@@ -5,15 +5,14 @@
 
 	let { form }: PageProps = $props()
 
-	// let endpoint = $state<string>(Object.keys(DIRECTORY[Object.keys(DIRECTORY)[0]])[0])
-	let endpoint = $state<string>('')
+	let endpoint = $derived<string>(form?.endpoint ?? '')
 </script>
 
 <form method="POST">
-	<label class="flex items-start">
+	<label class="flex items-baseline">
 		<span>{HOST}</span>
 
-		<select name="endpoint" bind:value={endpoint}>
+		<select class="appearance-none" name="endpoint" bind:value={endpoint}>
 			{#each Object.entries(DIRECTORY) as [label, endpoints]}
 				<optgroup {label}>
 					{#each Object.keys(endpoints) as e}
@@ -25,12 +24,34 @@
 	</label>
 
 	<div>
-		{#each Object.entries(PARAMS) as [param, value]}
+		{#each Object.entries(PARAMS) as [param, values]}
 			{#if endpoint.includes(`{${param}}`)}
+				{@const cachedValue = form?.entries[param] ?? values[0].value}
+
 				<label>
 					{param}:
-					<input name={param} {value} />
+					<input name={param} value={cachedValue} placeholder={values[0].value} />
 				</label>
+
+				{#each values as { value, label }}
+					<label>
+						<input
+							type="radio"
+							name="{param}-presets"
+							data-target={param}
+							onchange={(e) => {
+								const { target } = (e.target as HTMLInputElement).dataset
+								const input = document.querySelector(`input[name="${target}"]`)! as HTMLInputElement
+								if (input) {
+									input.value = value
+								}
+							}}
+							{value}
+							checked={value === cachedValue}
+						/>
+						{label}
+					</label>
+				{/each}
 			{/if}
 		{/each}
 	</div>
@@ -39,11 +60,11 @@
 </form>
 
 {#if form}
-	<output>{HOST + form.endpoint}</output>
+	<output>{HOST + form.fetchUrl}</output>
 
 	<CodeBlock
 		code={JSON.stringify(form.result, null, 2)}
 		lang="json"
-		className="whitespace-pre-wrap"
+		className="text-xs whitespace-pre-wrap"
 	/>
 {/if}

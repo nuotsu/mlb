@@ -10,6 +10,7 @@
 		scroll-behavior: smooth;
 	}
 
+	label,
 	select,
 	button {
 		cursor: pointer;

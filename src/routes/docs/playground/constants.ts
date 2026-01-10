@@ -14,8 +14,12 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 	Standings: {
 		'/standings': {},
 	},
-}
+} as const
 
-export const PARAMS = {
-	personId: '660271', // Shohei Ohtani
+export const PARAMS: Record<string, { value: string; label: string }[]> = {
+	personId: [
+		{ value: '660271', label: 'Shohei Ohtani' },
+		{ value: '669373', label: 'Tarik Skubal' },
+		{ value: '592450', label: 'Aaron Judge' },
+	],
 } as const
