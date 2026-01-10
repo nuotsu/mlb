@@ -60,7 +60,7 @@
 </form>
 
 {#if form}
-	<output>{HOST + form.fetchUrl}</output>
+	<output>Endpoint: {HOST + form.fetchUrl}</output>
 
 	<CodeBlock
 		code={JSON.stringify(form.result, null, 2)}

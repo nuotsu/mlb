@@ -12,7 +12,8 @@
 
 	label,
 	select,
-	button {
+	button,
+	summary {
 		cursor: pointer;
 	}
 }
