@@ -1,1 +1,17 @@
 @import 'tailwindcss';
+
+@theme {
+	--spacing-ch: 1ch;
+	--spacing-lh: 1lh;
+}
+
+@layer base {
+	html {
+		scroll-behavior: smooth;
+	}
+
+	select,
+	button {
+		cursor: pointer;
+	}
+}

@@ -3,5 +3,6 @@
 		"*.css": "tailwindcss"
 	},
 	"editor.defaultFormatter": "esbenp.prettier-vscode",
-	"editor.formatOnSave": true
+	"editor.formatOnSave": true,
+	"editor.insertSpaces": false
 }

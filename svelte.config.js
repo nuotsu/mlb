@@ -7,7 +7,18 @@ const config = {
 	// for more information about preprocessors
 	preprocess: vitePreprocess(),
 
-	kit: { adapter: adapter() }
+	kit: {
+		adapter: adapter(),
+		alias: {
+			$ui: './src/ui',
+		},
+	},
+
+	compilerOptions: {
+		experimental: {
+			async: true,
+		},
+	},
 }
 
 export default config

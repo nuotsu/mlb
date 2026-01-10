@@ -8,6 +8,15 @@ declare global {
 		// interface PageState {}
 		// interface Platform {}
 	}
+
+	namespace Docs {
+		interface EndpointFragment {
+			[key: string]: {
+				parameters?: string
+				endpoints?: EndpointFragment
+			}
+		}
+	}
 }
 
 export {}

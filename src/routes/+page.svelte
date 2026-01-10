@@ -1,2 +1,8 @@
-<h1>Welcome to SvelteKit</h1>
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+<h1>MLB Scorebug & <a href="/docs/playground">Stats API</a></h1>
+<p>by <a href="https://nuotsu.dev">nuotsu</a></p>
+
+<style>
+	a {
+		text-decoration: underline;
+	}
+</style>
