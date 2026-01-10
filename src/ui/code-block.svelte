@@ -96,9 +96,3 @@
 {:then html}
 	{@html html}
 {/await}
-
-<style>
-	:global(.shiki summary) {
-		/* display: block; */
-	}
-</style>

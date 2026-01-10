@@ -16,4 +16,22 @@
 	summary {
 		cursor: pointer;
 	}
+
+	.shiki details {
+		summary {
+			display: flex;
+
+			&:not(:hover)::after {
+				opacity: 0.25;
+			}
+
+			&::after {
+				content: ' ▶';
+			}
+		}
+
+		&[open] > summary::after {
+			content: ' ▼';
+		}
+	}
 }
