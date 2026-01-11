@@ -6,7 +6,10 @@
 	let { form }: PageProps = $props()
 
 	let endpoint = $derived<string>(form?.endpoint ?? '')
-	let parameters = $derived(ENDPOINTS[endpoint.split('?')[0]]?.parameters ?? {})
+
+	let parameters = $derived<Record<string, Docs.EndpointParameterValues[]>>(
+		(ENDPOINTS[endpoint.split('?')[0]]?.parameters as Docs.EndpointParameter) ?? {},
+	)
 
 	function parametersToString(parameters?: Docs.EndpointParameter) {
 		return Object.keys(parameters ?? {})
@@ -42,11 +45,10 @@
 	<table>
 		<tbody>
 			{#each Object.entries(parameters) as [parameter, values]}
-				{@const cachedValue = form?.entries[parameter] ?? values[0]?.value}
+				{@const cachedValue = form?.entries[parameter] ?? values[0]?.value ?? ''}
 
 				<tr>
 					<td>
-						{$inspect(values)}
 						<label for={parameter}>
 							{parameter}
 						</label>
@@ -68,7 +70,6 @@
 									<input
 										type="radio"
 										name="{parameter}-presets"
-										{value}
 										checked={value === cachedValue}
 										data-target={parameter}
 										onchange={(e) => {
