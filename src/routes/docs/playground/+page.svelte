@@ -21,7 +21,7 @@
 
 <form class="sticky top-0 z-1 bg-background" method="POST">
 	<div class="flex items-stretch gap-ch">
-		<button type="submit">Send</button>
+		<button class="action" type="submit">Send</button>
 
 		<label class="flex items-baseline">
 			<span>{HOST}</span>

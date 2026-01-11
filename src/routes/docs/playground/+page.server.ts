@@ -17,16 +17,18 @@ export const actions = {
 		const fetchUrl = new URL(processedUrl)
 
 		fetchUrl.searchParams.forEach((value, key) => {
-			if (!value) fetchUrl.searchParams.delete(key)
+			if (!value || endpoint.split('?')[0]?.includes(key)) {
+				fetchUrl.searchParams.delete(key)
+			}
 		})
 
-		const results = await fetch(fetchUrl.toString())
+		const results = await fetch(fetchUrl)
 		const result = await results.json()
 
 		return {
 			entries: Object.fromEntries(formData.entries()),
 			endpoint,
-			fetchUrl,
+			fetchUrl: decodeURIComponent(fetchUrl.toString()),
 			result,
 		}
 	},

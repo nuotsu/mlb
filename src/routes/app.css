@@ -1,8 +1,13 @@
+@import './fonts.css';
 @import 'tailwindcss';
 
 @theme {
+	--font-sans: 'Geist', sans-serif;
+	--font-mono: 'Geist Mono', monospace;
+
 	--color-background: #fff;
 	--color-foreground: #000;
+	--color-accent: var(--color-green-500);
 
 	--spacing-ch: 1ch;
 	--spacing-lh: 1lh;
@@ -13,7 +18,13 @@
 		scroll-behavior: smooth;
 	}
 
+	::selection {
+		background-color: var(--color-accent);
+		color: var(--color-foreground);
+	}
+
 	body {
+		accent-color: var(--color-accent);
 		background-color: var(--color-background);
 		color: var(--color-foreground);
 	}
@@ -34,46 +45,66 @@
 	scrollbar-width: none;
 }
 
+@utility action {
+	@apply bg-accent px-ch;
+}
+
 @layer vendor {
-	.shiki details {
-		--length: attr(data-length);
-		position: relative;
+	.shiki {
+		--line-num-width: calc(attr(data-line-width type(<number>), 0) * 1ch);
 
-		&::before {
-			content: '';
-			position: absolute;
-			inset: 1lh auto 0 calc(attr(data-indent type(<number>), 0) * 1ch);
-			border-left: 0.5px solid color-mix(in srgb, currentColor var(--border, 0%), transparent);
+		.line:not(details)::before {
+			content: attr(data-line);
+			counter-increment: step;
+			width: var(--line-num-width);
+			margin-right: 1ch;
+			display: inline-block;
+			text-align: right;
+			color: color-mix(in srgb, currentColor 25%, transparent);
 		}
 
-		&:hover:not(:has(details:hover)) {
-			--opacity: 1;
-			--border: 25%;
-
-			details:not(:hover) {
-				--opacity: 0.25;
-				--border: 0%;
-			}
-		}
-
-		summary {
-			display: flex;
-
-			&:not(:hover)::after {
-				opacity: var(--opacity, 0.25);
-			}
+		details {
+			--length: attr(data-length);
+			position: relative;
 
 			&::after {
-				content: ' ▶';
+				content: '';
+				pointer-events: none;
+				position: absolute;
+				inset: 1lh auto 0
+					calc(attr(data-indent type(<number>), 0) * 1ch + var(--line-num-width) + 1ch);
+				border-left: 0.5px solid color-mix(in srgb, currentColor var(--border, 0%), transparent);
 			}
-		}
 
-		&[open] summary::after {
-			content: ' ▼';
-		}
+			&:hover:not(:has(details:hover)) {
+				--opacity: 1;
+				--border: 25%;
 
-		&:not([open]) > summary::after {
-			opacity: 1;
+				details:not(:hover) {
+					--opacity: 0.25;
+					--border: 0%;
+				}
+			}
+
+			summary {
+				display: flex;
+
+				&:not(:hover)::after {
+					opacity: var(--opacity, 0.25);
+				}
+
+				&::after {
+					content: ' ▶';
+				}
+			}
+
+			&[open] summary::after {
+				content: ' ▼';
+			}
+
+			&:not([open]) > summary::after {
+				opacity: 1;
+			}
 		}
 	}
 }

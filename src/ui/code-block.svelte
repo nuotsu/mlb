@@ -12,6 +12,8 @@
 		className?: string
 	} = $props()
 
+	let i = 0
+
 	let html = async () =>
 		await codeToHtml(code, {
 			theme: 'dark-plus',
@@ -20,6 +22,7 @@
 				{
 					pre(node) {
 						node.properties.class = `${node.properties.class} ${className}`
+						node.properties['data-line-width'] = `${i.toString().length + 1}`
 					},
 					code: (node) => ({
 						...node,
@@ -48,6 +51,7 @@
 		}, [])
 
 		const result: ElementContent[] = grouped.map(([c, contents]) => {
+			i++
 			const e = c as Element
 
 			if (contents.length) {
@@ -58,6 +62,7 @@
 						properties: {
 							...e.properties,
 							'data-indent': getIndent(e),
+							'data-line': i,
 						},
 						children: e.children,
 					},
@@ -80,6 +85,7 @@
 					properties: {
 						...e.properties,
 						'data-indent': getIndent(e),
+						'data-line': i,
 					},
 					children: [...e.children, { type: 'text', value: '\n' }],
 				}
@@ -92,11 +98,6 @@
 	function getIndent(node?: Element) {
 		const { value } = ((node?.children?.[0] as Element)?.children?.[0] as { value: string }) ?? ''
 		return value?.match(/^\s*/)?.[0]?.length ?? 0
-	}
-
-	function getLastValue(children: ElementContent[]) {
-		const { value } = children?.at(-1) as { value: string }
-		return value ?? ''
 	}
 </script>
 
