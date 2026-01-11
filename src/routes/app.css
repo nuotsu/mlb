@@ -52,6 +52,15 @@
 @layer vendor {
 	.shiki {
 		--line-num-width: calc(attr(data-line-width type(<number>), 0) * 1ch);
+		padding-inline: 1ch;
+
+		&::before {
+			content: attr(data-pre);
+			position: sticky;
+			bottom: 0;
+			display: block;
+			color: var(--color-accent);
+		}
 
 		.line:not(details)::before {
 			content: attr(data-line);
@@ -60,7 +69,7 @@
 			margin-right: 1ch;
 			display: inline-block;
 			text-align: right;
-			color: color-mix(in srgb, currentColor 25%, transparent);
+			@apply text-current/25;
 		}
 
 		details {

@@ -5,10 +5,12 @@
 	let {
 		code,
 		lang,
+		pre,
 		className,
 	}: {
 		code: string
 		lang: BundledLanguage
+		pre?: string
 		className?: string
 	} = $props()
 
@@ -23,6 +25,7 @@
 					pre(node) {
 						node.properties.class = `${node.properties.class} ${className}`
 						node.properties['data-line-width'] = `${i.toString().length + 1}`
+						node.properties['data-pre'] = pre
 					},
 					code: (node) => ({
 						...node,

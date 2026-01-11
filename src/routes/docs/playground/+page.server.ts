@@ -1,5 +1,5 @@
+import { HOST } from '$ui/playground/constants'
 import type { Actions } from './$types'
-import { HOST } from './constants'
 
 export const actions = {
 	default: async ({ request }) => {
