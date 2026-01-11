@@ -21,12 +21,10 @@
 					pre(node) {
 						node.properties.class = `${node.properties.class} ${className}`
 					},
-					code(node) {
-						return {
-							...node,
-							children: fold(node.children),
-						} as Element
-					},
+					code: (node) => ({
+						...node,
+						children: fold(node.children),
+					}),
 				},
 			],
 		})
@@ -44,40 +42,46 @@
 				}
 
 				return [...a, [c, []]]
-			} else if (c.type === 'text') {
-				console.log(c)
 			}
 
 			return a
 		}, [])
 
 		const result: ElementContent[] = grouped.map(([c, contents]) => {
+			const e = c as Element
+
 			if (contents.length) {
-				const e = c as Element
+				const children = [
+					{
+						type: 'element',
+						tagName: 'summary',
+						properties: {
+							...e.properties,
+							'data-indent': getIndent(e),
+						},
+						children: e.children,
+					},
+					...fold(contents, indent + 2),
+				] as ElementContent[]
 
 				return {
 					...e,
 					tagName: 'details',
 					properties: {
 						...e.properties,
+						'data-indent': getIndent(e),
 						open: true,
 					},
-					children: [
-						{
-							type: 'element',
-							tagName: 'summary',
-							properties: {
-								...e.properties,
-							},
-							children: e.children,
-						},
-						...fold(contents, indent + 2),
-					],
+					children,
 				}
 			} else {
 				return {
-					...c,
-					children: [...(c as Element).children, { type: 'text', value: '\n' }],
+					...e,
+					properties: {
+						...e.properties,
+						'data-indent': getIndent(e),
+					},
+					children: [...e.children, { type: 'text', value: '\n' }],
 				}
 			}
 		})
@@ -88,6 +92,11 @@
 	function getIndent(node?: Element) {
 		const { value } = ((node?.children?.[0] as Element)?.children?.[0] as { value: string }) ?? ''
 		return value?.match(/^\s*/)?.[0]?.length ?? 0
+	}
+
+	function getLastValue(children: ElementContent[]) {
+		const { value } = children?.at(-1) as { value: string }
+		return value ?? ''
 	}
 </script>
 

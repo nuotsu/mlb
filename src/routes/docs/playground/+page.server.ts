@@ -6,15 +6,21 @@ export const actions = {
 		const formData = await request.formData()
 		const endpoint = (formData.get('endpoint') as string) || ''
 
-		let fetchUrl = endpoint
+		let processedUrl = HOST + endpoint
 
 		for (const [key, value] of formData.entries()) {
 			if (key !== 'endpoint') {
-				fetchUrl = fetchUrl.replace(`{${key}}`, value as string)
+				processedUrl = processedUrl.replace(`{${key}}`, value as string)
 			}
 		}
 
-		const results = await fetch(HOST + fetchUrl)
+		const fetchUrl = new URL(processedUrl)
+
+		fetchUrl.searchParams.forEach((value, key) => {
+			if (!value) fetchUrl.searchParams.delete(key)
+		})
+
+		const results = await fetch(fetchUrl.toString())
 		const result = await results.json()
 
 		return {

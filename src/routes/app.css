@@ -1,6 +1,9 @@
 @import 'tailwindcss';
 
 @theme {
+	--color-background: #fff;
+	--color-foreground: #000;
+
 	--spacing-ch: 1ch;
 	--spacing-lh: 1lh;
 }
@@ -16,13 +19,43 @@
 	summary {
 		cursor: pointer;
 	}
+}
 
+@utility no-scrollbar {
+	::-webkit-scrollbar {
+		display: none;
+	}
+
+	scrollbar-width: none;
+}
+
+@layer vendor {
 	.shiki details {
+		--length: attr(data-length);
+		position: relative;
+
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 1lh auto 0 calc(attr(data-indent type(<number>), 0) * 1ch);
+			border-left: 0.5px solid color-mix(in srgb, currentColor var(--border, 0%), transparent);
+		}
+
+		&:hover:not(:has(details:hover)) {
+			--opacity: 1;
+			--border: 25%;
+
+			details:not(:hover) {
+				--opacity: 0.25;
+				--border: 0%;
+			}
+		}
+
 		summary {
 			display: flex;
 
 			&:not(:hover)::after {
-				opacity: 0.25;
+				opacity: var(--opacity, 0.25);
 			}
 
 			&::after {
@@ -30,8 +63,12 @@
 			}
 		}
 
-		&[open] > summary::after {
+		&[open] summary::after {
 			content: ' ▼';
+		}
+
+		&:not([open]) > summary::after {
+			opacity: 1;
 		}
 	}
 }

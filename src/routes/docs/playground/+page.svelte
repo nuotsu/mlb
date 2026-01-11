@@ -6,62 +6,100 @@
 	let { form }: PageProps = $props()
 
 	let endpoint = $derived<string>(form?.endpoint ?? '')
+
+	function parametersToString(parameters?: string[]) {
+		return parameters
+			?.map((param) => `${param}={${param}}`)
+			.filter(Boolean)
+			.join('&')
+	}
 </script>
 
-<form method="POST">
-	<label class="flex items-baseline">
-		<span>{HOST}</span>
+<form class="sticky top-0 z-1 bg-background" method="POST">
+	<div class="flex items-stretch gap-ch">
+		<button type="submit">Send</button>
 
-		<select class="appearance-none" name="endpoint" bind:value={endpoint}>
-			{#each Object.entries(DIRECTORY) as [label, endpoints]}
-				<optgroup {label}>
-					{#each Object.keys(endpoints) as e}
-						<option value={e}>{e}</option>
-					{/each}
-				</optgroup>
-			{/each}
-		</select>
-	</label>
+		<label class="flex items-baseline">
+			<span>{HOST}</span>
 
-	<div>
-		{#each Object.entries(PARAMS) as [param, values]}
-			{#if endpoint.includes(`{${param}}`)}
-				{@const cachedValue = form?.entries[param] ?? values[0].value}
-
-				<label>
-					{param}:
-					<input name={param} value={cachedValue} placeholder={values[0].value} />
-				</label>
-
-				{#each values as { value, label }}
-					<label>
-						<input
-							type="radio"
-							name="{param}-presets"
-							data-target={param}
-							onchange={(e) => {
-								const { target } = (e.target as HTMLInputElement).dataset
-								const input = document.querySelector(`input[name="${target}"]`)! as HTMLInputElement
-								if (input) {
-									input.value = value
-								}
-							}}
-							{value}
-							checked={value === cachedValue}
-						/>
-						{label}
-					</label>
+			<select class="appearance-none" name="endpoint" bind:value={endpoint}>
+				{#each Object.entries(DIRECTORY) as [label, endpoints]}
+					<optgroup {label}>
+						{#each Object.keys(endpoints) as e}
+							<option
+								value={[e, parametersToString(endpoints[e].parameters)].filter(Boolean).join('?')}
+							>
+								{e}
+							</option>
+						{/each}
+					</optgroup>
 				{/each}
-			{/if}
-		{/each}
+			</select>
+		</label>
 	</div>
 
-	<button type="submit">Send</button>
+	<table>
+		<tbody>
+			{#each Object.entries(PARAMS) as [param, values]}
+				<tr>
+					{#if endpoint.includes(`{${param}}`) || endpoint.includes(`${param}=`)}
+						{@const cachedValue = form?.entries[param] ?? values[0].value}
+
+						<td>
+							<label for={param}>
+								{param}
+							</label>
+						</td>
+
+						<td>
+							<input
+								class="text-center tabular-nums"
+								id={param}
+								name={param}
+								value={cachedValue}
+								placeholder={values[0].value}
+							/>
+						</td>
+
+						<td>
+							{#each values as { value, label }}
+								{#if value}
+									<label>
+										<input
+											type="radio"
+											name="{param}-presets"
+											data-target={param}
+											onchange={(e) => {
+												const { target } = (e.target as HTMLInputElement).dataset
+												const input = document.querySelector(
+													`input[name="${target}"]`,
+												)! as HTMLInputElement
+												if (input) {
+													input.value = value
+												}
+											}}
+											{value}
+											checked={value === cachedValue}
+										/>
+										{label}
+									</label>
+								{/if}
+							{/each}
+						</td>
+					{/if}
+				</tr>
+			{/each}
+		</tbody>
+	</table>
+
+	{#if form}
+		<output class="sticky bottom-0 no-scrollbar block overflow-x-auto whitespace-nowrap">
+			Endpoint: {form.fetchUrl}
+		</output>
+	{/if}
 </form>
 
 {#if form}
-	<output>Endpoint: {HOST + form.fetchUrl}</output>
-
 	<CodeBlock
 		code={JSON.stringify(form.result, null, 2)}
 		lang="json"
