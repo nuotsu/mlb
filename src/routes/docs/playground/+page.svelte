@@ -1,15 +1,16 @@
 <script lang="ts">
 	import CodeBlock from '$ui/code-block.svelte'
 	import type { PageProps } from './$types'
-	import { DIRECTORY, HOST, PARAMS } from './constants'
+	import { DIRECTORY, ENDPOINTS, HOST } from './constants'
 
 	let { form }: PageProps = $props()
 
 	let endpoint = $derived<string>(form?.endpoint ?? '')
+	let parameters = $derived(ENDPOINTS[endpoint.split('?')[0]]?.parameters ?? {})
 
-	function parametersToString(parameters?: string[]) {
-		return parameters
-			?.map((param) => `${param}={${param}}`)
+	function parametersToString(parameters?: Docs.EndpointParameter) {
+		return Object.keys(parameters ?? {})
+			?.map((key) => `${key}={${key}}`)
 			.filter(Boolean)
 			.join('&')
 	}
@@ -27,7 +28,7 @@
 					<optgroup {label}>
 						{#each Object.keys(endpoints) as e}
 							<option
-								value={[e, parametersToString(endpoints[e].parameters)].filter(Boolean).join('?')}
+								value={[e, parametersToString(endpoints[e]?.parameters)].filter(Boolean).join('?')}
 							>
 								{e}
 							</option>
@@ -40,53 +41,52 @@
 
 	<table>
 		<tbody>
-			{#each Object.entries(PARAMS) as [param, values]}
+			{#each Object.entries(parameters) as [parameter, values]}
+				{@const cachedValue = form?.entries[parameter] ?? values[0]?.value}
+
 				<tr>
-					{#if endpoint.includes(`{${param}}`) || endpoint.includes(`${param}=`)}
-						{@const cachedValue = form?.entries[param] ?? values[0].value}
+					<td>
+						{$inspect(values)}
+						<label for={parameter}>
+							{parameter}
+						</label>
+					</td>
 
-						<td>
-							<label for={param}>
-								{param}
-							</label>
-						</td>
+					<td>
+						<input
+							class="text-center tabular-nums"
+							id={parameter}
+							name={parameter}
+							value={cachedValue}
+						/>
+					</td>
 
-						<td>
-							<input
-								class="text-center tabular-nums"
-								id={param}
-								name={param}
-								value={cachedValue}
-								placeholder={values[0].value}
-							/>
-						</td>
+					<td>
+						{#each values as { value, label }}
+							{#if label !== 'Hydrate'}
+								<label>
+									<input
+										type="radio"
+										name="{parameter}-presets"
+										{value}
+										checked={value === cachedValue}
+										data-target={parameter}
+										onchange={(e) => {
+											const { target } = (e.target as HTMLInputElement).dataset
+											const input = document.querySelector(
+												`input[name="${target}"]`,
+											)! as HTMLInputElement
 
-						<td>
-							{#each values as { value, label }}
-								{#if value}
-									<label>
-										<input
-											type="radio"
-											name="{param}-presets"
-											data-target={param}
-											onchange={(e) => {
-												const { target } = (e.target as HTMLInputElement).dataset
-												const input = document.querySelector(
-													`input[name="${target}"]`,
-												)! as HTMLInputElement
-												if (input) {
-													input.value = value
-												}
-											}}
-											{value}
-											checked={value === cachedValue}
-										/>
-										{label}
-									</label>
-								{/if}
-							{/each}
-						</td>
-					{/if}
+											if (input) {
+												input.value = value
+											}
+										}}
+									/>
+									{label}
+								</label>
+							{/if}
+						{/each}
+					</td>
 				</tr>
 			{/each}
 		</tbody>

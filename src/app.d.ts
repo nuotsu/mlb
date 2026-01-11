@@ -11,10 +11,18 @@ declare global {
 
 	namespace Docs {
 		interface EndpointFragment {
-			[key: string]: {
-				parameters?: string[]
-				endpoints?: EndpointFragment
+			[endpoint: string]: {
+				parameters?: EndpointParameter
 			}
+		}
+
+		interface EndpointParameter {
+			[parameter: string]: EndpointParameterValues[]
+		}
+
+		interface EndpointParameterValues {
+			value: string
+			label: string
 		}
 	}
 }
