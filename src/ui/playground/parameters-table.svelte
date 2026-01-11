@@ -8,12 +8,12 @@
 	)
 </script>
 
-<table class="block max-w-full overflow-x-auto">
+<table class="block max-w-full overflow-x-auto py-ch">
 	<tbody>
 		{#each Object.entries(parameters) as [parameter, values]}
 			{@const cachedValue = form?.entries[parameter] ?? values[0]?.value ?? ''}
 
-			<tr class="align-top *:px-[.5ch] *:first:pl-ch">
+			<tr class="align-top *:px-[.5ch]">
 				<th class="sticky left-0 bg-background text-right font-normal">
 					<label for={parameter} class="grid h-lh items-center">
 						<small class="flex justify-end font-mono">
