@@ -17,7 +17,7 @@ export const actions = {
 		const fetchUrl = new URL(processedUrl)
 
 		fetchUrl.searchParams.forEach((value, key) => {
-			if (!value || endpoint.split('?')[0]?.includes(key)) {
+			if (!value || endpoint.split('?')[0]?.includes(`{${key}}`)) {
 				fetchUrl.searchParams.delete(key)
 			}
 		})
