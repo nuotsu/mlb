@@ -12,7 +12,10 @@ export const PRESETS: Docs.EndpointParameter = {
 		{ value: '104', label: 'NL' },
 		{ value: '103,104', label: 'AL, NL' },
 	],
-	teamId: [{ value: '119', label: 'Los Angeles Dodgers' }],
+	teamId: [
+		{ value: '119', label: 'Los Angeles Dodgers' },
+		{ value: '147', label: 'New York Yankees' },
+	],
 	personId: [
 		{ value: '660271', label: 'Shohei Ohtani' },
 		{ value: '592450', label: 'Aaron Judge' },
@@ -41,10 +44,7 @@ export const PRESETS: Docs.EndpointParameter = {
 		{ value: 'S', label: 'Spring Training' },
 	],
 	gamePk: [{ value: '813024', label: "'25 World Series Game 7" }],
-	date: [
-		{ value: today.toISOString().split('T')[0], label: 'Today' },
-		{ value: '2025-11-01', label: "'25 World Series Game 7" },
-	],
+	date: [{ value: '2025-11-01', label: "'25 World Series Game 7" }],
 	hydrate: [{ value: '', label: '' }],
 } as const
 
@@ -53,14 +53,16 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 		'/people/{personId}': {
 			parameters: {
 				personId: PRESETS.personId,
+				hydrate: PRESETS.hydrate,
 			},
 		},
 		'/people/{personId}/stats': {
 			parameters: {
 				personId: PRESETS.personId,
 				stats: PRESETS.stats,
-				group: PRESETS.group,
 				seasons: PRESETS.seasons,
+				group: PRESETS.group,
+				gameType: PRESETS.gameType,
 			},
 		},
 	},
@@ -74,6 +76,12 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 		'/teams/{teamId}': {
 			parameters: {
 				teamId: PRESETS.teamId,
+			},
+		},
+		'/teams/{teamId}/roster': {
+			parameters: {
+				teamId: PRESETS.teamId,
+				season: PRESETS.season,
 			},
 		},
 	},

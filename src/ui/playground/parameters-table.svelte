@@ -14,7 +14,7 @@
 			{@const cachedValue = form?.entries[parameter] ?? values[0]?.value ?? ''}
 
 			<tr class="align-top *:px-[.5ch] *:first:pl-ch">
-				<th class="text-right font-normal">
+				<th class="sticky left-0 bg-background text-right font-normal">
 					<label for={parameter} class="grid h-lh items-center">
 						<small class="flex justify-end font-mono">
 							{parameter}
@@ -23,9 +23,9 @@
 					</label>
 				</th>
 
-				<td class="px-0!">
+				<td class="px-[3px]!">
 					<input
-						class="field-sizing-content w-full min-w-[6ch] input px-ch text-center tabular-nums"
+						class="field-sizing-content w-full max-w-[24ch] min-w-[6ch] input px-[.5ch] text-center tabular-nums"
 						id={parameter}
 						name={parameter}
 						value={cachedValue}
@@ -35,8 +35,26 @@
 
 				<td>
 					<div class="flex flex-wrap gap-x-ch">
+						{#if parameter === 'date'}
+							<input
+								class="input text-center"
+								type="date"
+								data-target={parameter}
+								value={cachedValue || new Date().toISOString().split('T')[0]}
+								onchange={(e) => {
+									const { dataset, value } = e.target as HTMLInputElement
+									const input = document.querySelector(
+										`input[name="${dataset.target}"]`,
+									)! as HTMLInputElement
+									if (input) {
+										input.value = value
+									}
+								}}
+							/>
+						{/if}
+
 						{#each values as { value, label }}
-							{#if label !== 'Hydrate'}
+							{#if label}
 								<label class="whitespace-nowrap">
 									<input
 										type="radio"

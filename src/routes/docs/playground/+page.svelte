@@ -12,7 +12,10 @@
 <form class="top-0 z-1 bg-background md:sticky" method="POST">
 	<div class="flex flex-wrap items-stretch max-md:flex-col">
 		<EndpointSelect bind:value={endpoint} />
-		<button class="action max-md:grow md:order-first" type="submit">Send</button>
+
+		<button class="action max-md:grow max-md:active:scale-95 md:order-first" type="submit">
+			Send
+		</button>
 	</div>
 
 	<ParametersTable {endpoint} {form} />
