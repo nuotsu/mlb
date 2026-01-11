@@ -8,21 +8,24 @@
 	)
 </script>
 
-<table class="block max-w-full overflow-x-auto px-ch">
+<table class="block max-w-full overflow-x-auto">
 	<tbody>
 		{#each Object.entries(parameters) as [parameter, values]}
 			{@const cachedValue = form?.entries[parameter] ?? values[0]?.value ?? ''}
 
-			<tr>
-				<td>
-					<label for={parameter}>
-						{parameter}
+			<tr class="align-top *:px-[.5ch] *:first:pl-ch">
+				<th class="text-right font-normal">
+					<label for={parameter} class="grid h-lh items-center">
+						<small class="flex justify-end font-mono">
+							{parameter}
+							<span class="text-current/25">=</span>
+						</small>
 					</label>
-				</td>
+				</th>
 
-				<td>
+				<td class="px-0!">
 					<input
-						class="field-sizing-content w-full min-w-[4ch] px-ch text-center tabular-nums"
+						class="field-sizing-content w-full min-w-[6ch] input px-ch text-center tabular-nums"
 						id={parameter}
 						name={parameter}
 						value={cachedValue}
@@ -60,3 +63,9 @@
 		{/each}
 	</tbody>
 </table>
+
+<style>
+	table:has(tbody:empty) {
+		display: none;
+	}
+</style>

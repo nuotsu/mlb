@@ -17,7 +17,7 @@
 	<span class="line-clamp-1 shrink break-all text-current/50">{host}</span>
 	<span class="shrink-0">{pathname}</span>
 
-	<select class="field-sizing-content h-lh min-w-[4ch] shrink-0" name="endpoint" bind:value>
+	<select class="field-sizing-content h-lh min-w-[4ch] shrink-0 input" name="endpoint" bind:value>
 		{#each Object.entries(DIRECTORY) as [label, endpoints]}
 			<optgroup {label}>
 				{#each Object.keys(endpoints) as e}

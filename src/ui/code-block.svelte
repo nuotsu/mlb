@@ -18,7 +18,7 @@
 
 	let html = async () =>
 		await codeToHtml(code, {
-			theme: 'dark-plus',
+			theme: 'github-dark-high-contrast',
 			lang,
 			transformers: [
 				{

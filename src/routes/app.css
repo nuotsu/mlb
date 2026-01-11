@@ -7,7 +7,7 @@
 
 	--color-background: #fff;
 	--color-foreground: #000;
-	--color-accent: var(--color-green-500);
+	--color-accent: #72f088; /* var(--color-green-500); */
 
 	--spacing-ch: 1ch;
 	--spacing-lh: 1lh;
@@ -25,6 +25,7 @@
 
 	body {
 		accent-color: var(--color-accent);
+		caret-color: var(--color-accent);
 		background-color: var(--color-background);
 		color: var(--color-foreground);
 	}
@@ -49,17 +50,18 @@
 	@apply bg-accent px-ch;
 }
 
+@utility input {
+	@apply hover:bg-accent/25 focus:bg-accent/25;
+}
+
 @layer vendor {
 	.shiki {
 		--line-num-width: calc(attr(data-line-width type(<number>), 0) * 1ch);
-		padding-inline: 1ch;
+		padding: 1ch;
 
 		&::before {
 			content: attr(data-pre);
-			position: sticky;
-			bottom: 0;
-			display: block;
-			color: var(--color-accent);
+			@apply mb-ch block text-accent/50;
 		}
 
 		.line:not(details)::before {

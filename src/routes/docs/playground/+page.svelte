@@ -10,9 +10,9 @@
 </script>
 
 <form class="top-0 z-1 bg-background md:sticky" method="POST">
-	<div class="flex flex-wrap items-stretch max-md:flex-col-reverse">
-		<button class="action max-md:grow" type="submit">Send</button>
+	<div class="flex flex-wrap items-stretch max-md:flex-col">
 		<EndpointSelect bind:value={endpoint} />
+		<button class="action max-md:grow md:order-first" type="submit">Send</button>
 	</div>
 
 	<ParametersTable {endpoint} {form} />
