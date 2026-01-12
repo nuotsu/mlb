@@ -15,13 +15,13 @@
 		className?: string
 	} = $props()
 
-	let post = $state(false)
+	// let post = $state(false)
 
-	$effect(() => {
-		if (post) {
-			addButtonHandlers()
-		}
-	})
+	// $effect(() => {
+	// 	if (post) {
+	// 		addButtonHandlers()
+	// 	}
+	// })
 </script>
 
 {#await shiki({ code, lang, pre, className })}
@@ -29,5 +29,5 @@
 {:then html}
 	{@html html}
 
-	<div hidden>{(post = true)}</div>
+	<!-- <div hidden>{(post = true)}</div> -->
 {/await}

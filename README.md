@@ -4,3 +4,8 @@
 
 - https://github.com/toddrob99/MLB-StatsAPI/wiki/Endpoints
 - https://gdx.mlb.com/components/copyright.txt
+
+## TODO
+
+- Playground
+  - /api/v1.1

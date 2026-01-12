@@ -116,39 +116,32 @@ function getIndent(node?: Element) {
 	return value?.match(/^\s*/)?.[0]?.length ?? 0
 }
 
-export function addButtonHandlers() {
-	const form = document.querySelector('form')
-	if (!form) return
+export function addButtonHandlers(mutation: MutationRecord) {
+	if (
+		mutation.type === 'childList' &&
+		['SECTION', 'TBODY', 'TR'].includes((mutation.target as unknown as Element).tagName)
+	) {
+		const form = document.querySelector('form')
+		if (!form) return
 
-	const select = form.querySelector('select[name="endpoint"]') as HTMLSelectElement
-	if (!select) return
+		const select = form.querySelector('select[name="endpoint"]') as HTMLSelectElement
+		if (!select) return
 
-	document.querySelectorAll('pre code button').forEach((button) => {
-		button.addEventListener('click', () => {
+		document.querySelectorAll('pre code button').forEach((button) => {
 			const { href } = (button as HTMLElement).dataset
 			if (!href) return
 
-			select.value = '/{custom}'
-			select.dispatchEvent(new Event('change'))
+			button.addEventListener('click', () => {
+				select.value = '/{custom}'
+				select.dispatchEvent(new Event('change'))
 
-			const observer = new MutationObserver((mutationList) => {
-				for (const mutation of mutationList) {
-					if (
-						mutation.type === 'childList' &&
-						['TBODY', 'TR'].includes((mutation.target as unknown as Element).tagName)
-					) {
-						const customInput = document.querySelector('input#custom') as HTMLInputElement
-						if (!customInput) return
+				const customInput = document.querySelector('input#custom') as HTMLInputElement
+				if (!customInput) return
 
-						customInput.value = href
+				customInput.value = href
 
-						observer.disconnect()
-						form.submit()
-					}
-				}
+				form.submit()
 			})
-
-			observer.observe(form, { childList: true, subtree: true })
 		})
-	})
+	}
 }
