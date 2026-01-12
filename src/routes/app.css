@@ -10,7 +10,9 @@
 	--color-accent: #72f088; /* var(--color-green-500); */
 
 	--spacing-ch: 1ch;
+	--spacing-rch: 1rch;
 	--spacing-lh: 1lh;
+	--spacing-rlh: 1rlh;
 }
 
 @custom-variant hover (&:hover);

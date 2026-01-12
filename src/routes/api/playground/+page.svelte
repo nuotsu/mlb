@@ -9,12 +9,12 @@
 	let endpoint = $derived(form?.endpoint ?? '')
 </script>
 
-<section class="top-0 z-1 bg-background md:sticky">
-	<form class="space-ch mx-auto grid max-w-5xl p-ch pb-0" method="POST">
-		<div class="flex flex-wrap items-stretch max-md:flex-col">
+<section class="top-0 z-1 bg-background sm:sticky">
+	<form class="space-ch mx-auto grid max-w-5xl gap-ch p-ch" method="POST">
+		<div class="flex flex-wrap items-stretch max-sm:flex-col">
 			<EndpointSelect bind:value={endpoint} />
 
-			<button class="action max-md:grow max-md:active:scale-95 md:order-first" type="submit">
+			<button class="action max-sm:grow max-sm:active:scale-95 sm:order-first" type="submit">
 				Send
 			</button>
 		</div>

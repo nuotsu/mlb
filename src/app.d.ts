@@ -22,7 +22,7 @@ declare global {
 
 		interface EndpointParameterValues {
 			value: string
-			label: string
+			label?: string
 		}
 	}
 }

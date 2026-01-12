@@ -34,9 +34,6 @@ export const PRESETS: Docs.EndpointParameter = {
 	season: [
 		{ value: currentYear.toString(), label: currentYear.toString() },
 		{ value: (currentYear - 1).toString(), label: (currentYear - 1).toString() },
-	],
-	seasons: [
-		{ value: currentYear.toString(), label: currentYear.toString() },
 		{ value: past_N_years().join(','), label: `${past_N_years()[0]}-${currentYear}` },
 	],
 	gameType: [
@@ -44,25 +41,21 @@ export const PRESETS: Docs.EndpointParameter = {
 		{ value: 'S', label: 'Spring Training' },
 	],
 	gamePk: [{ value: '813024', label: "'25 World Series Game 7" }],
-	date: [{ value: '2025-11-01', label: "'25 World Series Game 7" }],
-	hydrate: [{ value: '', label: '' }],
+	year: [
+		{ value: currentYear.toString(), label: currentYear.toString() },
+		{ value: (currentYear - 1).toString(), label: (currentYear - 1).toString() },
+	],
+	date: [
+		{ value: today.toISOString().split('T')[0], label: 'Today' },
+		{ value: '2025-11-01', label: "'25 World Series Game 7" },
+	],
 } as const
 
 export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
-	Players: {
-		'/people/{personId}': {
+	Leagues: {
+		'/leagues': {
 			parameters: {
-				personId: PRESETS.personId,
-				hydrate: PRESETS.hydrate,
-			},
-		},
-		'/people/{personId}/stats': {
-			parameters: {
-				personId: PRESETS.personId,
-				stats: PRESETS.stats,
-				seasons: PRESETS.seasons,
-				group: PRESETS.group,
-				gameType: PRESETS.gameType,
+				leagueIds: PRESETS.leagueId,
 			},
 		},
 	},
@@ -84,13 +77,66 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 				season: PRESETS.season,
 			},
 		},
+		'/teams/{teamId}/history': {
+			parameters: {
+				teamId: PRESETS.teamId,
+			},
+		},
+		'/teams/{teamId}/affiliates': {
+			parameters: {
+				teamId: PRESETS.teamId,
+			},
+		},
+	},
+	People: {
+		'/people/{personId}': {
+			parameters: {
+				personId: PRESETS.personId,
+				hydrate: [{ value: 'currentTeam' }],
+			},
+		},
+		'/people/{personId}/stats': {
+			parameters: {
+				personId: PRESETS.personId,
+				stats: PRESETS.stats,
+				seasons: PRESETS.season,
+				group: PRESETS.group,
+				gameType: PRESETS.gameType,
+			},
+		},
+		'/people/freeAgents': {
+			parameters: {
+				season: PRESETS.season,
+			},
+		},
+		'/people/changes': {
+			parameters: {
+				updatedSince: PRESETS.date,
+				fields: [{ value: 'people,id,fullName' }],
+			},
+		},
+		'/people/search': {
+			parameters: {
+				names: [{ value: '' }],
+			},
+		},
 	},
 	Schedule: {
 		'/schedule': {
 			parameters: {
 				sportId: PRESETS.sportId,
 				date: PRESETS.date,
-				hydrate: [{ value: 'linescore', label: 'Hydrate' }],
+				hydrate: [{ value: 'linescore' }],
+			},
+		},
+		'/schedule/postseason': {
+			parameters: {
+				season: PRESETS.season,
+				gameTypes: [
+					{ value: 'W', label: 'World Series' },
+					{ value: 'L', label: 'League Series' },
+					{ value: 'D', label: 'Division Series' },
+				],
 			},
 		},
 	},
@@ -120,6 +166,40 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 				stats: PRESETS.stats,
 				group: PRESETS.group,
 				season: PRESETS.season,
+			},
+		},
+		'/stats/leaders': {
+			parameters: {
+				leaderCategories: [
+					{ value: 'homeRuns', label: 'Home Runs' },
+					{ value: 'battingAverage', label: 'Batting Average' },
+				],
+				leaderGameTypes: [
+					{ value: 'R', label: 'Regular Season' },
+					{ value: 'P', label: 'Playoffs' },
+				],
+				statGroup: [PRESETS.group[0], PRESETS.group[1]],
+				season: PRESETS.season,
+			},
+		},
+	},
+	Other: {
+		'/sports': {},
+		'/venues': {},
+		'/uniforms/game': {
+			parameters: {
+				gamePks: PRESETS.gamePk,
+			},
+		},
+		'/jobs/umpires': {},
+		'/draft/{year}': {
+			parameters: {
+				year: PRESETS.year,
+			},
+		},
+		'/{custom}': {
+			parameters: {
+				custom: [{ value: '' }],
 			},
 		},
 	},
