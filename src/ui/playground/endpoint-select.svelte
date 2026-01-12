@@ -1,13 +1,17 @@
 <script lang="ts">
-	import { DIRECTORY, HOST } from './constants'
+	import { DIRECTORY, ENDPOINTS, HOST } from './constants'
 
 	let { value = $bindable() } = $props()
 
 	const { host, pathname } = new URL(HOST)
 
-	function parametersToString(parameters?: Docs.EndpointParameter) {
+	let endpointWithParameters = $derived(
+		[value, parametersToString(ENDPOINTS[value]?.parameters)].filter(Boolean).join('?'),
+	)
+
+	function parametersToString(parameters?: Docs.EndpointFragment) {
 		return Object.keys(parameters ?? {})
-			?.map((key) => `${key}={${key}}`)
+			?.map((key) => !value.includes(`{${key}}`) && `${key}={${key}}`)
 			.filter(Boolean)
 			.join('&')
 	}
@@ -22,13 +26,11 @@
 		{#each Object.entries(DIRECTORY) as [label, endpoints]}
 			<optgroup {label}>
 				{#each Object.keys(endpoints) as e}
-					<option
-						value={[e, parametersToString(endpoints[e]?.parameters)].filter(Boolean).join('?')}
-					>
-						{e}
-					</option>
+					<option value={e}>{e}</option>
 				{/each}
 			</optgroup>
 		{/each}
 	</select>
 </label>
+
+<input name="endpoint-with-parameters" type="hidden" bind:value={endpointWithParameters} readonly />

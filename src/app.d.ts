@@ -17,10 +17,10 @@ declare global {
 		}
 
 		interface EndpointParameter {
-			[parameter: string]: EndpointParameterValues[]
+			[parameter: string]: EndpointParameterProps[]
 		}
 
-		interface EndpointParameterValues {
+		interface EndpointParameterProps {
 			value: string
 			label?: string
 		}

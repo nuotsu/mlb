@@ -5,8 +5,9 @@ export const actions = {
 	default: async ({ request }) => {
 		const formData = await request.formData()
 		const endpoint = (formData.get('endpoint') as string) || ''
+		const endpointWithParameters = (formData.get('endpoint-with-parameters') as string) || ''
 
-		let processedUrl = HOST + endpoint
+		let processedUrl = HOST + endpointWithParameters
 
 		for (const [key, value] of formData.entries()) {
 			if (key !== 'endpoint') {
@@ -17,7 +18,7 @@ export const actions = {
 		const fetchUrl = new URL(processedUrl)
 
 		fetchUrl.searchParams.forEach((value, key) => {
-			if (!value || endpoint.split('?')[0]?.includes(`{${key}}`)) {
+			if (!value) {
 				fetchUrl.searchParams.delete(key)
 			}
 		})
@@ -28,6 +29,7 @@ export const actions = {
 		return {
 			entries: Object.fromEntries(formData.entries()),
 			endpoint,
+			endpointWithParameters,
 			fetchUrl: decodeURIComponent(fetchUrl.toString()),
 			result,
 		}

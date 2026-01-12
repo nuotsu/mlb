@@ -6,7 +6,7 @@
 
 	let { form }: PageProps = $props()
 
-	let endpoint = $derived(form?.endpoint ?? '')
+	let endpoint = $derived(form?.endpoint ?? '/{custom}')
 </script>
 
 <section class="top-0 z-1 bg-background sm:sticky">
