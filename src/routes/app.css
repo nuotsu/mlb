@@ -51,10 +51,15 @@
 }
 
 @utility action {
-	@apply bg-accent px-ch transition-transform select-none active:scale-90;
+	user-select: none;
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5ch;
+	@apply bg-accent px-ch transition-transform active:scale-90;
 }
 
 @utility input {
+	border-bottom: 1px dashed var(--color-accent);
 	@apply hover:bg-accent/25 focus:bg-accent/25;
 }
 

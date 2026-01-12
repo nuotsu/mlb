@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Loading from '$ui/loading.svelte'
 	import type { Element, ElementContent } from 'hast'
 	import { codeToHtml, type BundledLanguage } from 'shiki'
 
@@ -105,7 +106,7 @@
 </script>
 
 {#await html()}
-	<div>Loading...</div>
+	<Loading class="loading-results p-ch" />
 {:then html}
 	{@html html}
 {/await}

@@ -5,7 +5,7 @@ const offset = Number(today.getMonth() <= 3) // after April
 const currentYear = today.getFullYear() - offset
 const past_N_years = (n = 5) => Array.from({ length: n }, (_, i) => currentYear - n + i + 1)
 
-export const PRESETS: Docs.EndpointParameter = {
+export const PRESETS = {
 	sportId: [{ value: '1', label: 'MLB' }],
 	leagueId: [
 		{ value: '103', label: 'AL' },
@@ -21,6 +21,11 @@ export const PRESETS: Docs.EndpointParameter = {
 		{ value: '592450', label: 'Aaron Judge' },
 		{ value: '669373', label: 'Tarik Skubal' },
 		{ value: '121314', label: 'Jackie Robinson' },
+	],
+	jobType: [
+		{ value: 'umpires', label: 'Umpires' },
+		{ value: 'officialScorers', label: 'Official scorers' },
+		{ value: 'datacasters', label: 'Datacasters' },
 	],
 	stats: [
 		{ value: 'season', label: 'Season' },
@@ -49,7 +54,7 @@ export const PRESETS: Docs.EndpointParameter = {
 		{ value: today.toISOString().split('T')[0], label: 'Today' },
 		{ value: '2025-11-01', label: "'25 World Series Game 7" },
 	],
-} as const
+} satisfies Docs.EndpointParameter
 
 export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 	Leagues: {
@@ -191,10 +196,18 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 				gamePks: PRESETS.gamePk,
 			},
 		},
-		'/jobs/umpires': {},
+		'/jobs/{jobType}': {
+			parameters: {
+				jobType: PRESETS.jobType,
+				date: PRESETS.date,
+			},
+		},
 		'/draft/{year}': {
 			parameters: {
 				year: PRESETS.year,
+				fields: [
+					{ value: 'drafts,rounds,picks,person,id,fullName,blurb', label: 'blurb + person' },
+				],
 			},
 		},
 		'/{custom}': {
