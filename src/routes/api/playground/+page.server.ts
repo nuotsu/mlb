@@ -9,15 +9,6 @@ export const actions = {
 
 		let processedUrl = HOST + endpointWithParameters
 
-		// for v1.x
-		const custom = formData.get('custom') as string
-		if (custom) {
-			const { version } = /^\/api\/v(?<version>[0-9.]+)\//g.exec(custom)?.groups ?? {}
-			if (version !== '1') {
-				processedUrl = processedUrl.replace('/api/v1/', '')
-			}
-		}
-
 		for (const [key, value] of formData.entries()) {
 			if (key !== 'endpoint') {
 				processedUrl = processedUrl.replace(`{${key}}`, value as string)

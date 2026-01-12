@@ -1,4 +1,4 @@
-export const HOST = 'https://statsapi.mlb.com/api/v1'
+export const HOST = 'https://statsapi.mlb.com'
 
 const today = new Date()
 const offset = Number(today.getMonth() <= 3) // after April
@@ -61,7 +61,7 @@ export const PRESETS = {
 } satisfies Docs.EndpointParameter
 
 export const CUSTOM_ENDPOINT = {
-	'/{custom}': {
+	'/api/v1/{custom}': {
 		parameters: {
 			custom: [{ value: '' }],
 		},
@@ -72,49 +72,49 @@ export const CUSTOM_ENDPOINT_KEY = Object.keys(CUSTOM_ENDPOINT)[0] as keyof type
 
 export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 	Leagues: {
-		'/leagues': {
+		'/api/v1/leagues': {
 			parameters: {
 				leagueIds: PRESETS.leagueId,
 			},
 		},
 	},
 	Teams: {
-		'/teams': {
+		'/api/v1/teams': {
 			parameters: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
 			},
 		},
-		'/teams/{teamId}': {
+		'/api/v1/teams/{teamId}': {
 			parameters: {
 				teamId: PRESETS.teamId,
 			},
 		},
-		'/teams/{teamId}/roster': {
+		'/api/v1/teams/{teamId}/roster': {
 			parameters: {
 				teamId: PRESETS.teamId,
 				season: PRESETS.season,
 			},
 		},
-		'/teams/{teamId}/history': {
+		'/api/v1/teams/{teamId}/history': {
 			parameters: {
 				teamId: PRESETS.teamId,
 			},
 		},
-		'/teams/{teamId}/affiliates': {
+		'/api/v1/teams/{teamId}/affiliates': {
 			parameters: {
 				teamId: PRESETS.teamId,
 			},
 		},
 	},
 	People: {
-		'/people/{personId}': {
+		'/api/v1/people/{personId}': {
 			parameters: {
 				personId: PRESETS.personId,
 				hydrate: [{ value: 'currentTeam' }],
 			},
 		},
-		'/people/{personId}/stats': {
+		'/api/v1/people/{personId}/stats': {
 			parameters: {
 				personId: PRESETS.personId,
 				stats: PRESETS.stats,
@@ -123,32 +123,32 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 				gameType: PRESETS.gameType,
 			},
 		},
-		'/people/freeAgents': {
+		'/api/v1/people/freeAgents': {
 			parameters: {
 				season: PRESETS.season,
 			},
 		},
-		'/people/changes': {
+		'/api/v1/people/changes': {
 			parameters: {
 				updatedSince: PRESETS.date,
 				fields: [{ value: 'people,id,fullName' }],
 			},
 		},
-		'/people/search': {
+		'/api/v1/people/search': {
 			parameters: {
 				names: [{ value: '' }],
 			},
 		},
 	},
 	Schedule: {
-		'/schedule': {
+		'/api/v1/schedule': {
 			parameters: {
 				sportId: PRESETS.sportId,
 				date: PRESETS.date,
 				hydrate: [{ value: 'linescore' }],
 			},
 		},
-		'/schedule/postseason': {
+		'/api/v1/schedule/postseason': {
 			parameters: {
 				season: PRESETS.season,
 				gameTypes: [
@@ -160,27 +160,32 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 		},
 	},
 	'Game Data': {
-		'/game/{gamePk}/boxscore': {
+		'/api/v1.1/game/{gamePk}/feed/live': {
 			parameters: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
-		'/game/{gamePk}/linescore': {
+		'/api/v1/game/{gamePk}/boxscore': {
 			parameters: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
-		'/game/{gamePk}/content': {
+		'/api/v1/game/{gamePk}/linescore': {
 			parameters: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
-		'/game/{gamePk}/contextMetrics': {
+		'/api/v1/game/{gamePk}/content': {
 			parameters: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
-		'/game/{gamePk}/winProbability': {
+		'/api/v1/game/{gamePk}/contextMetrics': {
+			parameters: {
+				gamePk: PRESETS.gamePk,
+			},
+		},
+		'/api/v1/game/{gamePk}/winProbability': {
 			parameters: {
 				gamePk: PRESETS.gamePk,
 				fields: [
@@ -192,19 +197,19 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 				],
 			},
 		},
-		'/game/{gamePk}/playByPlay': {
+		'/api/v1/game/{gamePk}/playByPlay': {
 			parameters: {
 				gamePk: PRESETS.gamePk,
 				fields: [{ value: 'allPlays,result,description', label: 'All Plays' }],
 			},
 		},
-		'/game/changes': {
+		'/api/v1/game/changes': {
 			parameters: {
 				sportId: PRESETS.sportId,
 				updatedSince: PRESETS.date,
 			},
 		},
-		'/gamePace': {
+		'/api/v1/gamePace': {
 			parameters: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
@@ -212,7 +217,7 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 		},
 	},
 	Standings: {
-		'/standings': {
+		'/api/v1/standings': {
 			parameters: {
 				leagueId: PRESETS.leagueId,
 				season: PRESETS.season,
@@ -220,14 +225,14 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 		},
 	},
 	Stats: {
-		'/stats': {
+		'/api/v1/stats': {
 			parameters: {
 				stats: PRESETS.stats,
 				group: PRESETS.group,
 				season: PRESETS.season,
 			},
 		},
-		'/stats/leaders': {
+		'/api/v1/stats/leaders': {
 			parameters: {
 				leaderCategories: [
 					{ value: 'homeRuns', label: 'Home Runs' },
@@ -243,13 +248,13 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 		},
 	},
 	Other: {
-		'/sports': {},
-		'/venues': {
+		'/api/v1/sports': {},
+		'/api/v1/venues': {
 			parameters: {
 				venueIds: PRESETS.venueId,
 			},
 		},
-		'/draft/{year}': {
+		'/api/v1/draft/{year}': {
 			parameters: {
 				year: PRESETS.year,
 				fields: [
@@ -257,18 +262,18 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 				],
 			},
 		},
-		'/jobs/{jobType}': {
+		'/api/v1/jobs/{jobType}': {
 			parameters: {
 				jobType: PRESETS.jobType,
 				date: PRESETS.date,
 			},
 		},
-		'/uniforms/game': {
+		'/api/v1/uniforms/game': {
 			parameters: {
 				gamePks: PRESETS.gamePk,
 			},
 		},
-		'/attendance': {
+		'/api/v1/attendance': {
 			parameters: {
 				teamId: PRESETS.teamId,
 				season: PRESETS.season,

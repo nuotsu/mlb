@@ -3,8 +3,6 @@
 
 	let { value = $bindable() } = $props()
 
-	const { host, pathname } = new URL(HOST)
-
 	let endpointWithParameters = $derived(
 		[value, parametersToString(ENDPOINTS[value]?.parameters)].filter(Boolean).join('?'),
 	)
@@ -18,9 +16,9 @@
 </script>
 
 <label class="flex items-center px-ch">
-	<span class="line-clamp-1 shrink break-all text-current/50">{host}</span>
+	<span class="line-clamp-1 shrink break-all text-current/50">{HOST}</span>
 
-	<span class="shrink-0">{pathname}</span>
+	<!-- <span class="shrink-0">{pathname}</span> -->
 
 	<select class="field-sizing-content h-lh min-w-[6ch] shrink-0 input" name="endpoint" bind:value>
 		<option value={CUSTOM_ENDPOINT_KEY}>{CUSTOM_ENDPOINT_KEY}</option>

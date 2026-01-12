@@ -39,7 +39,7 @@ export async function shiki({
 							properties: {
 								...node.properties,
 								class: 'underline decoration-dashed',
-								'data-href': value.slice(1, -1).replace('/api/v1/', ''),
+								'data-href': value.slice(1, -1),
 							},
 						}
 					}
