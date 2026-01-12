@@ -10,13 +10,13 @@ declare global {
 	}
 
 	namespace Docs {
-		interface EndpointFragment {
+		interface EndpointSchema {
 			[endpoint: string]: {
-				parameters?: EndpointParameter
+				parameters?: EndpointParams
 			}
 		}
 
-		interface EndpointParameter {
+		interface EndpointParams {
 			[parameter: string]: EndpointParameterProps[]
 		}
 

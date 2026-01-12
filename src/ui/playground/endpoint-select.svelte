@@ -7,7 +7,7 @@
 		[value, parametersToString(ENDPOINTS[value]?.parameters)].filter(Boolean).join('?'),
 	)
 
-	function parametersToString(parameters?: Docs.EndpointFragment) {
+	function parametersToString(parameters?: Docs.EndpointSchema) {
 		return Object.keys(parameters ?? {})
 			?.map((key) => !value.includes(`{${key}}`) && `${key}={${key}}`)
 			.filter(Boolean)

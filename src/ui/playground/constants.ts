@@ -58,7 +58,7 @@ export const PRESETS = {
 		{ value: today.toISOString().split('T')[0], label: 'Today' },
 		{ value: '2025-11-01', label: "'25 World Series Game 7" },
 	],
-} satisfies Docs.EndpointParameter
+} satisfies Docs.EndpointParams
 
 export const CUSTOM_ENDPOINT = {
 	'/api/v1/{custom}': {
@@ -66,11 +66,11 @@ export const CUSTOM_ENDPOINT = {
 			custom: [{ value: '' }],
 		},
 	},
-} satisfies Docs.EndpointFragment
+} satisfies Docs.EndpointSchema
 
 export const CUSTOM_ENDPOINT_KEY = Object.keys(CUSTOM_ENDPOINT)[0] as keyof typeof CUSTOM_ENDPOINT
 
-export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
+export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	Leagues: {
 		'/api/v1/leagues': {
 			parameters: {
@@ -282,7 +282,7 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 	},
 } as const
 
-export const ENDPOINTS: Record<string, Docs.EndpointFragment> = Object.assign(
+export const ENDPOINTS: Record<string, Docs.EndpointSchema> = Object.assign(
 	CUSTOM_ENDPOINT,
 	DIRECTORY,
 )

@@ -6,7 +6,7 @@
 	let { endpoint } = $props()
 
 	let parameters = $derived<Record<string, Docs.EndpointParameterProps[]>>(
-		(ENDPOINTS[endpoint.split('?')[0]]?.parameters as Docs.EndpointParameter) ?? {},
+		(ENDPOINTS[endpoint.split('?')[0]]?.parameters as Docs.EndpointParams) ?? {},
 	)
 </script>
 
