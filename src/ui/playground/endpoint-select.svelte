@@ -3,12 +3,12 @@
 
 	let { value = $bindable() } = $props()
 
-	let endpointWithParameters = $derived(
-		[value, parametersToString(ENDPOINTS[value]?.parameters)].filter(Boolean).join('?'),
+	let endpoint = $derived(
+		[value, paramsToString(ENDPOINTS[value]?.queryParams)].filter(Boolean).join('?'),
 	)
 
-	function parametersToString(parameters?: Docs.EndpointSchema) {
-		return Object.keys(parameters ?? {})
+	function paramsToString(params?: Docs.EndpointSchema) {
+		return Object.keys(params ?? {})
 			?.map((key) => !value.includes(`{${key}}`) && `${key}={${key}}`)
 			.filter(Boolean)
 			.join('&')
@@ -18,9 +18,11 @@
 <label class="flex items-center px-ch">
 	<span class="line-clamp-1 shrink break-all text-current/50">{HOST}</span>
 
-	<!-- <span class="shrink-0">{pathname}</span> -->
-
-	<select class="field-sizing-content h-lh min-w-[6ch] shrink-0 input" name="endpoint" bind:value>
+	<select
+		name="endpoint-path"
+		class="field-sizing-content h-lh min-w-[6ch] shrink-0 input"
+		bind:value
+	>
 		<option value={CUSTOM_ENDPOINT_KEY}>{CUSTOM_ENDPOINT_KEY}</option>
 
 		{#each Object.entries(DIRECTORY) as [label, endpoints]}
@@ -33,4 +35,4 @@
 	</select>
 </label>
 
-<input name="endpoint-with-parameters" type="hidden" bind:value={endpointWithParameters} readonly />
+<input name="endpoint" type="hidden" bind:value={endpoint} readonly />

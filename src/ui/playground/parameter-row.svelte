@@ -8,7 +8,7 @@
 	let input = $derived(form?.entries[parameter] ?? values[0]?.value ?? '')
 	let isDateInput = $derived(['date', 'updatedSince'].includes(parameter))
 
-	let hasPresetOptions = $derived(values.every((value: Docs.EndpointParameterProps) => value.label))
+	let hasPresetOptions = $derived(values.every((value: Docs.EndpointParamProps) => value.label))
 </script>
 
 <tr class="align-top *:px-[.5ch]">
@@ -23,11 +23,11 @@
 
 	<td class="px-[3px]!" colspan={!hasPresetOptions ? 2 : undefined}>
 		<input
+			id={parameter}
+			name={parameter}
 			class="field-sizing-content w-full min-w-[6ch] input px-[.5ch] tabular-nums {hasPresetOptions
 				? 'max-w-[24ch] text-center'
 				: ''}"
-			id={parameter}
-			name={parameter}
 			bind:value={input}
 			placeholder={values[0]?.value}
 			type={isDateInput ? 'date' : 'search'}
@@ -41,10 +41,9 @@
 					{#if label}
 						<label class="whitespace-nowrap">
 							<input
-								type="radio"
 								name="{parameter}-presets"
 								checked={value === input}
-								data-target={parameter}
+								type="radio"
 								onchange={() => (input = value)}
 							/>
 							{label}

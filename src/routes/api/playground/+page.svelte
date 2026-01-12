@@ -9,7 +9,7 @@
 
 	let { form }: PageProps = $props()
 
-	let endpoint = $derived(form?.endpoint ?? CUSTOM_ENDPOINT_KEY)
+	let endpoint = $derived(form?.endpointPath ?? CUSTOM_ENDPOINT_KEY)
 </script>
 
 <section {@attach mutationObserver(addButtonHandlers)}>

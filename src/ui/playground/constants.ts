@@ -62,7 +62,7 @@ export const PRESETS = {
 
 export const CUSTOM_ENDPOINT = {
 	'/api/v1/{custom}': {
-		parameters: {
+		pathParams: {
 			custom: [{ value: '' }],
 		},
 	},
@@ -73,50 +73,56 @@ export const CUSTOM_ENDPOINT_KEY = Object.keys(CUSTOM_ENDPOINT)[0] as keyof type
 export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	Leagues: {
 		'/api/v1/leagues': {
-			parameters: {
+			queryParams: {
 				leagueIds: PRESETS.leagueId,
 			},
 		},
 	},
 	Teams: {
 		'/api/v1/teams': {
-			parameters: {
+			queryParams: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
 			},
 		},
 		'/api/v1/teams/{teamId}': {
-			parameters: {
+			pathParams: {
 				teamId: PRESETS.teamId,
 			},
 		},
 		'/api/v1/teams/{teamId}/roster': {
-			parameters: {
+			pathParams: {
 				teamId: PRESETS.teamId,
+			},
+			queryParams: {
 				season: PRESETS.season,
 			},
 		},
 		'/api/v1/teams/{teamId}/history': {
-			parameters: {
+			pathParams: {
 				teamId: PRESETS.teamId,
 			},
 		},
 		'/api/v1/teams/{teamId}/affiliates': {
-			parameters: {
+			pathParams: {
 				teamId: PRESETS.teamId,
 			},
 		},
 	},
 	People: {
 		'/api/v1/people/{personId}': {
-			parameters: {
+			pathParams: {
 				personId: PRESETS.personId,
+			},
+			queryParams: {
 				hydrate: [{ value: 'currentTeam' }],
 			},
 		},
 		'/api/v1/people/{personId}/stats': {
-			parameters: {
+			pathParams: {
 				personId: PRESETS.personId,
+			},
+			queryParams: {
 				stats: PRESETS.stats,
 				seasons: PRESETS.season,
 				group: PRESETS.group,
@@ -124,32 +130,32 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/people/freeAgents': {
-			parameters: {
+			queryParams: {
 				season: PRESETS.season,
 			},
 		},
 		'/api/v1/people/changes': {
-			parameters: {
+			queryParams: {
 				updatedSince: PRESETS.date,
 				fields: [{ value: 'people,id,fullName' }],
 			},
 		},
 		'/api/v1/people/search': {
-			parameters: {
+			queryParams: {
 				names: [{ value: '' }],
 			},
 		},
 	},
 	Schedule: {
 		'/api/v1/schedule': {
-			parameters: {
+			queryParams: {
 				sportId: PRESETS.sportId,
 				date: PRESETS.date,
 				hydrate: [{ value: 'linescore' }],
 			},
 		},
 		'/api/v1/schedule/postseason': {
-			parameters: {
+			queryParams: {
 				season: PRESETS.season,
 				gameTypes: [
 					{ value: 'W', label: 'World Series' },
@@ -161,33 +167,35 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	'Game Data': {
 		'/api/v1.1/game/{gamePk}/feed/live': {
-			parameters: {
+			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
 		'/api/v1/game/{gamePk}/boxscore': {
-			parameters: {
+			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
 		'/api/v1/game/{gamePk}/linescore': {
-			parameters: {
+			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
 		'/api/v1/game/{gamePk}/content': {
-			parameters: {
+			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
 		'/api/v1/game/{gamePk}/contextMetrics': {
-			parameters: {
+			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
 		'/api/v1/game/{gamePk}/winProbability': {
-			parameters: {
+			pathParams: {
 				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
 				fields: [
 					{
 						value:
@@ -198,19 +206,21 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/game/{gamePk}/playByPlay': {
-			parameters: {
+			pathParams: {
 				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
 				fields: [{ value: 'allPlays,result,description', label: 'All Plays' }],
 			},
 		},
 		'/api/v1/game/changes': {
-			parameters: {
+			queryParams: {
 				sportId: PRESETS.sportId,
 				updatedSince: PRESETS.date,
 			},
 		},
 		'/api/v1/gamePace': {
-			parameters: {
+			queryParams: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
 			},
@@ -218,7 +228,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	Standings: {
 		'/api/v1/standings': {
-			parameters: {
+			queryParams: {
 				leagueId: PRESETS.leagueId,
 				season: PRESETS.season,
 			},
@@ -226,14 +236,14 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	Stats: {
 		'/api/v1/stats': {
-			parameters: {
+			queryParams: {
 				stats: PRESETS.stats,
 				group: PRESETS.group,
 				season: PRESETS.season,
 			},
 		},
 		'/api/v1/stats/leaders': {
-			parameters: {
+			queryParams: {
 				leaderCategories: [
 					{ value: 'homeRuns', label: 'Home Runs' },
 					{ value: 'battingAverage', label: 'Batting Average' },
@@ -250,31 +260,35 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	Other: {
 		'/api/v1/sports': {},
 		'/api/v1/venues': {
-			parameters: {
+			queryParams: {
 				venueIds: PRESETS.venueId,
 			},
 		},
 		'/api/v1/draft/{year}': {
-			parameters: {
+			pathParams: {
 				year: PRESETS.year,
+			},
+			queryParams: {
 				fields: [
 					{ value: 'drafts,rounds,picks,person,id,fullName,blurb', label: 'blurb + person' },
 				],
 			},
 		},
 		'/api/v1/jobs/{jobType}': {
-			parameters: {
+			pathParams: {
 				jobType: PRESETS.jobType,
+			},
+			queryParams: {
 				date: PRESETS.date,
 			},
 		},
 		'/api/v1/uniforms/game': {
-			parameters: {
+			queryParams: {
 				gamePks: PRESETS.gamePk,
 			},
 		},
 		'/api/v1/attendance': {
-			parameters: {
+			queryParams: {
 				teamId: PRESETS.teamId,
 				season: PRESETS.season,
 			},
@@ -288,7 +302,7 @@ export const ENDPOINTS: Record<string, Docs.EndpointSchema> = Object.assign(
 )
 
 for (const [label, endpoints] of Object.entries(DIRECTORY)) {
-	for (const [endpoint, parameters] of Object.entries(endpoints)) {
-		ENDPOINTS[endpoint] = parameters
+	for (const [endpoint, params] of Object.entries(endpoints)) {
+		ENDPOINTS[endpoint] = params
 	}
 }

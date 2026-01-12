@@ -4,10 +4,10 @@ import type { Actions } from './$types'
 export const actions = {
 	default: async ({ request }) => {
 		const formData = await request.formData()
+		const endpointPath = formData.get('endpoint-path') as string
 		const endpoint = (formData.get('endpoint') as string) || ''
-		const endpointWithParameters = (formData.get('endpoint-with-parameters') as string) || ''
 
-		let processedUrl = HOST + endpointWithParameters
+		let processedUrl = HOST + endpoint
 
 		for (const [key, value] of formData.entries()) {
 			if (key !== 'endpoint') {
@@ -28,8 +28,8 @@ export const actions = {
 
 		return {
 			entries: Object.fromEntries(formData.entries()),
+			endpointPath,
 			endpoint,
-			endpointWithParameters,
 			fetchUrl: decodeURIComponent(fetchUrl.toString()),
 			result,
 		}
