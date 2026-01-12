@@ -5,7 +5,12 @@
 
 	let form = $derived(page.form)
 
-	let input = $derived(form?.entries[parameter] ?? values[0]?.value ?? '')
+	let input = $derived(
+		parameter === 'custom'
+			? (page.url.searchParams.get('endpoint') ?? '/api/v1/')
+			: (form?.entries[parameter] ?? values[0]?.value),
+	)
+
 	let isDateInput = $derived(['date', 'updatedSince'].includes(parameter))
 
 	let hasPresetOptions = $derived(values.every((value: Docs.EndpointParamProps) => value.label))

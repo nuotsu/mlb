@@ -1,10 +1,9 @@
-import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
 import type { Element, ElementContent, Text } from 'hast'
 import { codeToHtml, type BundledLanguage } from 'shiki'
 
 let i = 0
 
-export async function shiki({
+export default async function ({
 	code,
 	lang,
 	pre,
@@ -35,11 +34,11 @@ export async function shiki({
 					if (value.startsWith('"/api/')) {
 						return {
 							...node,
-							tagName: 'button',
+							tagName: 'a',
 							properties: {
 								...node.properties,
 								class: 'underline decoration-dashed',
-								'data-href': value.slice(1, -1),
+								href: value.slice(1, -1),
 							},
 						}
 					}
@@ -115,34 +114,4 @@ function fold(children: ElementContent[], indent = 2) {
 function getIndent(node?: Element) {
 	const { value } = ((node?.children?.[0] as Element)?.children?.[0] as { value: string }) ?? ''
 	return value?.match(/^\s*/)?.[0]?.length ?? 0
-}
-
-export function addButtonHandlers(mutation: MutationRecord) {
-	if (
-		mutation.type === 'childList' &&
-		['SECTION', 'TBODY', 'TR'].includes((mutation.target as unknown as Element).tagName)
-	) {
-		const form = document.querySelector('form')
-		if (!form) return
-
-		const select = form.querySelector('select[name="endpoint"]') as HTMLSelectElement
-		if (!select) return
-
-		document.querySelectorAll('pre code button').forEach((button) => {
-			const { href } = (button as HTMLElement).dataset
-			if (!href) return
-
-			button.addEventListener('click', () => {
-				select.value = CUSTOM_ENDPOINT_KEY
-				select.dispatchEvent(new Event('change'))
-
-				const customInput = document.querySelector('input#custom') as HTMLInputElement
-				if (!customInput) return
-
-				customInput.value = href
-
-				form.submit()
-			})
-		})
-	}
 }

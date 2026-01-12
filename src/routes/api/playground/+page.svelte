@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { mutationObserver } from '$lib/attachments'
 	import CodeBlock from '$ui/code-block/code-block.svelte'
-	import { addButtonHandlers } from '$ui/code-block/utils'
 	import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
 	import EndpointSelect from '$ui/playground/endpoint-select.svelte'
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
@@ -12,7 +10,7 @@
 	let endpoint = $derived(form?.endpointPath ?? CUSTOM_ENDPOINT_KEY)
 </script>
 
-<section {@attach mutationObserver(addButtonHandlers)}>
+<section>
 	<header class="top-0 z-1 bg-background sm:sticky">
 		<form class="space-ch mx-auto grid max-w-5xl gap-ch p-ch" method="POST">
 			<div class="flex flex-wrap items-stretch gap-y-ch max-sm:flex-col">

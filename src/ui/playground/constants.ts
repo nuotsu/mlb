@@ -61,12 +61,12 @@ export const PRESETS = {
 } satisfies Docs.EndpointParams
 
 export const CUSTOM_ENDPOINT = {
-	'/api/v1/{custom}': {
+	'/{custom}': {
 		pathParams: {
-			custom: [{ value: '' }],
+			custom: [{ value: '/api/v1/' }],
 		},
 	},
-} satisfies Docs.EndpointSchema
+} as const satisfies Docs.EndpointSchema
 
 export const CUSTOM_ENDPOINT_KEY = Object.keys(CUSTOM_ENDPOINT)[0] as keyof typeof CUSTOM_ENDPOINT
 

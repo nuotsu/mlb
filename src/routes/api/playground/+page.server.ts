@@ -11,7 +11,8 @@ export const actions = {
 
 		for (const [key, value] of formData.entries()) {
 			if (key !== 'endpoint') {
-				processedUrl = processedUrl.replace(`{${key}}`, value as string)
+				const newValue = key === 'custom' ? value.toString().replace(/^\//, '') : (value as string)
+				processedUrl = processedUrl.replace(`{${key}}`, newValue)
 			}
 		}
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state'
 	import { CUSTOM_ENDPOINT_KEY, DIRECTORY, ENDPOINTS, HOST } from './constants'
 
 	let { value = $bindable() } = $props()
@@ -22,6 +23,11 @@
 		name="endpoint-path"
 		class="field-sizing-content h-lh min-w-[6ch] shrink-0 input"
 		bind:value
+		onchange={() => {
+			if (page.url.searchParams.has('endpoint')) {
+				window.history.replaceState({}, '', window.location.pathname)
+			}
+		}}
 	>
 		<option value={CUSTOM_ENDPOINT_KEY}>{CUSTOM_ENDPOINT_KEY}</option>
 

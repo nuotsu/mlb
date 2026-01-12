@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Loading from '$ui/loading.svelte'
 	import type { BundledLanguage } from 'shiki'
-	import { shiki } from './utils'
+	import shiki from './shiki'
 
 	let {
 		code,
