@@ -2,7 +2,7 @@ import { HOST } from '$ui/playground/constants'
 import type { Actions } from './$types'
 
 export const actions = {
-	default: async ({ request }) => {
+	default: async ({ request, ...props }) => {
 		const formData = await request.formData()
 		const endpoint = (formData.get('endpoint') as string) || ''
 		const endpointWithParameters = (formData.get('endpoint-with-parameters') as string) || ''

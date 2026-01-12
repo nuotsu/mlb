@@ -1,5 +1,5 @@
 <script lang="ts">
-	import CodeBlock from '$ui/code-block.svelte'
+	import CodeBlock from '$ui/code-block/code-block.svelte'
 	import EndpointSelect from '$ui/playground/endpoint-select.svelte'
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
 	import type { PageProps } from './$types'
@@ -39,18 +39,16 @@
 {/if}
 
 <style>
-	button {
-		svg {
-			width: 1em;
-			height: 1em;
+	svg {
+		width: 1em;
+		height: 1em;
 
-			:global(body:has(.loading-results)) &.send-icon {
-				display: none;
-			}
+		:global(body:has(.loading-results)) &.send-icon {
+			display: none;
+		}
 
-			:global(body:not(:has(.loading-results))) &.loading-icon {
-				display: none;
-			}
+		:global(body:not(:has(.loading-results))) &.loading-icon {
+			display: none;
 		}
 	}
 </style>
