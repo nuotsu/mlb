@@ -54,7 +54,9 @@
 	user-select: none;
 	display: inline-flex;
 	align-items: center;
+	justify-content: center;
 	gap: 0.5ch;
+	padding: 0.25ch;
 	@apply bg-accent px-ch transition-transform active:scale-90;
 }
 

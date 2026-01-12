@@ -8,9 +8,9 @@ const past_N_years = (n = 5) => Array.from({ length: n }, (_, i) => currentYear 
 export const PRESETS = {
 	sportId: [{ value: '1', label: 'MLB' }],
 	leagueId: [
-		{ value: '103', label: 'AL' },
-		{ value: '104', label: 'NL' },
-		{ value: '103,104', label: 'AL, NL' },
+		{ value: '103', label: 'American' },
+		{ value: '104', label: 'National' },
+		{ value: '103,104', label: 'AL + NL' },
 	],
 	teamId: [
 		{ value: '119', label: 'Los Angeles Dodgers' },
@@ -46,6 +46,10 @@ export const PRESETS = {
 		{ value: 'S', label: 'Spring Training' },
 	],
 	gamePk: [{ value: '813024', label: "'25 World Series Game 7" }],
+	venueId: [
+		{ value: '22', label: 'Dodger Stadium' },
+		{ value: '3313', label: 'Yankee Stadium' },
+	],
 	year: [
 		{ value: currentYear.toString(), label: currentYear.toString() },
 		{ value: (currentYear - 1).toString(), label: (currentYear - 1).toString() },
@@ -156,6 +160,46 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 				gamePk: PRESETS.gamePk,
 			},
 		},
+		'/game/{gamePk}/content': {
+			parameters: {
+				gamePk: PRESETS.gamePk,
+			},
+		},
+		'/game/{gamePk}/contextMetrics': {
+			parameters: {
+				gamePk: PRESETS.gamePk,
+			},
+		},
+		'/game/{gamePk}/winProbability': {
+			parameters: {
+				gamePk: PRESETS.gamePk,
+				fields: [
+					{
+						value:
+							'result,description,homeTeamWinProbability,awayTeamWinProbability,homeTeamWinProbabilityAdded',
+						label: 'Probabilities',
+					},
+				],
+			},
+		},
+		'/game/{gamePk}/playByPlay': {
+			parameters: {
+				gamePk: PRESETS.gamePk,
+				fields: [{ value: 'allPlays,result,description', label: 'All Plays' }],
+			},
+		},
+		'/game/changes': {
+			parameters: {
+				sportId: PRESETS.sportId,
+				updatedSince: PRESETS.date,
+			},
+		},
+		'/gamePace': {
+			parameters: {
+				sportId: PRESETS.sportId,
+				season: PRESETS.season,
+			},
+		},
 	},
 	Standings: {
 		'/standings': {
@@ -190,16 +234,9 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 	},
 	Other: {
 		'/sports': {},
-		'/venues': {},
-		'/uniforms/game': {
+		'/venues': {
 			parameters: {
-				gamePks: PRESETS.gamePk,
-			},
-		},
-		'/jobs/{jobType}': {
-			parameters: {
-				jobType: PRESETS.jobType,
-				date: PRESETS.date,
+				venueIds: PRESETS.venueId,
 			},
 		},
 		'/draft/{year}': {
@@ -208,6 +245,23 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 				fields: [
 					{ value: 'drafts,rounds,picks,person,id,fullName,blurb', label: 'blurb + person' },
 				],
+			},
+		},
+		'/jobs/{jobType}': {
+			parameters: {
+				jobType: PRESETS.jobType,
+				date: PRESETS.date,
+			},
+		},
+		'/uniforms/game': {
+			parameters: {
+				gamePks: PRESETS.gamePk,
+			},
+		},
+		'/attendance': {
+			parameters: {
+				teamId: PRESETS.teamId,
+				season: PRESETS.season,
 			},
 		},
 		'/{custom}': {

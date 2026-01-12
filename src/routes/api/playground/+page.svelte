@@ -11,7 +11,7 @@
 
 <section class="top-0 z-1 bg-background sm:sticky">
 	<form class="space-ch mx-auto grid max-w-5xl gap-ch p-ch" method="POST">
-		<div class="flex flex-wrap items-stretch max-sm:flex-col">
+		<div class="flex flex-wrap items-stretch gap-y-ch max-sm:flex-col">
 			<EndpointSelect bind:value={endpoint} />
 
 			<button class="action max-sm:grow max-sm:active:scale-95 sm:order-first" type="submit">
