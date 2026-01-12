@@ -25,7 +25,7 @@
 		<input
 			id={parameter}
 			name={parameter}
-			class="field-sizing-content w-full min-w-[6ch] input px-[.5ch] tabular-nums {hasPresetOptions
+			class="field-sizing-content w-full min-w-[8ch] input px-[.5ch] tabular-nums sm:min-w-[12ch] {hasPresetOptions
 				? 'max-w-[24ch] text-center'
 				: ''}"
 			bind:value={input}

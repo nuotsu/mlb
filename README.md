@@ -4,3 +4,7 @@
 
 - https://github.com/toddrob99/MLB-StatsAPI/wiki/Endpoints
 - https://gdx.mlb.com/components/copyright.txt
+
+## TODO
+
+- cold folding > show children count (use `mutationObserver` attachment)
