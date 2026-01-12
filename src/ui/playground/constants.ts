@@ -60,6 +60,16 @@ export const PRESETS = {
 	],
 } satisfies Docs.EndpointParameter
 
+export const CUSTOM_ENDPOINT = {
+	'/{custom}': {
+		parameters: {
+			custom: [{ value: '' }],
+		},
+	},
+} satisfies Docs.EndpointFragment
+
+export const CUSTOM_ENDPOINT_KEY = Object.keys(CUSTOM_ENDPOINT)[0] as keyof typeof CUSTOM_ENDPOINT
+
 export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 	Leagues: {
 		'/leagues': {
@@ -264,15 +274,13 @@ export const DIRECTORY: Record<string, Docs.EndpointFragment> = {
 				season: PRESETS.season,
 			},
 		},
-		'/{custom}': {
-			parameters: {
-				custom: [{ value: '' }],
-			},
-		},
 	},
 } as const
 
-export let ENDPOINTS: Record<string, Docs.EndpointFragment> = {}
+export const ENDPOINTS: Record<string, Docs.EndpointFragment> = Object.assign(
+	CUSTOM_ENDPOINT,
+	DIRECTORY,
+)
 
 for (const [label, endpoints] of Object.entries(DIRECTORY)) {
 	for (const [endpoint, parameters] of Object.entries(endpoints)) {

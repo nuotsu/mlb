@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { DIRECTORY, ENDPOINTS, HOST } from './constants'
+	import { CUSTOM_ENDPOINT_KEY, DIRECTORY, ENDPOINTS, HOST } from './constants'
 
 	let { value = $bindable() } = $props()
 
@@ -23,6 +23,8 @@
 	<span class="shrink-0">{pathname}</span>
 
 	<select class="field-sizing-content h-lh min-w-[6ch] shrink-0 input" name="endpoint" bind:value>
+		<option value={CUSTOM_ENDPOINT_KEY}>{CUSTOM_ENDPOINT_KEY}</option>
+
 		{#each Object.entries(DIRECTORY) as [label, endpoints]}
 			<optgroup {label}>
 				{#each Object.keys(endpoints) as e}

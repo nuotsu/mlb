@@ -2,13 +2,14 @@
 	import { mutationObserver } from '$lib/attachments'
 	import CodeBlock from '$ui/code-block/code-block.svelte'
 	import { addButtonHandlers } from '$ui/code-block/utils'
+	import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
 	import EndpointSelect from '$ui/playground/endpoint-select.svelte'
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
 	import type { PageProps } from './$types'
 
 	let { form }: PageProps = $props()
 
-	let endpoint = $derived(form?.endpoint ?? '/{custom}')
+	let endpoint = $derived(form?.endpoint ?? CUSTOM_ENDPOINT_KEY)
 </script>
 
 <section {@attach mutationObserver(addButtonHandlers)}>

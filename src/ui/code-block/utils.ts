@@ -1,3 +1,4 @@
+import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
 import type { Element, ElementContent, Text } from 'hast'
 import { codeToHtml, type BundledLanguage } from 'shiki'
 
@@ -132,7 +133,7 @@ export function addButtonHandlers(mutation: MutationRecord) {
 			if (!href) return
 
 			button.addEventListener('click', () => {
-				select.value = '/{custom}'
+				select.value = CUSTOM_ENDPOINT_KEY
 				select.dispatchEvent(new Event('change'))
 
 				const customInput = document.querySelector('input#custom') as HTMLInputElement
