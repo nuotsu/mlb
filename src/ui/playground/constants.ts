@@ -115,7 +115,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				personId: PRESETS.personId,
 			},
 			queryParams: {
-				hydrate: [{ value: 'currentTeam' }],
+				hydrate: [{ value: 'currentTeam', empty: true }],
 			},
 		},
 		'/api/v1/people/{personId}/stats': {

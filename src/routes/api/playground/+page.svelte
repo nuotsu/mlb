@@ -3,16 +3,24 @@
 	import EndpointSelect from '$ui/playground/endpoint-select.svelte'
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
 	import Response from '$ui/playground/response.svelte'
+	import posthog from 'posthog-js'
 	import type { PageProps } from './$types'
 
 	let { form }: PageProps = $props()
 
 	let endpoint = $derived(form?.endpointPath ?? CUSTOM_ENDPOINT_KEY)
+	let distinctId = $state('anonymous')
+
+	$effect(() => {
+		distinctId = posthog.get_distinct_id() || 'anonymous'
+	})
 </script>
 
 <section class="flex flex-col sm:max-h-dvh">
 	<header class="top-0 z-1 bg-background sm:sticky">
 		<form class="space-ch mx-auto grid max-w-5xl gap-ch p-ch" method="POST">
+			<input name="distinctId" value={distinctId} type="hidden" />
+
 			<div class="flex flex-wrap items-stretch gap-ch max-sm:flex-col">
 				<EndpointSelect bind:value={endpoint} />
 
