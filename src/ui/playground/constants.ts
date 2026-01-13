@@ -151,7 +151,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				sportId: PRESETS.sportId,
 				date: PRESETS.date,
-				hydrate: [{ value: 'linescore' }],
+				season: PRESETS.season.map((s) => ({ ...s, disableRadio: true })),
+				hydrate: [{ value: '' }],
 			},
 		},
 		'/api/v1/schedule/postseason': {
@@ -169,6 +170,9 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 		'/api/v1.1/game/{gamePk}/feed/live': {
 			pathParams: {
 				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
+				fields: [{ value: '' }],
 			},
 		},
 		'/api/v1/game/{gamePk}/boxscore': {

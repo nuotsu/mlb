@@ -24,6 +24,7 @@ declare global {
 		interface EndpointParamProps {
 			value: string
 			label?: string
+			empty?: boolean
 		}
 	}
 }

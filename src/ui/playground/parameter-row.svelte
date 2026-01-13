@@ -1,14 +1,16 @@
 <script lang="ts">
 	import { page } from '$app/state'
+	import { cn } from '$lib/utils'
 
 	let { parameter, values } = $props()
 
 	let form = $derived(page.form)
+	let first = $derived(values[0])
 
 	let input = $derived(
 		parameter === 'custom'
 			? (page.url.searchParams.get('endpoint') ?? '/api/v1/')
-			: (form?.entries[parameter] ?? values[0]?.value),
+			: (form?.entries[parameter] ?? (first.disableRadio ? '' : first.value)),
 	)
 
 	let isDateInput = $derived(['date', 'updatedSince'].includes(parameter))
@@ -27,16 +29,20 @@
 	</th>
 
 	<td class="px-[3px]!" colspan={!hasPresetOptions ? 2 : undefined}>
-		<input
-			id={parameter}
-			name={parameter}
-			class="field-sizing-content w-full min-w-[8ch] input px-[.5ch] tabular-nums sm:min-w-[12ch] {hasPresetOptions
-				? 'max-w-[24ch] text-center'
-				: ''}"
-			bind:value={input}
-			placeholder={values[0]?.value}
-			type={isDateInput ? 'date' : 'search'}
-		/>
+		{#key values}
+			<input
+				id={parameter}
+				name={parameter}
+				class={cn(
+					'field-sizing-content w-full min-w-[8ch] input px-[.5ch] tabular-nums sm:min-w-[16ch]',
+					hasPresetOptions && 'max-w-[24ch] text-center',
+					!input && '[[type=date]]:text-current/50',
+				)}
+				bind:value={input}
+				placeholder={first.value}
+				type={isDateInput ? 'date' : 'search'}
+			/>
+		{/key}
 	</td>
 
 	{#if hasPresetOptions}

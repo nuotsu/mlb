@@ -1,8 +1,8 @@
 <script lang="ts">
-	import CodeBlock from '$ui/code-block/code-block.svelte'
 	import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
 	import EndpointSelect from '$ui/playground/endpoint-select.svelte'
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
+	import Response from '$ui/playground/response.svelte'
 	import type { PageProps } from './$types'
 
 	let { form }: PageProps = $props()
@@ -31,21 +31,11 @@
 		</form>
 	</header>
 
-	{#if form}
-		<CodeBlock
-			code={JSON.stringify(form.result, null, 2)}
-			lang="json"
-			pre={form.fetchUrl}
-			className="text-xs whitespace-pre-wrap"
-		/>
-	{/if}
+	<Response />
 </section>
 
 <style>
 	svg {
-		width: 1em;
-		height: 1em;
-
 		:global(body:has(.loading-results)) &.send-icon {
 			display: none;
 		}

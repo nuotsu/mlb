@@ -51,14 +51,28 @@
 	scrollbar-width: none;
 }
 
-@utility action {
+/* actions, inputs */
+
+@utility button-base {
 	user-select: none;
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	gap: 0.5ch;
-	padding: 0.25ch;
-	@apply bg-accent px-ch transition-transform active:scale-90;
+	padding: 0.25ch 1ch;
+
+	svg {
+		width: 1em;
+		height: 1em;
+	}
+}
+
+@utility action {
+	@apply button-base border border-accent bg-accent transition-transform active:scale-90;
+}
+
+@utility action-tertiary {
+	@apply button-base border border-current/25 transition-transform active:scale-90;
 }
 
 @utility input {

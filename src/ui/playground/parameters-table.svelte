@@ -3,25 +3,17 @@
 	import ParameterRow from './parameter-row.svelte'
 
 	let { endpoint } = $props()
-
-	let pathParams = $derived<Record<string, Docs.EndpointParamProps[]>>(
-		(ENDPOINTS[endpoint.split('?')[0]]?.pathParams as Docs.EndpointParams) ?? {},
-	)
-
-	let queryParams = $derived<Record<string, Docs.EndpointParamProps[]>>(
-		(ENDPOINTS[endpoint.split('?')[0]]?.queryParams as Docs.EndpointParams) ?? {},
-	)
 </script>
 
 <table class="block max-w-full overflow-x-auto py-[.5ch]">
 	<tbody>
-		{@render group('Path params', pathParams)}
-		{@render group('Query params', queryParams)}
+		{@render group('pathParams', 'Path params')}
+		{@render group('queryParams', 'Query params')}
 	</tbody>
 </table>
 
-{#snippet group(label: string, params: Record<string, Docs.EndpointParamProps[]>)}
-	{@const entries = Object.entries(params)}
+{#snippet group(key: string, label: string)}
+	{@const entries = Object.entries(ENDPOINTS[endpoint.split('?')[0]][key] ?? {})}
 
 	{#if entries.length}
 		<tr class="text-left">
