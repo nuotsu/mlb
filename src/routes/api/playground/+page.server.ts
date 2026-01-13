@@ -5,7 +5,7 @@ export const actions = {
 	default: async ({ request }) => {
 		const formData = await request.formData()
 		const endpointPath = formData.get('endpoint-path') as string
-		const endpoint = (formData.get('endpoint') as string) || ''
+		const endpoint = decodeURIComponent(formData.get('endpoint') as string) || ''
 
 		let processedUrl = HOST + endpoint
 

@@ -7,5 +7,5 @@ export const load = async ({ params, url }) => {
 		.filter(Boolean)
 		.join('?')
 
-	redirect(302, '/api/playground?endpoint=' + endpoint)
+	redirect(302, '/api/playground?endpoint=' + encodeURIComponent(endpoint))
 }

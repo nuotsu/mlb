@@ -9,7 +9,9 @@
 
 	let input = $derived(
 		parameter === 'custom'
-			? (page.url.searchParams.get('endpoint') ?? '/api/v1/')
+			? page.url.searchParams.has('endpoint')
+				? decodeURIComponent(page.url.searchParams.get('endpoint')!)
+				: '/api/v1/'
 			: (form?.entries[parameter] ?? (first.empty ? '' : first.value)),
 	)
 
