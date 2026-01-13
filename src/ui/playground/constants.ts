@@ -151,18 +151,30 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				sportId: PRESETS.sportId,
 				date: PRESETS.date,
+				startDate: [{ value: '' }],
+				endDate: [{ value: '' }],
 				season: PRESETS.season.map((s) => ({ ...s, empty: true })),
-				hydrate: [{ value: '' }],
+				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
+				venueIds: PRESETS.venueId.map((v) => ({ ...v, empty: true })),
+				fields: [
+					{
+						value: 'totalGames,dates,games,officialDate,dayNight,teams,team,name',
+						label: 'date + teams',
+						empty: true,
+					},
+				],
 			},
 		},
 		'/api/v1/schedule/postseason': {
 			queryParams: {
-				season: PRESETS.season,
 				gameTypes: [
 					{ value: 'W', label: 'World Series' },
 					{ value: 'L', label: 'League Series' },
 					{ value: 'D', label: 'Division Series' },
 				],
+				season: PRESETS.season,
+				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
+				fields: [{ value: '' }],
 			},
 		},
 	},

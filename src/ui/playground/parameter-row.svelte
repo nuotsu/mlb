@@ -14,7 +14,7 @@
 	)
 
 	let inputType = $derived(
-		['date', 'updatedSince'].includes(parameter)
+		['date', 'startDate', 'endDate', 'updatedSince'].includes(parameter)
 			? 'date'
 			: ['season'].includes(parameter)
 				? 'number'
@@ -40,7 +40,7 @@
 				id={parameter}
 				name={parameter}
 				class={cn(
-					'field-sizing-content w-full min-w-[8ch] input px-[.5ch] tabular-nums sm:min-w-[16ch]',
+					'field-sizing-content w-full min-w-[8ch] input px-[.5ch] tabular-nums sm:min-w-[16ch] sm:[[type=date]]:max-w-[10ch]',
 					hasPresetOptions && 'max-w-[24ch] text-center',
 					!input && '[[type=date]]:text-current/50',
 				)}
