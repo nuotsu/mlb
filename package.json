@@ -30,5 +30,9 @@
 		"tailwindcss": "^4.1.17",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.6"
+	},
+	"dependencies": {
+		"posthog-js": "^1.319.0",
+		"posthog-node": "^5.20.0"
 	}
 }
