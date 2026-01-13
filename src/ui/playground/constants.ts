@@ -151,7 +151,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				sportId: PRESETS.sportId,
 				date: PRESETS.date,
-				season: PRESETS.season.map((s) => ({ ...s, disableRadio: true })),
+				season: PRESETS.season.map((s) => ({ ...s, empty: true })),
 				hydrate: [{ value: '' }],
 			},
 		},

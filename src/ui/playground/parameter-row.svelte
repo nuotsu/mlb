@@ -10,10 +10,16 @@
 	let input = $derived(
 		parameter === 'custom'
 			? (page.url.searchParams.get('endpoint') ?? '/api/v1/')
-			: (form?.entries[parameter] ?? (first.disableRadio ? '' : first.value)),
+			: (form?.entries[parameter] ?? (first.empty ? '' : first.value)),
 	)
 
-	let isDateInput = $derived(['date', 'updatedSince'].includes(parameter))
+	let inputType = $derived(
+		['date', 'updatedSince'].includes(parameter)
+			? 'date'
+			: ['season'].includes(parameter)
+				? 'number'
+				: 'search',
+	)
 
 	let hasPresetOptions = $derived(values.every((value: Docs.EndpointParamProps) => value.label))
 </script>
@@ -40,7 +46,7 @@
 				)}
 				bind:value={input}
 				placeholder={first.value}
-				type={isDateInput ? 'date' : 'search'}
+				type={inputType}
 			/>
 		{/key}
 	</td>

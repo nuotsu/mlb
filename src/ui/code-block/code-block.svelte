@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { count } from '$lib/utils'
 	import Loading from '$ui/loading.svelte'
 	import type { BundledLanguage } from 'shiki'
 	import shiki from './shiki'
@@ -14,10 +15,32 @@
 		pre?: string
 		className?: string
 	} = $props()
+
+	let MAX_LINES = 300
+	let lines = $derived(code.split('\n'))
+	let truncated = $derived(lines.length > MAX_LINES)
+	let codeToRender = $derived(truncated ? lines.slice(0, MAX_LINES).join('\n') : code)
 </script>
 
-{#await shiki({ code, lang, pre, className })}
+{#await shiki({ code: codeToRender, lang, pre, className })}
 	<Loading class="loading-results p-ch" />
 {:then html}
 	{@html html}
+
+	{#if truncated}
+		{@const extraLines = lines.length - MAX_LINES}
+		<menu class="sticky bottom-0 p-ch text-sm">
+			<li>
+				<button class="action-tertiary backdrop-blur" onclick={() => (truncated = false)}>
+					Show {count(extraLines, 'more line', 'more lines')}
+				</button>
+			</li>
+		</menu>
+	{/if}
 {/await}
+
+<style>
+	menu {
+		padding-bottom: max(1ch, env(safe-area-inset-bottom));
+	}
+</style>

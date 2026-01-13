@@ -16,7 +16,7 @@
 	}
 </script>
 
-<label class="flex items-center px-ch">
+<label class="flex items-center">
 	<span class="line-clamp-1 shrink break-all text-current/50">{HOST}</span>
 
 	<select
