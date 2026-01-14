@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state'
 	import { count } from '$lib/utils'
 	import Loading from '$ui/loading.svelte'
 	import type { BundledLanguage } from 'shiki'
@@ -18,7 +19,9 @@
 
 	let MAX_LINES = 500
 	let lines = $derived(code.split('\n'))
-	let truncated = $derived(lines.length > MAX_LINES)
+	let truncated = $derived(
+		lines.length > MAX_LINES ? page.form?.truncated : lines.length > MAX_LINES,
+	)
 	let codeToRender = $derived(truncated ? lines.slice(0, MAX_LINES).join('\n') : code)
 </script>
 
@@ -28,11 +31,10 @@
 	{@html html}
 
 	{#if truncated}
-		{@const extraLines = lines.length - MAX_LINES}
 		<menu class="sticky bottom-0 p-ch text-sm">
 			<li>
 				<button class="action-tertiary backdrop-blur" onclick={() => (truncated = false)}>
-					Show {count(extraLines, 'more line', 'more lines')}
+					Show {count(lines.length - MAX_LINES, 'more line', 'more lines')}
 				</button>
 			</li>
 		</menu>

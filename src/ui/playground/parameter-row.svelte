@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import { cn } from '$lib/utils'
+	import { CUSTOM_ENDPOINT_PATH } from './constants'
 
 	let { parameter, values } = $props()
 
@@ -11,7 +12,7 @@
 		parameter === 'custom'
 			? page.url.searchParams.has('endpoint')
 				? decodeURIComponent(page.url.searchParams.get('endpoint')!)
-				: '/api/v1/'
+				: (form?.entries[parameter] ?? CUSTOM_ENDPOINT_PATH)
 			: (form?.entries[parameter] ?? (first.empty ? '' : first.value)),
 	)
 
@@ -52,6 +53,7 @@
 				bind:value={input}
 				placeholder={first.value}
 				type={inputType}
+				required={parameter === 'custom'}
 			/>
 		{/key}
 	</td>

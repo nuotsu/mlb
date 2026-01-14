@@ -1,7 +1,7 @@
 import type { Element, ElementContent, Text } from 'hast'
 import { codeToHtml, type BundledLanguage } from 'shiki'
 
-let i = 0
+let i: number
 
 export default async function ({
 	code,
@@ -14,6 +14,8 @@ export default async function ({
 	pre?: string
 	className?: string
 }) {
+	i = 0
+
 	return await codeToHtml(code, {
 		theme: 'github-dark-high-contrast',
 		lang,

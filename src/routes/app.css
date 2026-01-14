@@ -51,6 +51,13 @@
 	scrollbar-width: none;
 }
 
+@custom-variant sidebar-open (body:has(#sidebar-open:checked) &);
+@custom-variant sidebar-not-open (body:has(#sidebar-open:not(:checked)) &);
+
+@utility sidebar-closed-hidden {
+	@apply transition-opacity sidebar-not-open:pointer-events-none sidebar-not-open:opacity-0;
+}
+
 /* actions, inputs */
 
 @utility button-base {
@@ -77,7 +84,7 @@
 
 @utility input {
 	border-bottom: 1px dashed var(--color-accent);
-	@apply invalid:border-[red] invalid:text-[red]! hover:bg-accent/25 focus:bg-accent/25;
+	@apply invalid:border-[red] invalid:text-[red]! hover:bg-accent/25 focus:relative focus:bg-accent/25;
 }
 
 @layer vendor {
@@ -92,7 +99,6 @@
 
 		.line:not(details)::before {
 			content: attr(data-line);
-			counter-increment: step;
 			width: var(--line-num-width);
 			margin-right: 1ch;
 			display: inline-block;

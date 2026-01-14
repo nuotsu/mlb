@@ -2,6 +2,8 @@
 	import { page } from '$app/state'
 	import { CUSTOM_ENDPOINT_KEY, DIRECTORY, ENDPOINTS, HOST } from './constants'
 
+	let { protocol, host } = new URL(HOST)
+
 	let { value = $bindable() } = $props()
 
 	let endpoint = $derived(
@@ -17,7 +19,10 @@
 </script>
 
 <label class="flex items-center">
-	<span class="line-clamp-1 shrink break-all text-current/50">{HOST}</span>
+	<span class="flex break-all text-current/50">
+		<span class="shrink-0 max-sm:hidden">{protocol}//</span>
+		<span class="line-clamp-1 shrink">{host}</span>
+	</span>
 
 	<select
 		name="endpoint-path"

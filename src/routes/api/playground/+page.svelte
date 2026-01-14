@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { enhance } from '$app/forms'
 	import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
 	import EndpointSelect from '$ui/playground/endpoint-select.svelte'
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
@@ -18,7 +19,7 @@
 
 <section class="flex flex-col sm:max-h-dvh">
 	<header class="top-0 z-1 bg-background sm:sticky">
-		<form class="space-ch mx-auto grid max-w-5xl gap-ch p-ch" method="POST">
+		<form class="space-ch mx-auto grid max-w-5xl gap-ch p-ch" method="POST" use:enhance>
 			<input name="distinctId" value={distinctId} type="hidden" />
 
 			<div class="flex flex-wrap items-stretch gap-ch max-sm:flex-col">

@@ -1,7 +1,7 @@
 export const HOST = 'https://statsapi.mlb.com'
 
 const today = new Date()
-const offset = Number(today.getMonth() <= 3) // after April
+const offset = Number(today.getMonth() <= 2) // after March
 const currentYear = today.getFullYear() - offset
 const past_N_years = (n = 5) => Array.from({ length: n }, (_, i) => currentYear - n + i + 1)
 
@@ -39,6 +39,10 @@ export const PRESETS = {
 	season: [
 		{ value: currentYear.toString(), label: currentYear.toString() },
 		{ value: (currentYear - 1).toString(), label: (currentYear - 1).toString() },
+	],
+	seasons: [
+		{ value: currentYear.toString(), label: currentYear.toString() },
+		{ value: (currentYear - 1).toString(), label: (currentYear - 1).toString() },
 		{ value: past_N_years().join(','), label: `${past_N_years()[0]}-${currentYear}` },
 	],
 	gameType: [
@@ -72,12 +76,19 @@ export const CUSTOM_ENDPOINT = {
 } as const satisfies Docs.EndpointSchema
 
 export const CUSTOM_ENDPOINT_KEY = Object.keys(CUSTOM_ENDPOINT)[0] as keyof typeof CUSTOM_ENDPOINT
+export const CUSTOM_ENDPOINT_PATH = CUSTOM_ENDPOINT[CUSTOM_ENDPOINT_KEY].pathParams.custom[0].value
 
 export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	Leagues: {
 		'/api/v1/leagues': {
 			queryParams: {
 				leagueIds: PRESETS.leagueId,
+			},
+		},
+		'/api/v1/divisions': {
+			queryParams: {
+				leagueId: [PRESETS.leagueId[0], PRESETS.leagueId[1]],
+				season: PRESETS.season,
 			},
 		},
 	},
@@ -127,7 +138,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 			queryParams: {
 				stats: PRESETS.stats,
-				seasons: PRESETS.season,
+				seasons: PRESETS.seasons,
 				group: PRESETS.group,
 				gameType: PRESETS.gameType,
 			},
@@ -201,6 +212,11 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				],
 			},
 		},
+		// '/api/v1.1/game/{gamePk}/feed/live/timestamps': {
+		// 	pathParams: {
+		// 		gamePk: PRESETS.gamePk,
+		// 	},
+		// },
 		'/api/v1/game/{gamePk}/boxscore': {
 			pathParams: {
 				gamePk: PRESETS.gamePk,

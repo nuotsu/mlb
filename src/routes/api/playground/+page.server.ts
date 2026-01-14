@@ -49,6 +49,7 @@ export const actions = {
 			endpointPath,
 			endpoint,
 			fetchUrl: decodeURIComponent(fetchUrl.toString()),
+			truncated: true,
 			result,
 		}
 	},
