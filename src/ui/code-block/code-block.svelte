@@ -16,7 +16,7 @@
 		className?: string
 	} = $props()
 
-	let MAX_LINES = 300
+	let MAX_LINES = 500
 	let lines = $derived(code.split('\n'))
 	let truncated = $derived(lines.length > MAX_LINES)
 	let codeToRender = $derived(truncated ? lines.slice(0, MAX_LINES).join('\n') : code)

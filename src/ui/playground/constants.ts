@@ -45,7 +45,10 @@ export const PRESETS = {
 		{ value: 'R', label: 'Regular Season' },
 		{ value: 'S', label: 'Spring Training' },
 	],
-	gamePk: [{ value: '813024', label: "'25 World Series Game 7" }],
+	gamePk: [
+		{ value: '813024', label: "'25 World Series Game 7" },
+		{ value: '813031', label: "'25 NLCS Game 4" },
+	],
 	venueId: [
 		{ value: '22', label: 'Dodger Stadium' },
 		{ value: '3313', label: 'Yankee Stadium' },
@@ -174,6 +177,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				],
 				season: PRESETS.season,
 				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
+				// seriesNumber: [{ value: '1', empty: true }],
 				fields: [{ value: '' }],
 			},
 		},
@@ -184,7 +188,17 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				gamePk: PRESETS.gamePk,
 			},
 			queryParams: {
-				fields: [{ value: '' }],
+				timecode: [{ value: '20251102_031510', empty: true }],
+				fields: [
+					{
+						value: 'liveData,plays,allPlays,result,description,playEndTime',
+						label: 'All plays',
+					},
+					{
+						value: 'liveData,plays,currentPlay,result,description,playEndTime',
+						label: 'Current play',
+					},
+				],
 			},
 		},
 		'/api/v1/game/{gamePk}/boxscore': {
