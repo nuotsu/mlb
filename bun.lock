@@ -5,7 +5,7 @@
     "": {
       "name": "mlb",
       "dependencies": {
-        "posthog-js": "^1.323.0",
+        "posthog-js": "^1.324.1",
         "posthog-node": "^5.21.0",
       },
       "devDependencies": {
@@ -145,7 +145,7 @@
 
     "@posthog/core": ["@posthog/core@1.9.1", "", { "dependencies": { "cross-spawn": "^7.0.6" } }, "sha512-kRb1ch2dhQjsAapZmu6V66551IF2LnCbc1rnrQqnR7ArooVyJN9KOPXre16AJ3ObJz2eTfuP7x25BMyS2Y5Exw=="],
 
-    "@posthog/types": ["@posthog/types@1.323.0", "", {}, "sha512-+EQhG1o6CW40PiUhB+49vtDwGqP2BSikpysWqqpc0I0FcmzovJYRWO4M8Ii1e8QuiuB92OsGKng6R4QzlEdV6w=="],
+    "@posthog/types": ["@posthog/types@1.324.1", "", {}, "sha512-OV1DWoLFwYVMiIz6dTkzxOp502brOb8XGh6YHUJ3411Qi8gHyWY1lEGTcWnPFkTKE2KW+6alHlj7g3MMSCZ1kw=="],
 
     "@protobufjs/aspromise": ["@protobufjs/aspromise@1.1.2", "", {}, "sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ=="],
 
@@ -467,7 +467,7 @@
 
     "postcss": ["postcss@8.5.6", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg=="],
 
-    "posthog-js": ["posthog-js@1.323.0", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.208.0", "@opentelemetry/exporter-logs-otlp-http": "^0.208.0", "@opentelemetry/resources": "^2.2.0", "@opentelemetry/sdk-logs": "^0.208.0", "@posthog/core": "1.9.1", "@posthog/types": "1.323.0", "core-js": "^3.38.1", "dompurify": "^3.3.1", "fflate": "^0.4.8", "preact": "^10.28.0", "query-selector-shadow-dom": "^1.0.1", "web-vitals": "^4.2.4" } }, "sha512-CJcHd/JymNOxCDhZQ8n88e/iIXd0QzSvyZ3mDexst+bnMI3uHFl75EnjxyuGEj5AweZ1xWyscXIYVsJ44Ri4jg=="],
+    "posthog-js": ["posthog-js@1.324.1", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.208.0", "@opentelemetry/exporter-logs-otlp-http": "^0.208.0", "@opentelemetry/resources": "^2.2.0", "@opentelemetry/sdk-logs": "^0.208.0", "@posthog/core": "1.9.1", "@posthog/types": "1.324.1", "core-js": "^3.38.1", "dompurify": "^3.3.1", "fflate": "^0.4.8", "preact": "^10.28.0", "query-selector-shadow-dom": "^1.0.1", "web-vitals": "^4.2.4" } }, "sha512-V9mum4EK9BrN6KzVLnamdTcjLBP80mY7q8f+Y3VIvVexUtU6egUwniFeq2efrTFG3sWnU78DERhByePx86nbeQ=="],
 
     "posthog-node": ["posthog-node@5.21.0", "", { "dependencies": { "@posthog/core": "1.9.1" } }, "sha512-M7v/+Zyz/z3ZDC4u896K2Lb/pLbPA1Czo6Tp/WeQ1vuBsJtJajqWO3vRev3BHFTP92nao5YCrU0aIM+Flwbv1A=="],
 
