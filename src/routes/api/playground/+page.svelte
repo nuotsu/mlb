@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
+	import Metadata from '$ui/metadata.svelte'
 	import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
 	import EndpointSelect from '$ui/playground/endpoint-select.svelte'
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
@@ -16,6 +17,11 @@
 		distinctId = posthog.get_distinct_id() || 'anonymous'
 	})
 </script>
+
+<Metadata
+	title="Stats API Playground | MLB.TheOhtani.com"
+	description="A playground for the official MLB Stats API."
+/>
 
 <section class="flex flex-col sm:max-h-dvh">
 	<header class="top-0 z-1 bg-background sm:sticky">

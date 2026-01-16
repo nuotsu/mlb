@@ -16,6 +16,7 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 </svelte:head>
 
 <Sidebar />
@@ -33,5 +34,6 @@
 
 	main {
 		grid-area: main;
+		padding-right: env(safe-area-inset-right);
 	}
 </style>

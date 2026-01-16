@@ -1,6 +1,8 @@
+import { getToday } from '$lib/temporal'
+
 export const HOST = 'https://statsapi.mlb.com'
 
-const today = new Date()
+const today = getToday()
 const offset = Number(today.getMonth() <= 2) // after March
 const currentYear = today.getFullYear() - offset
 const past_N_years = (n = 5) => Array.from({ length: n }, (_, i) => currentYear - n + i + 1)

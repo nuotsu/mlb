@@ -12,7 +12,7 @@
 	})
 
 	afterNavigate(() => {
-		isMobile && (checked = false)
+		if (isMobile) checked = false
 	})
 </script>
 
@@ -24,7 +24,7 @@
 	}}
 	onresize={() => {
 		isMobile = window.matchMedia('(width < 40rem)').matches
-		isMobile && (checked = false)
+		if (isMobile) checked = false
 	}}
 />
 

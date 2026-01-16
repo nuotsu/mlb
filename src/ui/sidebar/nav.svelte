@@ -6,7 +6,7 @@
 
 <nav
 	class={cn(
-		'relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width] sidebar-open:w-50 ',
+		'relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width]',
 		'max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:transition-transform max-sm:sidebar-not-open:-translate-x-full',
 	)}
 >
@@ -19,7 +19,7 @@
 
 		<ul>
 			<li>
-				<a href="/" class="flex items-center gap-1">
+				<a href="/schedule" class="flex items-center gap-1">
 					<CalendarIcon />
 					<span class="sm:sidebar-closed-hidden">Weekly Schedule</span>
 				</a>
@@ -40,9 +40,17 @@
 </nav>
 
 <style>
-	nav :global(svg) {
-		flex-shrink: 0;
-		width: 1em;
-		height: 1em;
+	nav {
+		padding-left: max(1ch, env(safe-area-inset-left));
+
+		:global(body:has(#sidebar-open:checked)) & {
+			width: calc(200px + env(safe-area-inset-right));
+		}
+
+		:global(svg) {
+			flex-shrink: 0;
+			width: 1em;
+			height: 1em;
+		}
 	}
 </style>
