@@ -1,10 +1,14 @@
 <script lang="ts">
+	import { cn } from '$lib/utils'
 	import { CalendarIcon, JsonIcon } from '$ui/icons'
 	import Toggle from './toggle.svelte'
 </script>
 
 <nav
-	class="relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur [grid-area:nav] max-md:inset-y-0 max-md:left-0 max-sm:absolute max-sm:transition-transform sm:w-[calc(2ch+1rem)] sm:transition-[width] sidebar-open:w-50 max-sm:sidebar-not-open:-translate-x-full"
+	class={cn(
+		'relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width] sidebar-open:w-50 ',
+		'max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:transition-transform max-sm:sidebar-not-open:-translate-x-full',
+	)}
 >
 	<Toggle />
 

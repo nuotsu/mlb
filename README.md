@@ -28,4 +28,5 @@ Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view 
 
 ## TODO
 
+- expand on mobile landscape (adding safe-area padding)
 - cold folding > show children count (use `mutationObserver` attachment)
