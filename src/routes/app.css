@@ -94,7 +94,7 @@
 
 		&::before {
 			content: attr(data-pre);
-			@apply mb-ch block text-accent/50;
+			@apply mb-ch block break-all text-accent/50;
 		}
 
 		.line:not(details)::before {

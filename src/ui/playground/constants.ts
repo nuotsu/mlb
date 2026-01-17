@@ -8,7 +8,11 @@ const currentYear = today.getFullYear() - offset
 const past_N_years = (n = 5) => Array.from({ length: n }, (_, i) => currentYear - n + i + 1)
 
 export const PRESETS = {
-	sportId: [{ value: '1', label: 'MLB' }],
+	sportId: [
+		{ value: '1', label: 'MLB' },
+		{ value: '11', label: 'AAA' },
+		{ value: '586', label: 'HS' },
+	],
 	leagueId: [
 		{ value: '103', label: 'American' },
 		{ value: '104', label: 'National' },
@@ -174,7 +178,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				venueIds: PRESETS.venueId.map((v) => ({ ...v, empty: true })),
 				fields: [
 					{
-						value: 'totalGames,dates,games,officialDate,dayNight,teams,team,name',
+						value: 'dates,games,officialDate,dayNight,teams,team,name',
 						label: 'date + teams',
 						empty: true,
 					},
@@ -322,6 +326,20 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				],
 			},
 		},
+		'/api/v1/transactions': {
+			queryParams: {
+				sportId: PRESETS.sportId,
+				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
+				personId: PRESETS.personId.map((p) => ({ ...p, empty: true })),
+				date: PRESETS.date,
+				startDate: [{ value: '' }],
+				endDate: [{ value: '' }],
+				fields: [
+					{ value: 'transactions,description', label: 'description' },
+					{ value: 'transactions,person,id,fullName', label: 'person' },
+				],
+			},
+		},
 		'/api/v1/jobs/{jobType}': {
 			pathParams: {
 				jobType: PRESETS.jobType,
@@ -341,6 +359,10 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				season: PRESETS.season,
 			},
 		},
+	},
+	Meta: {
+		'/api/v1/gameStatus': {},
+		'/api/v1/gameTypes': {},
 	},
 } as const
 

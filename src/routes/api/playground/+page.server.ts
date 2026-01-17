@@ -25,11 +25,11 @@ export const actions = {
 
 		const fetchUrl = new URL(processedUrl)
 
-		fetchUrl.searchParams.forEach((value, key) => {
-			if (!value) {
+		for (const [key, value] of Array.from(fetchUrl.searchParams.entries())) {
+			if (value === '') {
 				fetchUrl.searchParams.delete(key)
 			}
-		})
+		}
 
 		const results = await fetch(fetchUrl)
 		const result = await results.json()

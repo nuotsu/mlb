@@ -1,5 +1,12 @@
-export const getToday = () => new Date(Date.now() - new Date().getTimezoneOffset() * 60 * 1000)
+export function getToday() {
+	return new Date(Date.now() - new Date().getTimezoneOffset() * 60 * 1000)
+}
 
-export function formatDate(date: Date, options: Intl.DateTimeFormatOptions = {}) {
-	return new Intl.DateTimeFormat('en-US', options).format(date)
+export function formatDate(
+	date: Date | string,
+	options: Intl.DateTimeFormatOptions & { locale?: string } = { locale: 'en-US' },
+) {
+	return new Intl.DateTimeFormat(options.locale, options).format(
+		typeof date === 'string' ? new Date(date) : date,
+	)
 }

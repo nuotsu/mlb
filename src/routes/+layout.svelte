@@ -21,7 +21,7 @@
 
 <Sidebar />
 
-<main class="isolate">
+<main class="isolate max-h-dvh overflow-y-auto">
 	{@render children()}
 </main>
 

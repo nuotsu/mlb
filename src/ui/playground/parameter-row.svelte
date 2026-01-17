@@ -21,10 +21,11 @@
 			? 'date'
 			: ['season', 'seriesNumber'].includes(parameter)
 				? 'number'
-				: 'search',
+				: undefined,
 	)
 
 	let hasPresetOptions = $derived(values.every((value: Docs.EndpointParamProps) => value.label))
+	let clearable = $derived(inputType === 'date' && input)
 </script>
 
 <tr class="align-top *:px-[.5ch]">
@@ -37,13 +38,13 @@
 		</label>
 	</th>
 
-	<td class="px-[3px]!" colspan={!hasPresetOptions ? 2 : undefined}>
+	<td class="px-[3px]!" colspan={!hasPresetOptions && !clearable ? 2 : undefined}>
 		{#key values}
 			<input
 				id={parameter}
 				name={parameter}
 				class={cn(
-					'field-sizing-content w-full min-w-[8ch] input px-[.5ch] tabular-nums sm:min-w-[16ch] sm:[[type=date]]:max-w-[10ch]',
+					'input field-sizing-content w-full min-w-[8ch] px-[.5ch] tabular-nums sm:min-w-[16ch] sm:[[type=date]]:max-w-[10ch]',
 					hasPresetOptions && 'max-w-[24ch]',
 					!input && '[[type=date]]:text-current/50',
 					['custom', 'fields', 'hydrate', 'timecode'].includes(parameter)
@@ -58,9 +59,9 @@
 		{/key}
 	</td>
 
-	{#if hasPresetOptions}
-		<td class="w-full">
-			<div class="flex flex-wrap gap-x-ch">
+	{#if hasPresetOptions || clearable}
+		<td class="w-full align-middle">
+			<div class="flex flex-wrap items-center gap-x-ch">
 				{#each values as { value, label }}
 					{#if label}
 						<label class="whitespace-nowrap">
@@ -74,6 +75,12 @@
 						</label>
 					{/if}
 				{/each}
+
+				{#if input}
+					<button type="button" class="text-xs text-[red]" onclick={() => (input = '')}>
+						Clear
+					</button>
+				{/if}
 			</div>
 		</td>
 	{/if}
