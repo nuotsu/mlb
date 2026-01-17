@@ -5,6 +5,7 @@
 	import Loading from '$ui/loading.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import DatePicker from '$ui/schedule/date-picker.svelte'
+	import Game from '$ui/schedule/game.svelte'
 	import { scheduleStore } from '$ui/schedule/store.svelte'
 
 	const { startDate, endDate } = $derived(scheduleStore)
@@ -23,7 +24,8 @@
 				day: '2-digit',
 			}),
 			fields:
-				'dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,teams,away,home,team,id,name,leagueRecord,wins,losses,pct,venue,seriesDescription',
+				'dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,teams,away,home,team,id,name,leagueRecord,wins,losses,venue,description',
+			hydrate: 'teams',
 		})
 	}
 </script>
@@ -37,29 +39,40 @@
 		<Loading>Loading schedule...</Loading>
 	{:then { dates }}
 		{#each dates as date}
-			<details open>
-				<summary>
-					{formatDate(date.date + 'T00:00:00', { month: 'short', day: 'numeric' })}
-					—
-					{count(date.games.length, 'game')}
+			<details class="group [&+&]:mt-ch" open>
+				<summary class="flex items-center gap-ch">
+					{formatDate(date.date + 'T00:00:00', {
+						weekday: 'short',
+						month: 'short',
+						day: 'numeric',
+					})}
+
+					<a class="order-last underline not-hover:decoration-dashed" href="/schedule/{date.date}">
+						{count(date.games.length, 'game')}
+					</a>
 				</summary>
 
-				{#each date.games as game}
-					<div class="grid grid-cols-[auto_1fr] gap-ch">
-						<time class="tabular-nums" datetime={game.gameDate}>
-							{formatDate(game.gameDate, { hour: '2-digit', minute: '2-digit' })}
-						</time>
-
-						<div>
-							<span class="inline-block">{game.teams.away.team.name}</span>
-							@
-							<span class="inline-block">{game.teams.home.team.name}</span>
-						</div>
-					</div>
-				{/each}
+				<div class="columns-[450px] *:break-inside-avoid">
+					{#each date.games as game}
+						<Game {game} />
+					{/each}
+				</div>
 			</details>
 		{:else}
-			<div>No games.</div>
+			<div class="text-center">No games.</div>
 		{/each}
 	{/await}
 </section>
+
+<style>
+	details {
+		summary::after {
+			content: '▹';
+			transition: rotate var(--default-transition-duration) ease-in-out;
+		}
+
+		&[open] summary::after {
+			rotate: 90deg;
+		}
+	}
+</style>

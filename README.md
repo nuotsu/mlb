@@ -2,13 +2,13 @@
 
 ## MLB Scorebug
 
-> https://mlb.theohtani.com
+- https://mlb.theohtani.com/schedule
 
 _Coming soon..._
 
 ## MLB Stats API Playground
 
-> https://mlb.theohtani.com/api/playground
+- https://mlb.theohtani.com/api/playground
 
 Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view API responses in the playground.
 
@@ -26,7 +26,13 @@ Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view 
 - https://github.com/toddrob99/MLB-StatsAPI/wiki/Endpoints
 - https://gdx.mlb.com/components/copyright.txt
 
+## Archive
+
+- https://sb3.theohtani.com
+- https://clubhouse.theohtani.com
+- https://sb2.theohtani.com
+- https://sb1.theohtani.com
+
 ## TODO
 
-- expand on mobile landscape (adding safe-area padding)
 - cold folding > show children count (use `mutationObserver` attachment)

@@ -69,6 +69,7 @@ export const PRESETS = {
 	],
 	date: [
 		{ value: today.toISOString().split('T')[0], label: 'Today' },
+		{ value: '2026-03-26', label: "'26 Opening Day" },
 		{ value: '2025-11-01', label: "'25 World Series Game 7" },
 	],
 } satisfies Docs.EndpointParams
@@ -226,6 +227,9 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 		'/api/v1/game/{gamePk}/boxscore': {
 			pathParams: {
 				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
+				fields: [{ value: '' }],
 			},
 		},
 		'/api/v1/game/{gamePk}/linescore': {

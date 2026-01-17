@@ -33,7 +33,7 @@
 		</ul>
 
 		<ul class="mt-auto text-sm sm:sidebar-closed-hidden">
-			<li><a href="https://github.com/nuotsu/mlb">View on GitHub</a></li>
+			<li><a href="https://github.com/nuotsu/mlb">Star on GitHub</a></li>
 			<li><a href="https://nuotsu.dev">Built by nuotsu</a></li>
 		</ul>
 	</div>
