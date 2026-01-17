@@ -18,6 +18,8 @@
 		<input
 			class="sr-only"
 			type="date"
+			min="1901-01-01"
+			max={`${new Date().getFullYear() + 1}-12-31`}
 			onclick={(e) => (e.target as HTMLInputElement)?.showPicker()}
 			bind:value={scheduleStore.today}
 		/>

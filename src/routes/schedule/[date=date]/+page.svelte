@@ -1,50 +1,44 @@
 <script lang="ts">
-	import { fetchMLB } from '$lib/fetch'
 	import { formatDate } from '$lib/temporal'
 	import { count } from '$lib/utils'
-	import Loading from '$ui/loading.svelte'
 	import Game from '$ui/schedule/game.svelte'
+	import type { PageProps } from './$types'
 
-	let { params } = $props()
-	let totalGames = $state(0)
+	let { params, data }: PageProps = $props()
 
-	async function fetchSchedule() {
-		const data = await fetchMLB<MLB.ScheduleResponse>('/api/v1/schedule', {
-			sportId: '1',
-			date: params.date,
-			fields:
-				'totalGames,dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,teams,away,home,team,id,name,leagueRecord,wins,losses,venue,description',
-			hydrate: 'teams',
-		})
-
-		totalGames = data.totalGames
-
-		return data
-	}
+	const { totalGames, dates } = $derived(data.schedule)
 </script>
 
 <header class="p-ch text-center">
 	<h1>
-		{formatDate(params.date + 'T00:00:00', { weekday: 'long', month: 'long', day: 'numeric' })}
+		<small class="block leading-rlh">
+			{formatDate(params.date + 'T00:00:00', {
+				weekday: 'long',
+			})}
+		</small>
+
+		{formatDate(params.date + 'T00:00:00', {
+			month: 'long',
+			day: 'numeric',
+			year: 'numeric',
+		})}
 	</h1>
 
-	{#if totalGames > 0}
-		<p>{count(totalGames, 'game')}</p>
-	{/if}
+	<p>
+		{#if totalGames}
+			{count(totalGames, 'game')}
+		{:else}
+			No games
+		{/if}
+	</p>
 </header>
 
 <section class="p-ch">
-	{#await fetchSchedule()}
-		<Loading>Loading {params.date} schedule...</Loading>
-	{:then { dates }}
-		{#each dates as date}
-			<div class="columns-[450px] *:break-inside-avoid">
-				{#each date.games as game}
-					<Game {game} />
-				{/each}
-			</div>
-		{:else}
-			<div class="text-center">No games.</div>
-		{/each}
-	{/await}
+	{#each dates as date}
+		<div class="columns-[450px] *:break-inside-avoid">
+			{#each date.games as game}
+				<Game {game} />
+			{/each}
+		</div>
+	{/each}
 </section>

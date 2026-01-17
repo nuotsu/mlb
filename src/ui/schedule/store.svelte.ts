@@ -4,7 +4,7 @@ import { formatDate, getToday } from '$lib/temporal'
 const sampleDates = ['2026-03-26', '2024-09-17']
 
 export const scheduleStore = $state({
-	today: formatDate(dev ? sampleDates[0] : getToday(), {
+	today: formatDate(dev ? sampleDates[1] : getToday(), {
 		locale: 'en-CA',
 		year: 'numeric',
 		month: '2-digit',

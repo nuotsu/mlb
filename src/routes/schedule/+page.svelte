@@ -24,7 +24,7 @@
 				day: '2-digit',
 			}),
 			fields:
-				'dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,teams,away,home,team,id,name,leagueRecord,wins,losses,venue,description',
+				'dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,reason,teams,away,home,team,id,name,leagueRecord,wins,losses,venue,description',
 			hydrate: 'teams',
 		})
 	}
@@ -59,7 +59,7 @@
 				</div>
 			</details>
 		{:else}
-			<div class="text-center">No games.</div>
+			<div class="text-center">No games</div>
 		{/each}
 	{/await}
 </section>

@@ -54,6 +54,8 @@
 				bind:value={input}
 				placeholder={first.value}
 				type={inputType}
+				min={inputType === 'date' ? '1901-01-01' : undefined}
+				max={inputType === 'date' ? `${new Date().getFullYear() + 1}-12-31` : undefined}
 				required={parameter === 'custom'}
 			/>
 		{/key}
