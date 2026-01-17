@@ -17,10 +17,8 @@
 </script>
 
 <svelte:window
-	onkeydown={({ key }) => {
-		if (key === '\\' && document.activeElement === document.body) {
-			checked = !checked
-		}
+	onkeydown={({ key, metaKey }) => {
+		if (key === '\\' && metaKey) checked = !checked
 	}}
 	onresize={() => {
 		isMobile = window.matchMedia('(width < 40rem)').matches
@@ -31,7 +29,7 @@
 <label
 	class="absolute top-ch right-0 z-1 grid h-lh place-content-center px-ch transition-transform max-sm:sidebar-not-open:translate-x-full"
 	aria-label="Toggle sidebar"
-	title="Toggle sidebar (\)"
+	title="Toggle sidebar (⌘ + \)"
 >
 	<input id="sidebar-open" class="sr-only" type="checkbox" bind:checked />
 
