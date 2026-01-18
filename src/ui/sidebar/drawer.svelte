@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Toggle from './toggle.svelte'
-	import { cn } from '$lib/utils'
 	import { browser } from '$app/environment'
+	import { cn } from '$lib/utils'
+	import Toggle from './toggle.svelte'
 
 	let { children } = $props()
 
@@ -16,7 +16,7 @@
 <nav
 	class={cn(
 		'relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width] dark:bg-neutral-800/50',
-		'max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:transition-transform max-sm:sidebar-not-open:-translate-x-full max-sm:sidebar-open:translate-x-(--swipe-x) max-sm:active:transition-none',
+		'max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:transition-transform max-sm:active:transition-none max-sm:sidebar-open:translate-x-(--swipe-x) max-sm:sidebar-not-open:-translate-x-full',
 	)}
 	style:--swipe-x="{swipeX}px"
 	ontouchstart={(e) => {
@@ -26,11 +26,11 @@
 		swipeX = Math.min(0, e.touches[0].clientX - startX)
 	}}
 	ontouchend={() => {
-		if (browser && swipeX < (clientWidth * -0.25)) {
+		if (browser && swipeX < clientWidth * -0.25) {
 			const input = document.getElementById('sidebar-open') as HTMLInputElement
 			if (input) input.checked = false
 		}
-		
+
 		startX = 0
 		swipeX = 0
 	}}

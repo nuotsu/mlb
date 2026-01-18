@@ -35,4 +35,5 @@ Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view 
 
 ## TODO
 
+- days until [WBC, ST, Opening Day]
 - cold folding > show children count (use `mutationObserver` attachment)

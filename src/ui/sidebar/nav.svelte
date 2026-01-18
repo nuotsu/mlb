@@ -4,9 +4,7 @@
 </script>
 
 <Drawer>
-	<div
-		class="flex h-full flex-col gap-ch overflow-clip"
-	>
+	<div class="flex h-full flex-col gap-ch overflow-clip">
 		<div class="sm:sidebar-closed-hidden">
 			<a href="/"> MLB.TheOhtani.com </a>
 		</div>

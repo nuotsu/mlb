@@ -5,8 +5,11 @@
 	--font-sans: 'Geist', sans-serif;
 	--font-mono: 'Geist Mono', monospace;
 
-	--color-background: #fff;
-	--color-foreground: #000;
+	--color-dark: #000;
+	--color-light: #fff;
+
+	--color-background: var(--color-light);
+	--color-foreground: var(--color-dark);
 	--color-accent: #72f088; /* var(--color-green-500); */
 
 	--spacing-ch: 1ch;
@@ -20,14 +23,14 @@
 @layer base {
 	@media (prefers-color-scheme: dark) {
 		:root {
-			--color-background: #000;
-			--color-foreground: #fff;
+			--color-background: var(--color-dark);
+			--color-foreground: var(--color-light);
 		}
 	}
 
 	::selection {
 		background-color: var(--color-accent);
-		color: #000;
+		color: var(--color-dark);
 	}
 
 	html {

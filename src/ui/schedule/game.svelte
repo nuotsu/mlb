@@ -1,15 +1,18 @@
 <script lang="ts">
 	import { fetchMLB } from '$lib/fetch'
 	import { formatDate } from '$lib/temporal'
+	import { cn } from '$lib/utils'
 	import Loading from '$ui/loading.svelte'
 
 	let { game }: { game: MLB.Game } = $props()
 
 	async function fetchBoxscore() {
 		return await fetchMLB<MLB.Boxscore>(`/api/v1/game/${game.gamePk}/boxscore`, {
-			fields: 'teams,away,team,id,teamName',
+			fields: 'teams,away,team,id,name,teamName,sport',
 		})
 	}
+
+	const lightOnDarkTeams = ['Giants', 'Marlins', 'Padres', 'Rays']
 </script>
 
 <article class="grid items-center gap-x-ch" data-gamePk={game.gamePk}>
@@ -43,16 +46,21 @@
 
 {#snippet team(team: MLB.Team)}
 	{@const src = `https://midfield.mlbstatic.com/v1/team/${team.id}/spots`}
+	{@const isLightOnDarkTeam =
+		(team as MLB.TeamDetailed).sport?.id !== 1 || lightOnDarkTeams.includes(team.teamName ?? '')}
 
 	<figure
-		class="relative inline-flex items-center gap-[.5ch] px-[.5ch] not-dark:before:opacity-10"
+		class={cn(
+			'relative inline-flex items-center gap-[.5ch] px-[.5ch] not-dark:before:opacity-10',
+			isLightOnDarkTeam && 'dark:text-dark',
+		)}
 		style:--bg="url('{src}/32')"
 	>
-		<picture>
+		<picture class="contents">
 			<source srcset="{src}/72" media="(prefers-color-scheme: dark)" />
 
 			<img
-				class="size-lh"
+				class="size-lh shrink-0"
 				src="https://www.mlbstatic.com/team-logos/team-cap-on-light/{team.id}.svg"
 				width="72"
 				height="72"
@@ -61,7 +69,7 @@
 			/>
 		</picture>
 
-		<figcaption>{team.teamName}</figcaption>
+		<figcaption class="leading-none line-clamp-1 break-all">{team.teamName}</figcaption>
 	</figure>
 {/snippet}
 
