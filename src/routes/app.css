@@ -19,13 +19,13 @@
 }
 
 @custom-variant hover (&:hover);
+@custom-variant dark (body:has([data-color-scheme='dark']) &);
+@custom-variant not-dark (body:has(#toggle-color-scheme:not([data-color-scheme='dark'])) &);
 
 @layer base {
-	@media (prefers-color-scheme: dark) {
-		:root {
-			--color-background: var(--color-dark);
-			--color-foreground: var(--color-light);
-		}
+	body:has([data-color-scheme='dark']) {
+		--color-background: var(--color-dark);
+		--color-foreground: var(--color-light);
 	}
 
 	::selection {

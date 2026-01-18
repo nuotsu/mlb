@@ -2,6 +2,7 @@
 	import { formatDate, getToday } from '$lib/temporal'
 	import { CalendarIcon, CalendarTodayIcon, JsonIcon } from '$ui/icons'
 	import Drawer from './drawer.svelte'
+	import ToggleColorScheme from './toggle-color-scheme.svelte'
 
 	const today = formatDate(getToday(), {
 		locale: 'en-CA',
@@ -39,7 +40,8 @@
 		</ul>
 
 		<ul class="mt-auto text-sm sm:sidebar-closed-hidden">
-			<li><a href="https://github.com/nuotsu/mlb">Star on GitHub</a></li>
+			<li><ToggleColorScheme /></li>
+			<li><a href="https://github.com/nuotsu/mlb">View on GitHub</a></li>
 			<li><a href="https://nuotsu.dev">Built by nuotsu</a></li>
 		</ul>
 	</div>

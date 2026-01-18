@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment'
 	import { cn } from '$lib/utils'
-	import Toggle from './toggle.svelte'
+	import ToggleSidebar from './toggle-sidebar.svelte'
 
 	let { children } = $props()
 
@@ -36,7 +36,7 @@
 	}}
 	bind:clientWidth
 >
-	<Toggle />
+	<ToggleSidebar />
 
 	{@render children()}
 </nav>
