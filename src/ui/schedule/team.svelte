@@ -6,11 +6,13 @@
 	const darkOnLightTeams = [
 		'Asheville Tourists',
 		'Miami Marlins',
+		'Minnesota Golden Gophers',
 		'San Diego Padres',
 		'San Francisco Giants',
 		'Sugar Land Space Cowboys',
 		'Sultanes de Monterrey',
 		'Tampa Bay Rays',
+		'Northeastern Huskies',
 	]
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)

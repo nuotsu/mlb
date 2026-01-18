@@ -23,8 +23,12 @@
 	description="A playground for the official MLB Stats API."
 />
 
+<header class="p-ch text-center">
+	<h1>Stats API Playground</h1>
+</header>
+
 <section class="flex flex-col sm:max-h-dvh">
-	<header class="top-0 z-1 bg-background sm:sticky">
+	<article class="top-0 z-1 bg-background sm:sticky">
 		<form class="space-ch mx-auto grid max-w-5xl gap-ch p-ch" method="POST" use:enhance>
 			<input name="distinctId" value={distinctId} type="hidden" />
 
@@ -44,7 +48,7 @@
 
 			<ParametersTable {endpoint} />
 		</form>
-	</header>
+	</article>
 
 	<Response />
 </section>

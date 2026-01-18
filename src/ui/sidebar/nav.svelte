@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatDate, getToday } from '$lib/temporal'
-	import { CalendarTodayIcon, CalendarIcon, JsonIcon } from '$ui/icons'
+	import { CalendarIcon, CalendarTodayIcon, JsonIcon } from '$ui/icons'
 	import Drawer from './drawer.svelte'
 
 	const today = formatDate(getToday(), {

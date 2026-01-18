@@ -3,17 +3,15 @@
 	import { scheduleStore } from './store.svelte'
 
 	const { startDate, endDate } = $derived(scheduleStore)
+
+	const isSameMonth = $derived(startDate.getMonth() === endDate.getMonth())
 </script>
 
 <fieldset class="flex justify-center">
-	<label class="min-w-[13ch] text-center">
-		{formatDate(startDate, { month: 'short', day: 'numeric' })}
+	<label class="min-w-[15ch] text-center">
+		{formatDate(startDate, { month: isSameMonth ? 'long' : 'short', day: 'numeric' })}
 		-
-		{#if startDate.getMonth() === endDate.getMonth()}
-			{formatDate(endDate, { day: 'numeric' })}
-		{:else}
-			{formatDate(endDate, { month: 'short', day: 'numeric' })}
-		{/if}
+		{formatDate(endDate, isSameMonth ? { day: 'numeric' } : { month: 'short', day: 'numeric' })}
 
 		<input
 			class="sr-only"

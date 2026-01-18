@@ -137,6 +137,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				personId: PRESETS.personId,
 			},
 			queryParams: {
+				fields: [{ value: '' }],
 				hydrate: [{ value: 'currentTeam', empty: true }],
 			},
 		},

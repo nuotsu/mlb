@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Metadata from '$ui/metadata.svelte'
-	import Season from '$ui/season.svelte'
+	import SeasonInfo from '$ui/season/season-info.svelte'
 </script>
 
 <Metadata
@@ -10,4 +10,4 @@
 
 <header class="mx-auto max-w-5xl p-ch text-center">Welcome to MLB.TheOhtani.com</header>
 
-<Season />
+<SeasonInfo />
