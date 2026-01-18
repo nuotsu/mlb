@@ -5,12 +5,18 @@
 	import { count } from '$lib/utils'
 	import Loading from '$ui/loading.svelte'
 	import Metadata from '$ui/metadata.svelte'
-	import DatePicker from '$ui/schedule/date-picker.svelte'
+	import WeekPicker from '$ui/schedule/week-picker.svelte'
 	import Game from '$ui/schedule/game.svelte'
-	import { scheduleStore } from '$ui/schedule/store.svelte'
+	import { weekStore } from '$ui/schedule/store.svelte'
 
 	const sportId = $derived(page.url.searchParams.get('sportId') || '1')
-	const { startDate, endDate } = $derived(scheduleStore)
+	const date = $derived(page.url.searchParams.get('date') || '')
+
+	$effect(() => {
+		if (date) weekStore.today = date
+	})
+
+	const { startDate, endDate } = $derived(weekStore)
 
 	async function fetchSchedule() {
 		return await fetchMLB<MLB.ScheduleResponse>('/api/v1/schedule', {
@@ -35,7 +41,7 @@
 <Metadata title="Schedule | MLB.TheOhtani.com" description="Weekly calendar of MLB games." />
 
 <section class="p-ch">
-	<DatePicker />
+	<WeekPicker />
 
 	{#await fetchSchedule()}
 		<Loading>Loading schedule...</Loading>

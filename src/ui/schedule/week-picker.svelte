@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { formatDate } from '$lib/temporal'
-	import { scheduleStore } from './store.svelte'
+	import { weekStore } from './store.svelte'
 
-	const { startDate, endDate } = $derived(scheduleStore)
+	const { startDate, endDate } = $derived(weekStore)
 
 	const isSameMonth = $derived(startDate.getMonth() === endDate.getMonth())
 </script>
@@ -19,12 +19,12 @@
 			min="1901-01-01"
 			max={`${new Date().getFullYear() + 1}-12-31`}
 			onclick={(e) => (e.target as HTMLInputElement)?.showPicker()}
-			bind:value={scheduleStore.today}
+			bind:value={weekStore.today}
 		/>
 	</label>
 
-	<button class="order-first" onclick={() => scheduleStore.addWeek(-1)}>{'<'}</button>
-	<button class="order-last" onclick={() => scheduleStore.addWeek()}>{'>'}</button>
+	<button class="order-first" onclick={() => weekStore.addWeek(-1)}>{'<'}</button>
+	<button class="order-last" onclick={() => weekStore.addWeek()}>{'>'}</button>
 </fieldset>
 
 <style>

@@ -1,10 +1,7 @@
-import { dev } from '$app/environment'
 import { formatDate, getToday } from '$lib/temporal'
 
-const sampleDates = ['2026-03-26', '2024-09-17']
-
-export const scheduleStore = $state({
-	today: formatDate(dev ? sampleDates[0] : getToday(), {
+export const weekStore = $state({
+	today: formatDate(getToday(), {
 		locale: 'en-CA',
 		year: 'numeric',
 		month: '2-digit',
@@ -33,5 +30,7 @@ export const scheduleStore = $state({
 				day: '2-digit',
 			},
 		)
+
+		window.history.replaceState({}, '', window.location.pathname)
 	},
 })
