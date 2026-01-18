@@ -16,6 +16,9 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<link rel="preconnect" href="https://statsapi.mlb.com" />
+	<link rel="preconnect" href="https://www.mlbstatic.com" />
+	<link rel="preconnect" href="https://midfield.mlbstatic.com" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 </svelte:head>
 

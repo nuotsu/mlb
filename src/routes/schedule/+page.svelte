@@ -52,7 +52,7 @@
 					</a>
 				</summary>
 
-				<div class="columns-[450px] *:break-inside-avoid">
+				<div class="mb-lh columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
 					{#each date.games as game}
 						<Game {game} />
 					{/each}

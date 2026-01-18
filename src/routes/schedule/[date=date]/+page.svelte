@@ -35,7 +35,7 @@
 
 <section class="p-ch">
 	{#each dates as date}
-		<div class="columns-[450px] *:break-inside-avoid">
+		<div class="columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
 			{#each date.games as game}
 				<Game {game} />
 			{/each}

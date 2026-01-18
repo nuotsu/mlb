@@ -4,9 +4,12 @@
 	import Toggle from './toggle.svelte'
 </script>
 
+<label for="sidebar-open" class="fixed inset-0 z-1 cursor-default sm:hidden sidebar-not-open:hidden"
+></label>
+
 <nav
 	class={cn(
-		'relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width]',
+		'relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width] dark:bg-neutral-800/50',
 		'max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:transition-transform max-sm:sidebar-not-open:-translate-x-full',
 	)}
 >
