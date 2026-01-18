@@ -1,6 +1,14 @@
 <script lang="ts">
-	import { CalendarIcon, JsonIcon } from '$ui/icons'
+	import { formatDate, getToday } from '$lib/temporal'
+	import { CalendarTodayIcon, CalendarIcon, JsonIcon } from '$ui/icons'
 	import Drawer from './drawer.svelte'
+
+	const today = formatDate(getToday(), {
+		locale: 'en-CA',
+		year: 'numeric',
+		month: '2-digit',
+		day: '2-digit',
+	})
 </script>
 
 <Drawer>
@@ -9,17 +17,23 @@
 			<a href="/"> MLB.TheOhtani.com </a>
 		</div>
 
-		<ul>
+		<ul class="[&_span]:sm:sidebar-closed-hidden">
 			<li>
 				<a href="/schedule" class="flex items-center gap-1">
 					<CalendarIcon />
-					<span class="sm:sidebar-closed-hidden">Weekly Schedule</span>
+					<span>Weekly Schedule</span>
+				</a>
+			</li>
+			<li>
+				<a href="/schedule/{today}" class="flex items-center gap-1">
+					<CalendarTodayIcon />
+					<span>Today's Games</span>
 				</a>
 			</li>
 			<li>
 				<a href="/api/playground" class="flex items-center gap-1">
 					<JsonIcon />
-					<span class="sm:sidebar-closed-hidden">Stats API Playground</span>
+					<span>Stats API Playground</span>
 				</a>
 			</li>
 		</ul>

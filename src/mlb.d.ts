@@ -1247,6 +1247,15 @@ declare global {
 			abbreviation?: string
 		}
 
+		// Season Types
+
+		/**
+		 * Season response
+		 */
+		interface SeasonResponse extends ApiResponse<SeasonDateInfo[]> {
+			seasons: SeasonDateInfo[]
+		}
+
 		/**
 		 * Season date information
 		 */

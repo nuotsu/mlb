@@ -316,6 +316,12 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	Other: {
 		'/api/v1/sports': {},
+		'/api/v1/seasons': {
+			queryParams: {
+				sportId: PRESETS.sportId,
+				season: PRESETS.season,
+			},
+		},
 		'/api/v1/venues': {
 			queryParams: {
 				venueIds: PRESETS.venueId,
