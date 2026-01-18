@@ -1,23 +1,12 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
+	import { colorSchemeStore } from '$ui/store.svelte'
 
-	let colorScheme = $derived(browser ? localStorage.getItem('color-scheme') || 'auto' : 'auto')
-
-	let mode = $derived.by(() => {
-		if (browser) {
-			return colorScheme === 'auto'
-				? window.matchMedia('(prefers-color-scheme: dark)').matches
-					? 'dark'
-					: 'light'
-				: colorScheme
-		}
-		return colorScheme
-	})
+	let mode = $derived(colorSchemeStore.mode)
 
 	$effect(() => {
 		const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 		function handleChange() {
-			if (colorScheme === 'auto') mode // re-derive mode
+			if (colorSchemeStore.colorScheme === 'auto') mode // re-derive mode
 		}
 		mediaQuery.addEventListener('change', handleChange)
 		return () => mediaQuery.removeEventListener('change', handleChange)
@@ -32,7 +21,7 @@
 	id="toggle-color-scheme"
 	data-color-scheme={mode}
 	onclick={() => {
-		colorScheme = mode === 'dark' ? 'light' : 'dark'
+		colorSchemeStore.colorScheme = mode === 'dark' ? 'light' : 'dark'
 	}}
 >
 	{mode === 'dark' ? 'Dark' : 'Light'} mode

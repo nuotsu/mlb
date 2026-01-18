@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { cn } from '$lib/utils'
+	import { colorSchemeStore } from '$ui/store.svelte'
 
 	let { team }: { team: MLB.Team } = $props()
+	let colorScheme = $derived(colorSchemeStore.colorScheme)
 
 	const darkOnLightTeams = [
 		'Asheville Tourists',
@@ -30,7 +32,7 @@
 	style:--bg="url('{src}/32')"
 >
 	<picture class="contents">
-		<source srcset="{src}/72" media="(prefers-color-scheme: dark)" />
+		<source srcset="{src}/72" media={colorScheme === 'dark' ? undefined : '()'} />
 
 		<img
 			class="size-lh shrink-0"
@@ -39,6 +41,9 @@
 			height="72"
 			alt={team.name}
 			draggable="false"
+			onerror={(e) => {
+				;(e.currentTarget as HTMLImageElement).src = `${src}/72`
+			}}
 		/>
 	</picture>
 
