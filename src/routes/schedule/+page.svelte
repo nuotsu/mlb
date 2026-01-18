@@ -5,9 +5,9 @@
 	import { count } from '$lib/utils'
 	import Loading from '$ui/loading.svelte'
 	import Metadata from '$ui/metadata.svelte'
-	import WeekPicker from '$ui/schedule/week-picker.svelte'
 	import Game from '$ui/schedule/game.svelte'
 	import { weekStore } from '$ui/schedule/store.svelte'
+	import WeekPicker from '$ui/schedule/week-picker.svelte'
 
 	const sportId = $derived(page.url.searchParams.get('sportId') || '1')
 	const date = $derived(page.url.searchParams.get('date') || '')
