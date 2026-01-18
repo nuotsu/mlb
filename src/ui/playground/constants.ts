@@ -11,6 +11,7 @@ export const PRESETS = {
 	sportId: [
 		{ value: '1', label: 'MLB' },
 		{ value: '11', label: 'AAA' },
+		{ value: '51', label: "Int'l" },
 		{ value: '586', label: 'HS' },
 	],
 	leagueId: [

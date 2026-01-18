@@ -68,7 +68,7 @@
 <style>
 	article {
 		grid-template:
-			'.			description' 1fr
+			'. description' 1fr
 			'status	boxscore' auto / auto 1fr;
 	}
 

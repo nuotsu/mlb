@@ -25,14 +25,14 @@
 		}
 	}
 
+	::selection {
+		background-color: var(--color-accent);
+		color: #000;
+	}
+
 	html {
 		scroll-behavior: smooth;
 		scrollbar-color: var(--color-accent) transparent;
-	}
-
-	::selection {
-		background-color: var(--color-accent);
-		color: var(--color-foreground);
 	}
 
 	body {
@@ -40,6 +40,8 @@
 		caret-color: var(--color-accent);
 		background-color: var(--color-background);
 		color: var(--color-foreground);
+
+		@apply max-sm:has-[#sidebar-open:checked]:overflow-clip;
 	}
 
 	label,

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state'
 	import { fetchMLB } from '$lib/fetch'
 	import { formatDate } from '$lib/temporal'
 	import { count } from '$lib/utils'
@@ -8,11 +9,12 @@
 	import Game from '$ui/schedule/game.svelte'
 	import { scheduleStore } from '$ui/schedule/store.svelte'
 
+	const sportId = $derived(page.url.searchParams.get('sportId') || '1')
 	const { startDate, endDate } = $derived(scheduleStore)
 
 	async function fetchSchedule() {
 		return await fetchMLB<MLB.ScheduleResponse>('/api/v1/schedule', {
-			sportId: '1',
+			sportId,
 			startDate: formatDate(startDate, {
 				year: 'numeric',
 				month: '2-digit',
