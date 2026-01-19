@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { replaceState } from '$app/navigation'
 	import { page } from '$app/state'
 	import { CUSTOM_ENDPOINT_KEY, DIRECTORY, ENDPOINTS, HOST } from './constants'
 
@@ -30,7 +31,7 @@
 		bind:value
 		onchange={() => {
 			if (page.url.searchParams.has('endpoint')) {
-				window.history.replaceState({}, '', window.location.pathname)
+				replaceState('', window.location.pathname)
 			}
 		}}
 	>

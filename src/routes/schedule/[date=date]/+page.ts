@@ -8,7 +8,7 @@ export const load: PageLoad = async ({ params, url }) => {
 		sportId,
 		date: params.date,
 		fields:
-			'totalGames,dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,teams,away,home,team,id,name,leagueRecord,wins,losses,venue,description',
+			'totalGames,dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,teams,away,home,team,id,name,leagueRecord,wins,losses,score,venue,description',
 		hydrate: 'teams',
 	})
 

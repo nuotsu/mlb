@@ -1,8 +1,14 @@
 <script lang="ts">
 	import { cn } from '$lib/utils'
 	import { colorSchemeStore } from '$ui/store.svelte'
+	import type { Snippet } from 'svelte'
 
-	let { team }: { team: MLB.Team } = $props()
+	let {
+		team,
+		class: className,
+		children,
+	}: { team: MLB.Team; class?: string; children?: Snippet } = $props()
+
 	let colorScheme = $derived(colorSchemeStore.colorScheme)
 
 	const darkOnLightTeams = [
@@ -24,10 +30,11 @@
 	)
 </script>
 
-<figure
+<div
 	class={cn(
-		'relative inline-flex items-center gap-[.5ch] px-[.5ch] not-dark:before:opacity-10',
+		'@container/team relative flex items-center gap-[.5ch] not-dark:before:opacity-10',
 		isDarkOnLightTeam && 'dark:text-dark',
+		className,
 	)}
 	style:--bg="url('{src}/32')"
 >
@@ -47,11 +54,15 @@
 		/>
 	</picture>
 
-	<figcaption class="line-clamp-1 break-all">{team.teamName}</figcaption>
-</figure>
+	<div class="line-clamp-1 grow break-all">
+		<span class="@max-[12ch]/team:hidden">{team.teamName}</span>
+	</div>
+
+	{@render children?.()}
+</div>
 
 <style>
-	figure::before {
+	div:has(picture)::before {
 		content: '';
 		position: absolute;
 		inset: 0;

@@ -342,7 +342,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				sportId: PRESETS.sportId,
 				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
-				personId: PRESETS.personId.map((p) => ({ ...p, empty: true })),
+				playerId: PRESETS.personId.map((p) => ({ ...p, empty: true })),
 				date: PRESETS.date,
 				startDate: [{ value: '' }],
 				endDate: [{ value: '' }],

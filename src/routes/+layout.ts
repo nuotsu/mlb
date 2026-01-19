@@ -1,10 +1,10 @@
-import { browser } from '$app/environment'
+import { browser, dev } from '$app/environment'
 import { PUBLIC_POSTHOG_KEY } from '$env/static/public'
 import posthog from 'posthog-js'
 import type { LayoutLoad } from './$types'
 
 export const load: LayoutLoad = async () => {
-	if (browser) {
+	if (browser && !dev) {
 		posthog.init(PUBLIC_POSTHOG_KEY, {
 			api_host: '/ph',
 			ui_host: 'https://us.posthog.com',

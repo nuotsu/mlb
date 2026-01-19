@@ -1,3 +1,4 @@
+import { replaceState } from '$app/navigation'
 import { formatDate, getToday } from '$lib/temporal'
 
 export const weekStore = $state({
@@ -31,6 +32,6 @@ export const weekStore = $state({
 			},
 		)
 
-		window.history.replaceState({}, '', window.location.pathname)
+		replaceState('', location.pathname)
 	},
 })

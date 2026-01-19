@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatDate } from '$lib/temporal'
+	import { formatDate, getToday } from '$lib/temporal'
 	import { weekStore } from './store.svelte'
 
 	const { startDate, endDate } = $derived(weekStore)
@@ -17,7 +17,7 @@
 			class="sr-only"
 			type="date"
 			min="1901-01-01"
-			max={`${new Date().getFullYear() + 1}-12-31`}
+			max={`${getToday().getFullYear()}-12-31`}
 			onclick={(e) => (e.target as HTMLInputElement)?.showPicker()}
 			bind:value={weekStore.today}
 		/>

@@ -23,11 +23,6 @@
 @custom-variant not-dark (body:has(#toggle-color-scheme:not([data-color-scheme='dark'])) &);
 
 @layer base {
-	body:has([data-color-scheme='dark']) {
-		--color-background: var(--color-dark);
-		--color-foreground: var(--color-light);
-	}
-
 	::selection {
 		background-color: var(--color-accent);
 		color: var(--color-dark);
@@ -45,6 +40,11 @@
 		color: var(--color-foreground);
 
 		@apply max-sm:has-[#sidebar-open:checked]:overflow-clip;
+
+		&:has([data-color-scheme='dark']) {
+			--color-background: var(--color-dark);
+			--color-foreground: var(--color-light);
+		}
 	}
 
 	label,
@@ -75,6 +75,10 @@
 				block-size: 0;
 			}
 		}
+	}
+
+	abbr {
+		text-decoration: none;
 	}
 }
 

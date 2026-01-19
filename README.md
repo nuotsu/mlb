@@ -35,5 +35,4 @@ Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view 
 
 ## TODO
 
-- date picker for /schedule/<date>
 - code folding > show children count (use `mutationObserver` attachment)

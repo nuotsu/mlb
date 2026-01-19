@@ -32,7 +32,7 @@
 				day: '2-digit',
 			}),
 			fields:
-				'dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,reason,teams,away,home,team,id,name,leagueRecord,wins,losses,venue,description',
+				'dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,reason,teams,away,home,team,id,name,leagueRecord,wins,losses,score,venue,description,seriesGameNumber,gamesInSeries',
 			hydrate: 'teams',
 		})
 	}
@@ -40,15 +40,17 @@
 
 <Metadata title="Schedule | MLB.TheOhtani.com" description="Weekly calendar of MLB games." />
 
-<section class="p-ch">
+<header class="p-ch">
 	<WeekPicker />
+</header>
 
+<section class="space-y-ch p-ch max-sm:px-0">
 	{#await fetchSchedule()}
 		<Loading>Loading schedule...</Loading>
 	{:then { dates }}
 		{#each dates as date}
-			<details class="group [&+&]:mt-ch" open>
-				<summary class="flex items-center gap-ch">
+			<details class="group" open>
+				<summary class="flex items-center gap-ch px-ch">
 					{formatDate(date.date + 'T00:00:00', {
 						weekday: 'short',
 						month: 'short',
