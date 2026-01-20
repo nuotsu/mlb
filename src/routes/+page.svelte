@@ -4,7 +4,7 @@
 </script>
 
 <Metadata
-	title="Scorebug | MLB.TheOhtani.com"
+	title="MLB.TheOhtani.com"
 	description="A custom MLB scorebug for Major League Baseball (MLB) and other leagues."
 />
 
