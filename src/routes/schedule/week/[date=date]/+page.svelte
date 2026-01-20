@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { page } from '$app/state'
 	import { formatDate } from '$lib/temporal'
 	import { count } from '$lib/utils'
 	import Game from '$ui/game/game.svelte'
@@ -8,7 +7,6 @@
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
-	let schedule = $derived(data.schedule)
 </script>
 
 <Metadata title="Weekly Schedule | MLB.TheOhtani.com" description="Weekly calendar of MLB games." />
@@ -18,7 +16,7 @@
 </header>
 
 <section class="space-y-ch p-ch max-sm:px-0">
-	{#each schedule.dates as date}
+	{#each data.schedule.dates as date}
 		<details class="group" open>
 			<summary class="flex items-center gap-ch px-ch">
 				{formatDate(date.date + 'T00:00:00', {

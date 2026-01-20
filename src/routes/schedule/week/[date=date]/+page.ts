@@ -1,20 +1,20 @@
 import { fetchMLB } from '$lib/fetch'
 import { formatDate } from '$lib/temporal'
-import { weekStore } from '$ui/schedule/store.svelte'
+import { getWeekDates } from '$ui/schedule/store.svelte'
 
 export const load = async ({ params, url }) => {
 	const sportId = url.searchParams.get('sportId') || '1'
 
-	weekStore.today = params.date
+	const { startDate, endDate } = getWeekDates(params.date)
 
 	const schedule = await fetchMLB<MLB.ScheduleResponse>('/api/v1/schedule', {
 		sportId,
-		startDate: formatDate(weekStore.startDate, {
+		startDate: formatDate(startDate, {
 			year: 'numeric',
 			month: '2-digit',
 			day: '2-digit',
 		}),
-		endDate: formatDate(weekStore.endDate, {
+		endDate: formatDate(endDate, {
 			year: 'numeric',
 			month: '2-digit',
 			day: '2-digit',

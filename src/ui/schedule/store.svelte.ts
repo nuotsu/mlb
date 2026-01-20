@@ -1,17 +1,11 @@
-import { formatDate, getToday } from '$lib/temporal'
+export function getWeekDates(date: string) {
+	const t = new Date(date + 'T00:00:00')
 
-export const weekStore = $state({
-	today: formatDate(getToday(), { locale: 'en-CA' }),
+	const startDate = new Date(t.setDate(t.getDate() - ((t.getDay() - 1) % 7)))
+	const endDate = new Date(t.setDate(t.getDate() + (6 - ((t.getDay() - 1) % 7))))
 
-	get t() {
-		return new Date(this.today)
-	},
-
-	get startDate() {
-		return new Date(this.t.setDate(this.t.getDate() - ((this.t.getDay() - 1) % 7)))
-	},
-
-	get endDate() {
-		return new Date(this.t.setDate(this.t.getDate() + (6 - ((this.t.getDay() - 1) % 7))))
-	},
-})
+	return {
+		startDate,
+		endDate,
+	}
+}
