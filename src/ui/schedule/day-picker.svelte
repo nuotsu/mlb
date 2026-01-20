@@ -8,12 +8,7 @@
 	function addDay(days: number = 1) {
 		return formatDate(
 			new Date(new Date(date + 'T00:00:00').setDate(new Date(date + 'T00:00:00').getDate() + days)),
-			{
-				locale: 'en-CA',
-				year: 'numeric',
-				month: '2-digit',
-				day: '2-digit',
-			},
+			{ locale: 'en-CA' },
 		)
 	}
 

@@ -21,7 +21,7 @@ export async function fetchMLB<T>(
 
 export async function fetchBoxscore(gamePk: string | number) {
 	return await fetchMLB<MLB.Boxscore>(`/api/v1/game/${gamePk}/boxscore`, {
-		fields: 'teams,away,team,id,name,teamName,sport',
+		fields: 'teams,away,team,id,name,teamName,abbreviation,sport',
 	})
 }
 

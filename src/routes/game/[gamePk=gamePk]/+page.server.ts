@@ -1,7 +1,7 @@
 import { fetchBoxscore, fetchLinescore, fetchMLB } from '$lib/fetch'
-import type { PageLoad } from './$types'
+import type { PageServerLoad } from './$types'
 
-export const load: PageLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params }) => {
 	const schedule = await fetchMLB<MLB.ScheduleResponse>(`/api/v1/schedule`, {
 		gamePk: params.gamePk,
 		fields: [
@@ -23,10 +23,7 @@ export const load: PageLoad = async ({ params }) => {
 
 	const winProbability = await fetchMLB<MLB.PlayWinProbability[]>(
 		`/api/v1/game/${params.gamePk}/winProbability`,
-		{
-			fields:
-				'result,description,homeTeamWinProbability,awayTeamWinProbability,homeTeamWinProbabilityAdded',
-		},
+		{ fields: 'result,homeTeamWinProbability,awayTeamWinProbability' },
 	)
 
 	return {

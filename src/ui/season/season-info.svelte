@@ -50,7 +50,7 @@
 </section>
 
 {#snippet linkedDate(date: string = '')}
-	<a class="decoration-dashed hover:underline" href="/schedule?date={date}">
+	<a class="decoration-dashed hover:underline" href="/schedule/week/{date}">
 		{formatDate(date + 'T00:00:00', { weekday: 'short', month: 'short', day: 'numeric' })}
 	</a>
 {/snippet}

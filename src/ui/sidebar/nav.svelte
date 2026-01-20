@@ -1,17 +1,9 @@
 <script lang="ts">
 	import { page } from '$app/state'
-	import { formatDate, getToday } from '$lib/temporal'
 	import { CalendarIcon, CalendarTodayIcon, JsonIcon } from '$ui/icons'
 	import type { Component } from 'svelte'
 	import Drawer from './drawer.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
-
-	const today = formatDate(getToday(), {
-		locale: 'en-CA',
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-	})
 
 	const links: {
 		href: string
@@ -19,12 +11,12 @@
 		icon: Component
 	}[] = [
 		{
-			href: '/schedule',
+			href: '/schedule/week',
 			label: 'Weekly Schedule',
 			icon: CalendarIcon,
 		},
 		{
-			href: `/schedule/day/${today}`,
+			href: `/schedule/day`,
 			label: "Today's Games",
 			icon: CalendarTodayIcon,
 		},
@@ -48,7 +40,7 @@
 					<a
 						{href}
 						class="relative flex items-center gap-1"
-						class:active={page.url.pathname === href}
+						class:active={page.route.id!.startsWith(href)}
 					>
 						<svelte:component this={icon} />
 						<span>{label}</span>

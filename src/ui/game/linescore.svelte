@@ -25,6 +25,7 @@
 					<th>{num}</th>
 				{/each}
 
+				<th class="w-[4ch]"><abbr title="Hits">R</abbr></th>
 				<th class="w-[4ch]"><abbr title="Hits">H</abbr></th>
 				<th class="w-[4ch]"><abbr title="Errors">E</abbr></th>
 				<th class="w-[4ch]"><abbr title="Left on base">LOB</abbr></th>
@@ -33,7 +34,7 @@
 
 		<tbody>
 			{#each ['away', 'home'] as const as teamKey}
-				{@const { hits, errors, leftOnBase } = teams?.[teamKey] as MLB.LinescoreTeam}
+				{@const { runs, hits, errors, leftOnBase } = teams?.[teamKey] as MLB.LinescoreTeam}
 
 				<tr>
 					{#each innings as inning}
@@ -66,7 +67,8 @@
 						></td>
 					{/each}
 
-					<td class="border-l! border-current/50">{hits}</td>
+					<td class="border-l! border-current/50 font-bold">{runs}</td>
+					<td>{hits}</td>
 					<td>{errors}</td>
 					<td>{leftOnBase}</td>
 					<td></td>

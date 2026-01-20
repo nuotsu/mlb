@@ -1,10 +1,27 @@
 <script lang="ts">
+	import { goto } from '$app/navigation'
+	import { page } from '$app/state'
 	import { formatDate, getToday } from '$lib/temporal'
 	import { weekStore } from './store.svelte'
+
+	let date = $derived(page.params.date)
 
 	const { startDate, endDate } = $derived(weekStore)
 
 	const isSameMonth = $derived(startDate.getMonth() === endDate.getMonth())
+
+	function addWeek(weeks: number = 1) {
+		return formatDate(
+			new Date(
+				new Date(date + 'T00:00:00').setDate(new Date(date + 'T00:00:00').getDate() + weeks * 7),
+			),
+			{ locale: 'en-CA' },
+		)
+	}
+
+	$effect(() => {
+		goto(`/schedule/week/${weekStore.today}`)
+	})
 </script>
 
 <fieldset class="flex flex-col items-center">
@@ -27,18 +44,19 @@
 			/>
 		</label>
 
-		<button class="order-first" onclick={() => weekStore.addWeek(-1)}>{'<'}</button>
-		<button class="order-last" onclick={() => weekStore.addWeek()}>{'>'}</button>
+		<a class="order-first" href="/schedule/week/{addWeek(-1)}">{'<'}</a>
+		<a class="order-last" href="/schedule/week/{addWeek()}">{'>'}</a>
 	</div>
 </fieldset>
 
 <style>
-	label,
-	button {
+	fieldset:has(label:hover) label,
+	a {
 		padding-inline: 1ch;
+	}
 
-		&:hover {
-			text-decoration: underline dashed;
-		}
+	fieldset:has(label:hover) label,
+	a:hover {
+		text-decoration: underline dashed;
 	}
 </style>

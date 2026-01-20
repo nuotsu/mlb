@@ -1,13 +1,18 @@
 <script lang="ts">
 	let {
 		winProbability,
+		boxscore,
 		linescore,
-	}: { winProbability: MLB.PlayWinProbability[]; linescore: MLB.Linescore } = $props()
+	}: {
+		winProbability: MLB.PlayWinProbability[]
+		boxscore?: MLB.Boxscore
+		linescore?: MLB.Linescore
+	} = $props()
 
 	let width = $state(0)
 	let height = $state(100)
 
-	const innings = $derived(linescore.innings?.length ?? linescore.scheduledInnings ?? 9)
+	const innings = $derived(linescore?.innings?.length ?? linescore?.scheduledInnings ?? 9)
 
 	const pathData = $derived(() => {
 		const points = winProbability.map((d, i) => {
@@ -15,7 +20,7 @@
 			const y = (d.homeTeamWinProbability / 100) * height
 			return `${x},${y}`
 		})
-		return `M ${points.join(' L ')}`
+		return `M ${points?.join(' L ')}`
 	})
 
 	const inningDividers = $derived(() => {
@@ -32,11 +37,11 @@
 
 <figure class="grid *:col-span-full *:row-span-full" bind:clientWidth={width}>
 	<figcaption
-		class="mr-auto grid grid-cols-2 text-center text-[xx-small] text-current/50 uppercase sm:text-xs"
+		class="mr-auto grid grid-cols-2 text-center text-[xx-small] text-current/25 uppercase sm:text-xs"
 		style:writing-mode="vertical-rl"
 	>
-		<span>Away</span>
-		<span>Home</span>
+		<span>{boxscore?.teams.away.team.abbreviation ?? 'Away'}</span>
+		<span>{boxscore?.teams.home.team.abbreviation ?? 'Home'}</span>
 	</figcaption>
 
 	<svg class="grow" {width} {height}>

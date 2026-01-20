@@ -39,7 +39,7 @@ export default async function ({
 							tagName: 'a',
 							properties: {
 								...node.properties,
-								class: 'underline decoration-dashed',
+								class: 'link',
 								href: value.slice(1, -1),
 							},
 						}

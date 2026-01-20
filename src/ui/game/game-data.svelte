@@ -8,7 +8,11 @@
 
 <dl class="grid grid-cols-[auto_1fr] gap-x-lh">
 	<dt>Date</dt>
-	<dd>{formatDate(game.gameDate, { year: 'numeric', month: 'long', day: 'numeric' })}</dd>
+	<dd>
+		<a class="link" href="/schedule/day/{formatDate(game.gameDate, { locale: 'en-CA' })}">
+			{formatDate(game.gameDate, { year: 'numeric', month: 'long', day: 'numeric' })}
+		</a>
+	</dd>
 
 	{#if game.description}
 		<dt>Description</dt>
@@ -35,27 +39,16 @@
 	{/if}
 
 	{#if weather?.condition}
+		{@const { condition, temp, wind } = weather ?? {}}
 		<dt>Weather</dt>
 		<dd>
-			{[`${weather?.condition}`, `${weather?.temp}°F`, `${feedLive.gameData.weather?.wind} mph`]
-				.filter(Boolean)
-				.join(' / ')}
+			{[condition, temp && `${temp}°F`, wind && `${wind} mph`].filter(Boolean).join(' / ')}
 		</dd>
 	{/if}
 
 	<dt>Endpoint</dt>
-	<dd>
+	<dd class="*:link">
 		<a href="https://statsapi.mlb.com{game.link}">Official</a> |
 		<a href={game.link}>Playground</a>
 	</dd>
 </dl>
-
-<style>
-	dl a {
-		text-decoration: underline dashed;
-
-		&:hover {
-			text-decoration-style: solid;
-		}
-	}
-</style>

@@ -20,12 +20,15 @@
 </script>
 
 <Metadata
-	title="{[away.teamName, home.teamName].join(' @ ')} ({date})| MLB.TheOhtani.com"
+	title="{[away.teamName, home.teamName].join(' @ ')} ({date}) | MLB.TheOhtani.com"
 	description="Game details for {[away.name, home.name].join(' at ')} on {date}"
 />
 
 <section class="mx-auto max-w-5xl space-y-ch p-ch">
 	<Game {game} {boxscore} {linescore} />
 	<GameData {game} {feedLive} />
-	<WinProbability winProbability={data.winProbability} {linescore} />
+
+	{#if Array.isArray(data.winProbability)}
+		<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
+	{/if}
 </section>

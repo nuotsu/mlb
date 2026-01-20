@@ -119,6 +119,10 @@
 	@apply button-base border border-current/25 transition-transform active:scale-90;
 }
 
+@utility link {
+	@apply underline not-hover:decoration-dashed;
+}
+
 @utility input {
 	border-bottom: 1px dashed var(--color-accent);
 	@apply invalid:border-[red] invalid:text-[red]! hover:bg-accent/25 focus:relative focus:bg-accent/25;

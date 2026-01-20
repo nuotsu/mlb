@@ -1,13 +1,7 @@
-import { replaceState } from '$app/navigation'
 import { formatDate, getToday } from '$lib/temporal'
 
 export const weekStore = $state({
-	today: formatDate(getToday(), {
-		locale: 'en-CA',
-		year: 'numeric',
-		month: '2-digit',
-		day: '2-digit',
-	}),
+	today: formatDate(getToday(), { locale: 'en-CA' }),
 
 	get t() {
 		return new Date(this.today)
@@ -19,19 +13,5 @@ export const weekStore = $state({
 
 	get endDate() {
 		return new Date(this.t.setDate(this.t.getDate() + (6 - ((this.t.getDay() - 1) % 7))))
-	},
-
-	addWeek(weeks: number = 1) {
-		this.today = formatDate(
-			new Date(this.startDate.setDate(this.startDate.getDate() + weeks * 7)),
-			{
-				locale: 'en-CA',
-				year: 'numeric',
-				month: '2-digit',
-				day: '2-digit',
-			},
-		)
-
-		replaceState('', location.pathname)
 	},
 })
