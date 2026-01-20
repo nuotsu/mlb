@@ -27,3 +27,13 @@
 	<Game {game} {boxscore} {linescore} />
 	<GameData {game} {feedLive} />
 </section>
+
+<style>
+	dl a {
+		text-decoration: underline dashed;
+
+		&:hover {
+			text-decoration-style: solid;
+		}
+	}
+</style>
