@@ -7,8 +7,12 @@ export const load: PageLoad = async ({ params, url }) => {
 	const schedule = await fetchMLB<MLB.ScheduleResponse>('/api/v1/schedule', {
 		sportId,
 		date: params.date,
-		fields:
-			'totalGames,dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,teams,away,home,team,id,name,leagueRecord,wins,losses,score,venue,description',
+		fields: [
+			'totalGames,dates,date,venue,description,seriesGameNumber,gamesInSeries',
+			'games,gamePk,gameType,gameDate',
+			'status,abstractGameState,detailedState,reason',
+			'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
+		],
 		hydrate: 'teams',
 	})
 

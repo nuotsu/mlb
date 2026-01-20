@@ -3,9 +3,9 @@
 	import { fetchMLB } from '$lib/fetch'
 	import { formatDate } from '$lib/temporal'
 	import { count } from '$lib/utils'
+	import Game from '$ui/game/game.svelte'
 	import Loading from '$ui/loading.svelte'
 	import Metadata from '$ui/metadata.svelte'
-	import Game from '$ui/schedule/game.svelte'
 	import { weekStore } from '$ui/schedule/store.svelte'
 	import WeekPicker from '$ui/schedule/week-picker.svelte'
 
@@ -31,8 +31,12 @@
 				month: '2-digit',
 				day: '2-digit',
 			}),
-			fields:
-				'dates,date,games,gamePk,gameType,gameDate,status,abstractGameState,detailedState,reason,teams,away,home,team,id,name,leagueRecord,wins,losses,score,venue,description,seriesGameNumber,gamesInSeries',
+			fields: [
+				'dates,date,venue,description,seriesGameNumber,gamesInSeries',
+				'games,gamePk,gameType,gameDate',
+				'status,abstractGameState,detailedState,reason',
+				'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
+			],
 			hydrate: 'teams',
 		})
 	}
@@ -64,7 +68,7 @@
 
 				<div class="mb-lh columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
 					{#each date.games as game}
-						<Game {game} />
+						<Game {game} showDescription />
 					{/each}
 				</div>
 			</details>

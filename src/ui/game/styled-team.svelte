@@ -42,10 +42,10 @@
 		<source srcset="{src}/72" media={colorScheme === 'dark' ? undefined : '()'} />
 
 		<img
-			class="size-lh shrink-0"
+			class="size-lh shrink-0 object-contain"
 			src="https://www.mlbstatic.com/team-logos/team-cap-on-light/{team.id}.svg"
-			width="72"
-			height="72"
+			width="300"
+			height="300"
 			alt={team.name}
 			draggable="false"
 			onerror={(e) => {
