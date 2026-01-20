@@ -67,7 +67,10 @@
 						day: 'numeric',
 					})}
 
-					<a class="order-last underline not-hover:decoration-dashed" href="/schedule/{date.date}">
+					<a
+						class="order-last underline not-hover:decoration-dashed"
+						href="/schedule/day/{date.date}"
+					>
 						{count(date.games.length, 'game')}
 					</a>
 				</summary>

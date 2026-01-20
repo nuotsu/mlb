@@ -24,7 +24,7 @@
 			icon: CalendarIcon,
 		},
 		{
-			href: `/schedule/${today}`,
+			href: `/schedule/day/${today}`,
 			label: "Today's Games",
 			icon: CalendarTodayIcon,
 		},

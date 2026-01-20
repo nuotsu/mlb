@@ -6,7 +6,7 @@
 	let date = $derived(page.params.date)
 
 	function addDay(days: number = 1) {
-		date = formatDate(
+		return formatDate(
 			new Date(new Date(date + 'T00:00:00').setDate(new Date(date + 'T00:00:00').getDate() + days)),
 			{
 				locale: 'en-CA',
@@ -18,7 +18,7 @@
 	}
 
 	$effect(() => {
-		goto(`/schedule/${date}`)
+		goto(`/schedule/day/${date}`)
 	})
 </script>
 
@@ -46,19 +46,19 @@
 			/>
 		</label>
 
-		<button class="order-first" onclick={() => addDay(-1)}>{'<'}</button>
-		<button class="order-last" onclick={() => addDay()}>{'>'}</button>
+		<a class="order-first" href="/schedule/day/{addDay(-1)}">{'<'}</a>
+		<a class="order-last" href="/schedule/day/{addDay()}">{'>'}</a>
 	</div>
 </fieldset>
 
 <style>
 	fieldset:has(label:hover) label,
-	button {
+	a {
 		padding-inline: 1ch;
 	}
 
 	fieldset:has(label:hover) label,
-	button:hover {
+	a:hover {
 		text-decoration: underline dashed;
 	}
 </style>
