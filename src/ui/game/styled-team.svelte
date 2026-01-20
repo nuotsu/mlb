@@ -55,7 +55,8 @@
 	</picture>
 
 	<div class="line-clamp-1 grow break-all">
-		<span class="@max-[12ch]/team:hidden">{team.teamName}</span>
+		<span class="@max-sm/team:hidden">{team.name}</span>
+		<span class="@max-[12ch]/team:hidden @sm:hidden">{team.teamName}</span>
 	</div>
 
 	{@render children?.()}

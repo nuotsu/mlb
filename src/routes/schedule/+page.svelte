@@ -42,7 +42,7 @@
 	}
 </script>
 
-<Metadata title="Schedule | MLB.TheOhtani.com" description="Weekly calendar of MLB games." />
+<Metadata title="Weekly Schedule | MLB.TheOhtani.com" description="Weekly calendar of MLB games." />
 
 <header class="p-ch">
 	<WeekPicker />
