@@ -2,6 +2,7 @@
 	import { formatDate } from '$lib/temporal'
 	import GameData from '$ui/game/game-data.svelte'
 	import Game from '$ui/game/game.svelte'
+	import WinProbability from '$ui/game/win-probability.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import type { PageProps } from './$types'
 
@@ -26,14 +27,5 @@
 <section class="mx-auto max-w-5xl space-y-ch p-ch">
 	<Game {game} {boxscore} {linescore} />
 	<GameData {game} {feedLive} />
+	<WinProbability winProbability={data.winProbability} {linescore} />
 </section>
-
-<style>
-	dl a {
-		text-decoration: underline dashed;
-
-		&:hover {
-			text-decoration-style: solid;
-		}
-	}
-</style>

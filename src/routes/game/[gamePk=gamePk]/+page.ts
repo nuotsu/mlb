@@ -21,10 +21,19 @@ export const load: PageLoad = async ({ params }) => {
 	const boxscore = await fetchBoxscore(params.gamePk)
 	const linescore = await fetchLinescore(params.gamePk)
 
+	const winProbability = await fetchMLB<MLB.PlayWinProbability[]>(
+		`/api/v1/game/${params.gamePk}/winProbability`,
+		{
+			fields:
+				'result,description,homeTeamWinProbability,awayTeamWinProbability,homeTeamWinProbabilityAdded',
+		},
+	)
+
 	return {
 		game,
 		feedLive,
 		boxscore,
 		linescore,
+		winProbability,
 	}
 }

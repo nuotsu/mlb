@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { replaceState } from '$app/navigation'
 	import { page } from '$app/state'
 	import { fetchMLB } from '$lib/fetch'
 	import { formatDate } from '$lib/temporal'
@@ -13,7 +14,12 @@
 	const date = $derived(page.url.searchParams.get('date') || '')
 
 	$effect(() => {
-		if (date) weekStore.today = date
+		if (date) {
+			weekStore.today = date
+			const url = new URL(location.pathname)
+			url.searchParams.set('date', date)
+			replaceState('', url.toString())
+		}
 	})
 
 	const { startDate, endDate } = $derived(weekStore)

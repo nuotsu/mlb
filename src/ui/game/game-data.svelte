@@ -1,10 +1,15 @@
 <script lang="ts">
+	import { formatDate } from '$lib/temporal'
+
 	let { game, feedLive }: { game: MLB.Game; feedLive: MLB.LiveGameFeed } = $props()
 
 	const { gameInfo, weather } = $derived(feedLive.gameData)
 </script>
 
 <dl class="grid grid-cols-[auto_1fr] gap-x-lh">
+	<dt>Date</dt>
+	<dd>{formatDate(game.gameDate, { year: 'numeric', month: 'long', day: 'numeric' })}</dd>
+
 	{#if game.description}
 		<dt>Description</dt>
 		<dd>{game.description}</dd>

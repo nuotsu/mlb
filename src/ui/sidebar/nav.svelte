@@ -42,7 +42,7 @@
 			<a href="/"> MLB.TheOhtani.com </a>
 		</div>
 
-		<ul class="[&_span]:sm:sidebar-closed-hidden">
+		<ul class="sidebar-not-open:landscape:max-lg:overflow-clip [&_span]:sm:sidebar-closed-hidden">
 			{#each links as { href, label, icon }}
 				<li>
 					<a

@@ -973,6 +973,23 @@ declare global {
 			homeTeamPerfectGame?: boolean
 		}
 
+		/**
+		 * Win probability
+		 */
+		interface PlayWinProbability {
+			result: {
+				description: string
+			}
+			homeTeamWinProbability: number
+			awayTeamWinProbability: number
+			homeTeamWinProbabilityAdded: number
+		}
+
+		interface WinProbabilityResponse extends ApiResponse<PlayWinProbability[]> {
+			probabilities?: PlayWinProbability[]
+			[index: number]: PlayWinProbability
+		}
+
 		// Schedule Types
 
 		/**
