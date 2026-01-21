@@ -20,7 +20,7 @@
 		"@sveltejs/vite-plugin-svelte": "^6.2.4",
 		"@tailwindcss/vite": "^4.1.18",
 		"clsx": "^2.1.1",
-		"prettier": "^3.8.0",
+		"prettier": "^3.8.1",
 		"prettier-plugin-svelte": "^3.4.1",
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"shiki": "^3.21.0",
@@ -32,7 +32,7 @@
 		"vite": "^7.3.1"
 	},
 	"dependencies": {
-		"posthog-js": "^1.331.0",
-		"posthog-node": "^5.23.0"
+		"posthog-js": "^1.333.0",
+		"posthog-node": "^5.24.1"
 	}
 }

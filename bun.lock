@@ -5,8 +5,8 @@
     "": {
       "name": "mlb",
       "dependencies": {
-        "posthog-js": "^1.331.0",
-        "posthog-node": "^5.23.0",
+        "posthog-js": "^1.333.0",
+        "posthog-node": "^5.24.1",
       },
       "devDependencies": {
         "@ianvs/prettier-plugin-sort-imports": "^4.7.0",
@@ -15,7 +15,7 @@
         "@sveltejs/vite-plugin-svelte": "^6.2.4",
         "@tailwindcss/vite": "^4.1.18",
         "clsx": "^2.1.1",
-        "prettier": "^3.8.0",
+        "prettier": "^3.8.1",
         "prettier-plugin-svelte": "^3.4.1",
         "prettier-plugin-tailwindcss": "^0.7.2",
         "shiki": "^3.21.0",
@@ -143,9 +143,9 @@
 
     "@polka/url": ["@polka/url@1.0.0-next.29", "", {}, "sha512-wwQAWhWSuHaag8c4q/KN/vCoeOJYshAIvMQwD4GpSb3OiZklFfvAgmj0VCBBImRpuF/aFgIRzllXlVX93Jevww=="],
 
-    "@posthog/core": ["@posthog/core@1.11.0", "", { "dependencies": { "cross-spawn": "^7.0.6" } }, "sha512-BnUQ9FP5vqMr2NKntDSLfMCwO/pOI2In7kAjg6vLVzU1JdcPt266kwCZj84PTYbdSfHG5ELDs3hXNv9Rn+coUw=="],
+    "@posthog/core": ["@posthog/core@1.13.0", "", { "dependencies": { "cross-spawn": "^7.0.6" } }, "sha512-knjncrk7qRmssFRbGzBl1Tunt21GRpe0Wv+uVelyL0Rh7PdQUsgguulzXFTps8hA6wPwTU4kq85qnbAJ3eH6Wg=="],
 
-    "@posthog/types": ["@posthog/types@1.331.0", "", {}, "sha512-C2eT5T2zovjLB+KOOWOb4vGBInH58imeuOrH/DL3hpcH0V5Nd5ttOAZczr1AxsI08lR5VaUPCw2bUsfPxYJGRA=="],
+    "@posthog/types": ["@posthog/types@1.333.0", "", {}, "sha512-9Wg/2ez+EZh6NmtOjhtYSkBHz/yIq8WMS0QSIizUoggh35hHVg4BTMXl3rz/tPearJNKU/8oRjEyuZ0OYTEDOA=="],
 
     "@protobufjs/aspromise": ["@protobufjs/aspromise@1.1.2", "", {}, "sha512-j+gKExEuLmKwvz3OgROXtrJ2UG2x8Ch2YZUxahh+s1F2HZ+wAceUNLkvy6zKCPVRkU++ZWQrdxsUeQXmcg4uoQ=="],
 
@@ -467,13 +467,13 @@
 
     "postcss": ["postcss@8.5.6", "", { "dependencies": { "nanoid": "^3.3.11", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg=="],
 
-    "posthog-js": ["posthog-js@1.331.0", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.208.0", "@opentelemetry/exporter-logs-otlp-http": "^0.208.0", "@opentelemetry/resources": "^2.2.0", "@opentelemetry/sdk-logs": "^0.208.0", "@posthog/core": "1.11.0", "@posthog/types": "1.331.0", "core-js": "^3.38.1", "dompurify": "^3.3.1", "fflate": "^0.4.8", "preact": "^10.28.0", "query-selector-shadow-dom": "^1.0.1", "web-vitals": "^4.2.4" } }, "sha512-9bUWkQXP95OhDxcjctKma8LSxpIxU+i7Xq+i/M4wjGjEvN7xt1ztNO4XKJYmEVT1Su3ZOLudidyWrSGL568F4A=="],
+    "posthog-js": ["posthog-js@1.333.0", "", { "dependencies": { "@opentelemetry/api": "^1.9.0", "@opentelemetry/api-logs": "^0.208.0", "@opentelemetry/exporter-logs-otlp-http": "^0.208.0", "@opentelemetry/resources": "^2.2.0", "@opentelemetry/sdk-logs": "^0.208.0", "@posthog/core": "1.13.0", "@posthog/types": "1.333.0", "core-js": "^3.38.1", "dompurify": "^3.3.1", "fflate": "^0.4.8", "preact": "^10.28.0", "query-selector-shadow-dom": "^1.0.1", "web-vitals": "^4.2.4" } }, "sha512-c7vquERMedjuGE2GnaDDJW/V1BIMMQG7BlYKrH0z8O7fc3WpEsQ/IyQ+9aD9+DLxlDCFpzrwgoxVDWi9K37mdA=="],
 
-    "posthog-node": ["posthog-node@5.23.0", "", { "dependencies": { "@posthog/core": "1.11.0" } }, "sha512-MxcBgY9l2qqLpUJqeIT/zm/s6VBp2zTWvamvkGwyuSP/vcg375+nQcgDtsg5PgEXPP/sFhVnr9Ae48ykd5wQ7A=="],
+    "posthog-node": ["posthog-node@5.24.1", "", { "dependencies": { "@posthog/core": "1.13.0" } }, "sha512-1+wsosb5fjuor9zpp3h2uq0xKYY7rDz8gpw/10Scz8Ob/uVNrsHSwGy76D9rgt4cfyaEgpJwyYv+hPi2+YjWtw=="],
 
     "preact": ["preact@10.28.2", "", {}, "sha512-lbteaWGzGHdlIuiJ0l2Jq454m6kcpI1zNje6d8MlGAFlYvP2GO4ibnat7P74Esfz4sPTdM6UxtTwh/d3pwM9JA=="],
 
-    "prettier": ["prettier@3.8.0", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-yEPsovQfpxYfgWNhCfECjG5AQaO+K3dp6XERmOepyPDVqcJm+bjyCVO3pmU+nAPe0N5dDvekfGezt/EIiRe1TA=="],
+    "prettier": ["prettier@3.8.1", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg=="],
 
     "prettier-plugin-svelte": ["prettier-plugin-svelte@3.4.1", "", { "peerDependencies": { "prettier": "^3.0.0", "svelte": "^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0" } }, "sha512-xL49LCloMoZRvSwa6IEdN2GV6cq2IqpYGstYtMT+5wmml1/dClEoI0MZR78MiVPpu6BdQFfN0/y73yO6+br5Pg=="],
 
