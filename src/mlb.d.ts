@@ -85,6 +85,13 @@ declare global {
 		// Player/Person Types
 
 		/**
+		 * Person response
+		 */
+		interface PersonResponse extends ApiResponse<Person[]> {
+			people: Person[]
+		}
+
+		/**
 		 * Basic person information
 		 */
 		interface Person {

@@ -29,7 +29,7 @@
 			{@const [decision, { id }] = Object.entries(decisions)[key]}
 			{@const player = feedLive.gameData.players[`ID${id}`] as unknown as MLB.Person}
 
-			<div class="flex items-center gap-ch">
+			<div class="group/decision relative flex max-w-max items-center gap-ch">
 				<dt class="grid shrink-0 items-center *:col-span-full *:row-span-full">
 					<abbr
 						class="relative mt-auto mr-auto grid aspect-square w-lh place-content-center text-[x-small] font-bold text-white"
@@ -40,14 +40,18 @@
 
 					<img
 						class=" size-[1.5lh] object-contain"
-						src="https://midfield.mlbstatic.com/v1/people/{id}/spots/72"
+						src="https://midfield.mlbstatic.com/v1/people/{id}/spots/48"
 						alt={player.fullName}
 						draggable={false}
 					/>
 				</dt>
 
 				<dd class="line-clamp-1 break-all" title={player.fullName}>
-					{player.lastName}
+					<a href="/player/{id}" class="decoration-dashed group-hover/decision:underline">
+						{player.lastName}
+
+						<span class="absolute inset-0"></span>
+					</a>
 				</dd>
 
 				<dd>{stat.summary}</dd>

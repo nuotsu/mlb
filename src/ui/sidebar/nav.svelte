@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state'
-	import { CalendarIcon, CalendarTodayIcon, JsonIcon } from '$ui/icons'
+	import { CalendarIcon, CalendarTodayIcon, HelmetIcon, JsonIcon } from '$ui/icons'
 	import type { Component } from 'svelte'
 	import Drawer from './drawer.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
@@ -19,6 +19,11 @@
 			href: `/schedule/day`,
 			label: "Today's Games",
 			icon: CalendarTodayIcon,
+		},
+		{
+			href: `/player`,
+			label: 'Player',
+			icon: HelmetIcon,
 		},
 		{
 			href: '/api/playground',

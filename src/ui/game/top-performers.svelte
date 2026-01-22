@@ -21,18 +21,22 @@
 			{console.warn(`Unhandled type: ${type}`)}
 		{/if}
 
-		<div class="flex items-center gap-ch">
+		<div class="group/player relative flex max-w-max items-center gap-ch">
 			<dt class="shrink-0">
 				<img
 					class="size-[1.5lh] object-contain"
-					src="https://midfield.mlbstatic.com/v1/people/{player.person.id}/spots/72"
+					src="https://midfield.mlbstatic.com/v1/people/{player.person.id}/spots/48"
 					alt={player.person.fullName}
 					draggable={false}
 				/>
 			</dt>
 
 			<dd class="line-clamp-1 break-all" title={player.person.fullName}>
-				{player.person.boxscoreName}
+				<a class="decoration-dashed group-hover/player:underline" href="/player/{player.person.id}">
+					{player.person.boxscoreName}
+
+					<span class="absolute inset-0"></span>
+				</a>
 			</dd>
 
 			{#if summary}
