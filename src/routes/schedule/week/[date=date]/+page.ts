@@ -28,7 +28,6 @@ export const load = async ({ params, url }) => {
 			// linescore
 			'linescore,currentInning,scheduledInnings',
 			'innings,num,runs,hits,errors,leftOnBase',
-			'teams,home,away',
 		],
 		hydrate: 'teams,flags,linescore',
 	})

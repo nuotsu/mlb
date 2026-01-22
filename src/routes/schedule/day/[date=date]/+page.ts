@@ -13,8 +13,11 @@ export const load: PageLoad = async ({ params, url }) => {
 			'status,abstractGameState,detailedState,reason',
 			'flags,noHitter,perfectGame',
 			'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
+			// linescore
+			'linescore,currentInning,scheduledInnings',
+			'innings,num,runs,hits,errors,leftOnBase',
 		],
-		hydrate: 'teams,flags',
+		hydrate: 'teams,flags,linescore',
 	})
 
 	return {
