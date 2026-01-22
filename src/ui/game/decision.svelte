@@ -23,7 +23,7 @@
 
 <dl>
 	{#await fetchAllPlayers()}
-		<Loading>Loading stats...</Loading>
+		<Loading>Loading decisions...</Loading>
 	{:then stats}
 		{#each stats as stat, key}
 			{@const [decision, { id }] = Object.entries(decisions)[key]}
@@ -42,6 +42,7 @@
 						class=" size-[1.5lh] object-contain"
 						src="https://midfield.mlbstatic.com/v1/people/{id}/spots/72"
 						alt={player.fullName}
+						draggable={false}
 					/>
 				</dt>
 
@@ -61,10 +62,10 @@
 			background-color: var(--color-green-600);
 		}
 		&[title='loser'] {
-			background-color: var(--color-blue-600);
+			background-color: var(--color-red-600);
 		}
 		&[title='save'] {
-			background-color: var(--color-red-600);
+			background-color: var(--color-blue-600);
 		}
 	}
 </style>

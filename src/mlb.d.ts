@@ -718,6 +718,18 @@ declare global {
 			officials?: Official[]
 			info?: BoxscoreInfo[]
 			pitchingNotes?: string[]
+			topPerformers?: TopPerformers[]
+		}
+
+		/**
+		 * Top performers
+		 */
+		interface TopPerformers {
+			type: 'hitter' | 'twoWayStarter' | 'starter' | 'reliever'
+			player: BoxscorePlayer
+			gameScore: number
+			hittingGameScore?: number
+			pitchingGameScore?: number
 		}
 
 		/**
@@ -749,6 +761,7 @@ declare global {
 		 * Batting statistics
 		 */
 		interface BattingStats {
+			summary?: string
 			runs?: number
 			doubles?: number
 			triples?: number
@@ -846,6 +859,7 @@ declare global {
 		 * Fielding statistics
 		 */
 		interface FieldingStats {
+			summary?: string
 			caughtStealing?: number
 			stolenBases?: number
 			stolenBasePercentage?: string
