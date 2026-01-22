@@ -10,8 +10,8 @@
 
 	const game = $derived(data.game)
 	const feedLive = $derived(data.feedLive)
+	const linescore = $derived(feedLive.liveData.linescore)
 	const boxscore = $derived(data.boxscore)
-	const linescore = $derived(data.linescore)
 
 	const [away, home] = $derived([boxscore.teams.away.team, boxscore.teams.home.team])
 	const date = $derived(

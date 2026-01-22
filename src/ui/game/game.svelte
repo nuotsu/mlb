@@ -17,6 +17,8 @@
 		linescore?: MLB.Linescore
 		showDescription?: boolean
 	} = $props()
+
+	const { flags } = $derived(game as unknown as { flags: MLB.GameFlags })
 </script>
 
 <article class="group/game grid items-end" data-gamePk={game.gamePk}>
@@ -39,17 +41,32 @@
 		{/if}
 	</div>
 
-	{#if showDescription}
-		<span class="grid h-rlh items-end text-center text-xs font-light" style:grid-area="description">
-			<span class="line-clamp-1">
+	<span
+		class="group/description grid h-rlh items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
+		style:grid-area="description"
+	>
+		{#if showDescription}
+			<span>
 				{#if game.description}
 					{game.description}
 				{:else if game.seriesGameNumber && game.gamesInSeries}
 					Series {game.seriesGameNumber} of {game.gamesInSeries}
 				{/if}
 			</span>
-		</span>
-	{/if}
+		{/if}
+
+		{#if flags.perfectGame || flags.noHitter}
+			<strong
+				class="border bg-background font-bold text-red-500 group-has-hover/description:hidden"
+			>
+				{#if flags.perfectGame}
+					Perfect game
+				{:else if flags.noHitter}
+					No-hitter
+				{/if}
+			</strong>
+		{/if}
+	</span>
 
 	<div style:grid-area="boxscore">
 		{#if boxscore}

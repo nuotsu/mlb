@@ -11,9 +11,10 @@ export const load: PageLoad = async ({ params, url }) => {
 			'totalGames,dates,date,venue,description,seriesGameNumber,gamesInSeries',
 			'games,gamePk,gameType,gameDate',
 			'status,abstractGameState,detailedState,reason',
+			'flags,noHitter,perfectGame',
 			'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
 		],
-		hydrate: 'teams',
+		hydrate: 'teams,flags',
 	})
 
 	return {

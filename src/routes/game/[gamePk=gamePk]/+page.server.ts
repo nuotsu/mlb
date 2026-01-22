@@ -1,4 +1,4 @@
-import { fetchBoxscore, fetchLinescore, fetchMLB } from '$lib/fetch'
+import { fetchBoxscore, fetchfeedLive, fetchMLB } from '$lib/fetch'
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params }) => {
@@ -7,19 +7,17 @@ export const load: PageServerLoad = async ({ params }) => {
 		fields: [
 			'dates,date,venue,description,seriesGameNumber,gamesInSeries',
 			'games,gamePk,gameType,gameDate,link',
+			'flags,noHitter,perfectGame',
 			'status,abstractGameState,detailedState,reason',
 			'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
 		],
+		hydrate: 'flags',
 	})
 
 	const game = schedule.dates[0].games.find((game) => game.gamePk === Number(params.gamePk))!
 
-	const feedLive = await fetchMLB<MLB.LiveGameFeed>(game?.link, {
-		fields: ['gameData', 'gameInfo,attendance,gameDurationMinutes', 'weather,condition,temp,wind'],
-	})
-
+	const feedLive = await fetchfeedLive(params.gamePk)
 	const boxscore = await fetchBoxscore(params.gamePk)
-	const linescore = await fetchLinescore(params.gamePk)
 
 	const winProbability = await fetchMLB<MLB.PlayWinProbability[]>(
 		`/api/v1/game/${params.gamePk}/winProbability`,
@@ -30,7 +28,6 @@ export const load: PageServerLoad = async ({ params }) => {
 		game,
 		feedLive,
 		boxscore,
-		linescore,
 		winProbability,
 	}
 }

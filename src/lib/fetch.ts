@@ -19,6 +19,19 @@ export async function fetchMLB<T>(
 
 // game
 
+export async function fetchfeedLive(gamePk: string | number) {
+	return await fetchMLB<MLB.LiveGameFeed>(`/api/v1.1/game/${gamePk}/feed/live`, {
+		fields: [
+			'gameData,liveData',
+			'gameInfo,attendance,gameDurationMinutes',
+			'weather,condition,temp,wind',
+			'linescore,currentInning,scheduledInnings',
+			'innings,num,runs,hits,errors,leftOnBase',
+			'teams,home,away',
+		],
+	})
+}
+
 export async function fetchBoxscore(gamePk: string | number) {
 	return await fetchMLB<MLB.Boxscore>(`/api/v1/game/${gamePk}/boxscore`, {
 		fields: 'teams,away,team,id,name,teamName,abbreviation,sport',
