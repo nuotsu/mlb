@@ -24,11 +24,14 @@
 	description="Game details for {[away.name, home.name].join(' at ')} on {date}"
 />
 
-<section class="mx-auto max-w-5xl space-y-ch p-ch">
-	<Game {game} {boxscore} {linescore} />
-	<GameData {game} {feedLive} />
+<section class="mx-auto max-w-5xl space-y-ch py-ch">
+	<Game class="sm:px-ch" {game} {boxscore} {linescore} />
 
-	{#if Array.isArray(data.winProbability)}
-		<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
-	{/if}
+	<div class="space-y-ch px-ch">
+		<GameData {game} {feedLive} />
+
+		{#if Array.isArray(data.winProbability)}
+			<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
+		{/if}
+	</div>
 </section>

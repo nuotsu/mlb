@@ -23,9 +23,14 @@ export const load = async ({ params, url }) => {
 			'dates,date,venue,description,seriesGameNumber,gamesInSeries',
 			'games,gamePk,gameType,gameDate',
 			'status,abstractGameState,detailedState,reason',
+			'flags,noHitter,perfectGame',
 			'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
+			// linescore
+			'linescore,currentInning,scheduledInnings',
+			'innings,num,runs,hits,errors,leftOnBase',
+			'teams,home,away',
 		],
-		hydrate: 'teams',
+		hydrate: 'teams,flags,linescore',
 	})
 
 	return {

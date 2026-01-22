@@ -32,7 +32,8 @@
 
 			<div class="mb-lh columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
 				{#each date.games as game}
-					<Game {game} showDescription />
+					{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
+					<Game {game} {linescore} showDescription />
 				{/each}
 			</div>
 		</details>

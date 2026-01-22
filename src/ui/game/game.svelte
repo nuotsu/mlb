@@ -11,17 +11,19 @@
 		boxscore,
 		linescore,
 		showDescription,
+		class: className = '',
 	}: {
 		game: MLB.Game
 		boxscore?: MLB.Boxscore
 		linescore?: MLB.Linescore
 		showDescription?: boolean
+		class?: string
 	} = $props()
 
 	const { flags } = $derived(game as unknown as { flags: MLB.GameFlags })
 </script>
 
-<article class="group/game grid items-end" data-gamePk={game.gamePk}>
+<article class="group/game grid items-end {className}" data-gamePk={game.gamePk}>
 	<div
 		class="relative grid h-6 place-content-center overflow-x-clip text-center text-sm tabular-nums *:leading-none group-has-[[style*=linescore]]/game:h-12"
 		style:grid-area="status"
@@ -55,7 +57,7 @@
 			</span>
 		{/if}
 
-		{#if flags.perfectGame || flags.noHitter}
+		{#if flags?.perfectGame || flags?.noHitter}
 			<strong
 				class="border bg-background font-bold text-red-500 group-has-hover/description:hidden"
 			>

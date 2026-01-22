@@ -18,9 +18,9 @@
 </script>
 
 <fieldset class="flex flex-col items-center text-center">
-	<label for="date" class="block text-sm leading-rlh">
+	<a href="/schedule/week/{date}" class="block text-sm leading-rlh">
 		{formatDate(date + 'T00:00:00', { weekday: 'long' })}
-	</label>
+	</a>
 
 	<div class="flex justify-center">
 		<label class="min-w-[16ch]">
@@ -47,13 +47,12 @@
 </fieldset>
 
 <style>
-	fieldset:has(label:hover) label,
+	label,
 	a {
 		padding-inline: 1ch;
-	}
 
-	fieldset:has(label:hover) label,
-	a:hover {
-		text-decoration: underline dashed;
+		&:hover {
+			text-decoration: underline dashed;
+		}
 	}
 </style>
