@@ -6,7 +6,7 @@
 	const { gameInfo, weather } = $derived(feedLive.gameData)
 </script>
 
-<dl class="grid grid-cols-[auto_1fr] gap-x-lh">
+<dl class="grid grid-cols-[auto_1fr] gap-x-lh [&_dt]:text-current/50">
 	<dt>Date</dt>
 	<dd>
 		<a class="link" href="/schedule/day/{formatDate(game.gameDate, { locale: 'en-CA' })}">
@@ -42,7 +42,7 @@
 		{@const { condition, temp, wind } = weather ?? {}}
 		<dt>Weather</dt>
 		<dd>
-			{[condition, temp && `${temp}°F`, wind && `${wind} mph`].filter(Boolean).join(' / ')}
+			{[condition, temp && `${temp}°F`, wind && `Wind: ${wind} mph`].filter(Boolean).join(' / ')}
 		</dd>
 	{/if}
 

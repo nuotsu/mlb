@@ -29,8 +29,10 @@
 		style:grid-area="status"
 	>
 		{#if game.status.abstractGameState === 'Final'}
+			{@const value =
+				game.status.reason || game.status.detailedState || game.status.abstractGameState}
 			<span>
-				{game.status.reason || game.status.detailedState || game.status.abstractGameState}
+				{value}{#if value === 'Final' && linescore?.currentInning! > linescore?.scheduledInnings!}/{linescore?.currentInning}{/if}
 			</span>
 		{:else}
 			<time datetime={game.gameDate}>

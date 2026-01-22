@@ -17,17 +17,19 @@ export async function fetchMLB<T>(
 	return (await response.json()) as T
 }
 
-// game
+// presets
 
 export async function fetchfeedLive(gamePk: string | number) {
 	return await fetchMLB<MLB.LiveGameFeed>(`/api/v1.1/game/${gamePk}/feed/live`, {
 		fields: [
-			'gameData,liveData',
+			'gamePk,gameData,liveData',
+			'players,fullName,lastName',
 			'gameInfo,attendance,gameDurationMinutes',
 			'weather,condition,temp,wind',
-			'linescore,currentInning,scheduledInnings',
-			'innings,num,runs,hits,errors,leftOnBase',
 			'teams,home,away',
+			'linescore,currentInning,scheduledInnings,innings,num,runs,hits,errors,leftOnBase',
+			'boxscore,topPerformers,player,stats,batting,pitching,summary',
+			'decisions,winner,loser,save,id',
 		],
 	})
 }

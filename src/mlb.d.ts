@@ -153,11 +153,18 @@ declare global {
 		}
 
 		/**
+		 * Player stats response
+		 */
+		interface PlayerStatsResponse extends ApiResponse<PlayerStats[]> {
+			stats: PlayerStats[]
+		}
+
+		/**
 		 * Player stats summary
 		 */
 		interface PlayerStats {
 			type: StatType
-			group?: string
+			group?: 'pitching' | 'hitting' | 'fielding'
 			exemptions?: unknown[]
 			splits: StatSplit[]
 		}
@@ -166,6 +173,7 @@ declare global {
 		 * Individual stat split
 		 */
 		interface StatSplit {
+			group?: 'pitching' | 'hitting' | 'fielding'
 			season?: string
 			stat: Record<string, number | string>
 			team?: Team
@@ -776,6 +784,8 @@ declare global {
 		 * Pitching statistics
 		 */
 		interface PitchingStats {
+			note?: string
+			summary?: string
 			runs?: number
 			doubles?: number
 			triples?: number
@@ -813,6 +823,8 @@ declare global {
 			wildPitches?: number
 			pickoffs?: number
 			totalBases?: number
+			groundOuts?: number
+			airOuts?: number
 			groundOutsToAirouts?: string
 			winPercentage?: string
 			pitchesPerInning?: string

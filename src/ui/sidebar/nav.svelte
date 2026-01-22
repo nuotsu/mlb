@@ -40,7 +40,7 @@
 					<a
 						{href}
 						class="relative flex items-center gap-1"
-						class:active={page.route.id!.startsWith(href)}
+						class:active={page.route.id?.startsWith(href)}
 					>
 						<svelte:component this={icon} />
 						<span>{label}</span>

@@ -152,6 +152,15 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				gameType: PRESETS.gameType,
 			},
 		},
+		'/api/v1/people/{personId}/stats/game/{gamePk}': {
+			pathParams: {
+				personId: PRESETS.personId,
+				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
+				fields: [{ value: '' }],
+			},
+		},
 		'/api/v1/people/freeAgents': {
 			queryParams: {
 				season: PRESETS.season,

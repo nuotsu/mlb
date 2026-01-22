@@ -44,7 +44,7 @@
 		<span>{boxscore?.teams.home.team.abbreviation ?? 'Home'}</span>
 	</figcaption>
 
-	<svg class="grow" {width} {height}>
+	<svg class="w-full grow" {width} {height}>
 		{#each inningDividers() as inning, i}
 			{#if i > 0}
 				<line

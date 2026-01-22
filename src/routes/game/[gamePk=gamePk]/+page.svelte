@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatDate } from '$lib/temporal'
+	import Decision from '$ui/game/decision.svelte'
 	import GameData from '$ui/game/game-data.svelte'
 	import Game from '$ui/game/game.svelte'
 	import WinProbability from '$ui/game/win-probability.svelte'
@@ -24,14 +25,14 @@
 	description="Game details for {[away.name, home.name].join(' at ')} on {date}"
 />
 
-<section class="mx-auto max-w-5xl space-y-ch py-ch">
-	<Game class="sm:px-ch" {game} {boxscore} {linescore} />
+<section class="mx-auto max-w-5xl space-y-ch py-ch *:px-ch">
+	<Game class="max-sm:px-0" {game} {boxscore} {linescore} />
 
-	<div class="space-y-ch px-ch">
-		<GameData {game} {feedLive} />
+	<Decision {feedLive} />
 
-		{#if Array.isArray(data.winProbability)}
-			<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
-		{/if}
-	</div>
+	{#if Array.isArray(data.winProbability)}
+		<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
+	{/if}
+
+	<GameData {game} {feedLive} />
 </section>
