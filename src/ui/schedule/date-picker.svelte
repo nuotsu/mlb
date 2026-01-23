@@ -7,7 +7,7 @@
 
 	function addDay(days: number = 1) {
 		return formatDate(
-			new Date(new Date(date + 'T00:00:00').setDate(new Date(date + 'T00:00:00').getDate() + days)),
+			new Date(new Date(date.replace(/-/g, '/')).setDate(new Date(date.replace(/-/g, '/')).getDate() + days)),
 			{ locale: 'en-CA' },
 		)
 	}
@@ -19,12 +19,12 @@
 
 <fieldset class="flex flex-col items-center text-center">
 	<a href="/schedule/week/{date}" class="block text-sm leading-rlh">
-		{formatDate(date + 'T00:00:00', { weekday: 'long' })}
+		{formatDate(date.replace(/-/g, '/'), { weekday: 'long' })}
 	</a>
 
 	<div class="flex justify-center">
 		<label class="min-w-[16ch]">
-			{formatDate(date + 'T00:00:00', {
+			{formatDate(date.replace(/-/g, '/'), {
 				month: 'long',
 				day: 'numeric',
 				year: 'numeric',

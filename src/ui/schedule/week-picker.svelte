@@ -4,7 +4,7 @@
 	import { formatDate, getToday } from '$lib/temporal'
 	import { getWeekDates } from './store.svelte'
 
-	let date = $state(formatDate(page.params.date + 'T00:00:00', { locale: 'en-CA' }))
+	let date = $state(formatDate(page.params.date.replace(/-/g, '/'), { locale: 'en-CA' }))
 
 	const { startDate, endDate } = $derived(getWeekDates(page.params.date!))
 	const isSameMonth = $derived(startDate.getMonth() === endDate.getMonth())
@@ -12,8 +12,8 @@
 	function addWeek(weeks: number = 1) {
 		return formatDate(
 			new Date(
-				new Date(page.params.date + 'T00:00:00').setDate(
-					new Date(page.params.date + 'T00:00:00').getDate() + weeks * 7,
+				new Date(page.params.date.replace(/-/g, '/')).setDate(
+					new Date(page.params.date.replace(/-/g, '/')).getDate() + weeks * 7,
 				),
 			),
 			{ locale: 'en-CA' },
