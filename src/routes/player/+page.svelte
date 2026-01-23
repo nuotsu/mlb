@@ -3,7 +3,9 @@
 	import { debounce } from '$lib/utils'
 	import { IconIcon } from '$ui/icons'
 	import Loading from '$ui/loading.svelte'
+	import Metadata from '$ui/metadata.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
+	import posthog from 'posthog-js'
 
 	let query = $state('')
 	let promise: Promise<any> | null = $state(null)
@@ -19,9 +21,14 @@
 		promise = fetchMLB('/api/v1/people/search', {
 			names: query,
 			fields: 'people,id,fullName,primaryNumber',
+		}).then((results) => {
+			posthog.capture('player_search_query', { query })
+			return results
 		})
 	}
 </script>
+
+<Metadata title="Player Search | MLB.TheOhtani.com" description="Search for a player by name" />
 
 <search class="space-y-ch p-ch">
 	<h1 class="text-center">Player Search</h1>
