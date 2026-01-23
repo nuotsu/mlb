@@ -15,7 +15,7 @@
 
 	{#each season.seasons as s}
 		<article>
-			<h1>{s.seasonId} Season</h1>
+			<h2 class="text-xl">{s.seasonId} Season</h2>
 
 			<table class="mx-auto">
 				<tbody>

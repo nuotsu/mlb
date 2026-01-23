@@ -24,7 +24,7 @@ Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view 
 ## Credits & References
 
 - https://github.com/toddrob99/MLB-StatsAPI/wiki/Endpoints
-- https://gdx.mlb.com/components/copyright.txt
+- Copyright: https://gdx.mlb.com/components/copyright.txt
 
 ## Archive
 

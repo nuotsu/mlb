@@ -17,7 +17,7 @@
 		},
 		{
 			href: `/schedule/day`,
-			label: "Today's Games",
+			label: 'Daily Schedule',
 			icon: CalendarTodayIcon,
 		},
 		{
