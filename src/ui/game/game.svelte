@@ -3,6 +3,7 @@
 	import { fetchBoxscore, fetchLinescore } from '$lib/fetch'
 	import { formatDate } from '$lib/temporal'
 	import Linescore from '$ui/game/linescore.svelte'
+	import ProbablePitchers from '$ui/game/probable-pitchers.svelte'
 	import TeamScores from '$ui/game/team-scores.svelte'
 	import Loading from '$ui/loading.svelte'
 
@@ -21,6 +22,8 @@
 	} = $props()
 
 	const { flags } = $derived(game as unknown as { flags: MLB.GameFlags })
+
+	const isGamePage = $derived(page.url.pathname === `/game/${game.gamePk}`)
 </script>
 
 <article class="group/game grid items-end {className}" data-gamePk={game.gamePk}>
@@ -40,37 +43,39 @@
 			</time>
 		{/if}
 
-		{#if page.url.pathname !== `/game/${game.gamePk}`}
+		{#if !isGamePage}
 			<a class="absolute inset-0 text-[0px]" href="/game/{game.gamePk}">View details</a>
 		{/if}
 	</div>
 
-	<span
-		class="group/description grid h-rlh items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
-		style:grid-area="description"
-	>
-		{#if showDescription}
-			<span>
-				{#if game.description}
-					{game.description}
-				{:else if game.seriesGameNumber && game.gamesInSeries}
-					Series {game.seriesGameNumber} of {game.gamesInSeries}
-				{/if}
-			</span>
-		{/if}
+	{#if !isGamePage}
+		<span
+			class="group/description grid h-rlh items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
+			style:grid-area="description"
+		>
+			{#if showDescription}
+				<span>
+					{#if game.description}
+						{game.description}
+					{:else if game.seriesGameNumber && game.gamesInSeries}
+						Series {game.seriesGameNumber} of {game.gamesInSeries}
+					{/if}
+				</span>
+			{/if}
 
-		{#if flags?.perfectGame || flags?.noHitter}
-			<strong
-				class="border bg-background font-bold text-red-500 group-has-hover/description:hidden"
-			>
-				{#if flags.perfectGame}
-					Perfect game
-				{:else if flags.noHitter}
-					No-hitter
-				{/if}
-			</strong>
-		{/if}
-	</span>
+			{#if flags?.perfectGame || flags?.noHitter}
+				<strong
+					class="border bg-background font-bold text-red-500 group-has-hover/description:hidden"
+				>
+					{#if flags.perfectGame}
+						Perfect game
+					{:else if flags.noHitter}
+						No-hitter
+					{/if}
+				</strong>
+			{/if}
+		</span>
+	{/if}
 
 	<div style:grid-area="boxscore">
 		{#if boxscore}
@@ -92,6 +97,8 @@
 				<Linescore linescore={data} />
 			{/await}
 		{/if}
+	{:else}
+		<ProbablePitchers />
 	{/if}
 </article>
 

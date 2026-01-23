@@ -35,4 +35,6 @@ Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view 
 
 ## TODO
 
+- probable pitchers
+- add more prev/next dates in date-picker, if space allows
 - code folding > show children count (use `mutationObserver` attachment)

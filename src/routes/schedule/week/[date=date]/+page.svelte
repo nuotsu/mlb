@@ -16,7 +16,7 @@
 </header>
 
 <section class="space-y-ch p-ch max-sm:px-0">
-	{#each data.schedule.dates as date}
+	{#each data.schedule.dates as date (date.date)}
 		<details class="group" open>
 			<summary class="flex items-center gap-ch px-ch">
 				{formatDate(date.date + 'T00:00:00', {

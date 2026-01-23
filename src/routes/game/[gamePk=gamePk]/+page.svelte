@@ -19,6 +19,9 @@
 	const date = $derived(
 		formatDate(game.gameDate, { year: 'numeric', month: 'short', day: 'numeric' }),
 	)
+
+	const hasTopPerformers = $derived(feedLive.liveData.boxscore.topPerformers?.length)
+	const hasDecisions = $derived(feedLive.liveData.decisions)
 </script>
 
 <Metadata
@@ -29,15 +32,17 @@
 <section class="mx-auto max-w-5xl space-y-lh py-ch *:px-ch">
 	<Game class="max-sm:px-0" {game} {boxscore} {linescore} />
 
-	<div class="flex flex-wrap gap-ch *:grow">
-		{#if feedLive.liveData.boxscore.topPerformers?.length}
-			<TopPerformers {feedLive} />
-		{/if}
+	{#if hasTopPerformers || hasDecisions}
+		<div class="flex flex-wrap gap-ch *:grow">
+			{#if hasTopPerformers}
+				<TopPerformers {feedLive} />
+			{/if}
 
-		{#if feedLive.liveData.decisions}
-			<Decision {feedLive} />
-		{/if}
-	</div>
+			{#if hasDecisions}
+				<Decision {feedLive} />
+			{/if}
+		</div>
+	{/if}
 
 	{#if Array.isArray(data.winProbability)}
 		<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />

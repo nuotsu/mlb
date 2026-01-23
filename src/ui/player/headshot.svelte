@@ -1,7 +1,7 @@
 <script lang="ts">
 	let {
 		person,
-		size = 48,
+		size = 96,
 		type = 'spots',
 		class: className,
 	}: {

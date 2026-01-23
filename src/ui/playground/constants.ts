@@ -195,6 +195,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 						empty: true,
 					},
 				],
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
 		'/api/v1/schedule/postseason': {

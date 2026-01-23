@@ -25,6 +25,7 @@ declare global {
 			value: string
 			label?: string
 			empty?: boolean
+			placeholder?: string
 		}
 	}
 }
