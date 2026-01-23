@@ -1,6 +1,6 @@
 import { HOST, PRESETS } from '$ui/playground/constants'
 
-type QueryParamKeys = keyof typeof PRESETS | 'startDate' | 'endDate' | 'fields' | 'hydrate'
+type QueryParamKeys = keyof typeof PRESETS | 'startDate' | 'endDate' | 'fields' | 'hydrate' | 'names'
 
 export async function fetchMLB<T>(
 	endpoint: string,

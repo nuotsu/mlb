@@ -1,4 +1,6 @@
 <script lang="ts">
+	import Headshot from '$ui/player/headshot.svelte'
+
 	let { feedLive }: { feedLive: MLB.LiveGameFeed } = $props()
 
 	const topPerformers = $derived(feedLive.liveData.boxscore.topPerformers)
@@ -23,12 +25,7 @@
 
 		<div class="group/player relative flex max-w-max items-center gap-ch">
 			<dt class="shrink-0">
-				<img
-					class="size-[1.5lh] object-contain"
-					src="https://midfield.mlbstatic.com/v1/people/{player.person.id}/spots/48"
-					alt={player.person.fullName}
-					draggable={false}
-				/>
+				<Headshot person={player.person} class="size-[1.5lh]" />
 			</dt>
 
 			<dd class="line-clamp-1 break-all" title={player.person.fullName}>

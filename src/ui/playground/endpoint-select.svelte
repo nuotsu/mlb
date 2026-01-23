@@ -27,7 +27,7 @@
 
 	<select
 		name="endpoint-path"
-		class="input field-sizing-content h-lh min-w-[6ch] shrink-0"
+		class="input-dev field-sizing-content h-lh min-w-[6ch] shrink-0"
 		bind:value
 		onchange={() => {
 			if (page.url.searchParams.has('endpoint')) {

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fetchMLB } from '$lib/fetch'
 	import Loading from '$ui/loading.svelte'
+	import Headshot from '$ui/player/headshot.svelte'
 
 	let { feedLive }: { feedLive: MLB.LiveGameFeed } = $props()
 
@@ -38,12 +39,7 @@
 						{decision.charAt(0).toUpperCase()}
 					</abbr>
 
-					<img
-						class=" size-[1.5lh] object-contain"
-						src="https://midfield.mlbstatic.com/v1/people/{id}/spots/48"
-						alt={player.fullName}
-						draggable={false}
-					/>
+					<Headshot person={player} class="size-[1.5lh]" />
 				</dt>
 
 				<dd class="line-clamp-1 break-all" title={player.fullName}>

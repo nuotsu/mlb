@@ -44,7 +44,7 @@
 				id={parameter}
 				name={parameter}
 				class={cn(
-					'input field-sizing-content w-full min-w-[8ch] px-[.5ch] tabular-nums sm:min-w-[16ch] sm:[[type=date]]:max-w-[10ch]',
+					'input-dev field-sizing-content w-full min-w-[8ch] px-[.5ch] tabular-nums sm:min-w-[16ch] sm:[[type=date]]:max-w-[10ch]',
 					hasPresetOptions && 'max-w-[24ch]',
 					!input && '[[type=date]]:text-current/50',
 					['custom', 'fields', 'hydrate', 'timecode'].includes(parameter)
