@@ -2,10 +2,7 @@ export function getToday() {
 	return new Date(Date.now() - new Date().getTimezoneOffset() * 60 * 1000)
 }
 
-/**
- * Converts a hyphenated date string (YYYY-MM-DD) to slash format (YYYY/MM/DD).
- * This ensures dates are parsed as local time instead of UTC when used in Date constructors.
- */
+/** Converts YYYY-MM-DD to YYYY/MM/DD to avoid UTC parsing issues */
 export function slash(date: string) {
 	return date.replace(/-/g, '/')
 }
