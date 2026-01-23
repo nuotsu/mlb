@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { formatDate, getToday } from '$lib/temporal'
+	import { formatDate, getToday, toSlashDate } from '$lib/temporal'
 	import { getWeekDates } from './store.svelte'
 
-	let date = $state(formatDate(page.params.date.replace(/-/g, '/'), { locale: 'en-CA' }))
+	let date = $state(formatDate(toSlashDate(page.params.date), { locale: 'en-CA' }))
 
 	const { startDate, endDate } = $derived(getWeekDates(page.params.date!))
 	const isSameMonth = $derived(startDate.getMonth() === endDate.getMonth())
@@ -12,8 +12,8 @@
 	function addWeek(weeks: number = 1) {
 		return formatDate(
 			new Date(
-				new Date(page.params.date.replace(/-/g, '/')).setDate(
-					new Date(page.params.date.replace(/-/g, '/')).getDate() + weeks * 7,
+				new Date(toSlashDate(page.params.date)).setDate(
+					new Date(toSlashDate(page.params.date)).getDate() + weeks * 7,
 				),
 			),
 			{ locale: 'en-CA' },
