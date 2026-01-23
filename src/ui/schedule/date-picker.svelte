@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { formatDate, getToday } from '$lib/temporal'
+	import { formatDate, getToday, slash } from '$lib/temporal'
 
 	let date = $derived(page.params.date)
 
 	function addDay(days: number = 1) {
 		return formatDate(
-			new Date(new Date(date + 'T00:00:00').setDate(new Date(date + 'T00:00:00').getDate() + days)),
+			new Date(new Date(slash(date)).setDate(new Date(slash(date)).getDate() + days)),
 			{ locale: 'en-CA' },
 		)
 	}
@@ -19,12 +19,12 @@
 
 <fieldset class="flex flex-col items-center text-center">
 	<a href="/schedule/week/{date}" class="block text-sm leading-rlh">
-		{formatDate(date + 'T00:00:00', { weekday: 'long' })}
+		{formatDate(slash(date), { weekday: 'long' })}
 	</a>
 
 	<div class="flex justify-center">
 		<label class="min-w-[16ch]">
-			{formatDate(date + 'T00:00:00', {
+			{formatDate(slash(date), {
 				month: 'long',
 				day: 'numeric',
 				year: 'numeric',
