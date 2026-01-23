@@ -33,7 +33,7 @@
 					</tr>
 					<tr>
 						<th>All-Star Game</th>
-						<td>{@render linkedDate(s.allStarDate)}</td>
+						<td>{@render linkedDate(s.allStarDate, 'day')}</td>
 					</tr>
 					<tr>
 						<th>Postseason</th>
@@ -49,8 +49,8 @@
 	{/each}
 </section>
 
-{#snippet linkedDate(date: string = '')}
-	<a class="decoration-dashed hover:underline" href="/schedule/week/{date}">
+{#snippet linkedDate(date: string = '', view: 'week' | 'day' = 'week')}
+	<a class="decoration-dashed hover:underline" href="/schedule/{view}/{date}">
 		{formatDate(date + 'T00:00:00', { weekday: 'short', month: 'short', day: 'numeric' })}
 	</a>
 {/snippet}
