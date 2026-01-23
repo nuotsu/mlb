@@ -31,7 +31,7 @@
 <tr class="align-top *:px-[.5ch]">
 	<th class="sticky left-0 bg-background text-right font-normal">
 		<label for={parameter} class="grid h-lh items-center">
-			<small class="flex justify-end font-mono">
+			<small class="flex justify-end font-mono tabular-nums">
 				{parameter}
 				<span class="text-current/25">=</span>
 			</small>
@@ -44,7 +44,7 @@
 				id={parameter}
 				name={parameter}
 				class={cn(
-					'input-dev field-sizing-content w-full min-w-[8ch] px-[.5ch] tabular-nums sm:min-w-[16ch] sm:[[type=date]]:max-w-[10ch]',
+					'input-dev field-sizing-content w-full min-w-[8ch] px-[.5ch] font-sans tabular-nums sm:min-w-[16ch] sm:[[type=date]]:max-w-[10ch]',
 					hasPresetOptions && 'max-w-[24ch]',
 					!input && '[[type=date]]:text-current/50',
 					['custom', 'fields', 'hydrate', 'timecode'].includes(parameter)

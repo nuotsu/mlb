@@ -21,5 +21,5 @@
 {/if}
 
 {#snippet score(score?: number)}
-	<strong class="shrink-0 text-right tabular-nums">{score}</strong>
+	<strong class="shrink-0 text-right font-sans tabular-nums">{score}</strong>
 {/snippet}

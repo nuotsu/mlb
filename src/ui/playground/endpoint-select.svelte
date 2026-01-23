@@ -19,7 +19,7 @@
 	}
 </script>
 
-<label class="flex items-center">
+<label class="flex flex-wrap items-center">
 	<span class="flex break-all text-current/50">
 		<span class="shrink-0 max-sm:hidden">{protocol}//</span>
 		<span class="line-clamp-1 shrink">{host}</span>
@@ -27,7 +27,7 @@
 
 	<select
 		name="endpoint-path"
-		class="input-dev field-sizing-content h-lh min-w-[6ch] shrink-0"
+		class="input-dev field-sizing-content h-lh grow max-sm:w-full"
 		bind:value
 		onchange={() => {
 			if (page.url.searchParams.has('endpoint')) {

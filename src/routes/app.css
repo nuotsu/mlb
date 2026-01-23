@@ -2,7 +2,8 @@
 @import 'tailwindcss';
 
 @theme {
-	--font-sans: 'Geist', sans-serif;
+	--font-serif: 'Mozilla Headline', sans-serif;
+	--font-sans: 'Geist', monospace;
 	--font-mono: 'Geist Mono', monospace;
 
 	--color-dark: #000;
@@ -28,9 +29,14 @@
 		color: var(--color-dark);
 	}
 
+	::placeholder {
+		@apply text-current/25;
+	}
+
 	html {
 		scroll-behavior: smooth;
 		scrollbar-color: var(--color-accent) transparent;
+		@apply font-serif;
 	}
 
 	body {
@@ -52,10 +58,6 @@
 	button,
 	summary {
 		cursor: pointer;
-	}
-
-	::placeholder {
-		@apply text-current/25;
 	}
 
 	@supports (interpolate-size: allow-keywords) {

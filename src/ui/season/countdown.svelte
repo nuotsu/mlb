@@ -40,7 +40,7 @@
 
 				{#if !isDay || value}
 					<div class={cn('grid', isDay && 'mr-ch')}>
-						<b class="font-mono">
+						<b class="font-mono tabular-nums">
 							{isDay ? value : value.toString().padStart(2, '0')}
 						</b>
 
@@ -55,7 +55,7 @@
 				{/if}
 
 				{#if part !== 'days' && i < duration.length - 1}
-					<span class="font-mono">:</span>
+					<span class="font-mono tabular-nums">:</span>
 				{/if}
 			{/each}
 		</div>
