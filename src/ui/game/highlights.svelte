@@ -44,7 +44,7 @@
 				<figure
 					class="w-full space-y-ch transition-opacity group-not-has-checked/highlight:hidden starting:opacity-0"
 				>
-					<video id={`highlights-${i}`} src={url} controls>
+					<video class="w-full" id={`highlights-${i}`} src={url} controls>
 						<track kind="captions" />
 					</video>
 
@@ -55,7 +55,7 @@
 	{/each}
 
 	<label
-		class="group/theater absolute right-0 bottom-0 grid h-lh place-content-center max-md:hidden"
+		class="group/theater absolute right-0 bottom-0 grid h-lh place-content-center not-hover:text-current/50 not-hover:transition-colors max-md:hidden"
 		title="Theater mode (t)"
 	>
 		<input id="theater-mode" type="checkbox" bind:checked={theaterMode} hidden />
