@@ -16,7 +16,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 
 <Metadata
 	title="MLB.TheOhtani.com"
-	description="A custom MLB scorebug for Major League Baseball (MLB) and other leagues."
+	description="A custom MLB scorebug for Major League Baseball (MLB) and other leagues. MLB = Mitchell's Live scoreBug."
 />
 
 <header class="p-ch">

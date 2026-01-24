@@ -9,7 +9,9 @@ $$ | \_/ $$ |$$$$$$$$\ $$$$$$$  |
 \__|     \__|\________|\_______/ .TheOhtani.com
 ```
 
-# MLB Scorebug & MLB Stats API Playground
+# MLB (Mitchell's Live scoreBug)
+
+> MLB Scorebug & MLB Stats API Playground
 
 ## MLB Scorebug
 
@@ -39,7 +41,7 @@ Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view 
 ## Credits & References
 
 - https://github.com/toddrob99/MLB-StatsAPI/wiki/Endpoints
-- Copyright: https://gdx.mlb.com/components/copyright.txt
+- Copyright 👉 https://gdx.mlb.com/components/copyright.txt
 
 ## Archive
 
