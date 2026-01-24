@@ -23,6 +23,11 @@
 				type="radio"
 				value={i}
 				checked={title === 'Daily Recap' || i === 0}
+				onchange={() => {
+					document.querySelectorAll('video')?.forEach((video) => {
+						if (video.id !== `highlights-${i}`) video.pause()
+					})
+				}}
 				hidden
 			/>
 
@@ -39,7 +44,7 @@
 				<figure
 					class="w-full space-y-ch transition-opacity group-not-has-checked/highlight:hidden starting:opacity-0"
 				>
-					<video src={url} controls>
+					<video id={`highlights-${i}`} src={url} controls>
 						<track kind="captions" />
 					</video>
 
