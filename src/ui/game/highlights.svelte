@@ -56,7 +56,7 @@
 
 	<label
 		class="group/theater absolute right-0 bottom-0 grid h-lh place-content-center max-md:hidden"
-		title="Theater mode"
+		title="Theater mode (t)"
 	>
 		<input id="theater-mode" type="checkbox" bind:checked={theaterMode} hidden />
 		<ExpandIcon class="group-has-checked/theater:hidden" />
