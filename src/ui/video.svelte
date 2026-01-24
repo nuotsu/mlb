@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { HTMLVideoAttributes } from 'svelte/elements'
 	import Hls from 'hls.js'
+	import type { HTMLVideoAttributes } from 'svelte/elements'
 
 	let {
 		playbacks,
@@ -19,22 +19,26 @@
 	const mp4 = $derived(playbacks?.find((p) => p.name === 'mp4Avc')?.url)
 
 	$effect(() => {
-		if (!video || !hls) return
+		const el = video
+		if (!el) return
 
-		if (video.canPlayType('application/vnd.apple.mpegurl')) {
-			// Safari - native HLS
-			video.src = hls
-		} else if (Hls.isSupported()) {
-			// Chrome/Firefox/Edge - use hls.js
-			const player = new Hls()
-			player.loadSource(hls)
-			player.attachMedia(video)
-			return () => player.destroy()
+		if (hls) {
+			if (el.canPlayType('application/vnd.apple.mpegurl')) {
+				// Native HLS (Safari, iOS)
+				el.src = hls
+			} else if (Hls.isSupported()) {
+				// hls.js (Chrome/Firefox/Edge)
+				const player = new Hls()
+				player.loadSource(hls)
+				player.attachMedia(el)
+				return () => player.destroy()
+			}
+		} else if (mp4) {
+			el.src = mp4
 		}
 	})
 </script>
 
-<video bind:this={video} class={className} {poster} controls {...props}>
-	<source src={mp4} type="video/mp4" />
+<video bind:this={video} class={className} {poster} playsinline controls {...props}>
 	<track kind="captions" />
 </video>
