@@ -1023,6 +1023,130 @@ declare global {
 			[index: number]: PlayWinProbability
 		}
 
+		interface GameContent {
+			link: string
+			editorial: {
+				preview: Record<string, unknown>
+				articles:
+					| (ContentItemWithMedia & {
+							media?: ContentItemWithMedia
+					  })[]
+					| null
+				recap: {
+					mlb: ContentItemWithMedia & {
+						media?: ContentItemWithMedia
+					}
+				}
+				wrap: Record<string, unknown>
+			}
+			media: {
+				epgAlternate: {
+					items: ContentItemWithMedia[]
+					title: string
+				}[]
+				milestones: null | unknown
+				featuredMedia: {
+					id: string
+				}
+				freeGame: boolean
+				enhancedGame: boolean
+				previewStory: {
+					items: ContentItemWithMedia[]
+					mlb: ContentItemWithMedia
+				}
+			}
+			highlights: {
+				scoreboard: null | unknown
+				gameCenter: null | unknown
+				milestone: null | unknown
+				highlights: {
+					items: ContentItemWithMedia[]
+				}
+				live: {
+					items: ContentItemWithMedia[]
+				}
+				scoreboardPreview: {
+					items: ContentItemWithMedia[]
+				}
+			}
+			summary: {
+				hasPreviewArticle: boolean
+				hasRecapArticle: boolean
+				hasWrapArticle: boolean
+				hasHighlightsVideo: boolean
+			}
+			gameNotes: Record<string, unknown>
+		}
+
+		interface ContentItem {
+			state: string
+			keywordsAll: {
+				type?: string
+				value: string
+				displayName: string
+			}[]
+			keywordsDisplay: {
+				type?: string
+				value: string
+				displayName: string
+			}[]
+			dapiURL?: string
+		}
+
+		interface ContentItemWithMedia extends ContentItem {
+			type: string
+			date: string
+			id: string
+			headline: string
+			seoTitle: string
+			slug: string
+			blurb: string
+			seoKeywords?: string
+			body?: string
+			contributors?: {
+				name: string
+			}[]
+			image?: {
+				title: string
+				altText: string | null
+				templateUrl: string
+				cuts: {
+					aspectRatio: string
+					width: number
+					height: number
+					src: string
+					at2x: string
+					at3x: string
+				}[]
+			}
+			noIndex: boolean
+			mediaPlaybackId: string
+			title: string
+			description: string
+			duration: string
+			mediaPlaybackUrl: string
+			playbacks?: {
+				name: string
+				url: string
+				width: string
+				height: string
+			}[]
+			photo?: {
+				title: string
+				altText: string | null
+				templateUrl: string
+				cuts: {
+					aspectRatio: string
+					width: number
+					height: number
+					src: string
+					at2x: string
+					at3x: string
+				}[]
+			}
+			url?: string
+		}
+
 		// Schedule Types
 
 		/**

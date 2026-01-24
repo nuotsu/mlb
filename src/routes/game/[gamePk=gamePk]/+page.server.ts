@@ -24,10 +24,15 @@ export const load: PageServerLoad = async ({ params }) => {
 		{ fields: 'result,homeTeamWinProbability,awayTeamWinProbability' },
 	)
 
+	const content = await fetchMLB<MLB.GameContent>(`/api/v1/game/${params.gamePk}/content`, {
+		highlightLimit: '0',
+	})
+
 	return {
 		game,
 		feedLive,
 		boxscore,
 		winProbability,
+		content,
 	}
 }

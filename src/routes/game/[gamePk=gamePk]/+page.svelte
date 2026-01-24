@@ -3,6 +3,7 @@
 	import Decision from '$ui/game/decision.svelte'
 	import GameData from '$ui/game/game-data.svelte'
 	import Game from '$ui/game/game.svelte'
+	import Highlights from '$ui/game/highlights.svelte'
 	import TopPerformers from '$ui/game/top-performers.svelte'
 	import WinProbability from '$ui/game/win-probability.svelte'
 	import Metadata from '$ui/metadata.svelte'
@@ -24,13 +25,22 @@
 	const hasDecisions = $derived(feedLive.liveData.decisions)
 </script>
 
+<svelte:head>
+	<link rel="preconnect" href="https://mlb-cuts-diamond.mlb.com" />
+</svelte:head>
+
 <Metadata
 	title="{[away.teamName, home.teamName].join(' @ ')} ({date}) | MLB.TheOhtani.com"
 	description="Game details for {[away.name, home.name].join(' at ')} on {date}"
 />
 
 <section class="mx-auto max-w-5xl space-y-lh py-ch *:px-ch">
-	<Game class="max-sm:px-0" {game} {boxscore} {linescore} />
+	<Game
+		class="sticky top-0 z-1 bg-background/50 backdrop-blur max-sm:px-0"
+		{game}
+		{boxscore}
+		{linescore}
+	/>
 
 	{#if hasTopPerformers || hasDecisions}
 		<div class="flex flex-wrap gap-ch *:grow">
@@ -48,5 +58,11 @@
 		<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
 	{/if}
 
-	<GameData {game} {feedLive} />
+	<article class="grid items-start gap-ch md:has-[#theater-mode:not(:checked)]:grid-cols-2">
+		<GameData {game} {feedLive} />
+
+		{#if data.content?.media?.epgAlternate}
+			<Highlights content={data.content} />
+		{/if}
+	</article>
 </section>

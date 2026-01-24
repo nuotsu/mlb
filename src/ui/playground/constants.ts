@@ -87,15 +87,136 @@ export const CUSTOM_ENDPOINT_KEY = Object.keys(CUSTOM_ENDPOINT)[0] as keyof type
 export const CUSTOM_ENDPOINT_PATH = CUSTOM_ENDPOINT[CUSTOM_ENDPOINT_KEY].pathParams.custom[0].value
 
 export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
-	Leagues: {
+	Sport: {
+		'/api/v1/sports': {},
+		'/api/v1/divisions': {
+			queryParams: {
+				leagueId: [PRESETS.leagueId[0], PRESETS.leagueId[1]],
+				season: PRESETS.season,
+			},
+		},
 		'/api/v1/leagues': {
 			queryParams: {
 				leagueIds: PRESETS.leagueId,
 			},
 		},
-		'/api/v1/divisions': {
+	},
+
+	Schedule: {
+		'/api/v1/schedule': {
 			queryParams: {
-				leagueId: [PRESETS.leagueId[0], PRESETS.leagueId[1]],
+				sportId: PRESETS.sportId,
+				date: PRESETS.date,
+				startDate: [{ value: '' }],
+				endDate: [{ value: '' }],
+				season: PRESETS.season.map((s) => ({ ...s, empty: true })),
+				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
+				venueIds: PRESETS.venueId.map((v) => ({ ...v, empty: true })),
+				fields: [
+					{
+						value: 'dates,games,officialDate,dayNight,teams,team,name',
+						label: 'date + teams',
+						empty: true,
+					},
+				],
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
+			},
+		},
+		'/api/v1/schedule/postseason': {
+			queryParams: {
+				gameTypes: [
+					{ value: 'W', label: 'World Series' },
+					{ value: 'L', label: 'League Series' },
+					{ value: 'D', label: 'Division Series' },
+				],
+				season: PRESETS.season,
+				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
+				// seriesNumber: [{ value: '1', empty: true }],
+				fields: [{ value: '' }],
+			},
+		},
+	},
+	Game: {
+		'/api/v1.1/game/{gamePk}/feed/live': {
+			pathParams: {
+				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
+				timecode: [{ value: '20251102_031510', empty: true }],
+				fields: [
+					{
+						value: 'liveData,plays,allPlays,result,description,playEndTime',
+						label: 'All plays',
+					},
+					{
+						value: 'liveData,plays,currentPlay,result,description,playEndTime',
+						label: 'Current play',
+					},
+				],
+			},
+		},
+		// '/api/v1.1/game/{gamePk}/feed/live/timestamps': {
+		// 	pathParams: {
+		// 		gamePk: PRESETS.gamePk,
+		// 	},
+		// },
+		'/api/v1/game/{gamePk}/boxscore': {
+			pathParams: {
+				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
+				fields: [{ value: '' }],
+			},
+		},
+		'/api/v1/game/{gamePk}/linescore': {
+			pathParams: {
+				gamePk: PRESETS.gamePk,
+			},
+		},
+		'/api/v1/game/{gamePk}/content': {
+			pathParams: {
+				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
+				fields: [{ value: '' }],
+			},
+		},
+		'/api/v1/game/{gamePk}/contextMetrics': {
+			pathParams: {
+				gamePk: PRESETS.gamePk,
+			},
+		},
+		'/api/v1/game/{gamePk}/winProbability': {
+			pathParams: {
+				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
+				fields: [
+					{
+						value:
+							'result,description,homeTeamWinProbability,awayTeamWinProbability,homeTeamWinProbabilityAdded',
+						label: 'Probabilities',
+					},
+				],
+			},
+		},
+		'/api/v1/game/{gamePk}/playByPlay': {
+			pathParams: {
+				gamePk: PRESETS.gamePk,
+			},
+			queryParams: {
+				fields: [{ value: 'allPlays,result,description', label: 'All Plays' }],
+			},
+		},
+		'/api/v1/game/changes': {
+			queryParams: {
+				sportId: PRESETS.sportId,
+				updatedSince: PRESETS.date,
+			},
+		},
+		'/api/v1/gamePace': {
+			queryParams: {
+				sportId: PRESETS.sportId,
 				season: PRESETS.season,
 			},
 		},
@@ -178,122 +299,6 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 	},
-	Schedule: {
-		'/api/v1/schedule': {
-			queryParams: {
-				sportId: PRESETS.sportId,
-				date: PRESETS.date,
-				startDate: [{ value: '' }],
-				endDate: [{ value: '' }],
-				season: PRESETS.season.map((s) => ({ ...s, empty: true })),
-				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
-				venueIds: PRESETS.venueId.map((v) => ({ ...v, empty: true })),
-				fields: [
-					{
-						value: 'dates,games,officialDate,dayNight,teams,team,name',
-						label: 'date + teams',
-						empty: true,
-					},
-				],
-				hydrate: [{ value: '', placeholder: 'hydrations' }],
-			},
-		},
-		'/api/v1/schedule/postseason': {
-			queryParams: {
-				gameTypes: [
-					{ value: 'W', label: 'World Series' },
-					{ value: 'L', label: 'League Series' },
-					{ value: 'D', label: 'Division Series' },
-				],
-				season: PRESETS.season,
-				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
-				// seriesNumber: [{ value: '1', empty: true }],
-				fields: [{ value: '' }],
-			},
-		},
-	},
-	'Game Data': {
-		'/api/v1.1/game/{gamePk}/feed/live': {
-			pathParams: {
-				gamePk: PRESETS.gamePk,
-			},
-			queryParams: {
-				timecode: [{ value: '20251102_031510', empty: true }],
-				fields: [
-					{
-						value: 'liveData,plays,allPlays,result,description,playEndTime',
-						label: 'All plays',
-					},
-					{
-						value: 'liveData,plays,currentPlay,result,description,playEndTime',
-						label: 'Current play',
-					},
-				],
-			},
-		},
-		// '/api/v1.1/game/{gamePk}/feed/live/timestamps': {
-		// 	pathParams: {
-		// 		gamePk: PRESETS.gamePk,
-		// 	},
-		// },
-		'/api/v1/game/{gamePk}/boxscore': {
-			pathParams: {
-				gamePk: PRESETS.gamePk,
-			},
-			queryParams: {
-				fields: [{ value: '' }],
-			},
-		},
-		'/api/v1/game/{gamePk}/linescore': {
-			pathParams: {
-				gamePk: PRESETS.gamePk,
-			},
-		},
-		'/api/v1/game/{gamePk}/content': {
-			pathParams: {
-				gamePk: PRESETS.gamePk,
-			},
-		},
-		'/api/v1/game/{gamePk}/contextMetrics': {
-			pathParams: {
-				gamePk: PRESETS.gamePk,
-			},
-		},
-		'/api/v1/game/{gamePk}/winProbability': {
-			pathParams: {
-				gamePk: PRESETS.gamePk,
-			},
-			queryParams: {
-				fields: [
-					{
-						value:
-							'result,description,homeTeamWinProbability,awayTeamWinProbability,homeTeamWinProbabilityAdded',
-						label: 'Probabilities',
-					},
-				],
-			},
-		},
-		'/api/v1/game/{gamePk}/playByPlay': {
-			pathParams: {
-				gamePk: PRESETS.gamePk,
-			},
-			queryParams: {
-				fields: [{ value: 'allPlays,result,description', label: 'All Plays' }],
-			},
-		},
-		'/api/v1/game/changes': {
-			queryParams: {
-				sportId: PRESETS.sportId,
-				updatedSince: PRESETS.date,
-			},
-		},
-		'/api/v1/gamePace': {
-			queryParams: {
-				sportId: PRESETS.sportId,
-				season: PRESETS.season,
-			},
-		},
-	},
 	Standings: {
 		'/api/v1/standings': {
 			queryParams: {
@@ -326,7 +331,6 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 		},
 	},
 	Other: {
-		'/api/v1/sports': {},
 		'/api/v1/seasons': {
 			queryParams: {
 				sportId: PRESETS.sportId,

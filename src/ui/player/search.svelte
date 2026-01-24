@@ -2,7 +2,7 @@
 	import { page } from '$app/state'
 	import { fetchMLB } from '$lib/fetch'
 	import { debounce } from '$lib/utils'
-	import { IconIcon } from '$ui/icons'
+	import { SearchIcon } from '$ui/icons'
 	import Loading from '$ui/loading.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 	import posthog from 'posthog-js'
@@ -56,7 +56,7 @@
 
 	<form class="mx-auto max-w-5xl" role="search">
 		<label class="grid *:col-span-full *:row-span-full">
-			<IconIcon class="mx-[.5ch] my-auto size-lh shrink-0" />
+			<SearchIcon class="mx-[.5ch] my-auto size-lh shrink-0" />
 
 			<input
 				name="query"

@@ -1,6 +1,13 @@
 import { HOST, PRESETS } from '$ui/playground/constants'
 
-type QueryParamKeys = keyof typeof PRESETS | 'startDate' | 'endDate' | 'fields' | 'hydrate' | 'names'
+type QueryParamKeys =
+	| keyof typeof PRESETS
+	| 'startDate'
+	| 'endDate'
+	| 'fields'
+	| 'hydrate'
+	| 'names'
+	| (string & {})
 
 export async function fetchMLB<T>(
 	endpoint: string,
@@ -9,7 +16,7 @@ export async function fetchMLB<T>(
 	const url = new URL(endpoint, HOST)
 
 	for (const [key, value] of Object.entries(params ?? {})) {
-		url.searchParams.set(key, typeof value !== 'string' ? value.flat().join(',') : value)
+		url.searchParams.set(key, typeof value !== 'string' ? value!.flat().join(',') : value)
 	}
 
 	const response = await fetch(url.toString())
