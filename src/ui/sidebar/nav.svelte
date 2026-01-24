@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state'
+	import { version } from '$pkg'
 	import { CalendarIcon, CalendarTodayIcon, HelmetIcon, JsonIcon } from '$ui/icons'
 	import type { Component } from 'svelte'
 	import Drawer from './drawer.svelte'
@@ -56,7 +57,12 @@
 
 		<ul class="mt-auto text-sm sm:sidebar-closed-hidden">
 			<li><ToggleColorScheme /></li>
-			<li><a href="https://github.com/nuotsu/mlb">View on GitHub</a></li>
+			<li>
+				<a href="https://github.com/nuotsu/mlb">
+					View on GitHub
+					<small class="text-current/50">v{version}</small>
+				</a>
+			</li>
 			<li><a href="https://nuotsu.dev">Built by nuotsu</a></li>
 		</ul>
 	</div>
