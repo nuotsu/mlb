@@ -36,7 +36,7 @@
 <Drawer>
 	<div class="flex h-full flex-col gap-ch">
 		<div class="sm:sidebar-closed-hidden">
-			<a href="/"> MLB.TheOhtani.com </a>
+			<a href="/"><strong>MLB</strong>.TheOhtani.com</a>
 		</div>
 
 		<ul class="sidebar-not-open:landscape:max-lg:overflow-clip [&_span]:sm:sidebar-closed-hidden">
