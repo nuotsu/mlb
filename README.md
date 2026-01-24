@@ -1,10 +1,27 @@
+```
+$$\      $$\ $$\       $$$$$$$\
+$$$\    $$$ |$$ |      $$  __$$\
+$$$$\  $$$$ |$$ |      $$ |  $$ |
+$$\$$\$$ $$ |$$ |      $$$$$$$\ |
+$$ \$$$  $$ |$$ |      $$  __$$\
+$$ |\$  /$$ |$$ |      $$ |  $$ |
+$$ | \_/ $$ |$$$$$$$$\ $$$$$$$  |
+\__|     \__|\________|\_______/ .TheOhtani.com
+```
+
 # MLB Scorebug & MLB Stats API Playground
 
 ## MLB Scorebug
 
 - https://mlb.theohtani.com/schedule
 
-_Coming soon..._
+![Weekly schedule view](/static/week.png)
+
+> Weekly schedule view
+
+![Game details view](/static/game.png)
+
+> Game details view
 
 ## MLB Stats API Playground
 
@@ -12,9 +29,7 @@ _Coming soon..._
 
 Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view API responses in the playground.
 
-### Examples
-
-![Games at Dodger Stadium for April 2026](/static/games-at-dodger-stadium-april-2026.png)
+![Games at Dodger Stadium for April 2026](/static/playground.png)
 
 > Games at Dodger Stadium for April 2026
 
