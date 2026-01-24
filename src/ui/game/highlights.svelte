@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { CollapseIcon, ExpandIcon } from '$ui/icons'
+	import Video from '$ui/video.svelte'
 
 	let { content }: { content: MLB.GameContent } = $props()
 
@@ -38,15 +39,18 @@
 				{title}
 			</label>
 
-			{#each items as { title, playbacks }}
-				{@const { url } = playbacks?.[0] ?? {}}
+			{#each items as { title, playbacks, image }}
+				{@const poster = image?.cuts.find((cut) => cut.width <= 1280)?.src}
 
 				<figure
 					class="w-full space-y-ch transition-opacity group-not-has-checked/highlight:hidden starting:opacity-0"
 				>
-					<video class="w-full" id={`highlights-${i}`} src={url} controls>
-						<track kind="captions" />
-					</video>
+					<Video
+						class="aspect-video w-full bg-current/10"
+						id={`highlights-${i}`}
+						{playbacks}
+						{poster}
+					/>
 
 					<figcaption class="px-ch">{title}</figcaption>
 				</figure>

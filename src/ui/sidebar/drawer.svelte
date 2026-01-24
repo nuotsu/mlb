@@ -44,6 +44,7 @@
 <style>
 	nav {
 		padding-left: max(1ch, env(safe-area-inset-left));
+		padding-bottom: max(1ch, env(safe-area-inset-bottom));
 
 		:global(body:has(#sidebar-open:checked)) & {
 			width: calc(200px + env(safe-area-inset-right));

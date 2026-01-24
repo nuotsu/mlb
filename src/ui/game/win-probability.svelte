@@ -11,16 +11,37 @@
 
 	let width = $state(0)
 	let height = $state(100)
+	const padding = 2
 
 	const innings = $derived(linescore?.innings?.length ?? linescore?.scheduledInnings ?? 9)
 
 	const pathData = $derived(() => {
-		const points = winProbability.map((d, i) => {
-			const x = (i / (winProbability.length - 1)) * width
-			const y = (d.homeTeamWinProbability / 100) * height
-			return `${x},${y}`
-		})
-		return `M ${points?.join(' L ')}`
+		const points = winProbability.map((d, i) => ({
+			x: (i / (winProbability.length - 1)) * width,
+			y: (d.homeTeamWinProbability / 100) * height,
+		}))
+
+		if (points.length < 2) return ''
+
+		// Generate smooth curve using Catmull-Rom to Bezier conversion
+		let d = `M ${points[0].x},${points[0].y}`
+
+		for (let i = 0; i < points.length - 1; i++) {
+			const p0 = points[i - 1] ?? points[i]
+			const p1 = points[i]
+			const p2 = points[i + 1]
+			const p3 = points[i + 2] ?? p2
+
+			const tension = 6
+			const cp1x = p1.x + (p2.x - p0.x) / tension
+			const cp1y = p1.y + (p2.y - p0.y) / tension
+			const cp2x = p2.x - (p3.x - p1.x) / tension
+			const cp2y = p2.y - (p3.y - p1.y) / tension
+
+			d += ` C ${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`
+		}
+
+		return d
 	})
 
 	const inningDividers = $derived(() => {
@@ -44,7 +65,7 @@
 		<span>{boxscore?.teams.home.team.abbreviation ?? 'Home'}</span>
 	</figcaption>
 
-	<svg class="w-full grow" {width} {height}>
+	<svg class="w-full grow" viewBox="0 {-padding} {width} {height + padding * 2}">
 		{#each inningDividers() as inning, i}
 			{#if i > 0}
 				<line
@@ -72,6 +93,13 @@
 			stroke-dasharray="4,4"
 		/>
 
-		<path d={pathData()} fill="none" stroke="var(--color-accent,currentColor)" stroke-width="1" />
+		<path
+			d={pathData()}
+			fill="none"
+			stroke="var(--color-accent,currentColor)"
+			stroke-width="1.5"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		/>
 	</svg>
 </figure>

@@ -1125,12 +1125,7 @@ declare global {
 			description: string
 			duration: string
 			mediaPlaybackUrl: string
-			playbacks?: {
-				name: string
-				url: string
-				width: string
-				height: string
-			}[]
+			playbacks?: ContentItemPlayback[]
 			photo?: {
 				title: string
 				altText: string | null
@@ -1145,6 +1140,13 @@ declare global {
 				}[]
 			}
 			url?: string
+		}
+
+		interface ContentItemPlayback {
+			name: string
+			url: string
+			width: string
+			height: string
 		}
 
 		// Schedule Types

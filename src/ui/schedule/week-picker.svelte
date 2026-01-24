@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { formatDate, getToday, slash } from '$lib/temporal'
+	import { createDateChangeHandler, formatDate, getToday, slash } from '$lib/temporal'
 	import { getWeekDates } from './store.svelte'
 
-	let date = $state(formatDate(slash(page.params.date), { locale: 'en-CA' }))
+	let date = $derived(page.params.date)
 
 	const { startDate, endDate } = $derived(getWeekDates(page.params.date!))
 	const isSameMonth = $derived(startDate.getMonth() === endDate.getMonth())
@@ -20,9 +20,10 @@
 		)
 	}
 
-	$effect(() => {
-		goto(`/schedule/week/${date}`)
-	})
+	const delayDateChange = createDateChangeHandler(
+		() => date,
+		(newDate) => goto(`/schedule/week/${newDate}`),
+	)
 </script>
 
 <fieldset class="flex flex-col items-center">
@@ -40,8 +41,9 @@
 				type="date"
 				min="1901-01-01"
 				max={`${getToday().getFullYear()}-12-31`}
+				value={date}
 				onclick={(e) => (e.target as HTMLInputElement)?.showPicker()}
-				bind:value={date}
+				onchange={(e) => delayDateChange(e.currentTarget.value)}
 			/>
 		</label>
 
