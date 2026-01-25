@@ -51,10 +51,10 @@
 	{@html `<script type="application/ld+json">${JSON.stringify(searchActionSchema)}<\/script>`}
 </svelte:head>
 
-<search class="space-y-ch">
+<search class="mx-auto max-w-3xl space-y-ch">
 	<h1 class="text-center">Player Search</h1>
 
-	<form class="mx-auto max-w-5xl" role="search">
+	<form role="search">
 		<label class="grid *:col-span-full *:row-span-full">
 			<SearchIcon class="mx-[.5ch] my-auto size-lh shrink-0" />
 
