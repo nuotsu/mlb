@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import { version } from '$pkg'
-	import { CalendarIcon, CalendarTodayIcon, HelmetIcon, JsonIcon } from '$ui/icons'
+	import { CalendarIcon, CalendarTodayIcon, HelmetIcon, JsonIcon, RobotIcon } from '$ui/icons'
 	import type { Component } from 'svelte'
 	import Drawer from './drawer.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
@@ -25,6 +25,11 @@
 			href: `/player`,
 			label: 'Player',
 			icon: HelmetIcon,
+		},
+		{
+			href: '/chat',
+			label: 'Ask Mitch',
+			icon: RobotIcon,
 		},
 		{
 			href: '/api/playground',
