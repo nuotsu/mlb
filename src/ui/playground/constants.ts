@@ -32,6 +32,7 @@ export const PRESETS = {
 	stats: [
 		{ value: 'season', label: 'Season' },
 		{ value: 'career', label: 'Career' },
+		{ value: 'gameLog', label: 'Game Log' },
 	],
 	group: [
 		{ value: 'hitting', label: 'Hitting' },

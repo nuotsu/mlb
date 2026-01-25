@@ -1,9 +1,9 @@
+import Anthropic from '@anthropic-ai/sdk'
+import { dev } from '$app/environment'
 import { ANTHROPIC_API_KEY } from '$env/static/private'
 import { PUBLIC_POSTHOG_HOST, PUBLIC_POSTHOG_KEY } from '$env/static/public'
-import { TOOLS, executeTool } from '$lib/chatbot/tools'
-import { SYSTEM_PROMPT } from '$lib/chatbot/system-prompt'
-import { dev } from '$app/environment'
-import Anthropic from '@anthropic-ai/sdk'
+import { SYSTEM_PROMPT } from '$lib/chat/system-prompt'
+import { CLAUDE_MODEL, executeTool, TOOLS } from '$lib/chat/tools'
 import { PostHog } from 'posthog-node'
 import type { RequestHandler } from './$types'
 
@@ -49,7 +49,7 @@ async function streamWithTools(
 	toolsUsed: string[],
 ): Promise<Anthropic.Message> {
 	const stream = anthropic.messages.stream({
-		model: 'claude-haiku-4-5-20251001',
+		model: CLAUDE_MODEL,
 		max_tokens: 256,
 		system: SYSTEM_PROMPT,
 		tools: TOOLS,
@@ -67,10 +67,12 @@ async function streamWithTools(
 					name: event.content_block.name,
 					input: '',
 				}
-				sendEvent({ status: `Using ${event.content_block.name}...` })
+				// Tell client to clear any streamed text and show status
+				sendEvent({ clear: true, status: `Using ${event.content_block.name}...` })
 			}
 		} else if (event.type === 'content_block_delta') {
 			if (event.delta.type === 'text_delta') {
+				// Stream text directly
 				sendEvent({ text: event.delta.text })
 			} else if (event.delta.type === 'input_json_delta' && currentToolUse) {
 				currentToolUse.input += event.delta.partial_json
@@ -98,10 +100,7 @@ async function streamWithTools(
 			sendEvent({ status: `Fetching ${toolUse.name}...` })
 
 			try {
-				const result = await executeTool(
-					toolUse.name,
-					toolUse.input as Record<string, string>,
-				)
+				const result = await executeTool(toolUse.name, toolUse.input as Record<string, string>)
 				toolResults.push({
 					type: 'tool_result',
 					tool_use_id: toolUse.id,
@@ -160,8 +159,8 @@ export const POST: RequestHandler = async ({ request }) => {
 			})
 		}
 
-		// Limit to last 6 messages to reduce token usage
-		const recentMessages = messages.slice(-6)
+		// Limit to last 10 messages to reduce token usage
+		const recentMessages = messages.slice(-10)
 		const anthropicMessages: Anthropic.MessageParam[] = recentMessages.map((m) => ({
 			role: m.role,
 			content: m.content,
@@ -176,11 +175,7 @@ export const POST: RequestHandler = async ({ request }) => {
 				}
 
 				try {
-					const finalMessage = await streamWithTools(
-						anthropicMessages,
-						sendEvent,
-						toolsUsed,
-					)
+					const finalMessage = await streamWithTools(anthropicMessages, sendEvent, toolsUsed)
 
 					if (!dev) {
 						posthog.capture({
@@ -191,7 +186,7 @@ export const POST: RequestHandler = async ({ request }) => {
 								tokens_out: finalMessage.usage.output_tokens,
 								latency_ms: Date.now() - start,
 								tools_used: toolsUsed,
-								model: 'claude-haiku-4-5-20251001',
+								model: CLAUDE_MODEL,
 								streaming: true,
 							},
 						})

@@ -1,10 +1,10 @@
+import Anthropic from '@anthropic-ai/sdk'
+import { json } from '@sveltejs/kit'
+import { dev } from '$app/environment'
 import { ANTHROPIC_API_KEY } from '$env/static/private'
 import { PUBLIC_POSTHOG_HOST, PUBLIC_POSTHOG_KEY } from '$env/static/public'
-import { TOOLS, executeTool } from '$lib/chatbot/tools'
-import { SYSTEM_PROMPT } from '$lib/chatbot/system-prompt'
-import { dev } from '$app/environment'
-import { json } from '@sveltejs/kit'
-import Anthropic from '@anthropic-ai/sdk'
+import { SYSTEM_PROMPT } from '$lib/chat/system-prompt'
+import { CLAUDE_MODEL, executeTool, TOOLS } from '$lib/chat/tools'
 import { PostHog } from 'posthog-node'
 import type { RequestHandler } from './$types'
 
@@ -79,7 +79,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 		// Initial API call with tools
 		let response = await anthropic.messages.create({
-			model: 'claude-haiku-4-5-20251001',
+			model: CLAUDE_MODEL,
 			max_tokens: 1024,
 			system: SYSTEM_PROMPT,
 			tools: TOOLS,
@@ -116,7 +116,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 			// Continue conversation with tool results
 			response = await anthropic.messages.create({
-				model: 'claude-haiku-4-5-20251001',
+				model: CLAUDE_MODEL,
 				max_tokens: 1024,
 				system: SYSTEM_PROMPT,
 				tools: TOOLS,
@@ -144,7 +144,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					tokens_out: response.usage.output_tokens,
 					latency_ms: Date.now() - start,
 					tools_used: toolsUsed,
-					model: 'claude-haiku-4-5-20251001',
+					model: CLAUDE_MODEL,
 				},
 			})
 		}
@@ -170,9 +170,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			})
 		}
 
-		return json(
-			{ error: 'Something went wrong. Please try again.' },
-			{ status: 500 },
-		)
+		return json({ error: 'Something went wrong. Please try again.' }, { status: 500 })
 	}
 }

@@ -1,5 +1,8 @@
-import { DIRECTORY, HOST } from '$ui/playground/constants'
 import type Anthropic from '@anthropic-ai/sdk'
+import { DIRECTORY, HOST } from '$ui/playground/constants'
+
+export const CLAUDE_MODEL = 'claude-haiku-4-5-20251001'
+// 'claude-sonnet-4-5-20250929'
 
 type Tool = Anthropic.Tool
 
@@ -144,11 +147,16 @@ const DEFAULT_FIELDS: Record<string, string> = {
 	'/api/v1/people/search': 'people,id,fullName,currentTeam,name,primaryPosition,abbreviation',
 	'/api/v1/people/{personId}':
 		'people,id,fullName,birthDate,birthCity,birthStateProvince,birthCountry,height,weight,primaryPosition,name,batSide,description,pitchHand,mlbDebutDate,currentTeam',
-	'/api/v1/people/{personId}/stats': 'stats,splits,stat,season,team,name',
-	'/api/v1/teams/{teamId}/roster': 'roster,person,id,fullName,jerseyNumber,position,abbreviation,status,description',
-	'/api/v1/standings': 'records,standingsType,teamRecords,team,id,name,wins,losses,winningPercentage,gamesBack,streak,streakCode,divisionRank,leagueRank',
-	'/api/v1/schedule': 'dates,date,games,gamePk,officialDate,status,detailedState,teams,away,home,team,name,score,isWinner',
-	'/api/v1/game/{gamePk}/boxscore': 'teams,away,home,team,name,teamStats,batting,pitching,players,person,fullName,stats,battingOrder',
+	'/api/v1/people/{personId}/stats':
+		'stats,type,group,gameType,splits,stat,season,date,team,name,game,gamePk',
+	'/api/v1/teams/{teamId}/roster':
+		'roster,person,id,fullName,jerseyNumber,position,abbreviation,status,description',
+	'/api/v1/standings':
+		'records,standingsType,teamRecords,team,id,name,wins,losses,winningPercentage,gamesBack,streak,streakCode,divisionRank,leagueRank',
+	'/api/v1/schedule':
+		'dates,date,games,gamePk,officialDate,status,detailedState,teams,away,home,team,name,score,isWinner',
+	'/api/v1/game/{gamePk}/boxscore':
+		'teams,away,home,team,name,teamStats,batting,pitching,players,person,fullName,stats,battingOrder',
 	'/api/v1/stats/leaders': 'leagueLeaders,leaders,rank,value,person,id,fullName,team,name',
 }
 
