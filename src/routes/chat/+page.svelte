@@ -117,8 +117,8 @@
 
 <Metadata title="Ask Mitch" description="Ask Mitch about anything MLB" />
 
-<section class="p-ch">
-	<div class="messages">
+<section class="flex min-h-dvh flex-col">
+	<div class="messages px-ch py-ch">
 		{#each messages as message, i (i)}
 			<div class="message {message.role}" class:error={message.isError}>
 				<strong>{message.role}:</strong>
@@ -128,8 +128,7 @@
 
 		{#if loading && !streamingContent}
 			<div class="message assistant loading">
-				<Loading class="animate-spin" />
-				<span>Thinking...</span>
+				<Loading class="animate-spin">Thinking...</Loading>
 			</div>
 		{/if}
 
@@ -141,7 +140,7 @@
 		{/if}
 	</div>
 
-	<div class="sticky bottom-0 flex">
+	<div class="sticky bottom-0 mt-auto flex p-ch backdrop-blur">
 		<textarea
 			class="input field-sizing-content min-h-[3lh] grow"
 			bind:value={input}
