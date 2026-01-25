@@ -16,7 +16,7 @@
 	let video = $state<HTMLVideoElement>()
 
 	const hls = $derived(playbacks?.find((p) => p.name === 'hlsCloud')?.url)
-	const mp4 = $derived(playbacks?.find((p) => p.name === 'mp4Avc')?.url)
+	const mp4 = $derived(playbacks?.find((p) => p.url.endsWith('.mp4'))?.url)
 
 	$effect(() => {
 		if (!video) return

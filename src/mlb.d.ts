@@ -111,6 +111,7 @@ declare global {
 			active?: boolean
 			primaryPosition?: Position
 			useName?: string
+			useLastName?: string
 			middleName?: string
 			boxscoreName?: string
 			nickName?: string

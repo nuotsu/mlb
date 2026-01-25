@@ -20,7 +20,7 @@
 
 		promise = fetchMLB('/api/v1/people/search', {
 			names: query,
-			fields: 'people,id,fullName,primaryNumber',
+			fields: 'people,id,fullName,primaryNumber,primaryPosition,abbreviation',
 		}).then((results) => {
 			posthog.capture('player_search_query', { query })
 			return results
@@ -78,10 +78,15 @@
 				<ul>
 					{#each results.people as person (person.id)}
 						<li>
-							<a class="flex gap-ch decoration-dashed hover:underline" href="/player/{person.id}">
+							<a class="group/player flex items-center gap-ch" href="/player/{person.id}">
 								<Headshot {person} size={36} class="size-lh shrink-0" />
 
-								{person.fullName}
+								<small class="inline-block w-[3ch] text-center text-current/50">
+									{person.primaryPosition.abbreviation}
+								</small>
+
+								<span class="decoration-dashed group-hover/player:underline">{person.fullName}</span
+								>
 
 								{#if person.primaryNumber}
 									<span>#{person.primaryNumber}</span>
