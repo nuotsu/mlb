@@ -40,12 +40,14 @@
 </script>
 
 <Drawer>
-	<div class="flex h-full flex-col gap-ch">
+	<div class="flex h-full max-h-dvh flex-col gap-ch py-ch">
 		<div class="sm:sidebar-closed-hidden">
 			<a href="/"><strong>MLB</strong>.TheOhtani.com</a>
 		</div>
 
-		<ul class="sidebar-not-open:landscape:max-lg:overflow-clip [&_span]:sm:sidebar-closed-hidden">
+		<ul
+			class="overflow-y-auto sidebar-not-open:landscape:max-lg:overflow-clip [&_span]:sm:sidebar-closed-hidden"
+		>
 			{#each links as { href, label, icon }}
 				<li>
 					<a

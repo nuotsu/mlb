@@ -29,11 +29,6 @@ export const PRESETS = {
 		{ value: '669373', label: 'Tarik Skubal' },
 		{ value: '121314', label: 'Jackie Robinson' },
 	],
-	jobType: [
-		{ value: 'umpires', label: 'Umpires' },
-		{ value: 'officialScorers', label: 'Official scorers' },
-		{ value: 'datacasters', label: 'Datacasters' },
-	],
 	stats: [
 		{ value: 'season', label: 'Season' },
 		{ value: 'career', label: 'Career' },
@@ -51,6 +46,11 @@ export const PRESETS = {
 		{ value: currentYear.toString(), label: currentYear.toString() },
 		{ value: (currentYear - 1).toString(), label: (currentYear - 1).toString() },
 		{ value: past_N_years().join(','), label: `${past_N_years()[0]}-${currentYear}` },
+	],
+	jobType: [
+		{ value: 'umpires', label: 'Umpires' },
+		{ value: 'officialScorers', label: 'Official scorers' },
+		{ value: 'datacasters', label: 'Datacasters' },
 	],
 	gameType: [
 		{ value: 'R', label: 'Regular Season' },
@@ -429,16 +429,6 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				],
 			},
 		},
-		'/api/v1/jobs/{jobType}': {
-			description:
-				'Game officials by type: umpire crews, official scorers, and datacasters assigned to games.',
-			pathParams: {
-				jobType: PRESETS.jobType,
-			},
-			queryParams: {
-				date: PRESETS.date,
-			},
-		},
 		'/api/v1/uniforms/game': {
 			description: 'Uniform details for specific games: jersey style, cap, pants, and special event gear.',
 			queryParams: {
@@ -451,6 +441,16 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				teamId: PRESETS.teamId,
 				season: PRESETS.season,
+			},
+		},
+		'/api/v1/jobs/{jobType}': {
+			description:
+				'Game officials by type: umpire crews, official scorers, and datacasters assigned to games.',
+			pathParams: {
+				jobType: PRESETS.jobType,
+			},
+			queryParams: {
+				date: PRESETS.date,
 			},
 		},
 	},

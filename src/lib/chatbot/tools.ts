@@ -22,6 +22,20 @@ function pathToToolName(path: string): string {
 		.toLowerCase()
 }
 
+// Endpoints to exclude from chatbot tools (still available in playground)
+const EXCLUDED_ENDPOINTS = new Set([
+	'/api/v1/gamePace',
+	'/api/v1/gameStatus',
+	'/api/v1/gameTypes',
+	'/api/v1/jobs/{jobType}',
+	'/api/v1/uniforms/game',
+	'/api/v1/attendance',
+	'/api/v1/game/changes',
+	'/api/v1/people/changes',
+	'/api/v1/people/freeAgents',
+	'/api/v1/game/{gamePk}/contextMetrics',
+])
+
 /**
  * Generate Anthropic tool definitions from DIRECTORY
  */
@@ -50,8 +64,8 @@ export function generateTools(): Tool[] {
 
 	for (const [_category, endpoints] of Object.entries(DIRECTORY)) {
 		for (const [path, config] of Object.entries(endpoints)) {
-			// Skip people/search since we have search_player
-			if (path === '/api/v1/people/search') continue
+			// Skip excluded endpoints and people/search (we have search_player)
+			if (path === '/api/v1/people/search' || EXCLUDED_ENDPOINTS.has(path)) continue
 
 			let toolName = pathToToolName(path)
 
@@ -125,6 +139,19 @@ export function getEndpointPath(toolName: string): string | null {
 	return toolNameToPath.get(toolName) ?? null
 }
 
+// Default field filters to reduce response size
+const DEFAULT_FIELDS: Record<string, string> = {
+	'/api/v1/people/search': 'people,id,fullName,currentTeam,name,primaryPosition,abbreviation',
+	'/api/v1/people/{personId}':
+		'people,id,fullName,birthDate,birthCity,birthStateProvince,birthCountry,height,weight,primaryPosition,name,batSide,description,pitchHand,mlbDebutDate,currentTeam',
+	'/api/v1/people/{personId}/stats': 'stats,splits,stat,season,team,name',
+	'/api/v1/teams/{teamId}/roster': 'roster,person,id,fullName,jerseyNumber,position,abbreviation,status,description',
+	'/api/v1/standings': 'records,standingsType,teamRecords,team,id,name,wins,losses,winningPercentage,gamesBack,streak,streakCode,divisionRank,leagueRank',
+	'/api/v1/schedule': 'dates,date,games,gamePk,officialDate,status,detailedState,teams,away,home,team,name,score,isWinner',
+	'/api/v1/game/{gamePk}/boxscore': 'teams,away,home,team,name,teamStats,batting,pitching,players,person,fullName,stats,battingOrder',
+	'/api/v1/stats/leaders': 'leagueLeaders,leaders,rank,value,person,id,fullName,team,name',
+}
+
 /**
  * Execute a tool call by fetching from MLB Stats API
  */
@@ -141,9 +168,14 @@ export async function executeTool(
 	if (toolName === 'search_player') {
 		const url = new URL(HOST + path)
 		url.searchParams.set('names', input.name)
+		if (DEFAULT_FIELDS['/api/v1/people/search']) {
+			url.searchParams.set('fields', DEFAULT_FIELDS['/api/v1/people/search'])
+		}
 		const response = await fetch(url)
 		return response.json()
 	}
+
+	const originalPath = path
 
 	// Replace path parameters
 	for (const [key, value] of Object.entries(input)) {
@@ -155,9 +187,14 @@ export async function executeTool(
 	// Build URL with query parameters
 	const url = new URL(HOST + path)
 	for (const [key, value] of Object.entries(input)) {
-		if (!path.includes(`{${key}}`) && value) {
+		if (!originalPath.includes(`{${key}}`) && value) {
 			url.searchParams.set(key, value)
 		}
+	}
+
+	// Apply default field filter if not already specified
+	if (!input.fields && DEFAULT_FIELDS[originalPath]) {
+		url.searchParams.set('fields', DEFAULT_FIELDS[originalPath])
 	}
 
 	const response = await fetch(url)

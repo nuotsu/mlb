@@ -10,6 +10,21 @@
 	let streamingContent = $state('')
 	let error = $state<string | null>(null)
 	let abortController: AbortController | null = null
+	let inputHeight = $state(0)
+
+	// Auto-scroll attachment that scrolls to bottom when content changes
+	function autoscroll(container: HTMLElement) {
+		$effect(() => {
+			// Track these values to trigger the effect
+			messages.length
+			streamingContent
+
+			container.scrollTo({
+				top: container.scrollHeight,
+				behavior: 'smooth',
+			})
+		})
+	}
 
 	function parseError(data: unknown): string {
 		if (typeof data === 'object' && data !== null) {
@@ -117,34 +132,37 @@
 
 <Metadata title="Ask Mitch" description="Ask Mitch about anything MLB" />
 
-<section class="flex min-h-dvh flex-col">
-	<div class="messages px-ch py-ch">
-		{#each messages as message, i (i)}
-			<div class="message {message.role}" class:error={message.isError}>
-				<strong>{message.role}:</strong>
-				<pre style="field-sizing: content; white-space: pre-wrap;">{message.content}</pre>
-			</div>
-		{/each}
+<section
+	class="messages flex h-dvh flex-col overflow-y-auto px-ch py-ch"
+	style:scroll-padding-bottom="{inputHeight}px"
+	{@attach autoscroll}
+>
+	{#each messages as message, i (i)}
+		<div class="message {message.role}" class:error={message.isError}>
+			<strong>{message.role}:</strong>
+			<pre style="field-sizing: content; white-space: pre-wrap;">{message.content}</pre>
+		</div>
+	{/each}
 
-		{#if loading && !streamingContent}
-			<div class="message assistant loading">
-				<Loading class="animate-spin">Thinking...</Loading>
-			</div>
-		{/if}
+	{#if loading && !streamingContent}
+		<div class="message assistant loading">
+			<Loading class="animate-spin">Thinking...</Loading>
+		</div>
+	{/if}
 
-		{#if streamingContent}
-			<div class="message assistant">
-				<strong>assistant:</strong>
-				<pre style="field-sizing: content; white-space: pre-wrap;">{streamingContent}</pre>
-			</div>
-		{/if}
-	</div>
+	{#if streamingContent}
+		<div class="message assistant">
+			<strong>assistant:</strong>
+			<pre style="field-sizing: content; white-space: pre-wrap;">{streamingContent}</pre>
+		</div>
+	{/if}
 
-	<div class="sticky bottom-0 mt-auto flex p-ch backdrop-blur">
+	<div class="sticky bottom-0 mt-auto flex backdrop-blur" bind:offsetHeight={inputHeight}>
 		<textarea
-			class="input field-sizing-content min-h-[3lh] grow"
+			class="input field-sizing-content grow p-ch"
 			bind:value={input}
 			onkeydown={handleKeydown}
+			rows={2}
 			placeholder="Ask about MLB stats... (Enter to send, Shift+Enter for newline)"
 			disabled={loading}
 		></textarea>

@@ -43,6 +43,94 @@ function getClientIP(request: Request): string {
 	)
 }
 
+async function streamWithTools(
+	messages: Anthropic.MessageParam[],
+	sendEvent: (data: unknown) => void,
+	toolsUsed: string[],
+): Promise<Anthropic.Message> {
+	const stream = anthropic.messages.stream({
+		model: 'claude-haiku-4-5-20251001',
+		max_tokens: 256,
+		system: SYSTEM_PROMPT,
+		tools: TOOLS,
+		messages,
+	})
+
+	const toolUseBlocks: Anthropic.ToolUseBlock[] = []
+	let currentToolUse: { id: string; name: string; input: string } | null = null
+
+	for await (const event of stream) {
+		if (event.type === 'content_block_start') {
+			if (event.content_block.type === 'tool_use') {
+				currentToolUse = {
+					id: event.content_block.id,
+					name: event.content_block.name,
+					input: '',
+				}
+				sendEvent({ status: `Using ${event.content_block.name}...` })
+			}
+		} else if (event.type === 'content_block_delta') {
+			if (event.delta.type === 'text_delta') {
+				sendEvent({ text: event.delta.text })
+			} else if (event.delta.type === 'input_json_delta' && currentToolUse) {
+				currentToolUse.input += event.delta.partial_json
+			}
+		} else if (event.type === 'content_block_stop') {
+			if (currentToolUse) {
+				toolUseBlocks.push({
+					type: 'tool_use',
+					id: currentToolUse.id,
+					name: currentToolUse.name,
+					input: JSON.parse(currentToolUse.input || '{}'),
+				})
+				currentToolUse = null
+			}
+		}
+	}
+
+	const finalMessage = await stream.finalMessage()
+
+	if (finalMessage.stop_reason === 'tool_use' && toolUseBlocks.length > 0) {
+		const toolResults: Anthropic.ToolResultBlockParam[] = []
+
+		for (const toolUse of toolUseBlocks) {
+			toolsUsed.push(toolUse.name)
+			sendEvent({ status: `Fetching ${toolUse.name}...` })
+
+			try {
+				const result = await executeTool(
+					toolUse.name,
+					toolUse.input as Record<string, string>,
+				)
+				toolResults.push({
+					type: 'tool_result',
+					tool_use_id: toolUse.id,
+					content: JSON.stringify(result, null, 2),
+				})
+			} catch (error) {
+				toolResults.push({
+					type: 'tool_result',
+					tool_use_id: toolUse.id,
+					content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
+					is_error: true,
+				})
+			}
+		}
+
+		return streamWithTools(
+			[
+				...messages,
+				{ role: 'assistant', content: finalMessage.content },
+				{ role: 'user', content: toolResults },
+			],
+			sendEvent,
+			toolsUsed,
+		)
+	}
+
+	return finalMessage
+}
+
 export const POST: RequestHandler = async ({ request }) => {
 	const ip = getClientIP(request)
 
@@ -72,31 +160,13 @@ export const POST: RequestHandler = async ({ request }) => {
 			})
 		}
 
-		const anthropicMessages: Anthropic.MessageParam[] = messages.map((m) => ({
+		// Limit to last 6 messages to reduce token usage
+		const recentMessages = messages.slice(-6)
+		const anthropicMessages: Anthropic.MessageParam[] = recentMessages.map((m) => ({
 			role: m.role,
 			content: m.content,
 		}))
 
-		// Make initial API call before streaming to catch errors early
-		let response: Anthropic.Message
-		try {
-			response = await anthropic.messages.create({
-				model: 'claude-haiku-4-5-20251001',
-				max_tokens: 1024,
-				system: SYSTEM_PROMPT,
-				tools: TOOLS,
-				messages: anthropicMessages,
-			})
-		} catch (apiError) {
-			console.error('Anthropic API error:', apiError)
-			const err = apiError as { status?: number; error?: unknown }
-			return new Response(JSON.stringify(err.error || { error: 'API error' }), {
-				status: err.status || 500,
-				headers: { 'Content-Type': 'application/json' },
-			})
-		}
-
-		// Create a readable stream
 		const stream = new ReadableStream({
 			async start(controller) {
 				const encoder = new TextEncoder()
@@ -106,94 +176,19 @@ export const POST: RequestHandler = async ({ request }) => {
 				}
 
 				try {
-					// Handle tool use loop
-					while (response.stop_reason === 'tool_use') {
-						const toolUseBlocks = response.content.filter(
-							(block): block is Anthropic.ToolUseBlock => block.type === 'tool_use',
-						)
+					const finalMessage = await streamWithTools(
+						anthropicMessages,
+						sendEvent,
+						toolsUsed,
+					)
 
-						const toolResults: Anthropic.ToolResultBlockParam[] = []
-
-						for (const toolUse of toolUseBlocks) {
-							toolsUsed.push(toolUse.name)
-							sendEvent({ status: `Fetching ${toolUse.name}...` })
-
-							try {
-								const result = await executeTool(
-									toolUse.name,
-									toolUse.input as Record<string, string>,
-								)
-								toolResults.push({
-									type: 'tool_result',
-									tool_use_id: toolUse.id,
-									content: JSON.stringify(result, null, 2),
-								})
-							} catch (error) {
-								toolResults.push({
-									type: 'tool_result',
-									tool_use_id: toolUse.id,
-									content: `Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
-									is_error: true,
-								})
-							}
-						}
-
-						response = await anthropic.messages.create({
-							model: 'claude-haiku-4-5-20251001',
-							max_tokens: 1024,
-							system: SYSTEM_PROMPT,
-							tools: TOOLS,
-							messages: [
-								...anthropicMessages,
-								{ role: 'assistant', content: response.content },
-								{ role: 'user', content: toolResults },
-							],
-						})
-					}
-
-					// Now stream the final text response
-					const messagesForStream: Anthropic.MessageParam[] =
-						response.stop_reason === 'end_turn'
-							? // If we already have a final response from tool use, just send it
-								[]
-							: anthropicMessages
-
-					if (messagesForStream.length === 0) {
-						// We already have the response from tool calls, send it directly
-						const textBlocks = response.content.filter(
-							(block): block is Anthropic.TextBlock => block.type === 'text',
-						)
-						for (const block of textBlocks) {
-							sendEvent({ text: block.text })
-						}
-					} else {
-						// Stream fresh response
-						const streamResponse = await anthropic.messages.stream({
-							model: 'claude-haiku-4-5-20251001',
-							max_tokens: 1024,
-							system: SYSTEM_PROMPT,
-							tools: TOOLS,
-							messages: messagesForStream,
-						})
-
-						for await (const event of streamResponse) {
-							if (
-								event.type === 'content_block_delta' &&
-								event.delta.type === 'text_delta'
-							) {
-								sendEvent({ text: event.delta.text })
-							}
-						}
-					}
-
-					// Analytics
 					if (!dev) {
 						posthog.capture({
 							distinctId: ip,
 							event: 'chat_response',
 							properties: {
-								tokens_in: response.usage.input_tokens,
-								tokens_out: response.usage.output_tokens,
+								tokens_in: finalMessage.usage.input_tokens,
+								tokens_out: finalMessage.usage.output_tokens,
 								latency_ms: Date.now() - start,
 								tools_used: toolsUsed,
 								model: 'claude-haiku-4-5-20251001',
@@ -205,7 +200,12 @@ export const POST: RequestHandler = async ({ request }) => {
 					sendEvent('[DONE]')
 				} catch (error) {
 					console.error('Stream error:', error)
-					sendEvent({ error: 'Something went wrong.' })
+					const err = error as { status?: number; error?: unknown }
+					if (err.status && err.error) {
+						sendEvent({ error: err.error })
+					} else {
+						sendEvent({ error: 'Something went wrong.' })
+					}
 				} finally {
 					controller.close()
 				}
