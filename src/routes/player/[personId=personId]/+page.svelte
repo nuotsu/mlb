@@ -12,15 +12,31 @@
 <Metadata title="{player.fullName} | MLB.TheOhtani.com" description="{player.fullName} profile" />
 
 <section class="p-ch">
-	<h1>
-		{player.fullName}
+	<header class="flex flex-wrap items-end gap-ch">
+		<Headshot
+			class="size-[4lh] shrink-0 rounded-none bg-transparent"
+			person={player}
+			size={240}
+			type="silo"
+		/>
+
+		<h1 class="grid">
+			<span>{player.useName || player.firstName}</span>
+			<strong class="text-3xl">{player.useLastName || player.lastName}</strong>
+		</h1>
 
 		{#if player.primaryNumber}
-			#{player.primaryNumber}
+			<div>
+				#{player.primaryNumber}
+			</div>
 		{/if}
-	</h1>
 
-	<Headshot class="size-[4lh] rounded-none bg-transparent" person={player} size={240} type="silo" />
+		{#if player.primaryPosition}
+			<div>
+				{player.primaryPosition.abbreviation}
+			</div>
+		{/if}
+	</header>
 
 	<!-- <img
 		src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/w_426,q_auto:best/v1/people/{player.id}/action/hero/current"

@@ -29,7 +29,7 @@
 <div class="flex">
 	<div class="relative grow">
 		<textarea
-			class="input field-sizing-content w-full p-ch"
+			class="input field-sizing-content w-full bg-transparent! p-ch"
 			bind:value
 			onkeydown={handleKeydown}
 			rows={2}
@@ -67,7 +67,6 @@
 	textarea {
 		min-height: 2lh;
 		max-height: 6lh;
-		background-color: transparent;
 	}
 
 	button :global(svg) {
