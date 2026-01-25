@@ -148,7 +148,7 @@ const DEFAULT_FIELDS: Record<string, string> = {
 	'/api/v1/people/{personId}':
 		'people,id,fullName,birthDate,birthCity,birthStateProvince,birthCountry,height,weight,primaryPosition,name,batSide,description,pitchHand,mlbDebutDate,currentTeam',
 	'/api/v1/people/{personId}/stats':
-		'stats,type,group,gameType,splits,stat,season,date,team,name,game,gamePk',
+		'stats,type,displayName,group,displayName,gameType,splits,stat,season,team,name,game,gamePk,gamesPlayed,atBats,hits,homeRuns,rbi,avg,obp,slg,ops,wins,losses,era,strikeOuts,inningsPitched',
 	'/api/v1/teams/{teamId}/roster':
 		'roster,person,id,fullName,jerseyNumber,position,abbreviation,status,description',
 	'/api/v1/standings':

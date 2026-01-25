@@ -11,12 +11,45 @@
 		},
 	})
 
-	type Message = { role: 'user' | 'assistant'; content: string; isError?: boolean }
+	type Message = {
+		role: 'user' | 'assistant'
+		content: string
+		isError?: boolean
+		isThinking?: boolean
+	}
 
 	let messages = $state<Message[]>([])
+
+	type MessageGroup = {
+		type: 'thinking' | 'regular'
+		messages: Message[]
+	}
+
+	let groupedMessages = $derived.by(() => {
+		const groups: MessageGroup[] = []
+
+		for (const message of messages) {
+			const isThinking = message.isThinking ?? false
+			const lastGroup = groups[groups.length - 1]
+
+			if (isThinking) {
+				if (lastGroup?.type === 'thinking') {
+					lastGroup.messages.push(message)
+				} else {
+					groups.push({ type: 'thinking', messages: [message] })
+				}
+			} else {
+				groups.push({ type: 'regular', messages: [message] })
+			}
+		}
+
+		return groups
+	})
+
 	let input = $state('')
 	let loading = $state(false)
 	let streamingContent = $state('')
+	let statusMessage = $state('')
 	let error = $state<string | null>(null)
 	let abortController: AbortController | null = null
 	let bottomHeight = $state(0)
@@ -108,9 +141,14 @@
 				return
 			}
 
+			console.log('[Chat] Stream started')
+
 			while (true) {
 				const { done, value } = await reader.read()
-				if (done) break
+				if (done) {
+					console.log('[Chat] Stream done')
+					break
+				}
 
 				const chunk = decoder.decode(value)
 				const lines = chunk.split('\n')
@@ -118,15 +156,33 @@
 				for (const line of lines) {
 					if (line.startsWith('data: ')) {
 						const data = line.slice(6)
+						console.log('[Chat] Event:', data)
+
 						if (data === '[DONE]') continue
 
 						try {
 							const parsed = JSON.parse(data)
 							if (parsed.clear) {
+								console.log('[Chat] Clearing content')
+								if (streamingContent.trim()) {
+									messages.push({
+										role: 'assistant',
+										content: streamingContent,
+										isThinking: true,
+									})
+								}
 								streamingContent = ''
 							}
+							if (parsed.status) {
+								console.log('[Chat] Status:', parsed.status)
+								statusMessage = parsed.status
+							}
 							if (parsed.text) {
+								statusMessage = ''
 								streamingContent += parsed.text
+							}
+							if (parsed.error) {
+								console.error('[Chat] Error from server:', parsed.error)
 							}
 						} catch {
 							// ignore parse errors
@@ -135,8 +191,12 @@
 				}
 			}
 
-			messages.push({ role: 'assistant', content: streamingContent })
+			console.log('[Chat] Final content length:', streamingContent.length)
+			if (streamingContent) {
+				messages.push({ role: 'assistant', content: streamingContent })
+			}
 			streamingContent = ''
+			statusMessage = ''
 		} catch (e) {
 			if ((e as Error).name !== 'AbortError') {
 				messages.push({ role: 'assistant', content: 'Something went wrong.' })
@@ -152,6 +212,7 @@
 			messages.push({ role: 'assistant', content: streamingContent + ' [stopped]' })
 			streamingContent = ''
 		}
+		statusMessage = ''
 		loading = false
 	}
 
@@ -163,43 +224,62 @@
 <Metadata title="Ask Mitch" description="Ask Mitch about anything MLB" />
 
 <section
-	class="mx-auto flex h-dvh max-w-3xl flex-col space-y-lh overflow-y-auto px-ch py-ch"
+	class="flex h-dvh flex-col overflow-y-auto px-ch pt-ch"
 	style:scroll-padding-bottom="{bottomHeight}px"
 	{@attach autoscroll}
 >
-	{#each messages as message, i (i)}
-		<div class="message {message.role}" class:error={message.isError}>
-			<strong>{message.role === 'assistant' ? 'Mitch' : 'You'}:</strong>
-			<div class="content">{@html parseMarkdown(message.content)}</div>
-		</div>
-	{/each}
+	<div class="mx-auto w-full max-w-3xl">
+		{#each groupedMessages as group, i (i)}
+			{#if group.type === 'thinking'}
+				<details class="message assistant text-sm text-current/50">
+					<summary class="italic">Thinking</summary>
 
-	{#if loading && !streamingContent}
-		<div class="message assistant loading">
-			<Loading class="animate-spin">Thinking...</Loading>
-		</div>
-	{/if}
+					<div class="space-y-ch">
+						{#each group.messages as msg, j (j)}
+							<div class="thinking-item">
+								<div class="content">{@html parseMarkdown(msg.content)}</div>
+							</div>
+						{/each}
+					</div>
+				</details>
+			{:else}
+				{@const message = group.messages[0]}
+				<div class="message {message.role}" class:error={message.isError}>
+					<strong>{message.role === 'assistant' ? 'Mitch' : 'You'}:</strong>
+					<div class="content">{@html parseMarkdown(message.content)}</div>
+				</div>
+			{/if}
+		{/each}
 
-	{#if streamingContent}
-		<div class="message assistant">
-			<strong>Mitch:</strong>
-			<div class="content">{@html parseMarkdown(streamingContent)}</div>
-		</div>
-	{/if}
-
-	<div class="sticky bottom-0 mt-auto backdrop-blur" bind:offsetHeight={bottomHeight}>
-		{#if rateLimitRemaining}
-			<small class="block p-ch text-center text-red-500">
-				Rate limit exceeded. Try again in {rateLimitRemaining}s
-			</small>
+		{#if loading && !streamingContent}
+			<div class="message assistant loading">
+				<Loading class="animate-spin">{statusMessage || 'Thinking...'}</Loading>
+			</div>
 		{/if}
 
-		<ChatInput
-			bind:value={input}
-			{loading}
-			disabled={!!rateLimitRemaining}
-			onsend={send}
-			onstop={stop}
-		/>
+		{#if streamingContent}
+			<div class="message assistant">
+				<strong>Mitch:</strong>
+				<div class="content">{@html parseMarkdown(streamingContent)}</div>
+			</div>
+		{/if}
+	</div>
+
+	<div class="sticky bottom-0 mt-auto backdrop-blur" bind:offsetHeight={bottomHeight}>
+		<div class="mx-auto max-w-3xl py-ch">
+			{#if rateLimitRemaining}
+				<small class="block p-ch text-center text-red-500">
+					Rate limit exceeded. Try again in {rateLimitRemaining}s
+				</small>
+			{/if}
+
+			<ChatInput
+				bind:value={input}
+				{loading}
+				disabled={!!rateLimitRemaining}
+				onsend={send}
+				onstop={stop}
+			/>
+		</div>
 	</div>
 </section>
