@@ -13,8 +13,6 @@
 
 	type Message = { role: 'user' | 'assistant'; content: string; isError?: boolean }
 
-	const MAX_LENGTH = 250
-
 	let messages = $state<Message[]>([])
 	let input = $state('')
 	let loading = $state(false)
@@ -200,8 +198,6 @@
 			bind:value={input}
 			{loading}
 			disabled={!!rateLimitRemaining}
-			maxlength={MAX_LENGTH}
-			placeholder="Ask about MLB stats..."
 			onsend={send}
 			onstop={stop}
 		/>

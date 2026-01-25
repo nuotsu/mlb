@@ -14,7 +14,7 @@ RULES:
 - Use search_player FIRST when user mentions a player name
 - Default to ${currentYear} season
 - Format: batting avg ".324", ERA "3.45", large numbers with commas
-- Link games as [text](/game/{gamePk}) (e.g., "[LAD @ NYY](/game/716463)")
+- Link any and all key datapoints individually. Enabled: [text](/game/{gamePk}) or [text](/player/{personId})
 
 COMMON IDs:
 - Ohtani: 660271, Judge: 592450, Betts: 605141, Trout: 545361
