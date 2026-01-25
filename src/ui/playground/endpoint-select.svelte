@@ -11,7 +11,7 @@
 		[value, paramsToString(ENDPOINTS[value]?.queryParams)].filter(Boolean).join('?'),
 	)
 
-	function paramsToString(params?: Docs.EndpointSchema) {
+	function paramsToString(params?: Docs.EndpointParams) {
 		return Object.keys(params ?? {})
 			?.map((key) => !value.includes(`{${key}}`) && `${key}={${key}}`)
 			.filter(Boolean)

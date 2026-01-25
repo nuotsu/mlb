@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
+	import { InfoIcon, LoadingIcon, SendIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
-	import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
+	import { CUSTOM_ENDPOINT_KEY, ENDPOINTS } from '$ui/playground/constants'
 	import EndpointSelect from '$ui/playground/endpoint-select.svelte'
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
 	import Response from '$ui/playground/response.svelte'
@@ -37,14 +38,17 @@
 
 				<button class="action max-sm:grow max-sm:active:scale-95 sm:order-first" type="submit">
 					Send
-
-					<!-- prettier-ignore -->
-					<svg class="send-icon" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16" height="200px" width="200px" xmlns="http://www.w3.org/2000/svg"><path d="M3.78 2L3 2.41v12l.78.42 9-6V8l-9-6zM4 13.48V3.35l7.6 5.07L4 13.48z"></path></svg>
-
-					<!-- prettier-ignore -->
-					<svg class="loading-icon animate-spin" stroke="currentColor" fill="currentColor" stroke-width="0" viewBox="0 0 16 16" height="200px" width="200px" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M13.917 7A6.002 6.002 0 0 0 2.083 7H1.071a7.002 7.002 0 0 1 13.858 0h-1.012z"></path></svg>
+					<SendIcon class="send-icon" />
+					<LoadingIcon class="loading-icon animate-spin" />
 				</button>
 			</div>
+
+			{#if ENDPOINTS[endpoint].description}
+				<div class="flex gap-ch bg-accent/10 p-ch text-sm">
+					<InfoIcon class="size-lh shrink-0 text-accent" aria-label="Endpoint description" />
+					<p>{ENDPOINTS[endpoint].description}</p>
+				</div>
+			{/if}
 
 			<ParametersTable {endpoint} />
 		</form>
@@ -54,13 +58,11 @@
 </section>
 
 <style>
-	svg {
-		:global(body:has(.loading-results)) &.send-icon {
-			display: none;
-		}
+	:global(body:has(.loading-results) svg.send-icon) {
+		display: none;
+	}
 
-		:global(body:not(:has(.loading-results))) &.loading-icon {
-			display: none;
-		}
+	:global(body:not(:has(.loading-results)) svg.loading-icon) {
+		display: none;
 	}
 </style>

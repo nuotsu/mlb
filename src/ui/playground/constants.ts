@@ -77,6 +77,7 @@ export const PRESETS = {
 
 export const CUSTOM_ENDPOINT = {
 	'/{custom}': {
+		description: 'Custom endpoint for exploring unlisted API paths; enter full path starting with /api/v1/.',
 		pathParams: {
 			custom: [{ value: '/api/v1/' }],
 		},
@@ -88,14 +89,19 @@ export const CUSTOM_ENDPOINT_PATH = CUSTOM_ENDPOINT[CUSTOM_ENDPOINT_KEY].pathPar
 
 export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	Sport: {
-		'/api/v1/sports': {},
+		'/api/v1/sports': {
+			description: 'List all sports with their IDs (MLB=1, AAA=11, etc.) and basic metadata.',
+		},
 		'/api/v1/divisions': {
+			description:
+				'Get division info (AL East, NL West, etc.) with standings order; filter by league and season.',
 			queryParams: {
 				leagueId: [PRESETS.leagueId[0], PRESETS.leagueId[1]],
 				season: PRESETS.season,
 			},
 		},
 		'/api/v1/leagues': {
+			description: 'Get league details (American/National) including season dates and structure.',
 			queryParams: {
 				leagueIds: PRESETS.leagueId,
 			},
@@ -104,6 +110,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 
 	Schedule: {
 		'/api/v1/schedule': {
+			description:
+				'Get game schedules by date, date range, team, or venue; returns gamePk IDs needed for other endpoints.',
 			queryParams: {
 				sportId: PRESETS.sportId,
 				date: PRESETS.date,
@@ -123,6 +131,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/schedule/postseason': {
+			description:
+				'Get postseason bracket and series info (World Series, LCS, LDS); includes series status and game results.',
 			queryParams: {
 				gameTypes: [
 					{ value: 'W', label: 'World Series' },
@@ -138,6 +148,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	Game: {
 		'/api/v1.1/game/{gamePk}/feed/live': {
+			description:
+				'Complete live game feed with all plays, runners, count, matchups; use timecode to get state at specific moment.',
 			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
@@ -161,6 +173,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 		// 	},
 		// },
 		'/api/v1/game/{gamePk}/boxscore': {
+			description:
+				'Traditional box score with batting/pitching lines, player stats, and game totals for a specific game.',
 			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
@@ -169,11 +183,14 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/game/{gamePk}/linescore': {
+			description: 'Inning-by-inning runs, hits, errors; current inning state for live games.',
 			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
 		'/api/v1/game/{gamePk}/content': {
+			description:
+				'Game media content including highlight videos, editorial recap, and photo galleries.',
 			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
@@ -182,11 +199,15 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/game/{gamePk}/contextMetrics': {
+			description:
+				'Advanced context stats like leverage index, win expectancy, and championship probability added.',
 			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
 		},
 		'/api/v1/game/{gamePk}/winProbability': {
+			description:
+				'Win probability after each play; shows how each at-bat shifted the odds for home/away teams.',
 			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
@@ -201,6 +222,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/game/{gamePk}/playByPlay': {
+			description:
+				'Chronological list of all plays with descriptions; lighter than live feed for historical games.',
 			pathParams: {
 				gamePk: PRESETS.gamePk,
 			},
@@ -209,12 +232,16 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/game/changes': {
+			description:
+				'List of games updated since a given date/time; useful for syncing or tracking postponements.',
 			queryParams: {
 				sportId: PRESETS.sportId,
 				updatedSince: PRESETS.date,
 			},
 		},
 		'/api/v1/gamePace': {
+			description:
+				'Pace of play statistics for a season: average game time, pitches per game, time between pitches.',
 			queryParams: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
@@ -223,17 +250,23 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	Teams: {
 		'/api/v1/teams': {
+			description:
+				'List all teams with IDs, names, abbreviations, venue, and league/division info; filter by sport and season.',
 			queryParams: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
 			},
 		},
 		'/api/v1/teams/{teamId}': {
+			description:
+				'Detailed team info: full name, venue, league, division, first year, and social media links.',
 			pathParams: {
 				teamId: PRESETS.teamId,
 			},
 		},
 		'/api/v1/teams/{teamId}/roster': {
+			description:
+				'Current or historical roster with player IDs, positions, jersey numbers, and status.',
 			pathParams: {
 				teamId: PRESETS.teamId,
 			},
@@ -242,11 +275,15 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/teams/{teamId}/history': {
+			description:
+				'Franchise history including former names, cities, leagues, and championship seasons.',
 			pathParams: {
 				teamId: PRESETS.teamId,
 			},
 		},
 		'/api/v1/teams/{teamId}/affiliates': {
+			description:
+				'Minor league affiliates (AAA, AA, A+, A, Rookie) with team names and league info.',
 			pathParams: {
 				teamId: PRESETS.teamId,
 			},
@@ -254,6 +291,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	People: {
 		'/api/v1/people/{personId}': {
+			description:
+				'Player bio: birthDate, birthCity, height, weight, position, bats/throws, draft info, MLB debut date.',
 			pathParams: {
 				personId: PRESETS.personId,
 			},
@@ -263,6 +302,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/people/{personId}/stats': {
+			description:
+				'Player statistics: season or career totals for hitting/pitching/fielding; filter by gameType (regular/postseason).',
 			pathParams: {
 				personId: PRESETS.personId,
 			},
@@ -274,6 +315,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/people/{personId}/stats/game/{gamePk}': {
+			description:
+				"Player's stats from a specific game: at-bats, hits, RBIs, innings pitched, strikeouts, etc.",
 			pathParams: {
 				personId: PRESETS.personId,
 				gamePk: PRESETS.gamePk,
@@ -283,17 +326,23 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/people/freeAgents': {
+			description:
+				'List of free agents for a given offseason with their previous team and contract status.',
 			queryParams: {
 				season: PRESETS.season,
 			},
 		},
 		'/api/v1/people/changes': {
+			description:
+				'Players whose records changed since a date; useful for tracking roster moves and data updates.',
 			queryParams: {
 				updatedSince: PRESETS.date,
 				fields: [{ value: 'people,id,fullName' }],
 			},
 		},
 		'/api/v1/people/search': {
+			description:
+				'Search players by name (partial match); use this first to find personId for other queries.',
 			queryParams: {
 				names: [{ value: '' }],
 			},
@@ -301,6 +350,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	Standings: {
 		'/api/v1/standings': {
+			description:
+				'Current standings with W-L record, PCT, GB, streak, last 10, home/away splits by league/division.',
 			queryParams: {
 				leagueId: PRESETS.leagueId,
 				season: PRESETS.season,
@@ -309,6 +360,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	Stats: {
 		'/api/v1/stats': {
+			description:
+				'General stats query for aggregated league-wide statistics by season and stat group.',
 			queryParams: {
 				stats: PRESETS.stats,
 				group: PRESETS.group,
@@ -316,6 +369,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/stats/leaders': {
+			description:
+				'League leaders in specific categories (HR, AVG, ERA, etc.); regular season or playoffs.',
 			queryParams: {
 				leaderCategories: [
 					{ value: 'homeRuns', label: 'Home Runs' },
@@ -332,17 +387,23 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 	},
 	Other: {
 		'/api/v1/seasons': {
+			description:
+				'Season metadata: regular season start/end dates, All-Star date, postseason dates, spring training info.',
 			queryParams: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
 			},
 		},
 		'/api/v1/venues': {
+			description:
+				'Ballpark info: location, capacity, dimensions, surface type, roof type, and timezone.',
 			queryParams: {
 				venueIds: PRESETS.venueId,
 			},
 		},
 		'/api/v1/draft/{year}': {
+			description:
+				'MLB Draft results by year: all rounds and picks with player info, school, and signing bonus.',
 			pathParams: {
 				year: PRESETS.year,
 			},
@@ -353,6 +414,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/transactions': {
+			description:
+				'Roster transactions: trades, signings, DFA, IL moves, call-ups; filter by team, player, or date range.',
 			queryParams: {
 				sportId: PRESETS.sportId,
 				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
@@ -367,6 +430,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/jobs/{jobType}': {
+			description:
+				'Game officials by type: umpire crews, official scorers, and datacasters assigned to games.',
 			pathParams: {
 				jobType: PRESETS.jobType,
 			},
@@ -375,11 +440,14 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/uniforms/game': {
+			description: 'Uniform details for specific games: jersey style, cap, pants, and special event gear.',
 			queryParams: {
 				gamePks: PRESETS.gamePk,
 			},
 		},
 		'/api/v1/attendance': {
+			description:
+				'Attendance figures by team and season: total, average, home/away, and capacity percentage.',
 			queryParams: {
 				teamId: PRESETS.teamId,
 				season: PRESETS.season,
@@ -387,12 +455,18 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 		},
 	},
 	Meta: {
-		'/api/v1/gameStatus': {},
-		'/api/v1/gameTypes': {},
+		'/api/v1/gameStatus': {
+			description:
+				'All possible game status codes (Scheduled, In Progress, Final, Postponed, etc.) with descriptions.',
+		},
+		'/api/v1/gameTypes': {
+			description:
+				'Game type codes: R=Regular Season, S=Spring Training, P=Playoffs, W=World Series, etc.',
+		},
 	},
 } as const
 
-export const ENDPOINTS: Record<string, Docs.EndpointSchema> = Object.assign(
+export const ENDPOINTS: Record<string, Docs.EndpointSchema[string]> = Object.assign(
 	CUSTOM_ENDPOINT,
 	DIRECTORY,
 )

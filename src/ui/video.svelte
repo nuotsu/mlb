@@ -19,22 +19,21 @@
 	const mp4 = $derived(playbacks?.find((p) => p.name === 'mp4Avc')?.url)
 
 	$effect(() => {
-		const el = video
-		if (!el) return
+		if (!video) return
 
 		if (hls) {
-			if (el.canPlayType('application/vnd.apple.mpegurl')) {
+			if (video.canPlayType('application/vnd.apple.mpegurl')) {
 				// Native HLS (Safari, iOS)
-				el.src = hls
+				video.src = hls
 			} else if (Hls.isSupported()) {
 				// hls.js (Chrome/Firefox/Edge)
 				const player = new Hls()
 				player.loadSource(hls)
-				player.attachMedia(el)
+				player.attachMedia(video)
 				return () => player.destroy()
 			}
 		} else if (mp4) {
-			el.src = mp4
+			video.src = mp4
 		}
 	})
 </script>

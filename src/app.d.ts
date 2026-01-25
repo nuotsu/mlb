@@ -12,6 +12,7 @@ declare global {
 	namespace Docs {
 		interface EndpointSchema {
 			[endpoint: string]: {
+				description?: string
 				pathParams?: EndpointParams
 				queryParams?: EndpointParams
 			}
