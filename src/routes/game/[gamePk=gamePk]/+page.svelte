@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatDate } from '$lib/temporal'
+	import Boxscore from '$ui/game/boxscore.svelte'
 	import Decision from '$ui/game/decision.svelte'
 	import GameData from '$ui/game/game-data.svelte'
 	import Game from '$ui/game/game.svelte'
@@ -59,10 +60,12 @@
 	{/if}
 
 	<article class="grid items-start gap-ch md:has-[#theater-mode:not(:checked)]:grid-cols-2">
-		<GameData {game} {feedLive} />
+		<Boxscore {feedLive} {boxscore} />
 
 		{#if data.content?.media?.epgAlternate}
 			<Highlights content={data.content} />
 		{/if}
+
+		<GameData {game} {feedLive} />
 	</article>
 </section>

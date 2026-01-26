@@ -35,7 +35,7 @@ export async function fetchfeedLive(gamePk: string | number) {
 			'weather,condition,temp,wind',
 			'teams,home,away',
 			'linescore,currentInning,scheduledInnings,innings,num,runs,hits,errors,leftOnBase',
-			'boxscore,topPerformers,type,player,boxscoreName,stats,batting,pitching,summary',
+			'boxscore,position,abbreviation,topPerformers,type,player,boxscoreName,stats,batting,pitching,summary',
 			'decisions,winner,loser,save,id',
 		],
 	})
