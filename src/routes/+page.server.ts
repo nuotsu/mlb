@@ -1,11 +1,13 @@
 import { fetchMLB } from '$lib/fetch'
 import { getToday } from '$lib/temporal'
-import type { PageLoad } from './$types'
+import type { PageServerLoad } from './$types'
 
-export const load: PageLoad = async () => {
+export const load: PageServerLoad = async () => {
+	const year = getToday().getFullYear().toString()
+
 	const season = await fetchMLB<MLB.SeasonResponse>(`/api/v1/seasons`, {
 		sportId: '1',
-		season: getToday().getFullYear().toString(),
+		season: year,
 	})
 
 	return {

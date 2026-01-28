@@ -16,10 +16,10 @@
 	<div class="flex justify-center">
 		<label class="min-w-[8ch]">
 			<input
-				class="appearance-none text-center decoration-dashed hover:underline"
+				class="min-w-[6ch] appearance-none text-center decoration-dashed hover:underline"
 				id="year"
 				type="number"
-				min="1901"
+				min="1876"
 				max={getToday().getFullYear()}
 				value={year}
 				onchange={(e) => goto(`/standings/${e.currentTarget.value}`)}

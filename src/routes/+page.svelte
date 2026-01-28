@@ -20,7 +20,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 />
 
 <header class="p-ch">
-	<h1 class="mx-auto flex max-w-max flex-col text-center" aria-label="Welcome to MLB.TheOhtani.com">
+	<h1 class="mx-auto flex max-w-max flex-col" aria-label="Welcome to MLB.TheOhtani.com">
 		<div class="-mb-ch">Welcome to</div>
 		<pre
 			class="overflow-x-auto overflow-y-clip font-mono text-[xx-small] leading-none">{ascii}</pre>
