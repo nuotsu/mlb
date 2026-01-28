@@ -19,8 +19,10 @@
 		<dd>{game.description}</dd>
 	{/if}
 
-	<dt>Series</dt>
-	<dd>{game.seriesGameNumber} of {game.gamesInSeries}</dd>
+	{#if game.seriesGameNumber && game.gamesInSeries}
+		<dt>Series</dt>
+		<dd>{game.seriesGameNumber} of {game.gamesInSeries}</dd>
+	{/if}
 
 	<dt>Venue</dt>
 	<dd>{game.venue.name}</dd>
