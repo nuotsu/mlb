@@ -1,17 +1,27 @@
 <script lang="ts">
 	import { cn } from '$lib/utils'
 	import StyledTeam from '$ui/game/styled-team.svelte'
+	import YearPicker from '$ui/schedule/year-picker.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
 </script>
 
-<section class="grid gap-lh p-ch sm:grid-cols-2 lg:grid-cols-3">
-	{#each data.standings.records as record}
+<header class="p-ch">
+	<YearPicker />
+</header>
+
+<section
+	class={cn('grid items-start gap-lh p-ch', {
+		'sm:grid-cols-2 lg:grid-cols-3': data.standings.records.length > 4,
+		'sm:grid-cols-2': data.standings.records.length % 2 === 0,
+	})}
+>
+	{#each data.standings.records as { division, teamRecords }}
 		<table class="w-full text-center">
 			<thead>
 				<tr class="text-sm text-current/25">
-					<th class="line-clamp-1 break-all text-foreground">{record.division.nameShort}</th>
+					<th class="line-clamp-1 break-all text-foreground">{division?.nameShort}</th>
 					<th class="w-[8ch]">W-L</th>
 					<th class="w-[5ch]">%</th>
 					<th class="w-[5ch]">GB</th>
@@ -20,7 +30,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each record.teamRecords as { team, wins, losses, winningPercentage, sportGamesBack, streak, leagueRank }}
+				{#each teamRecords as { team, wins, losses, winningPercentage, sportGamesBack, streak, leagueRank }}
 					<tr>
 						<td class="sticky left-0 min-w-[3.5ch]">
 							<StyledTeam class="flex-row-reverse pl-ch text-left" {team} />
