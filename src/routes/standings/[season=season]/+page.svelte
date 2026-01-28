@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils'
-	import StyledTeam from '$ui/game/styled-team.svelte'
 	import YearPicker from '$ui/schedule/year-picker.svelte'
+	import StyledTeam from '$ui/team/styled-team.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()

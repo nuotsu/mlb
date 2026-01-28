@@ -1,0 +1,16 @@
+import { fetchMLB } from '$lib/fetch'
+import type { PageLoad } from './$types'
+
+export const load: PageLoad = async ({ url }) => {
+	const searchParams = Object.fromEntries(url.searchParams.entries())
+
+	const teams = await fetchMLB<MLB.TeamsResponse>('/api/v1/teams', {
+		sportId: '1',
+		fields: ['teams,id,name,abbreviation'],
+		...searchParams,
+	})
+
+	return {
+		teams,
+	}
+}

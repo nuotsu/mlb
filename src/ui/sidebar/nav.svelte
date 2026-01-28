@@ -4,10 +4,11 @@
 	import {
 		CalendarIcon,
 		CalendarTodayIcon,
+		FlagIcon,
 		HelmetIcon,
+		JerseyIcon,
 		JsonIcon,
 		RobotIcon,
-		FlagIcon,
 	} from '$ui/icons'
 	import type { Component } from 'svelte'
 	import Drawer from './drawer.svelte'
@@ -32,6 +33,11 @@
 			href: '/standings',
 			label: 'Standings',
 			icon: FlagIcon,
+		},
+		{
+			href: '/teams',
+			label: 'Teams',
+			icon: JerseyIcon,
 		},
 		{
 			href: '/player',

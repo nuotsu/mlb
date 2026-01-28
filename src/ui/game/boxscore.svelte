@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/utils'
-	import StyledTeam from './styled-team.svelte'
+	import StyledTeam from '../team/styled-team.svelte'
 
 	let { feedLive, boxscore }: { feedLive: MLB.LiveGameFeed; boxscore: MLB.Boxscore } = $props()
 
