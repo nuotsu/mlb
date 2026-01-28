@@ -5,8 +5,6 @@
 
 	let { data }: PageProps = $props()
 	let player = $derived(data.person)
-
-	$inspect(player)
 </script>
 
 <Metadata title="{player.fullName} | MLB.TheOhtani.com" description="{player.fullName} profile" />

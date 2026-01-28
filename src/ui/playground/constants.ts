@@ -77,7 +77,8 @@ export const PRESETS = {
 
 export const CUSTOM_ENDPOINT = {
 	'/{custom}': {
-		description: 'Custom endpoint for exploring unlisted API paths; enter full path starting with /api/v1/.',
+		description:
+			'Custom endpoint for exploring unlisted API paths; enter full path starting with /api/v1/.',
 		pathParams: {
 			custom: [{ value: '/api/v1/' }],
 		},
@@ -355,6 +356,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				leagueId: PRESETS.leagueId,
 				season: PRESETS.season,
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
 	},
@@ -440,7 +442,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/uniforms/game': {
-			description: 'Uniform details for specific games: jersey style, cap, pants, and special event gear.',
+			description:
+				'Uniform details for specific games: jersey style, cap, pants, and special event gear.',
 			queryParams: {
 				gamePks: PRESETS.gamePk,
 			},

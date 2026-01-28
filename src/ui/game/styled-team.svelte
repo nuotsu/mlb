@@ -7,7 +7,11 @@
 		team,
 		class: className,
 		children,
-	}: { team: MLB.Team; class?: string; children?: Snippet } = $props()
+	}: {
+		team: MLB.Team
+		class?: string
+		children?: Snippet
+	} = $props()
 
 	let colorScheme = $derived(colorSchemeStore.colorScheme)
 
@@ -58,6 +62,9 @@
 	<div class="line-clamp-1 grow break-all">
 		<span class="@max-sm/team:hidden">{team.name}</span>
 		<span class="@max-[12ch]/team:hidden @sm:hidden">{team.teamName}</span>
+		{#if team.abbreviation}
+			<span class="@max-[7ch]/team:hidden @min-[12ch]/team:hidden">{team.abbreviation}</span>
+		{/if}
 	</div>
 
 	{@render children?.()}

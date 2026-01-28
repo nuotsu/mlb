@@ -1,7 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import { version } from '$pkg'
-	import { CalendarIcon, CalendarTodayIcon, HelmetIcon, JsonIcon, RobotIcon } from '$ui/icons'
+	import {
+		CalendarIcon,
+		CalendarTodayIcon,
+		HelmetIcon,
+		JsonIcon,
+		RobotIcon,
+		FlagIcon,
+	} from '$ui/icons'
 	import type { Component } from 'svelte'
 	import Drawer from './drawer.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
@@ -17,12 +24,17 @@
 			icon: CalendarIcon,
 		},
 		{
-			href: `/schedule/day`,
+			href: '/schedule/day',
 			label: 'Daily Schedule',
 			icon: CalendarTodayIcon,
 		},
 		{
-			href: `/player`,
+			href: '/standings',
+			label: 'Standings',
+			icon: FlagIcon,
+		},
+		{
+			href: '/player',
 			label: 'Player',
 			icon: HelmetIcon,
 		},

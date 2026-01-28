@@ -28,6 +28,10 @@ declare global {
 
 		// Team Types
 
+		interface TeamsResponse extends ApiResponse<Team[]> {
+			teams: Team[]
+		}
+
 		/**
 		 * Basic team information
 		 */

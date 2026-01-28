@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { cn } from '$lib/utils'
+	import StyledTeam from './styled-team.svelte'
+
 	let { feedLive, boxscore }: { feedLive: MLB.LiveGameFeed; boxscore: MLB.Boxscore } = $props()
 
 	let { away, home } = $derived(boxscore.teams)
@@ -12,16 +15,26 @@
 
 {#snippet team(team: MLB.TeamBoxscore)}
 	<div>
-		<h2>{team.team.abbreviation}</h2>
+		<StyledTeam team={team.team} />
 		<ol>
-			{#each team.battingOrder as playerId}
+			{#each team.batters as playerId}
 				{@const { lastName } = players[`ID${playerId}`] as unknown as MLB.Person}
 				{@const { position } = team.players[`ID${playerId}`]}
-				<li class="grid grid-cols-[3ch_1fr]">
-					<span class="text-center">{position.abbreviation}</span>
-					{lastName}
-				</li>
+				{@const isSubstituted = !team.battingOrder.includes(playerId)}
+
+				{#if position.abbreviation !== 'P'}
+					<li class="grid grid-cols-[3ch_1fr]" data-substituted={isSubstituted ? '' : undefined}>
+						<span class="text-center">{position.abbreviation}</span>
+						{lastName}
+					</li>
+				{/if}
 			{/each}
 		</ol>
 	</div>
 {/snippet}
+
+<style>
+	[data-substituted] + li {
+		margin-left: 2ch;
+	}
+</style>
