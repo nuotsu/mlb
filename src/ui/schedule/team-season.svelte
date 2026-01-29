@@ -28,8 +28,8 @@
 
 <article class="sm:px-ch">
 	{#each byMonth as [month, dates], i (month)}
-		<details name="schedule" open={month === currentMonth || i === 0}>
-			<summary class="max-sm:px-ch">
+		<details class="accordion" name="schedule" open={month === currentMonth || i === 0}>
+			<summary class="flex items-center gap-ch max-sm:px-ch">
 				{formatDate(slash(month + '-01'), { month: 'long', year: 'numeric' })}
 			</summary>
 

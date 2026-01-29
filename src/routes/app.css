@@ -147,6 +147,26 @@
 	@apply border-b border-dashed border-accent invalid:border-[red] invalid:text-[red]! hover:bg-accent/25 focus:relative focus:bg-accent/25;
 }
 
+@utility accordion {
+	summary {
+		list-style: none;
+
+		&::-webkit-details-marker {
+			display: none;
+		}
+
+		&::after {
+			content: '▹';
+			display: inline-block;
+			transition: rotate var(--default-transition-duration) ease-in-out;
+		}
+	}
+
+	&[open] summary::after {
+		rotate: 90deg;
+	}
+}
+
 @layer vendor {
 	.shiki {
 		--line-num-width: calc(attr(data-line-width type(<number>), 0) * 1ch);
