@@ -3,7 +3,7 @@
 	import { formatDate } from '$lib/temporal'
 	import Countdown from './countdown.svelte'
 
-	const season = $derived((page.data.season as MLB.SeasonResponse).seasons[0])
+	const season = $derived(page.data.season as MLB.SeasonDateInfo)
 </script>
 
 <section class="space-y-lh text-center">
