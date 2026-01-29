@@ -256,6 +256,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
 		'/api/v1/teams/{teamId}': {
@@ -263,6 +264,9 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				'Detailed team info: full name, venue, league, division, first year, and social media links.',
 			pathParams: {
 				teamId: PRESETS.teamId,
+			},
+			queryParams: {
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
 		'/api/v1/teams/{teamId}/roster': {
@@ -356,6 +360,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				leagueId: PRESETS.leagueId,
 				season: PRESETS.season,
+				fields: [{ value: '' }],
 				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},

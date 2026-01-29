@@ -1,8 +1,17 @@
 <script lang="ts">
+	import Metadata from '$ui/metadata.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
+
+	const { sport } = $derived(data.teams.teams[0] as MLB.TeamDetailed)
+	$inspect(sport)
 </script>
+
+<Metadata
+	title="{sport?.abbreviation || 'MLB'} Teams | MLB.TheOhtani.com"
+	description="List of all {sport?.name || 'MLB'} teams"
+/>
 
 <section class="p-ch">
 	<ul>

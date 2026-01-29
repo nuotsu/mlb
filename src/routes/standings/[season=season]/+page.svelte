@@ -1,11 +1,18 @@
 <script lang="ts">
+	import { page } from '$app/state'
 	import { cn } from '$lib/utils'
+	import Metadata from '$ui/metadata.svelte'
 	import YearPicker from '$ui/schedule/year-picker.svelte'
 	import StyledTeam from '$ui/team/styled-team.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
 </script>
+
+<Metadata
+	title="{page.params.season} MLB Standings | MLB.TheOhtani.com"
+	description="MLB standings for the {page.params.season} season"
+/>
 
 <header class="p-ch">
 	<YearPicker />
