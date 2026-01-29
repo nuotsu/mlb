@@ -28,7 +28,7 @@
 
 <article class="sm:px-ch">
 	{#each byMonth as [month, dates], i (month)}
-		<details name="schedule" open={month === currentMonth || i === 0}>
+		<details class="accordion" name="schedule" open={month === currentMonth || i === 0}>
 			<summary class="max-sm:px-ch">
 				{formatDate(slash(month + '-01'), { month: 'long', year: 'numeric' })}
 			</summary>
@@ -82,16 +82,5 @@
 <style>
 	ol {
 		grid-template-columns: auto auto auto minmax(8ch, 1fr);
-	}
-
-	details {
-		summary::after {
-			content: '▹';
-			transition: rotate var(--default-transition-duration) ease-in-out;
-		}
-
-		&[open] summary::after {
-			rotate: 90deg;
-		}
 	}
 </style>

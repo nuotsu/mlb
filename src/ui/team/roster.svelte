@@ -17,7 +17,7 @@
 	{@render list(batters, 'Batters', true)}
 	{@render list(pitchers, 'Pitchers')}
 
-	<details name="roster">
+	<details class="accordion" name="roster">
 		<summary>Coaches</summary>
 
 		<ul class="grid">
@@ -46,7 +46,7 @@
 </article>
 
 {#snippet list(arr: MLB.Roster[], label: string, open?: boolean)}
-	<details name="roster" {open}>
+	<details class="accordion" name="roster" {open}>
 		<summary>{label}</summary>
 
 		<ul class="grid">
@@ -77,16 +77,5 @@
 <style>
 	ul {
 		grid-template-columns: auto auto auto 1fr;
-	}
-
-	details {
-		summary::after {
-			content: '▹';
-			transition: rotate var(--default-transition-duration) ease-in-out;
-		}
-
-		&[open] summary::after {
-			rotate: 90deg;
-		}
 	}
 </style>
