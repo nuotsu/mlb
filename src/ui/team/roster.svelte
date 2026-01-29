@@ -18,7 +18,7 @@
 	{@render list(pitchers, 'Pitchers')}
 
 	<details class="accordion" name="roster">
-		<summary>Coaches</summary>
+		<summary class="flex items-center gap-ch">Coaches</summary>
 
 		<ul class="grid">
 			{#each coaches as { person, jerseyNumber, job } (person.id)}
@@ -47,7 +47,7 @@
 
 {#snippet list(arr: MLB.Roster[], label: string, open?: boolean)}
 	<details class="accordion" name="roster" {open}>
-		<summary>{label}</summary>
+		<summary class="flex items-center gap-ch">{label}</summary>
 
 		<ul class="grid">
 			{#each sort(arr) as { person, jerseyNumber, position } (person.id)}

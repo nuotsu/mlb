@@ -157,6 +157,7 @@
 
 		&::after {
 			content: '▹';
+			display: inline-block;
 			transition: rotate var(--default-transition-duration) ease-in-out;
 		}
 	}
