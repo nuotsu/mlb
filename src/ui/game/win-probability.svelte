@@ -66,7 +66,7 @@
 	</figcaption>
 
 	<svg class="w-full grow" viewBox="0 {-padding} {width} {height + padding * 2}">
-		{#each inningDividers() as inning, i}
+		{#each inningDividers() as inning, i (inning.num)}
 			{#if i > 0}
 				<line
 					class="stroke-current/25"

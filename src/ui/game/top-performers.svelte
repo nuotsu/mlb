@@ -7,7 +7,7 @@
 </script>
 
 <dl>
-	{#each topPerformers as { player, type }}
+	{#each topPerformers as { player, type } (player.person.id)}
 		{@const key = ['hitter', 'twoWayStarter'].includes(type)
 			? 'batting'
 			: ['starter', 'reliever'].includes(type)

@@ -17,7 +17,7 @@
 	<div>
 		<StyledTeam team={team.team} />
 		<ol>
-			{#each team.batters as playerId}
+			{#each team.batters as playerId (playerId)}
 				{@const { lastName } = players[`ID${playerId}`] as unknown as MLB.Person}
 				{@const { position } = team.players[`ID${playerId}`]}
 				{@const isSubstituted = !team.battingOrder.includes(playerId)}

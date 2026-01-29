@@ -64,7 +64,7 @@
 		</div>
 
 		<ul class="sidebar-not-open:landscape:max-lg:overflow-clip [&_span]:sm:sidebar-closed-hidden">
-			{#each links as { href, label, icon }}
+			{#each links as { href, label, icon } (href)}
 				<li>
 					<a
 						{href}

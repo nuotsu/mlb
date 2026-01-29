@@ -24,7 +24,7 @@
 		'sm:grid-cols-2': data.standings.records.length % 2 === 0,
 	})}
 >
-	{#each data.standings.records as { division, teamRecords }}
+	{#each data.standings.records as { division, teamRecords } (division?.id)}
 		<table class="w-full text-center">
 			<thead>
 				<tr class="text-sm text-current/25">
@@ -37,7 +37,7 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each teamRecords as { team, wins, losses, winningPercentage, sportGamesBack, streak, leagueRank }}
+				{#each teamRecords as { team, wins, losses, winningPercentage, sportGamesBack, streak, leagueRank } (team.id)}
 					<tr>
 						<td class="sticky left-0 min-w-[3.5ch]">
 							<StyledTeam class="flex-row-reverse pl-ch text-left" {team} />

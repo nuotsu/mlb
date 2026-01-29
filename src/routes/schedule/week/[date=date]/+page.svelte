@@ -31,7 +31,7 @@
 			</summary>
 
 			<div class="mb-lh columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
-				{#each date.games as game}
+				{#each date.games as game (game.gamePk)}
 					{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
 					<Game {game} {linescore} showDescription />
 				{/each}

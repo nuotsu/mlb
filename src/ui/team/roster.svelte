@@ -21,7 +21,7 @@
 		<summary>Coaches</summary>
 
 		<ul class="grid">
-			{#each coaches as { person, jerseyNumber, job }}
+			{#each coaches as { person, jerseyNumber, job } (person.id)}
 				<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
 					<a
 						class="group/person col-span-full grid grid-cols-subgrid items-center gap-x-ch"
@@ -50,7 +50,7 @@
 		<summary>{label}</summary>
 
 		<ul class="grid">
-			{#each sort(arr) as { person, jerseyNumber, position }}
+			{#each sort(arr) as { person, jerseyNumber, position } (person.id)}
 				<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
 					<a
 						class="group/person col-span-full grid grid-cols-subgrid items-center gap-x-ch"
