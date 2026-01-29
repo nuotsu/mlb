@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Metadata from '$ui/metadata.svelte'
+	import Logo from '$ui/team/logo.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
@@ -13,7 +14,11 @@
 	description="List of all {sport?.name || 'MLB'} teams"
 />
 
-<section class="p-ch">
+<section class="space-y-lh p-ch">
+	<header class="text-center">
+		<h1>{sport?.abbreviation || 'MLB'} Teams</h1>
+	</header>
+
 	<ul>
 		{#each data.teams.teams.sort((a, b) => a.name.localeCompare(b.name)) as team}
 			{@const src = `https://midfield.mlbstatic.com/v1/team/${team.id}/spots`}
@@ -23,18 +28,7 @@
 					class="flex items-center gap-ch decoration-dashed hover:underline"
 					href="/teams/{team.id}"
 				>
-					<img
-						class="size-lh text-transparent"
-						src="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{team.id}.svg"
-						alt={team.name}
-						width="300"
-						height="300"
-						draggable="false"
-						onerror={(e) => {
-							;(e.currentTarget as HTMLImageElement).src = `${src}/72`
-						}}
-					/>
-
+					<Logo class="size-lh" type="dark" {team} />
 					{team.name}
 				</a>
 			</li>

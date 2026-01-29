@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '$lib/utils'
-	import { colorSchemeStore } from '$ui/store.svelte'
 	import type { Snippet } from 'svelte'
+	import Logo from './logo.svelte'
 
 	let {
 		team,
@@ -12,8 +12,6 @@
 		class?: string
 		children?: Snippet
 	} = $props()
-
-	let colorScheme = $derived(colorSchemeStore.colorScheme)
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
 
@@ -43,21 +41,7 @@
 	)}
 	style:--bg="url('{src}/32')"
 >
-	<picture class="contents">
-		<source srcset="{src}/72" media={colorScheme === 'dark' ? undefined : '()'} />
-
-		<img
-			class="size-lh shrink-0 object-contain"
-			src="https://www.mlbstatic.com/team-logos/team-cap-on-light/{team.id}.svg"
-			width="300"
-			height="300"
-			alt={team.name}
-			draggable="false"
-			onerror={(e) => {
-				;(e.currentTarget as HTMLImageElement).src = `${src}/72`
-			}}
-		/>
-	</picture>
+	<Logo srcset="{src}/72" class="size-lh shrink-0 object-contain" {team} />
 
 	<div class="line-clamp-1 grow break-all">
 		<span class="@max-sm/team:hidden">{team.name}</span>
@@ -71,7 +55,7 @@
 </div>
 
 <style>
-	div:has(picture)::before {
+	.\@container\/team:global(:has(picture)::before) {
 		content: '';
 		position: absolute;
 		inset: 0;
