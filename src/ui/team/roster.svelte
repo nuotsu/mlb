@@ -78,4 +78,15 @@
 	ul {
 		grid-template-columns: auto auto auto 1fr;
 	}
+
+	details {
+		summary::after {
+			content: '▹';
+			transition: rotate var(--default-transition-duration) ease-in-out;
+		}
+
+		&[open] summary::after {
+			rotate: 90deg;
+		}
+	}
 </style>
