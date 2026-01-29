@@ -25,6 +25,9 @@
 </header>
 
 <section class="grid gap-lh sm:grid-cols-2">
-	<Roster roster={data.roster.roster} coaches={data.coaches.roster} />
+	{#if data.roster.roster}
+		<Roster roster={data.roster.roster} coaches={data.coaches.roster} />
+	{/if}
+
 	<TeamSeason schedule={data.schedule} {team} />
 </section>

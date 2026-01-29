@@ -12,20 +12,24 @@
 	} = $props()
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
+
+	let fallback = $state(false)
 </script>
 
 <picture class="shrink-0">
 	<source {srcset} media={colorSchemeStore.colorScheme === 'dark' ? undefined : '()'} />
 
 	<img
-		class="text-transparent {className}"
-		src="https://www.mlbstatic.com/team-logos/team-cap-on-light/{team.id}.svg"
+		class="overflow-hidden text-transparent {className}"
+		src={fallback
+			? `${src}/72`
+			: `https://www.mlbstatic.com/team-logos/team-cap-on-light/${team.id}.svg`}
 		alt={team.name}
 		width="300"
 		height="300"
 		draggable="false"
-		onerror={(e) => {
-			;(e.currentTarget as HTMLImageElement).src = `${src}/72`
+		onerror={() => {
+			if (!fallback) fallback = true
 		}}
 	/>
 </picture>

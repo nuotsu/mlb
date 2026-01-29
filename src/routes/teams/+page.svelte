@@ -19,7 +19,7 @@
 	</header>
 
 	<ul>
-		{#each data.teams.teams.sort((a, b) => a.name.localeCompare(b.name)) as team}
+		{#each data.teams.teams.sort((a, b) => a.name.localeCompare(b.name)) as team (team.id)}
 			<li>
 				<a
 					class="flex items-center gap-ch decoration-dashed hover:underline"
