@@ -1,7 +1,7 @@
 {
 	"name": "mlb",
 	"private": true,
-	"version": "0.4.24",
+	"version": "0.4.25",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --host",
@@ -33,7 +33,7 @@
 	},
 	"dependencies": {
 		"hls.js": "^1.6.15",
-		"posthog-js": "^1.336.1",
-		"posthog-node": "^5.24.4"
+		"posthog-js": "^1.336.4",
+		"posthog-node": "^5.24.7"
 	}
 }
