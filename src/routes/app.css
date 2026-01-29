@@ -148,9 +148,17 @@
 }
 
 @utility accordion {
-	summary::after {
-		content: '▹';
-		transition: rotate var(--default-transition-duration) ease-in-out;
+	summary {
+		list-style: none;
+
+		&::-webkit-details-marker {
+			display: none;
+		}
+
+		&::after {
+			content: '▹';
+			transition: rotate var(--default-transition-duration) ease-in-out;
+		}
 	}
 
 	&[open] summary::after {
