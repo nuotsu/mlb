@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { cn } from '$lib/utils'
-	import { colorSchemeStore } from '$ui/store.svelte'
 	import type { Snippet } from 'svelte'
+	import Logo from './logo.svelte'
 
 	let {
 		team,
 		class: className,
 		children,
-	}: { team: MLB.Team; class?: string; children?: Snippet } = $props()
-
-	let colorScheme = $derived(colorSchemeStore.colorScheme)
+	}: {
+		team: MLB.Team
+		class?: string
+		children?: Snippet
+	} = $props()
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
 
@@ -39,32 +41,21 @@
 	)}
 	style:--bg="url('{src}/32')"
 >
-	<picture class="contents">
-		<source srcset="{src}/72" media={colorScheme === 'dark' ? undefined : '()'} />
+	<Logo srcset="{src}/72" class="size-lh shrink-0 object-contain" {team} />
 
-		<img
-			class="size-lh shrink-0 object-contain"
-			src="https://www.mlbstatic.com/team-logos/team-cap-on-light/{team.id}.svg"
-			width="300"
-			height="300"
-			alt={team.name}
-			draggable="false"
-			onerror={(e) => {
-				;(e.currentTarget as HTMLImageElement).src = `${src}/72`
-			}}
-		/>
-	</picture>
-
-	<div class="line-clamp-1 grow break-all">
+	<div class="line-clamp-1 shrink-0 grow break-all">
 		<span class="@max-sm/team:hidden">{team.name}</span>
 		<span class="@max-[12ch]/team:hidden @sm:hidden">{team.teamName}</span>
+		{#if team.abbreviation}
+			<span class="@max-[7ch]/team:hidden @min-[12ch]/team:hidden">{team.abbreviation}</span>
+		{/if}
 	</div>
 
 	{@render children?.()}
 </div>
 
 <style>
-	div:has(picture)::before {
+	.\@container\/team:global(:has(picture)::before) {
 		content: '';
 		position: absolute;
 		inset: 0;

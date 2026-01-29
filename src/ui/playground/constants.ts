@@ -78,7 +78,8 @@ export const PRESETS = {
 
 export const CUSTOM_ENDPOINT = {
 	'/{custom}': {
-		description: 'Custom endpoint for exploring unlisted API paths; enter full path starting with /api/v1/.',
+		description:
+			'Custom endpoint for exploring unlisted API paths; enter full path starting with /api/v1/.',
 		pathParams: {
 			custom: [{ value: '/api/v1/' }],
 		},
@@ -256,6 +257,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
 		'/api/v1/teams/{teamId}': {
@@ -263,6 +265,9 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				'Detailed team info: full name, venue, league, division, first year, and social media links.',
 			pathParams: {
 				teamId: PRESETS.teamId,
+			},
+			queryParams: {
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
 		'/api/v1/teams/{teamId}/roster': {
@@ -273,6 +278,17 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 			queryParams: {
 				season: PRESETS.season,
+				hydrate: [{ value: 'person', empty: true }],
+			},
+		},
+		'/api/v1/teams/{teamId}/coaches': {
+			description: 'Current coaching staff with coach IDs, names, positions, and status.',
+			pathParams: {
+				teamId: PRESETS.teamId,
+			},
+			queryParams: {
+				season: PRESETS.season,
+				hydrate: [{ value: 'person', empty: true }],
 			},
 		},
 		'/api/v1/teams/{teamId}/history': {
@@ -356,6 +372,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				leagueId: PRESETS.leagueId,
 				season: PRESETS.season,
+				fields: [{ value: '' }],
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
 	},
@@ -431,7 +449,8 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 		},
 		'/api/v1/uniforms/game': {
-			description: 'Uniform details for specific games: jersey style, cap, pants, and special event gear.',
+			description:
+				'Uniform details for specific games: jersey style, cap, pants, and special event gear.',
 			queryParams: {
 				gamePks: PRESETS.gamePk,
 			},

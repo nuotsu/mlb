@@ -2,7 +2,9 @@
 	import { ENDPOINTS } from './constants'
 	import ParameterRow from './parameter-row.svelte'
 
-	let { endpoint } = $props()
+	let { endpoint }: { endpoint: string } = $props()
+
+	const config = $derived(ENDPOINTS[endpoint.split('?')[0]])
 </script>
 
 <table class="block max-w-full overflow-x-auto py-[.5ch]">
@@ -12,8 +14,8 @@
 	</tbody>
 </table>
 
-{#snippet group(key: string, label: string)}
-	{@const entries = Object.entries(ENDPOINTS[endpoint.split('?')[0]][key] ?? {})}
+{#snippet group(key: keyof typeof config, label: string)}
+	{@const entries = Object.entries(config[key] ?? {})}
 
 	{#if entries.length}
 		<tr class="text-left">

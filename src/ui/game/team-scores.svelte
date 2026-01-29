@@ -1,5 +1,5 @@
 <script lang="ts">
-	import StyledTeam from '$ui/game/styled-team.svelte'
+	import StyledTeam from '$ui/team/styled-team.svelte'
 
 	let { game, boxscore }: { game: MLB.Game; boxscore: MLB.Boxscore } = $props()
 </script>

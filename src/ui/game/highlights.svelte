@@ -15,7 +15,7 @@
 	}}
 />
 
-<article class="relative flex flex-wrap gap-ch text-center has-[#theater-mode:checked]:order-first">
+<article class="relative flex flex-wrap gap-ch text-center">
 	{#each highlights as { title, items }, i}
 		<div class="group/highlight contents">
 			<input

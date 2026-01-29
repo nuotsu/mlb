@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatDate } from '$lib/temporal'
+	import Boxscore from '$ui/game/boxscore.svelte'
 	import Decision from '$ui/game/decision.svelte'
 	import GameData from '$ui/game/game-data.svelte'
 	import Game from '$ui/game/game.svelte'
@@ -23,6 +24,9 @@
 
 	const hasTopPerformers = $derived(feedLive.liveData.boxscore.topPerformers?.length)
 	const hasDecisions = $derived(feedLive.liveData.decisions)
+	const hasBattingOrder = $derived(
+		boxscore.teams.away.battingOrder?.length || boxscore.teams.home.battingOrder?.length,
+	)
 </script>
 
 <svelte:head>
@@ -59,10 +63,14 @@
 	{/if}
 
 	<article class="grid items-start gap-ch md:has-[#theater-mode:not(:checked)]:grid-cols-2">
-		<GameData {game} {feedLive} />
+		{#if hasBattingOrder}
+			<Boxscore {feedLive} {boxscore} />
+		{/if}
 
 		{#if data.content?.media?.epgAlternate}
 			<Highlights content={data.content} />
 		{/if}
+
+		<GameData {game} {feedLive} />
 	</article>
 </section>

@@ -17,11 +17,11 @@
 	<table class="min-w-full table-fixed text-center">
 		<thead>
 			<tr class="align-bottom text-xs opacity-25">
-				{#each innings as { num }}
+				{#each innings as { num } (num)}
 					<th class="font-sans tabular-nums">{num}</th>
 				{/each}
 
-				{#each remainingInnings as num}
+				{#each remainingInnings as num (num)}
 					<th class="font-sans tabular-nums">{num}</th>
 				{/each}
 
@@ -37,7 +37,7 @@
 				{@const { runs, hits, errors, leftOnBase } = teams?.[teamKey] as MLB.LinescoreTeam}
 
 				<tr>
-					{#each innings as inning}
+					{#each innings as inning (inning.num)}
 						{@const bye =
 							inning.num === currentInning &&
 							teamKey === 'home' &&
@@ -58,7 +58,7 @@
 						</td>
 					{/each}
 
-					{#each remainingInnings as num}
+					{#each remainingInnings as num (num)}
 						<td
 							class={cn(
 								'nth-[3n]:border-r',

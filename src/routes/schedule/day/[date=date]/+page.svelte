@@ -32,7 +32,7 @@
 <section class="p-ch max-sm:px-0">
 	{#each dates as { games }}
 		<div class="columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
-			{#each games as game}
+			{#each games as game (game.gamePk)}
 				{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
 				<Game {game} {linescore} showDescription />
 			{/each}

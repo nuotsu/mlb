@@ -3,50 +3,52 @@
 	import { formatDate } from '$lib/temporal'
 	import Countdown from './countdown.svelte'
 
-	const season = $derived(page.data.season as MLB.SeasonResponse)
-	const current = $derived(season.seasons[0])
+	const season = $derived(page.data.season as MLB.SeasonDateInfo)
 </script>
 
 <section class="space-y-lh text-center">
 	<div class="flex flex-wrap justify-evenly gap-lh">
-		<Countdown date={current.springStartDate} until="Spring Training" />
-		<Countdown date={current.regularSeasonStartDate} until="Opening Day" />
+		<Countdown date={season.springStartDate} until="🌻 Spring Training" />
+		<Countdown date="2026-03-04" until="🌎 World Baseball Classic" />
+		<Countdown date={season.regularSeasonStartDate} until="🏟️ Opening Day" />
 	</div>
 
-	{#each season.seasons as s}
-		<article>
-			<h2 class="text-xl">{s.seasonId} Season</h2>
+	<article>
+		<h2 class="text-xl">{season.seasonId} Season</h2>
 
-			<table class="mx-auto">
-				<tbody>
-					<tr>
-						<th>Spring Training</th>
-						<td>{@render linkedDate(s.springStartDate)} - {@render linkedDate(s.springEndDate)}</td>
-					</tr>
-					<tr>
-						<th>Regular Season</th>
-						<td>
-							{@render linkedDate(s.regularSeasonStartDate)}
-							-
-							{@render linkedDate(s.regularSeasonEndDate)}
-						</td>
-					</tr>
-					<tr>
-						<th>All-Star Game</th>
-						<td>{@render linkedDate(s.allStarDate, 'day')}</td>
-					</tr>
-					<tr>
-						<th>Postseason</th>
-						<td>
-							{@render linkedDate(s.postSeasonStartDate)}
-							-
-							{@render linkedDate(s.postSeasonEndDate)}
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</article>
-	{/each}
+		<table class="mx-auto">
+			<tbody>
+				<tr>
+					<th>Spring Training</th>
+					<td>
+						{@render linkedDate(season.springStartDate)} - {@render linkedDate(
+							season.springEndDate,
+						)}
+					</td>
+				</tr>
+				<tr>
+					<th>Regular Season</th>
+					<td>
+						{@render linkedDate(season.regularSeasonStartDate)}
+						-
+						{@render linkedDate(season.regularSeasonEndDate)}
+					</td>
+				</tr>
+				<tr>
+					<th>All-Star Game</th>
+					<td>{@render linkedDate(season.allStarDate, 'day')}</td>
+				</tr>
+				<tr>
+					<th>Postseason</th>
+					<td>
+						{@render linkedDate(season.postSeasonStartDate)}
+						-
+						{@render linkedDate(season.postSeasonEndDate)}
+					</td>
+				</tr>
+			</tbody>
+		</table>
+	</article>
 </section>
 
 {#snippet linkedDate(date: string = '', view: 'week' | 'day' = 'week')}

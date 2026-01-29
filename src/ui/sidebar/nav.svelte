@@ -1,7 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import { version } from '$pkg'
-	import { CalendarIcon, CalendarTodayIcon, HelmetIcon, JsonIcon, RobotIcon } from '$ui/icons'
+	import {
+		CalendarIcon,
+		CalendarTodayIcon,
+		FlagIcon,
+		HelmetIcon,
+		JerseyIcon,
+		JsonIcon,
+		RobotIcon,
+	} from '$ui/icons'
 	import type { Component } from 'svelte'
 	import Drawer from './drawer.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
@@ -17,12 +25,22 @@
 			icon: CalendarIcon,
 		},
 		{
-			href: `/schedule/day`,
+			href: '/schedule/day',
 			label: 'Daily Schedule',
 			icon: CalendarTodayIcon,
 		},
 		{
-			href: `/player`,
+			href: '/standings',
+			label: 'Standings',
+			icon: FlagIcon,
+		},
+		{
+			href: '/teams',
+			label: 'Teams',
+			icon: JerseyIcon,
+		},
+		{
+			href: '/player',
 			label: 'Player',
 			icon: HelmetIcon,
 		},
@@ -45,10 +63,8 @@
 			<a href="/"><strong>MLB</strong>.TheOhtani.com</a>
 		</div>
 
-		<ul
-			class="overflow-y-auto sidebar-not-open:landscape:max-lg:overflow-clip [&_span]:sm:sidebar-closed-hidden"
-		>
-			{#each links as { href, label, icon }}
+		<ul class="sidebar-not-open:landscape:max-lg:overflow-clip [&_span]:sm:sidebar-closed-hidden">
+			{#each links as { href, label, icon } (href)}
 				<li>
 					<a
 						{href}

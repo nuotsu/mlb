@@ -28,6 +28,10 @@ declare global {
 
 		// Team Types
 
+		interface TeamsResponse extends ApiResponse<Team[]> {
+			teams: Team[]
+		}
+
 		/**
 		 * Basic team information
 		 */
@@ -58,6 +62,7 @@ declare global {
 			division?: Division
 			sport?: Sport
 			springLeague?: SpringLeague
+			deviceProperties?: DeviceProperties
 		}
 
 		/**
@@ -71,6 +76,50 @@ declare global {
 		}
 
 		/**
+		 * Roster response
+		 */
+		interface RosterResponse extends ApiResponse<Roster[]> {
+			roster: Roster[]
+		}
+
+		/**
+		 * Team roster entry
+		 */
+		interface Roster {
+			person: {
+				id: number
+				fullName: string
+				link: string
+			}
+			jerseyNumber: string
+			position: Position
+			status: PlayerStatus
+			parentTeamId: number
+		}
+
+		/**
+		 * Coaches response
+		 */
+		interface CoachesResponse extends ApiResponse<Coach[]> {
+			roster: Coach[]
+		}
+
+		/**
+		 * Coach roster entry
+		 */
+		interface Coach {
+			person: {
+				id: number
+				fullName: string
+				link: string
+			}
+			jerseyNumber: string
+			job: string
+			jobId: string
+			title: string
+		}
+
+		/**
 		 * Team in a game context
 		 */
 		interface GameTeam {
@@ -80,6 +129,228 @@ declare global {
 			isWinner?: boolean
 			splitSquad?: boolean
 			seriesNumber?: number
+		}
+
+		interface Social {
+			facebook?: string[]
+			instagram?: string[]
+			pinterest?: string[]
+			snapchat?: string[]
+			tumblr?: string[]
+			twitter?: string[]
+		}
+
+		interface DeviceProperties {
+			urlLogo?: {
+				type?: string
+				id?: string
+				timestamp?: string
+				binaryFile?: string
+				url?: string
+			}
+			bodyBackgroundSkin1?: {
+				type?: string
+				id?: string
+				timestamp?: string
+				title?: string
+				description?: string
+				url?: string
+				image?: {
+					title?: string
+					altText?: string
+					cuts?: Record<
+						string,
+						{
+							aspectRatio?: string
+							width?: string
+							height?: string
+							type?: string
+							src?: string
+							at2x?: string
+							at3x?: string
+						}
+					>
+				}
+			}
+			teamNameDisplay?: string
+			favicon?: {
+				type?: string
+				id?: string
+				timestamp?: string
+				title?: string
+				description?: string
+				url?: string
+				image?: {
+					title?: string
+					altText?: string
+					cuts?: Record<
+						string,
+						{
+							aspectRatio?: string
+							width?: string
+							height?: string
+							type?: string
+							src?: string
+							at2x?: string
+							at3x?: string
+						}
+					>
+				}
+			}
+			bodyBackgroundSkinWiredURL?: string
+			bodyBackgroundSkinTotal?: number
+			headerMastheadTagline?: {
+				type?: string
+				id?: string
+				timestamp?: string
+				binaryFile?: string
+				url?: string
+			}
+			navigationMastheadSponsorImage?: {
+				type?: string
+				id?: string
+				timestamp?: string
+				binaryFile?: string
+				url?: string
+			}
+			organismHeadlineFont?: {
+				type?: string
+				id?: string
+				timestamp?: string
+				binaryFile?: string
+				url?: string
+			}
+			style?: {
+				organismLogoVersion?: string
+				organismLogoStyle?: string
+				headerMastheadLogoVersion?: string
+				headerMastheadLogoStyle?: string
+				headerMastheadLogoContainer?: {
+					left?: string
+					top?: string
+					height?: string
+				}
+				headerMastheadTaglineContainer?: {
+					height?: string
+					width?: string
+					top?: string
+					left?: string
+				}
+				footerLogoVersion?: string
+				footerLogoStyle?: string
+				headlineTextTransform?: string
+				headlineFontFamily?: string
+				headlineFontFamilySizeMultiplier?: number
+				bodyBackgroundColor?: string
+				palette?: string
+				basePalette?: {
+					pageContainerBackgroundColor?: string
+					pageContainerBorderColor?: string
+					headerMastheadBackgroundColor?: string
+					headerMastheadTextColor?: string
+					headerNavigationBackgroundColor?: string
+					headerNavigationBorderColor?: string
+					headerNavigationTextColorHover?: string
+					headerNavigationTextColor?: string
+					footerTitleColor?: string
+					footerTextColor?: string
+					footerBackgroundColor?: string
+					footerBorderColor?: string
+					footerLinkColor?: string
+					footerLinkColorHover?: string
+					footerLinkColorActive?: string
+					buttonPrimaryBackgroundColor?: string
+					buttonPrimaryBackgroundColorHover?: string
+					buttonPrimaryTextColor?: string
+					buttonPrimaryTextColorHover?: string
+					buttonSpotlightBackgroundColor?: string
+					buttonSpotlightBackgroundColorHover?: string
+					buttonSpotlightTextColor?: string
+					buttonSpotlightTextColorHover?: string
+					tableHeaderBackgroundColor?: string
+					tableRowBackgroundColor?: string
+					tableTextColor?: string
+					organismSectionTitleColor?: string
+					organismTitleColor?: string
+					organismTextColor?: string
+					organismTagBackgroundColor?: string
+					organismTagTextColor?: string
+					organismBackgroundColor?: string
+					organismBorderColor?: string
+					organismLinkColor?: string
+					organismLinkColorHover?: string
+					organismLinkTextDecoration?: string
+					organismLinkColorActive?: string
+					organismScrimTitleColor?: string
+					organismScrimTextColor?: string
+					organismScrimTagColor?: string
+					organismScrimBackgroundColor?: string
+					organismScrimBackgroundColorHover?: string
+					organismScrimBorderColor?: string
+					organismScrimLinkColor?: string
+					organismScrimLinkColorHover?: string
+					organismContentHeadingSecondaryBorderColor?: string
+					organismContentHeadingPrimaryBorderColor?: string
+					organismSidekickBackgroundColor?: string
+					organismJumbotronTitleColor?: string
+				}
+				darkPalette?: {
+					pageContainerBackgroundColor?: string
+					pageContainerBorderColor?: string
+					headerMastheadBackgroundColor?: string
+					headerMastheadTextColor?: string
+					headerNavigationBackgroundColor?: string
+					headerNavigationBorderColor?: string
+					headerNavigationTextColorHover?: string
+					headerNavigationTextColor?: string
+					footerTitleColor?: string
+					footerTextColor?: string
+					footerBackgroundColor?: string
+					footerBorderColor?: string
+					footerLinkColor?: string
+					footerLinkColorHover?: string
+					footerLinkColorActive?: string
+					buttonPrimaryBackgroundColor?: string
+					buttonPrimaryBackgroundColorHover?: string
+					buttonPrimaryTextColor?: string
+					buttonPrimaryTextColorHover?: string
+					buttonSpotlightBackgroundColor?: string
+					buttonSpotlightBackgroundColorHover?: string
+					buttonSpotlightTextColor?: string
+					buttonSpotlightTextColorHover?: string
+					tableHeaderBackgroundColor?: string
+					tableRowBackgroundColor?: string
+					tableTextColor?: string
+					organismSectionTitleColor?: string
+					organismTitleColor?: string
+					organismTextColor?: string
+					organismTagBackgroundColor?: string
+					organismTagTextColor?: string
+					organismBackgroundColor?: string
+					organismBorderColor?: string
+					organismLinkColor?: string
+					organismLinkColorHover?: string
+					organismLinkTextDecoration?: string
+					organismLinkColorActive?: string
+					organismScrimTitleColor?: string
+					organismScrimTextColor?: string
+					organismScrimTagColor?: string
+					organismScrimBackgroundColor?: string
+					organismScrimBackgroundColorHover?: string
+					organismScrimBorderColor?: string
+					organismScrimLinkColor?: string
+					organismScrimLinkColorHover?: string
+					organismContentHeadingSecondaryBorderColor?: string
+					organismContentHeadingPrimaryBorderColor?: string
+					organismSidekickBackgroundColor?: string
+					organismJumbotronTitleColor?: string
+				}
+			}
+			siteConfig?: {
+				commenting?: boolean
+				articleVideoAutoPlay?: boolean
+				articleVideoAutoPlaySound?: boolean
+			}
 		}
 
 		// Player/Person Types

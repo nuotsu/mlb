@@ -17,7 +17,7 @@
 
 <section class="space-y-ch p-ch max-sm:px-0">
 	{#each data.schedule.dates as date (date.date)}
-		<details class="group" open>
+		<details class="accordion group" open>
 			<summary class="flex items-center gap-ch px-ch">
 				{formatDate(date.date + 'T00:00:00', {
 					weekday: 'short',
@@ -31,7 +31,7 @@
 			</summary>
 
 			<div class="mb-lh columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
-				{#each date.games as game}
+				{#each date.games as game (game.gamePk)}
 					{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
 					<Game {game} {linescore} showDescription />
 				{/each}
@@ -42,15 +42,3 @@
 	{/each}
 </section>
 
-<style>
-	details {
-		summary::after {
-			content: '▹';
-			transition: rotate var(--default-transition-duration) ease-in-out;
-		}
-
-		&[open] summary::after {
-			rotate: 90deg;
-		}
-	}
-</style>
