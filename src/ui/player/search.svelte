@@ -81,12 +81,13 @@
 							<a class="group/player flex items-center gap-ch" href="/player/{person.id}">
 								<Headshot {person} size={36} class="size-lh shrink-0" />
 
-								<small class="inline-block w-[3ch] text-center text-current/50">
+								<small class="inline-block w-[3ch] text-center">
 									{person.primaryPosition.abbreviation}
 								</small>
 
-								<span class="decoration-dashed group-hover/player:underline">{person.fullName}</span
-								>
+								<span class="decoration-dashed group-hover/player:underline">
+									{person.fullName}
+								</span>
 
 								{#if person.primaryNumber}
 									<span>#{person.primaryNumber}</span>

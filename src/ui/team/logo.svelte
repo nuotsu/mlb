@@ -14,7 +14,7 @@
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
 </script>
 
-<picture>
+<picture class="shrink-0">
 	<source {srcset} media={colorSchemeStore.colorScheme === 'dark' ? undefined : '()'} />
 
 	<img

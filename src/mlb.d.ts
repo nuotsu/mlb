@@ -76,6 +76,50 @@ declare global {
 		}
 
 		/**
+		 * Roster response
+		 */
+		interface RosterResponse extends ApiResponse<Roster[]> {
+			roster: Roster[]
+		}
+
+		/**
+		 * Team roster entry
+		 */
+		interface Roster {
+			person: {
+				id: number
+				fullName: string
+				link: string
+			}
+			jerseyNumber: string
+			position: Position
+			status: PlayerStatus
+			parentTeamId: number
+		}
+
+		/**
+		 * Coaches response
+		 */
+		interface CoachesResponse extends ApiResponse<Coach[]> {
+			roster: Coach[]
+		}
+
+		/**
+		 * Coach roster entry
+		 */
+		interface Coach {
+			person: {
+				id: number
+				fullName: string
+				link: string
+			}
+			jerseyNumber: string
+			job: string
+			jobId: string
+			title: string
+		}
+
+		/**
 		 * Team in a game context
 		 */
 		interface GameTeam {

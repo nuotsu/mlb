@@ -61,7 +61,9 @@
 		</div>
 
 		{#if until}
-			<p>until <strong>{until}</strong></p>
+			<p>
+				until <a class="decoration-dashed hover:underline" href="/schedule/day/{date}">{until}</a>
+			</p>
 		{/if}
 	</article>
 {/if}

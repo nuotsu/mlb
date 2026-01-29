@@ -6,7 +6,6 @@
 	let { data }: PageProps = $props()
 
 	const { sport } = $derived(data.teams.teams[0] as MLB.TeamDetailed)
-	$inspect(sport)
 </script>
 
 <Metadata
@@ -21,14 +20,12 @@
 
 	<ul>
 		{#each data.teams.teams.sort((a, b) => a.name.localeCompare(b.name)) as team}
-			{@const src = `https://midfield.mlbstatic.com/v1/team/${team.id}/spots`}
-
 			<li>
 				<a
 					class="flex items-center gap-ch decoration-dashed hover:underline"
 					href="/teams/{team.id}"
 				>
-					<Logo class="size-lh" type="dark" {team} />
+					<Logo class="size-lh" {team} />
 					{team.name}
 				</a>
 			</li>

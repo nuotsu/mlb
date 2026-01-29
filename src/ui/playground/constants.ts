@@ -277,6 +277,17 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			},
 			queryParams: {
 				season: PRESETS.season,
+				hydrate: [{ value: 'person', empty: true }],
+			},
+		},
+		'/api/v1/teams/{teamId}/coaches': {
+			description: 'Current coaching staff with coach IDs, names, positions, and status.',
+			pathParams: {
+				teamId: PRESETS.teamId,
+			},
+			queryParams: {
+				season: PRESETS.season,
+				hydrate: [{ value: 'person', empty: true }],
 			},
 		},
 		'/api/v1/teams/{teamId}/history': {

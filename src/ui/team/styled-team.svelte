@@ -43,7 +43,7 @@
 >
 	<Logo srcset="{src}/72" class="size-lh shrink-0 object-contain" {team} />
 
-	<div class="line-clamp-1 grow break-all">
+	<div class="line-clamp-1 shrink-0 grow break-all">
 		<span class="@max-sm/team:hidden">{team.name}</span>
 		<span class="@max-[12ch]/team:hidden @sm:hidden">{team.teamName}</span>
 		{#if team.abbreviation}

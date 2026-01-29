@@ -19,7 +19,7 @@
 </header>
 
 <section
-	class={cn('grid items-start gap-lh p-ch', {
+	class={cn('items-start gap-lh p-ch has-[table]:grid', {
 		'sm:grid-cols-2 lg:grid-cols-3': data.standings.records.length > 4,
 		'sm:grid-cols-2': data.standings.records.length % 2 === 0,
 	})}
@@ -67,6 +67,8 @@
 				{/each}
 			</tbody>
 		</table>
+	{:else}
+		<div class="text-center">No standings</div>
 	{/each}
 </section>
 
