@@ -3,8 +3,6 @@
 
 	let { roster, coaches }: { roster: MLB.Roster[]; coaches: MLB.Coach[] } = $props()
 
-	$inspect(coaches)
-
 	const batters = $derived(roster.filter(({ position }) => position.abbreviation !== 'P'))
 	const pitchers = $derived(roster.filter(({ position }) => position.abbreviation === 'P'))
 

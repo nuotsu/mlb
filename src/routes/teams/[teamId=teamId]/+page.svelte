@@ -16,7 +16,10 @@
 	<Logo class="size-[4lh] shrink-0 rounded-none bg-transparent" {team} />
 
 	<h1 class="grid">
-		<span>{team.locationName}</span>
+		{#if team.franchiseName !== team.teamName}
+			<span>{team.franchiseName}</span>
+		{/if}
+
 		<strong class="text-3xl">{team.teamName}</strong>
 	</h1>
 </header>
