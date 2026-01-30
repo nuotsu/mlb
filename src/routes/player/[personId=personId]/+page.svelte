@@ -52,4 +52,6 @@
 		src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/w_426,q_auto:best/v1/people/{person.id}/action/hero/current"
 		alt=""
 	/> -->
+
+	<div class="mt-lh">Coming soon...</div>
 </section>

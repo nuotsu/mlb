@@ -147,6 +147,8 @@
 	@apply border-b border-dashed border-accent invalid:border-[red] invalid:text-[red]! hover:bg-accent/25 focus:relative focus:bg-accent/25;
 }
 
+/* components */
+
 @utility accordion {
 	summary {
 		list-style: none;
@@ -166,6 +168,8 @@
 		rotate: 90deg;
 	}
 }
+
+/* vendor */
 
 @layer vendor {
 	.shiki {

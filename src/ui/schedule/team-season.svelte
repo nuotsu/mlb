@@ -33,7 +33,7 @@
 				{formatDate(slash(month + '-01'), { month: 'long', year: 'numeric' })}
 			</summary>
 
-			<ol class="grid overflow-x-auto whitespace-nowrap">
+			<ol class="grid overflow-x-auto py-ch whitespace-nowrap">
 				{#each dates as { date, games } (date)}
 					{#each games as { gamePk, gameDate, teams, venue } (gamePk)}
 						{@const atHome = teams.home.team.id === team.id}

@@ -20,7 +20,7 @@
 	<details class="accordion" name="roster">
 		<summary class="flex items-center gap-ch">Coaches</summary>
 
-		<ul class="grid">
+		<ul class="grid py-ch">
 			{#each coaches as { person, jerseyNumber, job } (person.id)}
 				<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
 					<a
@@ -49,7 +49,7 @@
 	<details class="accordion" name="roster" {open}>
 		<summary class="flex items-center gap-ch">{label}</summary>
 
-		<ul class="grid">
+		<ul class="grid py-ch">
 			{#each sort(arr) as { person, jerseyNumber, position } (person.id)}
 				<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
 					<a
