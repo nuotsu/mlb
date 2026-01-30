@@ -8,6 +8,7 @@
 		HelmetIcon,
 		JerseyIcon,
 		JsonIcon,
+		RankIcon,
 		RobotIcon,
 	} from '$ui/icons'
 	import type { Component } from 'svelte'
@@ -33,6 +34,11 @@
 			href: '/standings',
 			label: 'Standings',
 			icon: FlagIcon,
+		},
+		{
+			href: '/stats/leaders',
+			label: 'Stat Leaders',
+			icon: RankIcon,
 		},
 		{
 			href: '/teams',

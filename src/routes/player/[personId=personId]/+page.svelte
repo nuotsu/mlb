@@ -9,8 +9,6 @@
 	)
 
 	const team = $derived(person.active ? person.currentTeam : person.preferredTeam?.team)
-
-	$inspect(data)
 </script>
 
 <Metadata title="{person.fullName} | MLB.TheOhtani.com" description="{person.fullName} profile" />
