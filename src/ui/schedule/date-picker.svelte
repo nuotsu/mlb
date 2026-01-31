@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { createDateChangeHandler, formatDate, getToday, slash } from '$lib/temporal'
+	import { formatDate, getToday, slash } from '$lib/temporal'
+	import { debounce } from '$lib/utils'
 
 	let date = $derived(page.params.date)
 
@@ -11,11 +12,6 @@
 			{ locale: 'en-CA' },
 		)
 	}
-
-	const delayDateChange = createDateChangeHandler(
-		() => date,
-		(newDate) => goto(`/schedule/day/${newDate}`),
-	)
 </script>
 
 <fieldset class="flex flex-col items-center text-center">
@@ -39,7 +35,8 @@
 				max={`${getToday().getFullYear()}-12-31`}
 				value={date}
 				onclick={(e) => (e.target as HTMLInputElement)?.showPicker()}
-				onchange={(e) => delayDateChange(e.currentTarget.value)}
+				onchange={debounce((e) => goto(`/schedule/day/${e.currentTarget.value}`), 3000)}
+				onblur={(e) => goto(`/schedule/day/${e.currentTarget.value}`)}
 			/>
 		</label>
 

@@ -87,12 +87,14 @@
 		<ul class="mt-auto text-sm sm:sidebar-closed-hidden">
 			<li><ToggleColorScheme /></li>
 			<li>
-				<a href="https://github.com/nuotsu/mlb">
-					View on GitHub
-					<small class="text-current/50">v{version}</small>
-				</a>
+				<a href="https://github.com/nuotsu/mlb"> View on GitHub </a>
 			</li>
 			<li><a href="https://nuotsu.dev">Built by nuotsu</a></li>
+			<li>
+				<small class="text-[xx-small] font-extralight text-current/50">
+					@ {new Date().getFullYear()} MLB.TheOhtani.com. v{version}
+				</small>
+			</li>
 		</ul>
 	</div>
 </Drawer>

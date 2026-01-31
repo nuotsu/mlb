@@ -17,22 +17,3 @@ export function formatDate(
 		typeof date === 'string' ? new Date(date) : date,
 	)
 }
-
-export function createDateChangeHandler(
-	getCurrentDate: () => string | undefined,
-	navigate: (date: string) => void,
-	delay: number = 2500,
-) {
-	const debouncedNavigate = debounce(navigate, delay)
-
-	return (newDate: string) => {
-		const newDay = newDate.split('-')[2]
-		const currentDay = getCurrentDate()?.split('-')[2]
-
-		if (newDay !== currentDay) {
-			navigate(newDate)
-		} else {
-			debouncedNavigate(newDate)
-		}
-	}
-}
