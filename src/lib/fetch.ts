@@ -41,9 +41,13 @@ export async function fetchfeedLive(gamePk: string | number) {
 	})
 }
 
-export async function fetchBoxscore(gamePk: string | number) {
+export async function fetchBoxscore(
+	gamePk: string | number,
+	params: Partial<Record<QueryParamKeys, string | string[]>> = {},
+) {
 	return await fetchMLB<MLB.Boxscore>(`/api/v1/game/${gamePk}/boxscore`, {
-		fields: 'teams,away,team,id,name,teamName,abbreviation,sport',
+		...params,
+		fields: ['teams,away,team,id,name,teamName,abbreviation,sport', ...(params?.fields ?? [])],
 	})
 }
 

@@ -22,50 +22,54 @@
 	}
 </script>
 
-<dl class="grid gap-[.5ch]">
-	{#await fetchAllPlayers()}
-		<Loading>Loading decisions...</Loading>
-	{:then stats}
-		{#each stats as { summary }, key}
-			{@const [decision, { id }] = Object.entries(decisions)[key]}
-			{@const player = feedLive.gameData.players[`ID${id}`] as unknown as MLB.Person}
+<article class="space-y-ch">
+	<h2 class="text-xs text-current/50">Decisions</h2>
 
-			<div class="group/decision relative flex max-w-max items-center gap-ch">
-				<dt class="flex shrink-0 items-center gap-ch self-start">
-					<div class="relative flex items-center gap-ch">
-						<abbr
-							class="absolute bottom-0 left-0 grid aspect-square w-lh place-content-center text-[6px] font-bold text-white"
-							title={decision}
+	<dl class="grid gap-[.5ch]">
+		{#await fetchAllPlayers()}
+			<Loading>Loading decisions...</Loading>
+		{:then stats}
+			{#each stats as { summary }, key}
+				{@const [decision, { id }] = Object.entries(decisions)[key]}
+				{@const player = feedLive.gameData.players[`ID${id}`] as unknown as MLB.Person}
+
+				<div class="group/decision relative flex max-w-max items-center gap-ch">
+					<dt class="flex shrink-0 items-center gap-ch self-start">
+						<div class="relative flex items-center gap-ch">
+							<abbr
+								class="absolute bottom-0 left-0 grid aspect-square w-lh place-content-center text-[6px] font-bold text-white"
+								title={decision}
+							>
+								{decision.charAt(0).toUpperCase()}
+							</abbr>
+							<Headshot person={player} class="size-lh" />
+						</div>
+
+						<a
+							href="/player/{id}"
+							class="line-clamp-1 min-w-[10ch] break-all decoration-dashed group-hover/decision:underline"
+							title={player.fullName}
 						>
-							{decision.charAt(0).toUpperCase()}
-						</abbr>
-						<Headshot person={player} class="size-lh" />
-					</div>
+							{player.lastName}
+							<span class="absolute inset-0"></span>
+						</a>
+					</dt>
 
-					<a
-						href="/player/{id}"
-						class="line-clamp-1 min-w-[10ch] break-all decoration-dashed group-hover/decision:underline"
-						title={player.fullName}
-					>
-						{player.lastName}
-						<span class="absolute inset-0"></span>
-					</a>
-				</dt>
-
-				{#if summary}
-					{@const items = summary.split(', ')}
-					<dd class="flex flex-wrap gap-x-[.5ch] leading-none">
-						{#each items as item, i}
-							<span>
-								{item}{#if i < items.length - 1},{/if}
-							</span>
-						{/each}
-					</dd>
-				{/if}
-			</div>
-		{/each}
-	{/await}
-</dl>
+					{#if summary}
+						{@const items = summary.split(', ')}
+						<dd class="flex flex-wrap gap-x-[.5ch] leading-none">
+							{#each items as item, i}
+								<span>
+									{item}{#if i < items.length - 1},{/if}
+								</span>
+							{/each}
+						</dd>
+					{/if}
+				</div>
+			{/each}
+		{/await}
+	</dl>
+</article>
 
 <style>
 	abbr {

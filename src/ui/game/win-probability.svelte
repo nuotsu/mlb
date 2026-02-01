@@ -77,7 +77,7 @@
 	})
 </script>
 
-<figure class="grid *:col-span-full *:row-span-full" bind:clientWidth={width}>
+<figure class="grid px-ch *:col-span-full *:row-span-full" bind:clientWidth={width}>
 	<figcaption
 		class="mr-auto grid grid-cols-2 text-center text-[xx-small] text-current/25 uppercase sm:text-xs"
 		style:writing-mode="vertical-rl"

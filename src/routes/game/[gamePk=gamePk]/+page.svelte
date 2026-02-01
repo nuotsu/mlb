@@ -38,21 +38,14 @@
 	description="Game details for {[away.name, home.name].join(' at ')} on {date}"
 />
 
-<section class="mx-auto max-w-5xl space-y-lh py-ch *:px-ch">
-	<Game
-		class="sticky top-0 z-1 bg-background/50 backdrop-blur max-sm:px-0"
-		{game}
-		{boxscore}
-		{linescore}
-	/>
+<section class="mx-auto max-w-5xl space-y-lh">
+	<Game class="sticky top-0 z-1 bg-background/50 backdrop-blur" {game} {boxscore} {linescore} />
 
 	{#if hasTopPerformers || hasDecisions}
-		<div class="flex flex-wrap gap-ch *:grow">
+		<div class="flex flex-wrap items-start gap-ch px-ch *:grow">
 			{#if hasTopPerformers}
 				<TopPerformers {feedLive} />
 			{/if}
-
-			<hr class="border-dashed border-current/25 sm:hidden" />
 
 			{#if hasDecisions}
 				<Decision {feedLive} />
@@ -64,13 +57,13 @@
 		<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
 	{/if}
 
-	<article class="grid items-start gap-ch md:has-[#theater-mode:not(:checked)]:grid-cols-2">
-		{#if hasBattingOrder}
-			<Boxscore {feedLive} {boxscore} />
-		{/if}
-
+	<article class="grid items-start gap-lh md:has-[#theater-mode:not(:checked)]:grid-cols-2">
 		{#if data.content?.media?.epgAlternate}
 			<Highlights content={data.content} />
+		{/if}
+
+		{#if hasBattingOrder}
+			<Boxscore {feedLive} {boxscore} />
 		{/if}
 
 		<GameData {game} {feedLive} />
