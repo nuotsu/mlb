@@ -14,7 +14,7 @@
 />
 
 <section class="flex overflow-x-auto p-ch">
-	{#if data.hittingLeaders?.stats?.length}
+	{#if data.hittingLeaders?.stats}
 		<table class="text-center">
 			<thead>
 				<tr>
@@ -46,6 +46,6 @@
 			</tbody>
 		</table>
 	{:else}
-		<p class="text-current/50">No stat leaders available for the {page.params.season} season.</p>
+		<div class="text-center">No stats for {page.params.season} season.</div>
 	{/if}
 </section>
