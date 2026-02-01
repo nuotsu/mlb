@@ -52,6 +52,8 @@
 				<TopPerformers {feedLive} />
 			{/if}
 
+			<hr class="border-dashed border-current/25 sm:hidden" />
+
 			{#if hasDecisions}
 				<Decision {feedLive} />
 			{/if}

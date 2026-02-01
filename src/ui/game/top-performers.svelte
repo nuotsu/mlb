@@ -6,7 +6,7 @@
 	const topPerformers = $derived(feedLive.liveData.boxscore.topPerformers)
 </script>
 
-<dl>
+<dl class="grid gap-[.5ch]">
 	{#each topPerformers as { player, type } (player.person.id)}
 		{@const key = ['hitter', 'twoWayStarter'].includes(type)
 			? 'batting'
@@ -24,20 +24,29 @@
 		{/if}
 
 		<div class="group/player relative flex max-w-max items-center gap-ch">
-			<dt class="shrink-0">
-				<Headshot person={player.person} class="size-[1.5lh]" />
-			</dt>
+			<dt class="flex shrink-0 items-center gap-ch self-start">
+				<Headshot person={player.person} class="size-lh" />
 
-			<dd class="line-clamp-1 break-all" title={player.person.fullName}>
-				<a class="decoration-dashed group-hover/player:underline" href="/player/{player.person.id}">
+				<a
+					class="line-clamp-1 min-w-[10ch] break-all decoration-dashed group-hover/player:underline"
+					href="/player/{player.person.id}"
+					title={player.person.fullName}
+				>
 					{player.person.boxscoreName}
 
 					<span class="absolute inset-0"></span>
 				</a>
-			</dd>
+			</dt>
 
 			{#if summary}
-				<dd>{summary}</dd>
+				{@const items = summary.split(', ')}
+				<dd class="flex flex-wrap gap-x-[.5ch] leading-none">
+					{#each items as item, i}
+						<span>
+							{item}{#if i < items.length - 1},{/if}
+						</span>
+					{/each}
+				</dd>
 			{/if}
 		</div>
 	{/each}
