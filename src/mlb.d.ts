@@ -1535,6 +1535,29 @@ declare global {
 			pct?: string
 		}
 
+		// Baseball Stats Types
+
+		/**
+		 * Individual baseball stat definition
+		 */
+		interface BaseballStat {
+			name: string
+			lookupParam?: string
+			isCounting: boolean
+			label?: string
+			statGroups: StatGroupRef[]
+			orgTypes: unknown[]
+			highLowTypes: unknown[]
+			streakLevels: unknown[]
+		}
+
+		/**
+		 * Reference to a stat group
+		 */
+		interface StatGroupRef {
+			displayName: 'hitting' | 'pitching' | 'fielding' | 'catching' | 'game'
+		}
+
 		// Stats Leaders Types
 
 		/**

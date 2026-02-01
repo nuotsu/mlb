@@ -474,6 +474,10 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 		},
 	},
 	Meta: {
+		'/api/v1/baseballStats': {
+			description:
+				'All available stat types and categories (homeRuns, battingAverage, era, wins, etc.) used in stats endpoints.',
+		},
 		'/api/v1/gameStatus': {
 			description:
 				'All possible game status codes (Scheduled, In Progress, Final, Postponed, etc.) with descriptions.',

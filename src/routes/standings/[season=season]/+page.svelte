@@ -57,11 +57,12 @@
 							>{sportGamesBack}</td
 						>
 						<td
-							class={cn('font-sans tabular-nums', {
-								positive: streak?.streakCode?.startsWith('W'),
-								negative: streak?.streakCode?.startsWith('L'),
-							})}>{streak?.streakCode}</td
+							class="font-sans tabular-nums"
+							class:positive={streak?.streakCode?.startsWith('W')}
+							class:negative={streak?.streakCode?.startsWith('L')}
 						>
+							{streak?.streakCode}
+						</td>
 						<td class="font-sans tabular-nums">{leagueRank}</td>
 					</tr>
 				{/each}

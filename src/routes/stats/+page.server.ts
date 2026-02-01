@@ -1,5 +1,8 @@
 import { redirect } from '@sveltejs/kit'
+import { getToday } from '$lib/temporal'
 
 export const load = async () => {
-	redirect(302, '/stats/leaders')
+	const season = getToday().getFullYear()
+
+	redirect(302, `/stats/${season}`)
 }
