@@ -38,7 +38,7 @@
 			</div>
 		</details>
 	{:else}
-		<div class="text-center">No games</div>
+		<div class="text-center">No games this week.</div>
 	{/each}
 </section>
 
