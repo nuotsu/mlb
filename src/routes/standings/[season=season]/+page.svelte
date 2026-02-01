@@ -27,7 +27,7 @@
 	{#each data.standings.records as { division, teamRecords } (division?.id)}
 		<table class="w-full text-center">
 			<thead>
-				<tr class="text-sm text-current/25">
+				<tr class="text-sm text-current/50">
 					<th class="line-clamp-1 break-all text-foreground">{division?.nameShort}</th>
 					<th class="w-[8ch]">W-L</th>
 					<th class="w-[5ch]">%</th>
@@ -53,9 +53,9 @@
 								Number(winningPercentage) >= 0.5 ? 'positive' : 'negative',
 							)}>{winningPercentage}</td
 						>
-						<td class={cn('font-sans tabular-nums', sportGamesBack === '-' && 'text-current/25')}
-							>{sportGamesBack}</td
-						>
+						<td class={cn('font-sans tabular-nums', sportGamesBack === '-' && 'text-current/50')}>
+							{sportGamesBack}
+						</td>
 						<td
 							class="font-sans tabular-nums"
 							class:positive={streak?.streakCode?.startsWith('W')}
