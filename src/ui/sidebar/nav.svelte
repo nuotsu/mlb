@@ -36,7 +36,7 @@
 			icon: FlagIcon,
 		},
 		{
-			href: '/stats/leaders',
+			href: '/stats',
 			label: 'Stat Leaders',
 			icon: RankIcon,
 		},

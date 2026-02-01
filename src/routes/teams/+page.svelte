@@ -18,17 +18,21 @@
 		<h1>{sport?.abbreviation || 'MLB'} Teams</h1>
 	</header>
 
-	<ul>
-		{#each data.teams.teams.sort((a, b) => a.name.localeCompare(b.name)) as team (team.id)}
-			<li>
-				<a
-					class="flex items-center gap-ch decoration-dashed hover:underline"
-					href="/teams/{team.id}"
-				>
-					<Logo class="size-lh" {team} />
-					{team.name}
-				</a>
-			</li>
-		{/each}
-	</ul>
+	{#if data.teams?.teams}
+		<ul>
+			{#each data.teams.teams.sort((a, b) => a.name.localeCompare(b.name)) as team (team.id)}
+				<li>
+					<a
+						class="flex items-center gap-ch decoration-dashed hover:underline"
+						href="/teams/{team.id}"
+					>
+						<Logo class="size-lh" {team} />
+						{team.name}
+					</a>
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<div class="text-center">No teams available</div>
+	{/if}
 </section>

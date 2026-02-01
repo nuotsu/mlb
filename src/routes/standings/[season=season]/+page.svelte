@@ -69,7 +69,7 @@
 			</tbody>
 		</table>
 	{:else}
-		<div class="text-center">No standings</div>
+		<div class="text-center">No standings for {page.params.season} season</div>
 	{/each}
 </section>
 

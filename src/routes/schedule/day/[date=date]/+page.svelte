@@ -38,6 +38,6 @@
 			{/each}
 		</div>
 	{:else}
-		<div class="text-center">No games</div>
+		<div class="text-center">No games for {date}</div>
 	{/each}
 </section>
