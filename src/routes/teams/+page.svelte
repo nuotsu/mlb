@@ -33,6 +33,6 @@
 			{/each}
 		</ul>
 	{:else}
-		<div class="text-center">No teams available.</div>
+		<div class="text-center">No teams available</div>
 	{/if}
 </section>

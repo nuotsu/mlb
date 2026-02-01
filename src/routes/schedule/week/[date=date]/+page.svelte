@@ -47,7 +47,7 @@
 			</div>
 		</details>
 	{:else}
-		<div class="text-center">No games for {dateRange}.</div>
+		<div class="text-center">No games for {dateRange}</div>
 	{/each}
 </section>
 
