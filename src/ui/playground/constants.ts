@@ -443,7 +443,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				endDate: [{ value: '' }],
 				fields: [
 					{ value: 'transactions,description', label: 'description' },
-					{ value: 'transactions,person,id,fullName', label: 'person' },
+					{ value: 'transactions,person,fullName', label: 'person' },
 				],
 			},
 		},

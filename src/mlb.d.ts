@@ -1285,6 +1285,19 @@ declare global {
 			result: {
 				description: string
 			}
+			about: {
+				atBatIndex: number
+				halfInning: 'top' | 'bottom'
+				isTopInning: boolean
+				inning: number
+				startTime: string
+				endTime: string
+				isComplete: boolean
+				isScoringPlay: boolean
+				hasReview: boolean
+				hasOut: boolean
+				captivatingIndex: number
+			}
 			homeTeamWinProbability: number
 			awayTeamWinProbability: number
 			homeTeamWinProbabilityAdded: number

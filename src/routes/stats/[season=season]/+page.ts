@@ -5,9 +5,8 @@ export const load: PageLoad = async ({ params, url }) => {
 	const sortStats = (url.searchParams.get('sortStat') ?? 'avg,era').split(',')
 	const [hittingSortStat, pitchingSortStat] = [sortStats[0] ?? 'avg', sortStats[1] ?? 'era']
 
-	const statsList = await fetchMLB<MLB.BaseballStat[]>('/api/v1/baseballStats')
-
-	const [hittingLeaders, pitchingLeaders] = await Promise.all([
+	const [statsList, hittingLeaders, pitchingLeaders] = await Promise.all([
+		fetchMLB<MLB.BaseballStat[]>('/api/v1/baseballStats'),
 		fetchMLB<MLB.PlayerStatsResponse>('/api/v1/stats', {
 			stats: 'season',
 			group: 'hitting',

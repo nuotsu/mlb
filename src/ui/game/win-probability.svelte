@@ -46,11 +46,32 @@
 
 	const inningDividers = $derived(() => {
 		const result = []
+		const totalPoints = winProbability.length - 1
+
+		// Find the first index of each half-inning (top and bottom)
+		const halfInningStarts = new Map<string, number>()
+		winProbability.forEach((d, i) => {
+			const inning = d.about?.inning ?? 1
+			const half = d.about?.isTopInning ? 'top' : 'bot'
+			const key = `${inning}-${half}`
+			if (!halfInningStarts.has(key)) {
+				halfInningStarts.set(key, i)
+			}
+		})
+
 		for (let i = 0; i < innings; i++) {
-			const startX = (i / innings) * width
-			const endX = ((i + 1) / innings) * width
+			const inningNum = i + 1
+			const topStartIndex = halfInningStarts.get(`${inningNum}-top`) ?? 0
+			const botStartIndex = halfInningStarts.get(`${inningNum}-bot`)
+			const nextInningTopIndex = halfInningStarts.get(`${inningNum + 1}-top`)
+
+			const startX = totalPoints > 0 ? (topStartIndex / totalPoints) * width : 0
+			const midX = botStartIndex !== undefined ? (botStartIndex / totalPoints) * width : undefined
+			const endX =
+				nextInningTopIndex !== undefined ? (nextInningTopIndex / totalPoints) * width : width
 			const centerX = (startX + endX) / 2
-			result.push({ num: i + 1, startX, endX, centerX })
+
+			result.push({ num: inningNum, startX, midX, endX, centerX })
 		}
 		return result
 	})
@@ -75,6 +96,18 @@
 					x2={inning.startX}
 					y2={height}
 					stroke-width="0.5"
+				/>
+			{/if}
+
+			{#if inning.midX !== undefined}
+				<line
+					class="stroke-current/15"
+					x1={inning.midX}
+					y1={height * 0.2}
+					x2={inning.midX}
+					y2={height}
+					stroke-width="1"
+					stroke-dasharray="4,4"
 				/>
 			{/if}
 
