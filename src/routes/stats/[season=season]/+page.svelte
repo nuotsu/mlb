@@ -14,7 +14,7 @@
 />
 
 <section class="flex overflow-x-auto p-ch">
-	{#if data.hittingLeaders?.stats?.length}
+	{#if data.hittingLeaders?.stats?.[0]?.splits}
 		<table class="text-center">
 			<thead>
 				<tr>
