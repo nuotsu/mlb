@@ -31,3 +31,9 @@
 
 	<TeamSeason schedule={data.schedule} {team} />
 </section>
+
+<style>
+	section {
+		padding-bottom: max(1ch, env(safe-area-inset-bottom));
+	}
+</style>

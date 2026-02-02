@@ -13,14 +13,14 @@
 	}
 </script>
 
-<article class="px-ch">
-	{@render list(batters, 'Batters', true)}
+<article class="space-y-px px-ch">
+	{@render list(batters, 'Batters')}
 	{@render list(pitchers, 'Pitchers')}
 
-	<details class="accordion" name="roster">
+	<details class="accordion">
 		<summary class="flex items-center gap-ch">Coaches</summary>
 
-		<ul class="grid py-ch">
+		<ul class="grid">
 			{#each coaches as { person, jerseyNumber, job } (person.id)}
 				<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
 					<a
@@ -46,10 +46,10 @@
 </article>
 
 {#snippet list(arr: MLB.Roster[], label: string, open?: boolean)}
-	<details class="accordion" name="roster" {open}>
+	<details class="accordion" open>
 		<summary class="flex items-center gap-ch">{label}</summary>
 
-		<ul class="grid py-ch">
+		<ul class="grid">
 			{#each sort(arr) as { person, jerseyNumber, position } (person.id)}
 				<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
 					<a

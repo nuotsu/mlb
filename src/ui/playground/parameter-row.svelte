@@ -29,7 +29,7 @@
 </script>
 
 <tr class="align-top *:px-[.5ch]">
-	<th class="sticky left-0 bg-background text-right font-normal">
+	<th class="sticky left-0 bg-background text-right">
 		<label for={parameter} class="grid h-lh items-center">
 			<small class="flex justify-end font-mono tabular-nums">
 				{parameter}

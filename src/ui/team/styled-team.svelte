@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
 	import { cn } from '$lib/utils'
 	import type { Snippet } from 'svelte'
 	import Logo from './logo.svelte'
@@ -14,32 +15,16 @@
 	} = $props()
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
-
-	const isDarkOnLightTeam = $derived(
-		[
-			'Asheville Tourists',
-			'Miami Marlins',
-			'Minnesota Golden Gophers',
-			'San Diego Padres',
-			'San Francisco Giants',
-			'Sugar Land Space Cowboys',
-			'Sultanes de Monterrey',
-			'Tampa Bay Rays',
-			'Northeastern Huskies',
-		].includes(team.name) || [51].includes((team as MLB.TeamDetailed).sport?.id!),
-	)
-
-	const isLightOnDarkTeam = $derived(['Hanshin Tigers', 'Tokyo Yomiuri Giants'].includes(team.name))
 </script>
 
 <div
 	class={cn(
-		'@container/team relative flex items-center gap-[.5ch] not-dark:before:opacity-10',
-		isDarkOnLightTeam && 'dark:text-dark',
-		isLightOnDarkTeam && 'dark:text-light',
+		'@container/team relative flex items-center gap-[.5ch]',
+		isDarkOnLightTeam(team) && 'dark:text-dark',
+		isLightOnDarkTeam(team) && 'dark:text-light',
 		className,
 	)}
-	style:--bg="url('{src}/32')"
+	style:--team-bg="url('{src}/32')"
 >
 	<Logo srcset="{src}/72" class="size-lh shrink-0 object-contain" {team} />
 
@@ -53,15 +38,3 @@
 
 	{@render children?.()}
 </div>
-
-<style>
-	.\@container\/team:global(:has(picture)::before) {
-		content: '';
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-		background-image: var(--bg);
-		background-size: 1500% 1500%;
-		background-position: 50% 5%;
-	}
-</style>

@@ -57,15 +57,23 @@
 		<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
 	{/if}
 
-	<article class="grid items-center gap-lh md:has-[#theater-mode:not(:checked)]:grid-cols-2">
+	<article
+		class="group/details grid items-center gap-lh md:has-[#theater-mode:not(:checked)]:grid-cols-2"
+	>
 		{#if data.content?.media?.epgAlternate}
 			<Highlights content={data.content} />
 		{/if}
 
+		{#if hasBattingOrder}
+			<Boxscore {boxscore} />
+		{/if}
+
 		<GameData {game} {feedLive} />
 	</article>
-
-	{#if hasBattingOrder}
-		<Boxscore {boxscore} />
-	{/if}
 </section>
+
+<style>
+	section {
+		padding-bottom: max(1ch, env(safe-area-inset-bottom));
+	}
+</style>

@@ -19,10 +19,7 @@
 
 	{#if entries.length}
 		<tr class="text-left">
-			<th
-				class="sticky left-0 bg-background text-xs font-normal text-current/50 uppercase"
-				colspan="2"
-			>
+			<th class="sticky left-0 bg-background text-xs text-current/50 uppercase" colspan="2">
 				{label}
 			</th>
 		</tr>

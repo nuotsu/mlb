@@ -48,11 +48,11 @@
 		{/if}
 	</div>
 
-	{#if !isGamePage}
-		<span
-			class="group/description grid h-rlh items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
-			style:grid-area="description"
-		>
+	<span
+		class="group/description grid h-rlh items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
+		style:grid-area="description"
+	>
+		{#if !isGamePage}
 			{#if showDescription}
 				<span>
 					{#if game.description}
@@ -74,8 +74,8 @@
 					{/if}
 				</strong>
 			{/if}
-		</span>
-	{/if}
+		{/if}
+	</span>
 
 	<div style:grid-area="boxscore">
 		{#if boxscore}

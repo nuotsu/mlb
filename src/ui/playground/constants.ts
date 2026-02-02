@@ -384,6 +384,7 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				stats: PRESETS.stats,
 				group: PRESETS.group,
 				season: PRESETS.season,
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
 		'/api/v1/stats/leaders': {

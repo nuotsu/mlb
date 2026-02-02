@@ -26,14 +26,14 @@
 	const currentMonth = getToday().toISOString().slice(0, 7)
 </script>
 
-<article class="sm:px-ch">
+<article class="space-y-px sm:px-ch">
 	{#each byMonth as [month, dates], i (month)}
 		<details class="accordion" name="schedule" open={month === currentMonth || i === 0}>
 			<summary class="flex items-center gap-ch max-sm:px-ch">
 				{formatDate(slash(month + '-01'), { month: 'long', year: 'numeric' })}
 			</summary>
 
-			<ol class="grid overflow-x-auto py-ch whitespace-nowrap">
+			<ol class="grid overflow-x-auto whitespace-nowrap">
 				{#each dates as { date, games } (date)}
 					{#each games as { gamePk, gameDate, teams, venue } (gamePk)}
 						{@const atHome = teams.home.team.id === team.id}
@@ -48,7 +48,7 @@
 									>
 										{formatDate(slash(date), {
 											weekday: 'short',
-											month: 'short',
+											month: 'numeric',
 											day: 'numeric',
 										})}
 									</span>

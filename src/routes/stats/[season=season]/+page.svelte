@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state'
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
+	import { cn } from '$lib/utils'
 	import Metadata from '$ui/metadata.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 	import SeasonPicker from '$ui/stats/season-picker.svelte'
@@ -7,8 +9,8 @@
 
 	let { data }: PageProps = $props()
 
-	let sortStats = $derived((page.url.searchParams.get('sortStat') ?? 'avg,era').split(','))
-	let hittingSortStat = $derived(sortStats[0] ?? 'avg')
+	let sortStats = $derived((page.url.searchParams.get('sortStat') ?? 'homeRuns,era').split(','))
+	let hittingSortStat = $derived(sortStats[0] ?? 'homeRuns')
 	let pitchingSortStat = $derived(sortStats[1] ?? 'era')
 </script>
 
@@ -24,19 +26,23 @@
 <article class="overflow-x-auto p-ch has-[table]:flex">
 	{#if data.hittingLeaders?.stats?.[0]?.splits.length}
 		<table class="table-fixed text-center">
-			<thead class="text-sm text-current/50">
+			<thead class="text-sm">
 				<tr>
 					<th colspan="3"></th>
 					{#each ['avg', 'homeRuns', 'rbi', 'hits', 'doubles', 'triples', 'stolenBases', 'obp', 'slg', 'ops'] as stat}
 						{@const { label, name, lookupParam } =
 							data.statsList.find((s) => [s.name, s.lookupParam].includes(stat)) ?? {}}
-						<td>
-							<abbr
-								class="uppercase"
-								class:font-bold={hittingSortStat === stat}
-								title={label ?? name}
-							>
-								<a href="?sortStat={stat},{pitchingSortStat}">
+						<th>
+							<abbr title={label ?? name}>
+								<a
+									href="?sortStat={stat},{pitchingSortStat}"
+									class={cn(
+										'block uppercase',
+										hittingSortStat === stat
+											? 'bg-foreground font-bold text-background'
+											: 'text-current/40',
+									)}
+								>
 									{#if stat === 'doubles'}
 										2B
 									{:else if stat === 'triples'}
@@ -46,15 +52,15 @@
 									{/if}
 								</a>
 							</abbr>
-						</td>
+						</th>
 					{/each}
 				</tr>
 			</thead>
 			<tbody>
 				{#each data.hittingLeaders.stats as { splits }}
-					{#each splits as { player, stat, league }}
-						<tr class="hover:*:bg-foreground/10">
-							{@render p(player as MLB.Person, league)}
+					{#each splits as { player, stat, league, team }}
+						<tr class="hover:[&>td]:bg-foreground/10">
+							{@render p(player as MLB.Person, league, team)}
 							<td class="font-sans tabular-nums" class:positive={Number(stat.avg) >= 0.3}>
 								{stat.avg}
 							</td>
@@ -82,19 +88,24 @@
 <article class="overflow-x-auto p-ch has-[table]:flex">
 	{#if data.pitchingLeaders?.stats?.[0]?.splits.length}
 		<table class="table-fixed text-center">
-			<thead class="text-sm text-current/50">
+			<thead class="text-sm">
 				<tr>
 					<th colspan="3"></th>
 					{#each ['era', 'wins', 'losses', 'strikeOuts', 'saves', 'whip', 'inningsPitched'] as stat}
 						{@const { label, name, lookupParam } =
 							data.statsList.find((s) => [s.name, s.lookupParam].includes(stat)) ?? {}}
-						<td>
-							<abbr
-								class="uppercase"
-								class:font-bold={pitchingSortStat === stat}
-								title={label ?? name}
-							>
-								<a href="?sortStat={hittingSortStat},{stat}">
+
+						<th>
+							<abbr title={label ?? name}>
+								<a
+									href="?sortStat={hittingSortStat},{stat}"
+									class={cn(
+										'block uppercase',
+										pitchingSortStat === stat
+											? 'bg-foreground font-bold text-background'
+											: 'text-current/40',
+									)}
+								>
 									{#if stat === 'strikeOuts'}
 										K
 									{:else}
@@ -102,15 +113,16 @@
 									{/if}
 								</a>
 							</abbr>
-						</td>
+						</th>
 					{/each}
 				</tr>
 			</thead>
+
 			<tbody>
 				{#each data.pitchingLeaders.stats as { splits }}
-					{#each splits as { player, stat, league }}
-						<tr class="hover:*:bg-foreground/10">
-							{@render p(player as MLB.Person, league)}
+					{#each splits as { player, stat, league, team }}
+						<tr class="hover:[&>td]:bg-foreground/10">
+							{@render p(player as MLB.Person, league, team)}
 							<td class="font-sans tabular-nums" class:positive={Number(stat.era) < 3}>
 								{stat.era}
 							</td>
@@ -132,25 +144,38 @@
 	{/if}
 </article>
 
-{#snippet p(person: MLB.Person, league?: MLB.League)}
-	<td class="sticky left-0 min-w-lh px-0!">
+{#snippet p(person: MLB.Person, league?: MLB.League, team?: MLB.Team)}
+	{@const bg = `url(https://midfield.mlbstatic.com/v1/team/${team?.id}/spots/32)`}
+
+	<th class="sticky -left-ch z-1 min-w-lh" style:--team-bg={bg}>
 		<Headshot {person} class="size-lh" />
-	</td>
-	<td class="text-left">
+	</th>
+	<th
+		class={cn('relative px-[.5ch] text-left', {
+			'dark:text-dark': isDarkOnLightTeam(team),
+			'dark:text-light': isLightOnDarkTeam(team),
+		})}
+		style:--team-bg={bg}
+	>
 		<a
 			class="line-clamp-1 w-[10ch] break-all decoration-dashed hover:underline"
 			href="/player/{person.id}"
 		>
 			{person.lastName}
 		</a>
-	</td>
-	<td class="text-xs text-current/50">{league?.name}</td>
+	</th>
+	<th
+		class={cn('relative px-[.5ch] text-left text-xs text-current/50', {
+			'dark:text-dark': isDarkOnLightTeam(team),
+			'dark:text-light': isLightOnDarkTeam(team),
+		})}
+		style:--team-bg={bg}>{league?.name}</th
+	>
 {/snippet}
 
 <style>
-	th,
 	td {
-		padding-inline: 0.5ch;
-		min-width: 3ch;
+		padding-inline: 1ch;
+		min-width: 4ch;
 	}
 </style>

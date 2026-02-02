@@ -2,8 +2,8 @@ import { fetchMLB } from '$lib/fetch'
 import type { PageLoad } from './$types'
 
 export const load: PageLoad = async ({ params, url }) => {
-	const sortStats = (url.searchParams.get('sortStat') ?? 'avg,era').split(',')
-	const [hittingSortStat, pitchingSortStat] = [sortStats[0] ?? 'avg', sortStats[1] ?? 'era']
+	const sortStats = (url.searchParams.get('sortStat') ?? 'homeRuns,era').split(',')
+	const [hittingSortStat, pitchingSortStat] = [sortStats[0] ?? 'homeRuns', sortStats[1] ?? 'era']
 
 	const [statsList, hittingLeaders, pitchingLeaders] = await Promise.all([
 		fetchMLB<MLB.BaseballStat[]>('/api/v1/baseballStats'),
@@ -12,7 +12,7 @@ export const load: PageLoad = async ({ params, url }) => {
 			group: 'hitting',
 			sortStat: hittingSortStat,
 			season: params.season,
-			limit: '10',
+			limit: '20',
 			fields: [
 				'stats,splits',
 				'player,id,lastName',
@@ -25,7 +25,7 @@ export const load: PageLoad = async ({ params, url }) => {
 			group: 'pitching',
 			sortStat: pitchingSortStat,
 			season: params.season,
-			limit: '10',
+			limit: '20',
 			fields: [
 				'stats,splits',
 				'player,id,lastName',

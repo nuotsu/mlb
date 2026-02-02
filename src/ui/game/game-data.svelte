@@ -6,7 +6,7 @@
 	const { gameInfo, weather } = $derived(feedLive.gameData)
 </script>
 
-<dl class="mx-auto grid max-w-max grid-cols-[auto_1fr] gap-x-lh [&_dt]:text-current/50">
+<dl class="mx-auto grid max-w-max grid-cols-[auto_1fr] gap-x-lh px-ch [&_dt]:text-current/50">
 	<dt>Date</dt>
 	<dd>
 		<a class="link" href="/schedule/day/{formatDate(game.gameDate, { locale: 'en-CA' })}">
@@ -47,10 +47,4 @@
 			{[condition, temp && `${temp}°F`, wind && `Wind: ${wind} mph`].filter(Boolean).join(' / ')}
 		</dd>
 	{/if}
-
-	<dt>Endpoint</dt>
-	<dd class="*:link">
-		<a href="https://statsapi.mlb.com{game.link}">Official</a> |
-		<a href={game.link}>Playground</a>
-	</dd>
 </dl>

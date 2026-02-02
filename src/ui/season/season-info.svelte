@@ -58,6 +58,10 @@
 {/snippet}
 
 <style>
+	th {
+		font-weight: bold;
+	}
+
 	th,
 	td {
 		padding: 0 1ch;

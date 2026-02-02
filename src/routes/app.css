@@ -86,6 +86,25 @@
 	abbr {
 		text-decoration: none;
 	}
+
+	th {
+		font-weight: normal;
+	}
+
+	[style*='--team-bg:'] {
+		&::before {
+			content: '';
+			pointer-events: none;
+			position: absolute;
+			inset: 0;
+			z-index: -1;
+			background-image: var(--team-bg);
+			background-size: 1500% 1500%;
+			background-position: 50% 5%;
+		}
+
+		@apply not-dark:before:opacity-10;
+	}
 }
 
 @utility no-scrollbar {
@@ -161,11 +180,24 @@
 			content: '▹';
 			display: inline-block;
 			transition: rotate var(--default-transition-duration) ease-in-out;
+			margin-left: auto;
 		}
+
+		@apply border-l bg-neutral-100/50 px-ch hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:hover:bg-neutral-700/50;
 	}
 
-	&[open] summary::after {
-		rotate: 90deg;
+	&[open] {
+		&::details-content {
+			@apply mt-ch mb-lh;
+		}
+
+		summary {
+			@apply border-accent;
+
+			&::after {
+				rotate: 90deg;
+			}
+		}
 	}
 }
 

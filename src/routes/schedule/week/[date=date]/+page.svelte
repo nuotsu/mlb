@@ -15,22 +15,22 @@
 	<WeekPicker />
 </header>
 
-<section class="space-y-ch p-ch max-sm:px-0">
+<section class="space-y-px p-ch max-sm:px-0">
 	{#each data.schedule.dates as date (date.date)}
 		<details class="group accordion" open>
-			<summary class="flex items-center gap-ch px-ch">
+			<summary class="flex items-center gap-ch py-ch after:ml-0!">
 				{formatDate(date.date + 'T00:00:00', {
 					weekday: 'short',
 					month: 'short',
 					day: 'numeric',
 				})}
 
-				<a class="order-last link" href="/schedule/day/{date.date}">
+				<a class="ml-auto link" href="/schedule/day/{date.date}">
 					{count(date.games.length, 'game')}
 				</a>
 			</summary>
 
-			<div class="mb-lh columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
+			<div class="columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
 				{#each date.games as game (game.gamePk)}
 					{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
 					<Game {game} {linescore} showDescription />
