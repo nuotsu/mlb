@@ -3,6 +3,7 @@
 	import { page } from '$app/state'
 	import { formatDate, getToday, slash } from '$lib/temporal'
 	import { debounce } from '$lib/utils'
+	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 	import { getWeekDates } from './store.svelte'
 
 	let date = $derived(page.params.date)
@@ -44,19 +45,14 @@
 			/>
 		</label>
 
-		<a class="order-first" href="/schedule/week/{addWeek(-1)}">{'<'}</a>
-		<a class="order-last" href="/schedule/week/{addWeek()}">{'>'}</a>
+		<a class="order-first button border-b-0 border-l" href="/schedule/week/{addWeek(-1)}"><ChevronLeftIcon /></a>
+		<a class="order-last border-r button border-b-0" href="/schedule/week/{addWeek()}"><ChevronRightIcon /></a>
 	</div>
 </fieldset>
 
 <style>
-	fieldset:has(label:hover) label,
-	a {
+	fieldset:has(label:hover) label {
 		padding-inline: 1ch;
-	}
-
-	fieldset:has(label:hover) label,
-	a:hover {
 		text-decoration: underline dashed;
 	}
 </style>

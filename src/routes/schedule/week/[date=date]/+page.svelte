@@ -18,10 +18,10 @@
 <section class="space-y-px p-ch max-sm:px-0">
 	{#each data.schedule.dates as date (date.date)}
 		<details class="group accordion" open>
-			<summary class="flex items-center gap-ch py-ch after:ml-0!">
+			<summary class="sticky top-0 z-1 flex items-center gap-ch py-ch backdrop-blur after:ml-0!">
 				{formatDate(date.date + 'T00:00:00', {
 					weekday: 'short',
-					month: 'short',
+					month: 'numeric',
 					day: 'numeric',
 				})}
 

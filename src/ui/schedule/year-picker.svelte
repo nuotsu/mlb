@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { getToday } from '$lib/temporal'
+	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 
 	let year = $derived(Number(page.params.season ?? getToday().getFullYear()))
 
@@ -26,14 +27,13 @@
 			/>
 		</label>
 
-		<a class="order-first" href="/standings/{addYear(-1)}">&lt;</a>
-		<a class="order-last" href="/standings/{addYear()}">&gt;</a>
+		<a class="order-first button border-b-0 border-l" href="/standings/{addYear(-1)}"><ChevronLeftIcon /></a>
+		<a class="order-last border-r button border-b-0" href="/standings/{addYear()}"><ChevronRightIcon /></a>
 	</div>
 </fieldset>
 
 <style>
-	label,
-	a {
+	label {
 		padding-inline: 1ch;
 
 		&:hover {

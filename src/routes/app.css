@@ -154,6 +154,15 @@
 	@apply button-base border border-current/25 transition-transform active:scale-90;
 }
 
+@utility button {
+	user-select: none;
+	@apply button-base border-b border-current/25 bg-neutral-100/50 hover:border-accent hover:bg-neutral-200/50 active:bg-accent/25! dark:bg-neutral-800/50 dark:hover:bg-neutral-700/50;
+
+	&:has(svg:only-child) {
+		padding-inline: 0.5ch;
+	}
+}
+
 @utility link {
 	@apply underline not-hover:decoration-dashed;
 }
@@ -188,7 +197,7 @@
 
 	&[open] {
 		&::details-content {
-			@apply mt-ch mb-lh;
+			@apply pt-ch pb-lh;
 		}
 
 		summary {

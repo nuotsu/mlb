@@ -3,6 +3,7 @@
 	import { page } from '$app/state'
 	import { formatDate, getToday, slash } from '$lib/temporal'
 	import { debounce } from '$lib/utils'
+	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 
 	let date = $derived(page.params.date)
 
@@ -40,14 +41,13 @@
 			/>
 		</label>
 
-		<a class="order-first" href="/schedule/day/{addDay(-1)}">{'<'}</a>
-		<a class="order-last" href="/schedule/day/{addDay()}">{'>'}</a>
+		<a class="order-first button border-b-0 border-l" href="/schedule/day/{addDay(-1)}"><ChevronLeftIcon /></a>
+		<a class="order-last border-r button border-b-0" href="/schedule/day/{addDay()}"><ChevronRightIcon /></a>
 	</div>
 </fieldset>
 
 <style>
-	label,
-	a {
+	label {
 		padding-inline: 1ch;
 
 		&:hover {

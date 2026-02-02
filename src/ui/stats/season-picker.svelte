@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { getToday } from '$lib/temporal'
+	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 
 	let season = $derived(Number(page.params.season ?? getToday().getFullYear()))
 	let search = $derived(page.url.search)
@@ -23,14 +24,13 @@
 			/>
 		</label>
 
-		<a class="order-first" href="/stats/{season - 1}{search}">{'<'}</a>
-		<a class="order-last" href="/stats/{season + 1}{search}">{'>'}</a>
+		<a class="order-first button border-b-0 border-l" href="/stats/{season - 1}{search}"><ChevronLeftIcon /></a>
+		<a class="order-last border-r button border-b-0" href="/stats/{season + 1}{search}"><ChevronRightIcon /></a>
 	</div>
 </fieldset>
 
 <style>
-	label,
-	a {
+	label {
 		padding-inline: 1ch;
 
 		&:hover {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '$lib/utils'
-	import ArrowDownRight from '$ui/icons/arrow-down-right.svelte'
+	import { ArrowDownRightIcon } from '$ui/icons'
 	import Headshot from '$ui/player/headshot.svelte'
 	import StyledTeam from '$ui/team/styled-team.svelte'
 
@@ -105,7 +105,7 @@
 
 			{#if substituted}
 				<div class="absolute top-full left-ch grid size-lh place-content-center">
-					<ArrowDownRight class="size-ch text-current/40" />
+					<ArrowDownRightIcon class="size-ch text-current/40" />
 				</div>
 			{/if}
 		</a>
