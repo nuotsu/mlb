@@ -53,7 +53,7 @@
 			<tbody>
 				{#each data.hittingLeaders.stats as { splits }}
 					{#each splits as { player, stat, league }}
-						<tr>
+						<tr class="hover:*:bg-foreground/10">
 							{@render p(player as MLB.Person, league)}
 							<td class="font-sans tabular-nums" class:positive={Number(stat.avg) >= 0.3}>
 								{stat.avg}
@@ -109,7 +109,7 @@
 			<tbody>
 				{#each data.pitchingLeaders.stats as { splits }}
 					{#each splits as { player, stat, league }}
-						<tr>
+						<tr class="hover:*:bg-foreground/10">
 							{@render p(player as MLB.Person, league)}
 							<td class="font-sans tabular-nums" class:positive={Number(stat.era) < 3}>
 								{stat.era}
