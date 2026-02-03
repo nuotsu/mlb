@@ -3,11 +3,17 @@
 		group,
 		key,
 		stats,
+		statsList,
+		class: className,
 	}: {
-		group: 'hitting' | 'pitching'
+		group: string
 		key: string
 		stats: MLB.PlayerStats[]
+		statsList?: MLB.BaseballStat[]
+		class?: string
 	} = $props()
+
+	const statInfo = $derived(statsList?.find((s) => [s.name, s.lookupParam].includes(key)))
 
 	let width = $state(0)
 	const height = 100
@@ -108,29 +114,42 @@
 
 	const maxPoint = $derived(
 		scaledPoints.reduce(
-			(max, point) => (point.value > max.value ? point : max),
+			(max, point) => (point.value >= max.value ? point : max),
 			scaledPoints[0] ?? { x: 0, y: 0, value: 0 },
 		),
 	)
 
 	const minPoint = $derived(
 		scaledPoints.reduce(
-			(min, point) => (point.value < min.value ? point : min),
+			(min, point) => (point.value <= min.value ? point : min),
 			scaledPoints[0] ?? { x: 0, y: 0, value: Infinity },
 		),
 	)
 
+	const lowerIsBetter = $derived(['era', 'whip', 'losses'].includes(key))
+
 	const formatValue = (val: number): string => {
 		if (key === 'avg' || key === 'obp' || key === 'slg' || key === 'ops') {
 			return val.toFixed(3).replace(/^0/, '')
+		}
+		if (key === 'era' || key === 'whip') {
+			return val.toFixed(2)
 		}
 		return val.toFixed(0)
 	}
 </script>
 
 {#if dataPoints.length > 0}
-	<figure class="grid *:col-span-full *:row-span-full" bind:clientWidth={width}>
-		<figcaption class="pointer-events-none z-1 m-auto self-start text-xl text-current/25 uppercase">
+	<figure
+		class="grid *:col-span-full *:row-span-full {className}"
+		bind:clientWidth={width}
+		data-group={group}
+		data-stat={key}
+	>
+		<figcaption
+			class="pointer-events-none z-1 m-auto self-start text-xl text-current/25 uppercase"
+			title={statInfo?.label ?? statInfo?.name}
+		>
 			{key}
 		</figcaption>
 
@@ -157,7 +176,7 @@
 
 				<!-- Min/max value labels -->
 				<text
-					class="positive"
+					class={lowerIsBetter ? 'negative' : 'positive'}
 					fill="currentColor"
 					x={maxPoint.x}
 					y={maxPoint.y - 6}
@@ -167,7 +186,7 @@
 					{formatValue(maxPoint.value)}
 				</text>
 				<text
-					class="negative"
+					class={lowerIsBetter ? 'positive' : 'negative'}
 					fill="currentColor"
 					x={minPoint.x}
 					y={minPoint.y + 12}
@@ -196,7 +215,7 @@
 
 				<!-- Season labels -->
 				{#each scaledPoints as point, i (point.season)}
-					{#if i === 0 || i === scaledPoints.length - 1 || scaledPoints.length <= 4}
+					{#if i === 0 || i === scaledPoints.length - 1 || point.season === (lowerIsBetter ? minPoint.season : maxPoint.season)}
 						<text
 							class="fill-current/50"
 							x={point.x}
