@@ -112,21 +112,35 @@
 		return d
 	})
 
+	const lowerIsBetter = $derived(['era', 'whip', 'losses'].includes(key))
+
 	const maxPoint = $derived(
 		scaledPoints.reduce(
-			(max, point) => (point.value >= max.value ? point : max),
+			(max, point) =>
+				lowerIsBetter
+					? point.value > max.value
+						? point
+						: max // earliest max when lower is better (worst value)
+					: point.value >= max.value
+						? point
+						: max, // latest max normally (best value)
 			scaledPoints[0] ?? { x: 0, y: 0, value: 0 },
 		),
 	)
 
 	const minPoint = $derived(
 		scaledPoints.reduce(
-			(min, point) => (point.value <= min.value ? point : min),
+			(min, point) =>
+				lowerIsBetter
+					? point.value <= min.value
+						? point
+						: min // latest min when lower is better (best value)
+					: point.value < min.value
+						? point
+						: min, // earliest min normally (worst value)
 			scaledPoints[0] ?? { x: 0, y: 0, value: Infinity },
 		),
 	)
-
-	const lowerIsBetter = $derived(['era', 'whip', 'losses'].includes(key))
 
 	const formatValue = (val: number): string => {
 		if (key === 'avg' || key === 'obp' || key === 'slg' || key === 'ops') {
