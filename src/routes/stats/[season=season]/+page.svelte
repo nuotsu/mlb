@@ -31,7 +31,7 @@
 					<th colspan="3"></th>
 					{#each ['avg', 'homeRuns', 'rbi', 'hits', 'doubles', 'triples', 'stolenBases', 'obp', 'slg', 'ops'] as stat}
 						{@const { label, name, lookupParam } =
-							data.statsList.find((s) => [s.name, s.lookupParam].includes(stat)) ?? {}}
+							data.baseballStats.find((s) => [s.name, s.lookupParam].includes(stat)) ?? {}}
 						<th>
 							<abbr title={label ?? name}>
 								<a
@@ -93,7 +93,7 @@
 					<th colspan="3"></th>
 					{#each ['era', 'wins', 'losses', 'strikeOuts', 'saves', 'whip', 'inningsPitched'] as stat}
 						{@const { label, name, lookupParam } =
-							data.statsList.find((s) => [s.name, s.lookupParam].includes(stat)) ?? {}}
+							data.baseballStats.find((s) => [s.name, s.lookupParam].includes(stat)) ?? {}}
 
 						<th>
 							<abbr title={label ?? name}>

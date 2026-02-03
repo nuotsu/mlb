@@ -3,17 +3,17 @@
 		group,
 		key,
 		stats,
-		statsList,
+		baseballStats,
 		class: className,
 	}: {
 		group: string
 		key: string
 		stats: MLB.PlayerStats[]
-		statsList?: MLB.BaseballStat[]
+		baseballStats?: MLB.BaseballStat[]
 		class?: string
 	} = $props()
 
-	const statInfo = $derived(statsList?.find((s) => [s.name, s.lookupParam].includes(key)))
+	const statInfo = $derived(baseballStats?.find((s) => [s.name, s.lookupParam].includes(key)))
 
 	let width = $state(0)
 	const height = 120
@@ -142,9 +142,9 @@
 {#if dataPoints.length > 0}
 	<figure
 		class="grid *:col-span-full *:row-span-full {className}"
-		bind:clientWidth={width}
 		data-group={group}
 		data-stat={key}
+		bind:clientWidth={width}
 	>
 		<figcaption
 			class="pointer-events-none z-1 m-auto self-start text-xl text-current/25 uppercase"
