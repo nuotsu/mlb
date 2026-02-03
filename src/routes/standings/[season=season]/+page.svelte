@@ -38,9 +38,9 @@
 			</thead>
 			<tbody>
 				{#each teamRecords as { team, wins, losses, winningPercentage, sportGamesBack, streak, leagueRank } (team.id)}
-					<tr>
+					<tr class="hover:[&>td]:bg-foreground/10">
 						<td class="sticky left-0 min-w-[3.5ch]">
-							<StyledTeam class="flex-row-reverse pl-ch text-left" {team} />
+							<StyledTeam class="flex-row-reverse pl-ch text-left" {team} linked />
 						</td>
 						<td class="flex justify-center font-sans tabular-nums">
 							<span class="positive">{wins}</span>

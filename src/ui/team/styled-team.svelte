@@ -7,10 +7,12 @@
 	let {
 		team,
 		class: className,
+		linked,
 		children,
 	}: {
 		team: MLB.Team
 		class?: string
+		linked?: boolean
 		children?: Snippet
 	} = $props()
 
@@ -19,7 +21,7 @@
 
 <div
 	class={cn(
-		'@container/team relative flex items-center gap-[.5ch]',
+		'group/team @container/team relative flex items-center gap-[.5ch]',
 		isDarkOnLightTeam(team) && 'dark:text-dark',
 		isLightOnDarkTeam(team) && 'dark:text-light',
 		className,
@@ -28,13 +30,21 @@
 >
 	<Logo srcset="{src}/72" class="size-lh shrink-0 object-contain" {team} />
 
-	<div class="line-clamp-1 shrink-0 grow break-all">
-		<span class="@max-sm/team:hidden">{team.name}</span>
-		<span class="@max-[12ch]/team:hidden @sm:hidden">{team.teamName}</span>
+	<div
+		class="line-clamp-1 shrink-0 grow break-all *:decoration-dashed group-has-[a:hover]/team:*:underline"
+	>
+		<span class="@max-3xs/team:hidden">{team.name}</span>
+		<span class="@max-[12ch]/team:hidden @3xs:hidden">{team.teamName}</span>
 		{#if team.abbreviation}
 			<span class="@max-[7ch]/team:hidden @min-[12ch]/team:hidden">{team.abbreviation}</span>
 		{/if}
 	</div>
 
 	{@render children?.()}
+
+	{#if linked}
+		<a href="/teams/{team.id}" class="absolute inset-0 text-transparent">
+			{team.name}
+		</a>
+	{/if}
 </div>

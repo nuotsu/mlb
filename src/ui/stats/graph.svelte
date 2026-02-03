@@ -16,7 +16,7 @@
 	const statInfo = $derived(statsList?.find((s) => [s.name, s.lookupParam].includes(key)))
 
 	let width = $state(0)
-	const height = 100
+	const height = 120
 	const padding = { top: 16, bottom: 18, left: 20, right: 20 }
 	const chartHeight = height - padding.top - padding.bottom
 
@@ -181,7 +181,7 @@
 					x={maxPoint.x}
 					y={maxPoint.y - 6}
 					text-anchor="middle"
-					font-size="10"
+					font-size="12"
 				>
 					{formatValue(maxPoint.value)}
 				</text>
@@ -191,7 +191,7 @@
 					x={minPoint.x}
 					y={minPoint.y + 12}
 					text-anchor="middle"
-					font-size="10"
+					font-size="12"
 				>
 					{formatValue(minPoint.value)}
 				</text>
@@ -215,7 +215,7 @@
 
 				<!-- Season labels -->
 				{#each scaledPoints as point, i (point.season)}
-					{#if i === 0 || i === scaledPoints.length - 1 || point.season === (lowerIsBetter ? minPoint.season : maxPoint.season)}
+					{#if i === 0 || i === scaledPoints.length - 1 || point.season === (lowerIsBetter ? minPoint.season : maxPoint.season) || point.season === (lowerIsBetter ? maxPoint.season : minPoint.season)}
 						<text
 							class="fill-current/50"
 							x={point.x}
