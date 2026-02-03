@@ -10,8 +10,10 @@ export const load: PageServerLoad = async ({ params }) => {
 			'id,fullName,firstName,lastName,useName,useLastName',
 			'primaryNumber,primaryPosition,abbreviation,active',
 			'currentTeam,preferredTeam,team,name',
+			'stats,group,displayName,splits,season,stat',
+			'avg,homeRuns,rbi,hits,stolenBases,slg',
 		],
-		hydrate: 'currentTeam,preferredTeam',
+		hydrate: ['currentTeam,preferredTeam', 'stats(group=[pitching,hitting],type=[yearByYear])'],
 	})
 
 	const [person] = data.people

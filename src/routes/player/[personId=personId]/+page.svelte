@@ -1,11 +1,16 @@
 <script lang="ts">
 	import Metadata from '$ui/metadata.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
+	import StatGraph from '$ui/stats/graph.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
 	let person = $derived(
-		data.person as MLB.Person & { currentTeam: MLB.Team; preferredTeam?: { team: MLB.Team } },
+		data.person as MLB.Person & {
+			currentTeam: MLB.Team
+			preferredTeam?: { team: MLB.Team }
+			stats: MLB.PlayerStats[]
+		},
 	)
 
 	const team = $derived(person.active ? person.currentTeam : person.preferredTeam?.team)
@@ -51,5 +56,9 @@
 		alt=""
 	/> -->
 
-	<div class="mt-lh">Coming soon...</div>
+	<article class="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-ch">
+		{#each ['avg', 'homeRuns', 'rbi', 'hits', 'stolenBases', 'slg'] as key}
+			<StatGraph group="hitting" stats={person.stats} {key} />
+		{/each}
+	</article>
 </section>
