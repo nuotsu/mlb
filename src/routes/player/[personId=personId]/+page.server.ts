@@ -15,10 +15,11 @@ export const load: PageServerLoad = async ({ params }) => {
 				'stats,group,displayName,splits,season,stat',
 				'avg,homeRuns,rbi,hits,doubles,triples,baseOnBalls,stolenBases,slg',
 				'era,wins,losses,strikeOuts,baseOnBalls,hitBatsmen,saves,whip,inningsPitched',
+				'type,zones,zone,color,temp,value',
 			],
 			hydrate: [
 				'team,currentTeam,preferredTeam',
-				'stats(group=[pitching,hitting],type=[yearByYear])',
+				'stats(group=[pitching,hitting],type=[yearByYear,hotColdZones])',
 			],
 		}),
 	])

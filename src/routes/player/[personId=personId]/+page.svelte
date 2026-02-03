@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Metadata from '$ui/metadata.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
-	import GraphList from '$ui/stats/graph-list.svelte'
+	import YearByYearList from '$ui/stats/year-by-year-list.svelte'
 	import StyledTeam from '$ui/team/styled-team.svelte'
 	import type { PageProps } from './$types'
 
@@ -16,6 +16,8 @@
 	)
 
 	const team = $derived(person.active ? person.currentTeam : person.preferredTeam?.team)
+
+	const hotColdZones = $derived(person.stats.find((s) => s.type.displayName === 'hotColdZones'))
 </script>
 
 <Metadata title="{person.fullName} | MLB.TheOhtani.com" description="{person.fullName} profile" />
@@ -56,5 +58,5 @@
 		alt=""
 	/> -->
 
-	<GraphList {person} />
+	<YearByYearList {person} />
 </section>

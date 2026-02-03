@@ -324,10 +324,12 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				personId: PRESETS.personId,
 			},
 			queryParams: {
-				stats: PRESETS.stats,
+				stats: [...PRESETS.stats, { value: 'hotColdZones', label: 'Hot/Cold Zones' }],
 				seasons: PRESETS.seasons,
 				group: PRESETS.group,
 				gameType: PRESETS.gameType,
+				fields: [{ value: '' }],
+				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
 		'/api/v1/people/{personId}/stats/game/{gamePk}': {

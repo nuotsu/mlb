@@ -462,6 +462,8 @@ declare global {
 			gameType?: string
 			numTeams?: number
 			rank?: number
+			name?: string
+			zones?: HotColdZone[]
 		}
 
 		/**
@@ -469,6 +471,16 @@ declare global {
 		 */
 		interface StatType {
 			displayName: string
+		}
+
+		/**
+		 * Hot/Cold zone information
+		 */
+		interface HotColdZone {
+			zone: string
+			color: string
+			temp: string
+			value: string
 		}
 
 		// Game Types

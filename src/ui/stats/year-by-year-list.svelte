@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state'
-	import StatGraph from '$ui/stats/graph.svelte'
+	import YearByYear from '$ui/stats/year-by-year.svelte'
 
 	let {
 		person,
@@ -84,7 +84,7 @@
 						{/if}
 					</label>
 
-					<StatGraph class="col-span-full mb-ch" {group} stats={person.stats} {statsList} {key} />
+					<YearByYear class="col-span-full mb-ch" {group} stats={person.stats} {statsList} {key} />
 				{/each}
 			{/if}
 		{/each}
