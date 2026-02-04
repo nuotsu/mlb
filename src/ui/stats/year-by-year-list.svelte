@@ -44,12 +44,20 @@
 		baseballStats?.find((s) => [s.name, s.lookupParam].includes(key))?.lookupParam ?? key
 </script>
 
-<article class="grid grid-cols-[repeat(auto-fit,minmax(10ch,1fr))] gap-px text-center">
+<article
+	class="grid grid-cols-[repeat(auto-fit,minmax(10ch,1fr))] gap-px text-center"
+	ontouchmove={(e) => {
+		const touch = e.touches[0]
+		const element = document.elementFromPoint(touch.clientX, touch.clientY)
+		const input = element?.closest('label')?.querySelector('input')
+		if (input) input.checked = true
+	}}
+>
 	{#each Object.entries(statKeys) as [group, keys] (group)}
 		{#if hasStats(group)}
 			{#each keys as key, i (key)}
 				<label
-					class="order-last button uppercase has-checked:border-accent has-checked:font-bold dark:has-checked:text-accent"
+					class="order-last button-base touch-none border-b border-current/25 bg-neutral-200/50 uppercase has-checked:border-accent has-checked:font-bold dark:bg-neutral-800/50 dark:has-checked:text-accent"
 					data-group={group}
 				>
 					<input class="sr-only" type="radio" name="{group}-stat" value={key} checked={i === 0} />
