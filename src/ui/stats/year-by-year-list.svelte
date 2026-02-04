@@ -90,7 +90,7 @@
 </article>
 
 <style>
-	label:has(:not(:checked)) + :global([data-stat]) {
+	label:has(:not(input:checked)) + :global([data-stat]) {
 		display: none;
 	}
 </style>
