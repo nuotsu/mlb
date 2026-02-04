@@ -415,6 +415,20 @@ declare global {
 			abbreviation: string
 		}
 
+		interface PositionMeta {
+			shortName: string
+			fullName: string
+			abbrev: string
+			code: string
+			type: string
+			formalName: string
+			displayName: string
+			pitcher: boolean
+			gamePosition: boolean
+			fielder: boolean
+			outfield: boolean
+		}
+
 		/**
 		 * Batting side information
 		 */
@@ -457,6 +471,7 @@ declare global {
 			stat: Record<string, number | string>
 			team?: Team
 			player?: Person
+			position?: Position
 			league?: League
 			sport?: Sport
 			gameType?: string

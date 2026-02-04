@@ -14,13 +14,11 @@
 	const { startDate, endDate } = $derived(getWeekDates(date))
 	const isSameMonth = $derived(startDate.getMonth() === endDate.getMonth())
 
+	const gotoDate = debounce((date: string) => goto(`/schedule/week/${date}`), 1000)
+
 	function addWeek(weeks: number = 1) {
 		return formatDate(
-			new Date(
-				new Date(slash(date)).setDate(
-					new Date(slash(date)).getDate() + weeks * 7,
-				),
-			),
+			new Date(new Date(slash(date)).setDate(new Date(slash(date)).getDate() + weeks * 7)),
 			{ locale: 'en-CA' },
 		)
 	}
@@ -47,8 +45,12 @@
 			/>
 		</label>
 
-		<a class="order-first button border-b-0 border-l" href="/schedule/week/{addWeek(-1)}"><ChevronLeftIcon /></a>
-		<a class="order-last border-r button border-b-0" href="/schedule/week/{addWeek()}"><ChevronRightIcon /></a>
+		<a class="order-first button border-b-0 border-l" href="/schedule/week/{addWeek(-1)}"
+			><ChevronLeftIcon /></a
+		>
+		<a class="order-last button border-r border-b-0" href="/schedule/week/{addWeek()}"
+			><ChevronRightIcon /></a
+		>
 	</div>
 </fieldset>
 
