@@ -74,16 +74,21 @@
 
 	<YearByYearList {person} />
 
-	<HotColdZones
-		hotColdZones={data.hittingHotColdZones}
-		baseballStats={data.baseballStats}
-		data-group="hitting"
-	/>
-	<HotColdZones
-		hotColdZones={data.pitchingHotColdZones}
-		baseballStats={data.baseballStats}
-		data-group="pitching"
-	/>
+	{#if data.hittingHotColdZones}
+		<HotColdZones
+			hotColdZones={data.hittingHotColdZones}
+			baseballStats={data.baseballStats}
+			data-group="hitting"
+		/>
+	{/if}
+
+	{#if data.pitchingHotColdZones}
+		<HotColdZones
+			hotColdZones={data.pitchingHotColdZones}
+			baseballStats={data.baseballStats}
+			data-group="pitching"
+		/>
+	{/if}
 </section>
 
 <style>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { HTMLAttributes } from 'svelte/elements'
+	import HomePlate from './home-plate.svelte'
 	import Strikezone from './strikezone.svelte'
 
 	let {
@@ -13,7 +14,7 @@
 </script>
 
 <article
-	class="mx-auto grid max-w-max grid-cols-[2fr_1fr] grid-rows-[1fr_repeat(var(--count),auto)] items-center gap-x-ch"
+	class="mx-auto grid max-w-max grid-cols-[auto_auto] grid-rows-[1fr_repeat(var(--count),auto)] items-center overflow-clip"
 	style:--count={(hotColdZones?.splits?.length ?? 0) + 2}
 	{...props}
 >
@@ -35,10 +36,12 @@
 		</label>
 
 		<Strikezone
-			class="col-start-1 row-[1/var(--count)]"
+			class="relative z-1 col-start-1 row-[1/var(--count)] px-ch"
 			zones={stat.zones as unknown as MLB.HotColdZone[]}
 		/>
 	{/each}
+
+	<HomePlate class="relative col-start-1 row-start-(--count) -mt-lh" />
 </article>
 
 <style>
