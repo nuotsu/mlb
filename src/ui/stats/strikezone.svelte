@@ -12,8 +12,17 @@
 		class?: string
 	} & HTMLAttributes<HTMLElement> = $props()
 
-	const zoneTemp = $derived(Object.fromEntries(zones.map((z) => [z.zone, z.temp])))
 	const zoneValue = $derived(Object.fromEntries(zones.map((z) => [z.zone, z.value])))
+
+	const values = $derived(zones.map((z) => Number(z.value)).filter((v) => !isNaN(v)))
+	const min = $derived(Math.min(...values))
+	const max = $derived(Math.max(...values))
+
+	function zoneOpacity(zone: string) {
+		const v = Number(zoneValue[zone])
+		if (isNaN(v) || max === min) return 0
+		return (v - min) / (max - min)
+	}
 
 	const r = (n: number) => Math.round(n * 10) / 10
 
@@ -47,9 +56,8 @@
 	<svg viewBox="0 0 {W} {H}" class="w-full p-px">
 		<path
 			data-zone="11"
-			data-temp={zoneTemp['11'] ?? ''}
 			d="M0 0 L{midX} 0 L{midX} {szY} L{szX} {szY} L{szX} {midY} L0 {midY} Z"
-			fill="transparent"
+			fill="oklch(0.7 0.17 145 / {zoneOpacity('11')})"
 			stroke="currentColor"
 			stroke-width="1"
 		/>
@@ -73,9 +81,8 @@
 
 		<path
 			data-zone="12"
-			data-temp={zoneTemp['12'] ?? ''}
 			d="M{midX} 0 L{W} 0 L{W} {midY} L{szX + szW} {midY} L{szX + szW} {szY} L{midX} {szY} Z"
-			fill="transparent"
+			fill="oklch(0.7 0.17 145 / {zoneOpacity('12')})"
 			stroke="currentColor"
 			stroke-width="1"
 		/>
@@ -99,9 +106,8 @@
 
 		<path
 			data-zone="13"
-			data-temp={zoneTemp['13'] ?? ''}
 			d="M0 {midY} L{szX} {midY} L{szX} {szY + szH} L{midX} {szY + szH} L{midX} {H} L0 {H} Z"
-			fill="transparent"
+			fill="oklch(0.7 0.17 145 / {zoneOpacity('13')})"
 			stroke="currentColor"
 			stroke-width="1"
 		/>
@@ -125,10 +131,9 @@
 
 		<path
 			data-zone="14"
-			data-temp={zoneTemp['14'] ?? ''}
 			d="M{szX + szW} {midY} L{W} {midY} L{W} {H} L{midX} {H} L{midX} {szY + szH} L{szX +
 				szW} {szY + szH} Z"
-			fill="transparent"
+			fill="oklch(0.7 0.17 145 / {zoneOpacity('14')})"
 			stroke="currentColor"
 			stroke-width="1"
 		/>
@@ -153,12 +158,11 @@
 		{#each innerZones as iz (iz.zone)}
 			<rect
 				data-zone={iz.zone}
-				data-temp={zoneTemp[iz.zone] ?? ''}
 				x={iz.x}
 				y={iz.y}
 				width={cellW}
 				height={cellH}
-				fill="transparent"
+				fill="oklch(0.7 0.17 145 / {zoneOpacity(iz.zone)})"
 				stroke="currentColor"
 				stroke-width="1"
 			/>
@@ -194,20 +198,3 @@
 	</svg>
 </figure>
 
-<style>
-	[data-temp='hot'] {
-		fill: color-mix(in srgb, var(--color-green-600) 60%, transparent);
-	}
-	[data-temp='warm'] {
-		fill: color-mix(in srgb, var(--color-green-600) 45%, transparent);
-	}
-	[data-temp='lukewarm'] {
-		fill: color-mix(in srgb, var(--color-green-600) 30%, transparent);
-	}
-	[data-temp='cool'] {
-		fill: color-mix(in srgb, var(--color-green-600) 15%, transparent);
-	}
-	[data-temp='cold'] {
-		fill: color-mix(in srgb, var(--color-green-600) 0%, transparent);
-	}
-</style>
