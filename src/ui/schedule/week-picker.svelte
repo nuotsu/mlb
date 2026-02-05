@@ -1,21 +1,24 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
-	import { page } from '$app/state'
 	import { formatDate, getToday, slash } from '$lib/temporal'
-	import { debounce } from '$lib/utils'
 	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 	import { getWeekDates } from './store.svelte'
 
-	let date = $derived(page.params.date)
+	let {
+		date,
+		onDateChange,
+	}: {
+		date: string
+		onDateChange?: (date: string) => void
+	} = $props()
 
-	const { startDate, endDate } = $derived(getWeekDates(page.params.date!))
+	const { startDate, endDate } = $derived(getWeekDates(date))
 	const isSameMonth = $derived(startDate.getMonth() === endDate.getMonth())
 
 	function addWeek(weeks: number = 1) {
 		return formatDate(
 			new Date(
-				new Date(slash(page.params.date)).setDate(
-					new Date(slash(page.params.date)).getDate() + weeks * 7,
+				new Date(slash(date)).setDate(
+					new Date(slash(date)).getDate() + weeks * 7,
 				),
 			),
 			{ locale: 'en-CA' },
@@ -40,8 +43,7 @@
 				max={`${getToday().getFullYear()}-12-31`}
 				value={date}
 				onclick={(e) => (e.target as HTMLInputElement)?.showPicker()}
-				onchange={debounce((e) => goto(`/schedule/week/${e.currentTarget.value}`), 3000)}
-				onblur={(e) => goto(`/schedule/week/${e.currentTarget.value}`)}
+				onchange={(e) => onDateChange?.(e.currentTarget.value)}
 			/>
 		</label>
 
