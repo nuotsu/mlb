@@ -1,11 +1,14 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
-	import { page } from '$app/state'
 	import { formatDate, getToday, slash } from '$lib/temporal'
-	import { debounce } from '$lib/utils'
 	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 
-	let date = $derived(page.params.date)
+	let {
+		date,
+		onDateChange,
+	}: {
+		date: string
+		onDateChange?: (date: string) => void
+	} = $props()
 
 	function addDay(days: number = 1) {
 		return formatDate(
@@ -36,8 +39,7 @@
 				max={`${getToday().getFullYear()}-12-31`}
 				value={date}
 				onclick={(e) => (e.target as HTMLInputElement)?.showPicker()}
-				onchange={debounce((e) => goto(`/schedule/day/${e.currentTarget.value}`), 3000)}
-				onblur={(e) => goto(`/schedule/day/${e.currentTarget.value}`)}
+				onchange={(e) => onDateChange?.(e.currentTarget.value)}
 			/>
 		</label>
 
