@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { pushState } from '$app/navigation'
 	import { page } from '$app/state'
-	import { formatDate } from '$lib/temporal'
+	import { formatDate, formatWeekRange } from '$lib/temporal'
 	import { count } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Game from '$ui/game/game.svelte'
@@ -31,13 +31,13 @@
 
 <Metadata title="Weekly Schedule | MLB.TheOhtani.com" description="Weekly calendar of MLB games." />
 
-<Header title="Weekly Schedule">
+<Header title="Weekly Schedule" crumbs={[{ name: 'Weekly Schedule' }]}>
 	{#snippet after()}
 		<WeekPicker date={currentDate} {onDateChange} />
 	{/snippet}
 </Header>
 
-<section class="space-y-px p-ch max-sm:px-0">
+<section class="space-y-px py-lh sm:px-ch">
 	{#each schedule.dates as date (date.date)}
 		<details class="group accordion" open>
 			<summary class="sticky-below-header z-1 flex items-center gap-ch backdrop-blur after:ml-0!">

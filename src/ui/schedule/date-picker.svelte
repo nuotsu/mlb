@@ -19,16 +19,12 @@
 </script>
 
 <fieldset class="flex flex-col items-center text-center">
-	<a href="/schedule/week/{date}" class="block text-sm leading-rlh">
-		{formatDate(slash(date), { weekday: 'long' })}
-	</a>
-
 	<div class="flex justify-center">
-		<label class="min-w-[12ch]">
+		<label class="min-w-[14ch]">
 			{formatDate(slash(date), {
 				month: 'short',
+				weekday: 'short',
 				day: 'numeric',
-				year: 'numeric',
 			})}
 
 			<input

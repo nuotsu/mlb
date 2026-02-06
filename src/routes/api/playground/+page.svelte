@@ -25,7 +25,7 @@
 	description="A playground for the official MLB Stats API."
 />
 
-<Header title="Stats API Playground" />
+<Header title="Stats API Playground" crumbs={[{ name: 'Stats API Playground' }]} />
 
 <section class="flex flex-col sm:max-h-dvh">
 	<article class="top-0 z-1 bg-background">

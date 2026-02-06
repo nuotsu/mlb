@@ -6,7 +6,7 @@
 
 <Metadata title="Player Directory | MLB.TheOhtani.com" description="Search for a player by name" />
 
-<Header title="Player Directory" />
+<Header title="Player Directory" crumbs={[{ href: '/player', name: 'Players' }]} />
 
 <section class="p-ch">
 	<Search />

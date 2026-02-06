@@ -6,7 +6,7 @@
 	const season = $derived(page.data.season as MLB.SeasonDateInfo)
 </script>
 
-<section class="space-y-lh text-center">
+<section class="space-y-lh px-ch text-center">
 	<div class="flex flex-wrap justify-evenly gap-lh">
 		<Countdown date={season.springStartDate} until="🌻 Spring Training" />
 		<Countdown date="2026-03-04" until="🌎 World Baseball Classic" />

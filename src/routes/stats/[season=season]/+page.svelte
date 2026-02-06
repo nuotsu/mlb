@@ -12,6 +12,8 @@
 
 	let { data }: PageProps = $props()
 
+	let position = $derived(page.url.searchParams.get('position'))
+
 	let positionPlayers = $derived(
 		data.positions.filter(
 			(p) => p.gamePosition && !p.pitcher && !['PH', 'PR', 'EH'].includes(p.abbrev),
@@ -38,7 +40,13 @@
 	description="MLB statistical leaders for the {page.params.season} season"
 />
 
-<Header title="Stat Leaders">
+<Header
+	title="Stat Leaders"
+	crumbs={[
+		{ href: '/stats', name: 'Stat Leaders' },
+		position ? { href: `/stats?position=${position}`, name: position } : {},
+	]}
+>
 	{#snippet after()}
 		<SeasonPicker />
 	{/snippet}
@@ -54,6 +62,7 @@
 					<th colspan="3">
 						<select
 							class="w-full text-center hover:bg-current/10"
+							value={position ?? ''}
 							onchange={(e) => {
 								const { value } = e.target as HTMLSelectElement
 								goto(withParam('position', value))

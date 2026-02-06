@@ -13,7 +13,13 @@
 
 <Metadata title="{team.name} | MLB.TheOhtani.com" description="{team.name} team page" />
 
-<Header>
+<Header
+	crumbs={[
+		{ href: '/teams', name: 'Teams' },
+		team.sport?.name ? { href: `/teams?sportId=${team.sport?.id}`, name: team.sport.name } : {},
+		{ name: team.name },
+	]}
+>
 	<div class="flex flex-wrap items-end gap-ch">
 		<Logo class="size-[3lh] shrink-0 rounded-none bg-transparent" {team} />
 

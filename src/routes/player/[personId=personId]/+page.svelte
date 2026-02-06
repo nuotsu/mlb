@@ -4,7 +4,6 @@
 	import Headshot from '$ui/player/headshot.svelte'
 	import HotColdZones from '$ui/stats/hot-cold-zones.svelte'
 	import YearByYearList from '$ui/stats/year-by-year-list.svelte'
-	import StyledTeam from '$ui/team/styled-team.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
@@ -24,7 +23,13 @@
 
 <Metadata title="{person.fullName} | MLB.TheOhtani.com" description="{person.fullName} profile" />
 
-<Header>
+<Header
+	crumbs={[
+		{ href: '/player', name: 'Players' },
+		team?.id ? { href: `/teams/${team.id}`, name: team?.name } : {},
+		{ name: person.fullName },
+	]}
+>
 	<div class="flex flex-wrap items-end gap-ch">
 		<Headshot
 			class="size-[3lh] shrink-0 rounded-none bg-transparent"
@@ -50,10 +55,6 @@
 			</div>
 		{/if}
 	</div>
-
-	{#if team}
-		<StyledTeam {team} linked />
-	{/if}
 </Header>
 
 <!-- <img

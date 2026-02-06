@@ -10,7 +10,14 @@
 	<dt>Date</dt>
 	<dd>
 		<a class="link" href="/schedule/day/{formatDate(game.gameDate, { locale: 'en-CA' })}">
-			{formatDate(game.gameDate, { year: 'numeric', month: 'long', day: 'numeric' })}
+			{formatDate(game.gameDate, {
+				month: 'long',
+				day: 'numeric',
+				year: 'numeric',
+			})}
+			({formatDate(game.gameDate, {
+				weekday: 'long',
+			})})
 		</a>
 	</dd>
 
@@ -23,6 +30,12 @@
 		<dt>Series</dt>
 		<dd>{game.seriesGameNumber} of {game.gamesInSeries}</dd>
 	{/if}
+
+	<dt>Home team</dt>
+	<dd><a class="link" href="/teams/{game.teams.home.team.id}">{game.teams.home.team.name}</a></dd>
+
+	<dt>Away team</dt>
+	<dd><a class="link" href="/teams/{game.teams.away.team.id}">{game.teams.away.team.name}</a></dd>
 
 	<dt>Venue</dt>
 	<dd>{game.venue.name}</dd>

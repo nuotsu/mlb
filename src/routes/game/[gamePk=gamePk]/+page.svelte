@@ -7,6 +7,7 @@
 	import Highlights from '$ui/game/highlights.svelte'
 	import TopPerformers from '$ui/game/top-performers.svelte'
 	import WinProbability from '$ui/game/win-probability.svelte'
+	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import type { PageProps } from './$types'
 
@@ -38,9 +39,23 @@
 	description="Game details for {[away.name, home.name].join(' at ')} on {date}"
 />
 
-<section class="mx-auto max-w-5xl space-y-lh">
-	<Game class="sticky top-0 z-1 bg-background/50 backdrop-blur" {game} {boxscore} {linescore} />
+<Header
+	crumbs={[
+		{
+			href: `/schedule/week/${formatDate(game.gameDate, { locale: 'en-CA' })}`,
+			name: 'Weekly Schedule',
+		},
+		{
+			href: `/schedule/day/${formatDate(game.gameDate, { locale: 'en-CA' })}`,
+			name: formatDate(game.gameDate, { weekday: 'short', month: 'short', day: 'numeric' }),
+		},
+		{ name: `${away.abbreviation} @ ${home.abbreviation}` },
+	]}
+>
+	<Game class="w-full" {game} {boxscore} {linescore} />
+</Header>
 
+<section class="mx-auto max-w-5xl space-y-lh py-lh">
 	{#if hasTopPerformers || hasDecisions}
 		<div class="flex flex-wrap items-start gap-ch px-ch *:grow">
 			{#if hasTopPerformers}

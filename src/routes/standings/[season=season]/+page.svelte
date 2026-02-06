@@ -15,7 +15,7 @@
 	description="MLB standings for the {page.params.season} season"
 />
 
-<Header title="Standings">
+<Header title="Standings" crumbs={[{ name: 'Standings' }]}>
 	{#snippet after()}
 		<YearPicker />
 	{/snippet}

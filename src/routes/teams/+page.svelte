@@ -21,7 +21,13 @@
 	description="List of all {sport?.name || 'MLB'} teams"
 />
 
-<Header title="{sport?.abbreviation || 'MLB'} Teams" />
+<Header
+	title="{sport?.abbreviation || 'MLB'} Teams"
+	crumbs={[
+		{ href: '/teams', name: 'Teams' },
+		sport?.name ? { href: `/teams?sportId=${sport.id}`, name: sport.name } : {},
+	]}
+/>
 
 <section class="grid gap-lh px-ch py-lh md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
 	{#if data.teams?.teams}

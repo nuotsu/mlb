@@ -49,7 +49,8 @@
 	</div>
 
 	<span
-		class="group/description grid h-rlh items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
+		class="group/description grid items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
+		class:h-rlh={!isGamePage}
 		style:grid-area="description"
 	>
 		{#if !isGamePage}
@@ -105,17 +106,17 @@
 <style>
 	article {
 		grid-template:
-			'status description' 1fr
+			'status description' auto
 			'status	boxscore' auto / auto 1fr;
 
 		&:global(:has([style*='linescore'])) {
 			grid-template:
-				'status description linescore' 1lh
+				'status description linescore' auto
 				'status	boxscore linescore' auto / 8ch 16ch minmax(18ch, 1fr);
 
 			@media (width < 32rem) {
 				grid-template:
-					'. description description' 1lh
+					'. description description' auto
 					'status boxscore linescore' auto / 8ch 7ch 1fr;
 			}
 		}

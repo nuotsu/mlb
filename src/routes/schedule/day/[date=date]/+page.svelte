@@ -42,13 +42,19 @@
 	description="Game schedule for {formattedDate}"
 />
 
-<Header title="Daily Schedule">
+<Header
+	title="Daily Schedule"
+	crumbs={[
+		{ href: `/schedule/week/${currentDate}`, name: 'Weekly Schedule' },
+		{ href: `/schedule/day/${currentDate}`, name: formattedDate },
+	]}
+>
 	{#snippet after()}
 		<DatePicker date={currentDate} {onDateChange} />
 	{/snippet}
 </Header>
 
-<section class="p-ch max-sm:px-0">
+<section class="py-lh sm:px-ch">
 	{#each schedule.dates as { games }}
 		{#if schedule.totalGames}
 			<p>{count(schedule.totalGames, 'game')}</p>

@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { formatDate, getToday, slash } from '$lib/temporal'
+	import { formatDate, formatWeekRange, getToday, slash } from '$lib/temporal'
 	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
-	import { getWeekDates } from './store.svelte'
 
 	let {
 		date,
@@ -10,9 +9,6 @@
 		date: string
 		onDateChange?: (date: string) => void
 	} = $props()
-
-	const { startDate, endDate } = $derived(getWeekDates(date))
-	const isSameMonth = $derived(startDate.getMonth() === endDate.getMonth())
 
 	function addWeek(weeks: number = 1) {
 		return formatDate(
@@ -23,10 +19,8 @@
 </script>
 
 <fieldset class="flex justify-center">
-	<label class="min-w-[16ch] text-center">
-		{formatDate(startDate, { month: 'short', day: 'numeric' })}
-		-
-		{formatDate(endDate, isSameMonth ? { day: 'numeric' } : { month: 'short', day: 'numeric' })}
+	<label class="min-w-[14ch] text-center">
+		{formatWeekRange(date)}
 
 		<input
 			id="week"
