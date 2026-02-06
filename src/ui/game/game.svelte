@@ -55,13 +55,13 @@
 	>
 		{#if !isGamePage}
 			{#if showDescription}
-				<span>
-					{#if game.description}
-						{game.description}
-					{:else if game.seriesGameNumber && game.gamesInSeries && game.gamesInSeries > 1}
+				{#if game.description}
+					<span>{game.description}</span>
+				{:else if game.seriesGameNumber && game.gamesInSeries && game.gamesInSeries > 1}
+					<span class="text-current/50">
 						Series {game.seriesGameNumber} of {game.gamesInSeries}
-					{/if}
-				</span>
+					</span>
+				{/if}
 			{/if}
 
 			{#if flags?.perfectGame || flags?.noHitter}

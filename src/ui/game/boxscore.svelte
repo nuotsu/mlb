@@ -90,7 +90,7 @@
 
 {#snippet p({ position, person }: MLB.BoxscorePlayer, substituted?: boolean)}
 	<th class="relative min-w-[14ch] text-left">
-		<a href="/person/{person.id}" class="group/player flex items-center gap-ch">
+		<a href="/player/{person.id}" class="group/player flex items-center gap-ch">
 			<Headshot {person} class="sticky -left-ch z-1 size-lh" />
 
 			<span class="line-clamp-1 break-all decoration-dashed group-hover/player:underline">

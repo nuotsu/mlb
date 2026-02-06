@@ -37,7 +37,7 @@
 	}
 
 	const formattedDate = $derived(
-		formatDate(currentDate + 'T00:00:00', {
+		formatDate(slash(currentDate), {
 			weekday: 'short',
 			month: 'short',
 			day: 'numeric',
@@ -62,21 +62,24 @@
 	{/snippet}
 </Header>
 
-<section class="py-lh sm:px-ch">
-	<SeasonProgress {currentDate} {seasonProgress} />
+<section class="flex min-h-[calc(100dvh-var(--header-height))] flex-col gap-ch">
+	<div class="grow py-lh sm:px-ch">
+		{#each schedule.dates as { games }}
+			{#if schedule.totalGames}
+				<p class="text-center text-current/50">{count(schedule.totalGames, 'game')}</p>
+			{/if}
+			<div class="columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
+				{#each games as game (game.gamePk)}
+					{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
+					<Game {game} {linescore} showDescription />
+				{/each}
+			</div>
+		{:else}
+			<Empty>No games</Empty>
+		{/each}
+	</div>
 
-	{#each schedule.dates as { games }}
-		{#if schedule.totalGames}
-			<p>{count(schedule.totalGames, 'game')}</p>
-		{/if}
-
-		<div class="columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
-			{#each games as game (game.gamePk)}
-				{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
-				<Game {game} {linescore} showDescription />
-			{/each}
-		</div>
-	{:else}
-		<Empty>No games</Empty>
-	{/each}
+	{#if schedule.dates[0]?.games.some((game) => game.gameType === 'R')}
+		<SeasonProgress {currentDate} {seasonProgress} />
+	{/if}
 </section>

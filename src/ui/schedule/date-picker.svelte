@@ -20,11 +20,12 @@
 
 <fieldset class="flex flex-col items-center text-center">
 	<div class="flex justify-center">
-		<label class="min-w-[14ch]">
+		<label class="min-w-[16ch]">
 			{formatDate(slash(date), {
 				month: 'short',
 				weekday: 'short',
 				day: 'numeric',
+				year: 'numeric',
 			})}
 
 			<input

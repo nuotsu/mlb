@@ -11,7 +11,22 @@ export async function fetchSeasonProgress(
 		fields: ['seasons,regularSeasonStartDate,regularSeasonEndDate'],
 	})
 
-	const { team, leagueRecord } = schedule.dates?.[0]?.games[0].teams.away ?? {}
+	const games = schedule.dates?.[0]?.games ?? []
+
+	const allTeams = games
+		?.filter((g) => g.gameType === 'R')
+		?.flatMap((g) => [g.teams.away, g.teams.home])
+
+	const gamesPlayed = allTeams.length
+		? Math.round(
+				allTeams.reduce(
+					(sum, t) => sum + (t.leagueRecord?.wins ?? 0) + (t.leagueRecord?.losses ?? 0),
+					0,
+				) / allTeams.length,
+			)
+		: 0
+
+	const { team } = games[0]?.teams.away ?? {}
 
 	const { totalGames } = team?.id
 		? await fetchMLB<MLB.ScheduleResponse>(`/api/v1/schedule`, {
@@ -28,7 +43,7 @@ export async function fetchSeasonProgress(
 			MLB.SeasonDateInfo,
 			'regularSeasonStartDate' | 'regularSeasonEndDate'
 		>),
-		gamesPlayed: (leagueRecord?.wins ?? 0) + (leagueRecord?.losses ?? 0),
+		gamesPlayed,
 		totalGames,
 	}
 }
