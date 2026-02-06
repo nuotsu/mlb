@@ -14,7 +14,7 @@
 </script>
 
 <article class="space-y-ch">
-	<h2 class="h2">Roster</h2>
+	<h2 class="h2 max-sm:px-ch">Roster</h2>
 
 	<div class="space-y-px">
 		{@render list(batters, 'Batters')}
@@ -25,7 +25,7 @@
 				Coaches
 			</summary>
 
-			<ul class="grid">
+			<ul class="grid max-sm:px-ch">
 				{#each coaches as { person, jerseyNumber, job } (person.id)}
 					<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
 						<a
@@ -57,7 +57,7 @@
 			{label}
 		</summary>
 
-		<ul class="grid">
+		<ul class="grid max-sm:px-ch">
 			{#each sort(arr) as { person, jerseyNumber, position } (person.id)}
 				<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
 					<a

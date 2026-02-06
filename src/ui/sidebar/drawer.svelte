@@ -15,7 +15,7 @@
 
 <nav
 	class={cn(
-		'relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur transition-colors [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width] dark:bg-neutral-800/50',
+		'relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur-xs transition-colors [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width] dark:bg-neutral-800/50',
 		'max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:transition-transform max-sm:active:transition-none max-sm:sidebar-open:translate-x-(--swipe-x) max-sm:sidebar-not-open:-translate-x-full',
 	)}
 	style:--swipe-x="{swipeX}px"

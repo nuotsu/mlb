@@ -33,7 +33,7 @@
 	</div>
 </Header>
 
-<section class="grid gap-lh px-ch py-lh sm:grid-cols-2">
+<section class="grid gap-lh py-lh sm:grid-cols-2 sm:px-ch">
 	{#if data.roster.roster}
 		<Roster roster={data.roster.roster} coaches={data.coaches.roster} />
 	{/if}

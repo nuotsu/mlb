@@ -27,7 +27,7 @@
 </script>
 
 <article class="space-y-ch">
-	<h2 class="h2">Schedule</h2>
+	<h2 class="h2 max-sm:px-ch">Schedule</h2>
 
 	<div class="space-y-px">
 		{#each byMonth as [month, dates], i (month)}
@@ -48,9 +48,7 @@
 									href="/game/{gamePk}"
 								>
 									<time class="contents text-center text-sm *:px-[.5ch]" datetime={gameDate}>
-										<span
-											class="sticky left-0 z-1 bg-background/50 decoration-dashed backdrop-blur group-hover/game:underline"
-										>
+										<span class="decoration-dashed group-hover/game:underline">
 											{formatDate(slash(date), {
 												weekday: 'short',
 												month: 'numeric',
