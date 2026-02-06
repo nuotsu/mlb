@@ -17,7 +17,7 @@
 
 <Header title="Standings" crumbs={[{ name: 'Standings' }]}>
 	{#snippet after()}
-		<YearPicker />
+		<YearPicker class="mx-auto" />
 	{/snippet}
 </Header>
 

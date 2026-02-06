@@ -58,7 +58,7 @@
 	]}
 >
 	{#snippet after()}
-		<DatePicker date={currentDate} {onDateChange} />
+		<DatePicker date={currentDate} {onDateChange} class="mx-auto" />
 	{/snippet}
 </Header>
 

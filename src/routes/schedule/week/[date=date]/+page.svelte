@@ -9,6 +9,7 @@
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import WeekPicker from '$ui/schedule/week-picker.svelte'
+	import ToggleAllDetails from '$ui/toggle-all-details.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
@@ -32,7 +33,10 @@
 
 <Header title="Weekly Schedule" crumbs={[{ name: 'Weekly Schedule' }]}>
 	{#snippet after()}
-		<WeekPicker date={currentDate} {onDateChange} />
+		<div class="mx-auto flex items-center gap-ch">
+			<WeekPicker date={currentDate} {onDateChange} />
+			<ToggleAllDetails />
+		</div>
 	{/snippet}
 </Header>
 

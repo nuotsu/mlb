@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CollapseIcon, ExpandIcon } from '$ui/icons'
+	import { CollapseHorizontalIcon, ExpandHorizontalIcon } from '$ui/icons'
 	import Video from '$ui/video.svelte'
 
 	let { content }: { content: MLB.GameContent } = $props()
@@ -63,7 +63,7 @@
 		title="Theater mode (t)"
 	>
 		<input class="sr-only" id="theater-mode" type="checkbox" bind:checked={theaterMode} />
-		<ExpandIcon class="group-has-checked/theater:hidden" />
-		<CollapseIcon class="group-not-has-checked/theater:hidden" />
+		<ExpandHorizontalIcon class="group-has-checked/theater:hidden" />
+		<CollapseHorizontalIcon class="group-not-has-checked/theater:hidden" />
 	</label>
 </article>

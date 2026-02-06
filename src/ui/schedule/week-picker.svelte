@@ -5,9 +5,11 @@
 	let {
 		date,
 		onDateChange,
+		class: className,
 	}: {
 		date: string
 		onDateChange?: (date: string) => void
+		class?: string
 	} = $props()
 
 	function addWeek(weeks: number = 1) {
@@ -18,7 +20,7 @@
 	}
 </script>
 
-<fieldset class="flex justify-center">
+<fieldset class="flex justify-center {className}">
 	<label class="min-w-[14ch] grow text-center">
 		{formatWeekRange(date)}
 

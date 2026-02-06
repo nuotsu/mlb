@@ -48,7 +48,7 @@
 	]}
 >
 	{#snippet after()}
-		<SeasonPicker />
+		<SeasonPicker class="mx-auto" />
 	{/snippet}
 </Header>
 

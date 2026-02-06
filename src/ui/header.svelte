@@ -39,9 +39,7 @@
 		</hgroup>
 
 		{#if after}
-			<div class="mx-auto">
-				{@render after()}
-			</div>
+			{@render after()}
 		{/if}
 	</div>
 </header>

@@ -5,9 +5,11 @@
 	let {
 		date,
 		onDateChange,
+		class: className,
 	}: {
 		date: string
 		onDateChange?: (date: string) => void
+		class?: string
 	} = $props()
 
 	function addDay(days: number = 1) {
@@ -18,7 +20,7 @@
 	}
 </script>
 
-<fieldset class="flex flex-col items-center text-center">
+<fieldset class="flex flex-col items-center text-center {className}">
 	<div class="flex justify-center">
 		<label class="min-w-[16ch]">
 			{formatDate(slash(date), {

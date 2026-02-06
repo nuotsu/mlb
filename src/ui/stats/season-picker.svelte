@@ -4,11 +4,17 @@
 	import { getToday } from '$lib/temporal'
 	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 
+	let {
+		class: className,
+	}: {
+		class?: string
+	} = $props()
+
 	let season = $derived(Number(page.params.season ?? getToday().getFullYear()))
 	let search = $derived(page.url.search)
 </script>
 
-<fieldset class="flex justify-center text-center">
+<fieldset class="flex justify-center text-center {className}">
 	<label class="min-w-[8ch]">
 		<input
 			class="min-w-[6ch] appearance-none text-center decoration-dashed hover:underline"
