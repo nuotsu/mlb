@@ -24,9 +24,9 @@
 	</a>
 
 	<div class="flex justify-center">
-		<label class="min-w-[16ch]">
+		<label class="min-w-[12ch]">
 			{formatDate(slash(date), {
-				month: 'long',
+				month: 'short',
 				day: 'numeric',
 				year: 'numeric',
 			})}
@@ -43,8 +43,12 @@
 			/>
 		</label>
 
-		<a class="order-first button border-b-0 border-l" href="/schedule/day/{addDay(-1)}"><ChevronLeftIcon /></a>
-		<a class="order-last border-r button border-b-0" href="/schedule/day/{addDay()}"><ChevronRightIcon /></a>
+		<a class="order-first button border-b-0 border-l" href="/schedule/day/{addDay(-1)}">
+			<ChevronLeftIcon />
+		</a>
+		<a class="order-last button border-r border-b-0" href="/schedule/day/{addDay()}">
+			<ChevronRightIcon />
+		</a>
 	</div>
 </fieldset>
 

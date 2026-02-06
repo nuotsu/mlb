@@ -3,8 +3,8 @@ import type { PageLoad } from './$types'
 
 export const load: PageLoad = async ({ params, url }) => {
 	const searchParams = Object.fromEntries(url.searchParams.entries())
-	const sortStats = (url.searchParams.get('sortStat') ?? 'homeRuns,era').split(',')
-	const [hittingSortStat, pitchingSortStat] = [sortStats[0] ?? 'homeRuns', sortStats[1] ?? 'era']
+	const hittingSortStat = url.searchParams.get('hittingSortStat') ?? 'homeRuns'
+	const pitchingSortStat = url.searchParams.get('pitchingSortStat') ?? 'era'
 
 	const [baseballStats, hittingLeaders, pitchingLeaders, positions] = await Promise.all([
 		fetchMLB<MLB.BaseballStat[]>('/api/v1/baseballStats'),

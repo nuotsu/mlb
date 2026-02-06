@@ -1,9 +1,11 @@
 <script lang="ts">
-	import { page } from '$app/state'
 	import { pushState } from '$app/navigation'
+	import { page } from '$app/state'
 	import { formatDate } from '$lib/temporal'
 	import { count } from '$lib/utils'
+	import Empty from '$ui/empty.svelte'
 	import Game from '$ui/game/game.svelte'
+	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import DatePicker from '$ui/schedule/date-picker.svelte'
 	import { fetchDaySchedule } from '../fetch'
@@ -35,18 +37,23 @@
 	)
 </script>
 
-<Metadata title="{formattedDate} | MLB.TheOhtani.com" description="Game schedule for {formattedDate}" />
+<Metadata
+	title="{formattedDate} | MLB.TheOhtani.com"
+	description="Game schedule for {formattedDate}"
+/>
 
-<header class="space-y-ch p-ch text-center">
-	<DatePicker date={currentDate} {onDateChange} />
-
-	{#if schedule.totalGames}
-		<p>{count(schedule.totalGames, 'game')}</p>
-	{/if}
-</header>
+<Header title="Daily Schedule">
+	{#snippet after()}
+		<DatePicker date={currentDate} {onDateChange} />
+	{/snippet}
+</Header>
 
 <section class="p-ch max-sm:px-0">
 	{#each schedule.dates as { games }}
+		{#if schedule.totalGames}
+			<p>{count(schedule.totalGames, 'game')}</p>
+		{/if}
+
 		<div class="columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
 			{#each games as game (game.gamePk)}
 				{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
@@ -54,6 +61,6 @@
 			{/each}
 		</div>
 	{:else}
-		<div class="text-center">No games</div>
+		<Empty>No games</Empty>
 	{/each}
 </section>

@@ -13,41 +13,49 @@
 	}
 </script>
 
-<article class="space-y-px px-ch">
-	{@render list(batters, 'Batters')}
-	{@render list(pitchers, 'Pitchers')}
+<article class="space-y-ch">
+	<h2 class="h2">Roster</h2>
 
-	<details class="accordion">
-		<summary class="flex items-center gap-ch">Coaches</summary>
+	<div class="space-y-px">
+		{@render list(batters, 'Batters')}
+		{@render list(pitchers, 'Pitchers')}
 
-		<ul class="grid">
-			{#each coaches as { person, jerseyNumber, job } (person.id)}
-				<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
-					<a
-						class="group/person col-span-full grid grid-cols-subgrid items-center gap-x-ch"
-						href="/player/{person.id}"
-					>
-						<span class="inline-block text-center text-sm not-empty:before:content-['#']">
-							{jerseyNumber}
-						</span>
+		<details class="accordion">
+			<summary class="sticky-below-header z-1 flex items-center gap-ch backdrop-blur-xs">
+				Coaches
+			</summary>
 
-						<Headshot {person} size={36} class="size-lh shrink-0" />
+			<ul class="grid">
+				{#each coaches as { person, jerseyNumber, job } (person.id)}
+					<li class="col-span-full grid grid-cols-subgrid gap-x-ch">
+						<a
+							class="group/person col-span-full grid grid-cols-subgrid items-center gap-x-ch"
+							href="/player/{person.id}"
+						>
+							<span class="inline-block text-center text-sm not-empty:before:content-['#']">
+								{jerseyNumber}
+							</span>
 
-						<span class="line-clamp-1 break-all decoration-dashed group-hover/person:underline">
-							{(person as MLB.Person).lastInitName}
-						</span>
+							<Headshot {person} size={36} class="size-lh shrink-0" />
 
-						<span class="line-clamp-1 break-all">{job}</span>
-					</a>
-				</li>
-			{/each}
-		</ul>
-	</details>
+							<span class="line-clamp-1 break-all decoration-dashed group-hover/person:underline">
+								{(person as MLB.Person).lastInitName}
+							</span>
+
+							<span class="line-clamp-1 break-all">{job}</span>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</details>
+	</div>
 </article>
 
 {#snippet list(arr: MLB.Roster[], label: string, open?: boolean)}
 	<details class="accordion" open>
-		<summary class="flex items-center gap-ch">{label}</summary>
+		<summary class="sticky-below-header z-1 flex items-center gap-ch backdrop-blur-xs">
+			{label}
+		</summary>
 
 		<ul class="grid">
 			{#each sort(arr) as { person, jerseyNumber, position } (person.id)}

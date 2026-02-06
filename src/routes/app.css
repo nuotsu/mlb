@@ -20,8 +20,12 @@
 }
 
 @custom-variant hover (&:hover);
+
 @custom-variant dark (body:has([data-color-scheme='dark']) &);
 @custom-variant not-dark (body:has(#toggle-color-scheme:not([data-color-scheme='dark'])) &);
+
+@custom-variant sidebar-open (body:has(#sidebar-open:checked) &);
+@custom-variant sidebar-not-open (body:has(#sidebar-open:not(:checked)) &);
 
 @layer base {
 	::selection {
@@ -107,6 +111,8 @@
 	}
 }
 
+/* utilities */
+
 @utility no-scrollbar {
 	::-webkit-scrollbar {
 		display: none;
@@ -115,14 +121,44 @@
 	scrollbar-width: none;
 }
 
-@custom-variant sidebar-open (body:has(#sidebar-open:checked) &);
-@custom-variant sidebar-not-open (body:has(#sidebar-open:not(:checked)) &);
+@utility sticky-below-header {
+	position: sticky;
+	top: calc(var(--header-height) + var(--offset, 0px));
+}
 
 @utility sidebar-closed-hidden {
 	@apply transition-opacity sidebar-not-open:pointer-events-none sidebar-not-open:opacity-0;
 }
 
 /* typography */
+
+@utility h-base {
+	@apply font-bold;
+}
+
+@utility h1 {
+	@apply text-xl h-base;
+}
+
+@utility h2 {
+	@apply text-lg h-base;
+}
+
+@utility h3 {
+	@apply h-base;
+}
+
+@utility h4 {
+	@apply h-base;
+}
+
+@utility h5 {
+	@apply h-base;
+}
+
+@utility h6 {
+	@apply h-base;
+}
 
 @utility positive {
 	@apply text-green-700 dark:text-green-200;

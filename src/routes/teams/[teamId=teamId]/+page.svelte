@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import TeamSeason from '$ui/schedule/team-season.svelte'
 	import Logo from '$ui/team/logo.svelte'
@@ -12,19 +13,21 @@
 
 <Metadata title="{team.name} | MLB.TheOhtani.com" description="{team.name} team page" />
 
-<header class="flex flex-wrap items-end gap-ch p-ch">
-	<Logo class="size-[4lh] shrink-0 rounded-none bg-transparent" {team} />
+<Header>
+	<div class="flex flex-wrap items-end gap-ch">
+		<Logo class="size-[3lh] shrink-0 rounded-none bg-transparent" {team} />
 
-	<h1 class="grid">
-		{#if team.franchiseName !== team.teamName}
-			<span>{team.franchiseName}</span>
-		{/if}
+		<h1 class="grid">
+			{#if team.franchiseName !== team.teamName}
+				<span>{team.franchiseName}</span>
+			{/if}
 
-		<strong class="text-3xl">{team.teamName}</strong>
-	</h1>
-</header>
+			<strong class="text-3xl">{team.teamName}</strong>
+		</h1>
+	</div>
+</Header>
 
-<section class="grid gap-lh sm:grid-cols-2">
+<section class="grid gap-lh px-ch py-lh sm:grid-cols-2">
 	{#if data.roster.roster}
 		<Roster roster={data.roster.roster} coaches={data.coaches.roster} />
 	{/if}

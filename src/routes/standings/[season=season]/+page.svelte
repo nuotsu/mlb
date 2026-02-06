@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import { cn } from '$lib/utils'
+	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import YearPicker from '$ui/schedule/year-picker.svelte'
 	import StyledTeam from '$ui/team/styled-team.svelte'
@@ -14,9 +15,11 @@
 	description="MLB standings for the {page.params.season} season"
 />
 
-<header class="p-ch">
-	<YearPicker />
-</header>
+<Header title="Standings">
+	{#snippet after()}
+		<YearPicker />
+	{/snippet}
+</Header>
 
 <section
 	class={cn('items-start gap-lh p-ch has-[table]:grid', {

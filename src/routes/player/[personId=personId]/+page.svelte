@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 	import HotColdZones from '$ui/stats/hot-cold-zones.svelte'
@@ -23,10 +24,10 @@
 
 <Metadata title="{person.fullName} | MLB.TheOhtani.com" description="{person.fullName} profile" />
 
-<header class="px-ch pt-ch">
+<Header>
 	<div class="flex flex-wrap items-end gap-ch">
 		<Headshot
-			class="size-[4lh] shrink-0 rounded-none bg-transparent"
+			class="size-[3lh] shrink-0 rounded-none bg-transparent"
 			{person}
 			size={240}
 			type={person.active ? 'silo' : 'spots'}
@@ -53,12 +54,12 @@
 	{#if team}
 		<StyledTeam {team} linked />
 	{/if}
+</Header>
 
-	<!-- <img
-		src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/w_426,q_auto:best/v1/people/{person.id}/action/hero/current"
-		alt=""
-	/> -->
-</header>
+<!-- <img
+	src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/w_426,q_auto:best/v1/people/{person.id}/action/hero/current"
+	alt=""
+/> -->
 
 <section class="space-y-lh px-ch py-lh">
 	<nav class="flex items-center justify-center gap-ch">

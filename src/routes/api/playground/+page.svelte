@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
+	import Header from '$ui/header.svelte'
 	import { InfoIcon, LoadingIcon, SendIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
 	import { CUSTOM_ENDPOINT_KEY, ENDPOINTS } from '$ui/playground/constants'
@@ -24,12 +25,10 @@
 	description="A playground for the official MLB Stats API."
 />
 
-<section class="flex flex-col sm:max-h-dvh">
-	<header class="p-ch pb-0 text-center">
-		<h1>Stats API Playground</h1>
-	</header>
+<Header title="Stats API Playground" />
 
-	<article class="top-0 z-1 bg-background sm:sticky">
+<section class="flex flex-col sm:max-h-dvh">
+	<article class="top-0 z-1 bg-background">
 		<form class="space-ch mx-auto grid max-w-5xl gap-ch p-ch" method="POST" use:enhance>
 			<input name="distinctId" value={distinctId} type="hidden" />
 

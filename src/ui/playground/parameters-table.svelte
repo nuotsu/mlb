@@ -32,7 +32,7 @@
 
 <style>
 	table {
-		&:has(tbody:empty) {
+		&:not(:has(tbody tr)) {
 			display: none;
 		}
 
