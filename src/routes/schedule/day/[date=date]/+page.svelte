@@ -1,31 +1,39 @@
 <script lang="ts">
 	import { pushState } from '$app/navigation'
 	import { page } from '$app/state'
-	import { formatDate } from '$lib/temporal'
+	import { fetchDaySchedule } from '$lib/fetch'
+	import { formatDate, slash } from '$lib/temporal'
 	import { count } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Game from '$ui/game/game.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import DatePicker from '$ui/schedule/date-picker.svelte'
-	import { fetchDaySchedule } from '../fetch'
+	import SeasonProgress from '$ui/season/season-progress.svelte'
 	import type { PageProps } from './$types'
+	import { fetchSeasonProgress } from './fetch-season-progress'
 
 	let { data }: PageProps = $props()
 
-	let currentDate: string = $state(page.params.date!)
-	let schedule: MLB.ScheduleResponse = $state(data.schedule)
+	let currentDate = $state(page.params.date!)
+	let schedule = $derived(data.schedule)
+	let seasonProgress = $derived(data.seasonProgress)
 
-	// sync from load function on full navigation
 	$effect(() => {
 		currentDate = page.params.date!
 		schedule = data.schedule
+		seasonProgress = data.seasonProgress
 	})
 
 	async function onDateChange(date: string) {
 		currentDate = date
 		pushState(`/schedule/day/${date}`, {})
 		schedule = await fetchDaySchedule(date)
+		seasonProgress = await fetchSeasonProgress(
+			page.url.searchParams.get('sportId') || '1',
+			new Date(slash(currentDate)).getFullYear().toString(),
+			schedule,
+		)
 	}
 
 	const formattedDate = $derived(
@@ -55,6 +63,8 @@
 </Header>
 
 <section class="py-lh sm:px-ch">
+	<SeasonProgress {currentDate} {seasonProgress} />
+
 	{#each schedule.dates as { games }}
 		{#if schedule.totalGames}
 			<p>{count(schedule.totalGames, 'game')}</p>

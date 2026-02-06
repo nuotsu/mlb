@@ -19,7 +19,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 	description="A custom MLB scorebug for Major League Baseball (MLB) and other leagues. MLB = Mitchell's Live scoreBug."
 />
 
-<header class="px-ch py-lh">
+<header class="px-ch pt-lh">
 	<h1 class="mx-auto flex max-w-max flex-col" aria-label="Welcome to MLB.TheOhtani.com">
 		<div class="-mb-ch">Welcome to</div>
 		<pre

@@ -1,22 +1,21 @@
 <script lang="ts">
 	import { pushState } from '$app/navigation'
 	import { page } from '$app/state'
-	import { formatDate, formatWeekRange } from '$lib/temporal'
+	import { fetchWeekSchedule } from '$lib/fetch'
+	import { formatDate } from '$lib/temporal'
 	import { count } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Game from '$ui/game/game.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import WeekPicker from '$ui/schedule/week-picker.svelte'
-	import { fetchWeekSchedule } from '../fetch'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
 
 	let currentDate: string = $state(page.params.date!)
-	let schedule: MLB.ScheduleResponse = $state(data.schedule)
+	let schedule: MLB.ScheduleResponse = $derived(data.schedule)
 
-	// sync from load function on full navigation
 	$effect(() => {
 		currentDate = page.params.date!
 		schedule = data.schedule

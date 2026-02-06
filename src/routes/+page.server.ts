@@ -10,9 +10,7 @@ export const load: PageServerLoad = async () => {
 		season: year,
 	})
 
-	const [season] = seasons.seasons
-
 	return {
-		season,
+		season: seasons.seasons[0],
 	}
 }

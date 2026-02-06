@@ -1,4 +1,4 @@
-import { fetchWeekSchedule } from '../fetch'
+import { fetchWeekSchedule } from '$lib/fetch'
 
 export const load = async ({ params, url }) => {
 	const sportId = url.searchParams.get('sportId') || '1'

@@ -58,7 +58,7 @@
 				<span>
 					{#if game.description}
 						{game.description}
-					{:else if game.seriesGameNumber && game.gamesInSeries}
+					{:else if game.seriesGameNumber && game.gamesInSeries && game.gamesInSeries > 1}
 						Series {game.seriesGameNumber} of {game.gamesInSeries}
 					{/if}
 				</span>

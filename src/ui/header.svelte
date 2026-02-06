@@ -29,7 +29,7 @@
 >
 	<Breadcrumbs {crumbs} />
 
-	<div class="flex flex-wrap justify-between gap-ch">
+	<div class="flex flex-wrap justify-between gap-x-lh gap-y-ch">
 		<hgroup class="grow">
 			{#if children}
 				{@render children()}
@@ -39,7 +39,7 @@
 		</hgroup>
 
 		{#if after}
-			<div class="mx-auto" data-after>
+			<div class="mx-auto">
 				{@render after()}
 			</div>
 		{/if}

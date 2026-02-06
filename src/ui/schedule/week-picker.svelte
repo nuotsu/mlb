@@ -19,7 +19,7 @@
 </script>
 
 <fieldset class="flex justify-center">
-	<label class="min-w-[14ch] text-center">
+	<label class="min-w-[14ch] grow text-center">
 		{formatWeekRange(date)}
 
 		<input
