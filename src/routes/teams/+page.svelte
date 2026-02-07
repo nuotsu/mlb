@@ -32,7 +32,9 @@
 	{#if data.teams?.teams}
 		{#each teamsByLeague as [league, teams] (league)}
 			<details class="accordion" open>
-				<summary class="sticky-below-header z-1 h2 backdrop-blur-xs">{league}</summary>
+				<summary class="sticky-below-header z-1 flex items-center gap-ch backdrop-blur-xs h2"
+					>{league}</summary
+				>
 
 				<ul>
 					{#each teams?.sort((a, b) => a.name.localeCompare(b.name)) as team (team.id)}
