@@ -7,7 +7,7 @@
 </script>
 
 <section class="space-y-lh px-ch py-lh">
-	<div class="flex flex-wrap justify-center gap-lh">
+	<div class="flex flex-wrap justify-center gap-lh max-sm:*:w-full">
 		<Countdown date={season.springStartDate} until="🌻 Spring Training" />
 		<Countdown date="2026-03-04" until="🌎 World Baseball Classic" />
 		<Countdown date={season.regularSeasonStartDate} until="🏟️ Opening Day" />

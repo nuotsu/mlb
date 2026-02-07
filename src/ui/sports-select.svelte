@@ -12,7 +12,9 @@
 	let sport = $derived(page.url.searchParams.get('sportId') ?? '1')
 
 	async function fetchSports() {
-		return await fetchMLB<MLB.SportsResponse>('/api/v1/sports', { fields: ['sports,id,name'] })
+		return await fetchMLB<MLB.SportsResponse>('/api/v1/sports', {
+			fields: ['sports,id,name,abbreviation'],
+		})
 	}
 </script>
 
@@ -33,7 +35,7 @@
 	{#await fetchSports() then { sports }}
 		{#each sports as sportId}
 			<option value={sportId.id} selected={sportId.id === Number(sport)}>
-				{sportId.name}
+				{sportId.abbreviation}
 			</option>
 		{/each}
 	{/await}

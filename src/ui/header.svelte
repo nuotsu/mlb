@@ -29,7 +29,7 @@
 >
 	<Breadcrumbs {crumbs} />
 
-	<div class="flex flex-wrap justify-between gap-x-lh gap-y-ch">
+	<div class="flex flex-wrap items-end justify-between gap-x-lh gap-y-ch">
 		<hgroup class="grow">
 			{#if children}
 				{@render children()}

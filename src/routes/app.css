@@ -133,7 +133,7 @@
 /* typography */
 
 @utility h-base {
-	@apply font-bold;
+	@apply leading-tight font-bold;
 }
 
 @utility h1 {
@@ -234,7 +234,7 @@
 
 	&[open] {
 		&::details-content {
-			@apply pt-ch pb-lh;
+			@apply mt-ch mb-lh;
 		}
 
 		summary {

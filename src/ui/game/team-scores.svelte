@@ -6,10 +6,11 @@
 
 {#if game.status.abstractGameState === 'Final'}
 	<div class="grid text-left">
-		<StyledTeam team={boxscore.teams.away.team} record={game.teams.away.leagueRecord}>
+		<StyledTeam team={boxscore.teams.away.team} record={game.teams.away.leagueRecord} linked>
 			{@render score(game.teams.away.score)}
 		</StyledTeam>
-		<StyledTeam team={boxscore.teams.home.team} record={game.teams.home.leagueRecord}>
+
+		<StyledTeam team={boxscore.teams.home.team} record={game.teams.home.leagueRecord} linked>
 			{@render score(game.teams.home.score)}
 		</StyledTeam>
 	</div>
@@ -19,11 +20,13 @@
 			class="flex-row-reverse pl-[.5ch] *:data-name:order-last [&_picture]:ml-auto"
 			team={boxscore.teams.away.team}
 			record={game.teams.away.leagueRecord}
+			linked
 		/>
 		<StyledTeam
 			class="pr-[.5ch] *:data-name:order-last [&_picture]:mr-auto"
 			team={boxscore.teams.home.team}
 			record={game.teams.home.leagueRecord}
+			linked
 		/>
 	</div>
 {/if}

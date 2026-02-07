@@ -2,7 +2,7 @@
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
-	import TeamSeason from '$ui/schedule/team-season.svelte'
+	import TeamSchedule from '$ui/schedule/team-schedule.svelte'
 	import Logo from '$ui/team/logo.svelte'
 	import Roster from '$ui/team/roster.svelte'
 	import type { PageProps } from './$types'
@@ -41,7 +41,7 @@
 		<Empty>No roster</Empty>
 	{/if}
 
-	<TeamSeason schedule={data.schedule} {team} />
+	<TeamSchedule schedule={data.schedule} {team} />
 </section>
 
 <style>

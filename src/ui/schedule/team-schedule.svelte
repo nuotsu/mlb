@@ -38,16 +38,19 @@
 						{formatDate(slash(month + '-01'), { month: 'long', year: 'numeric' })}
 					</summary>
 
-					<ol class="isolate grid overflow-x-auto whitespace-nowrap">
+					<ol class="isolate grid overflow-x-auto">
 						{#each dates as { date, games } (date)}
 							{#each games as { gamePk, gameDate, teams, venue } (gamePk)}
 								{@const atHome = teams.home.team.id === team.id}
 								<li class="col-span-full grid grid-cols-subgrid">
 									<a
-										class="group/game col-span-full grid grid-cols-subgrid items-center *:px-[.5ch]"
+										class="group/game col-span-full grid grid-cols-subgrid items-stretch *:px-[.5ch]"
 										href="/game/{gamePk}"
 									>
-										<time class="contents text-center text-sm *:px-[.5ch]" datetime={gameDate}>
+										<time
+											class="my-auto contents text-center text-xs *:m-auto *:px-[.5ch]"
+											datetime={gameDate}
+										>
 											<span class="decoration-dashed group-hover/game:underline">
 												{formatDate(slash(date), {
 													weekday: 'short',
@@ -64,12 +67,15 @@
 											</span>
 										</time>
 
-										<span class="pr-ch! text-center text-sm">
+										<span class="m-auto text-center text-xs">
 											{atHome ? 'vs' : '@'}
 										</span>
 
-										<StyledTeam class="pl-[.5ch]" team={atHome ? teams.away.team : teams.home.team}>
-											<small class="line-clamp-1 pl-ch text-[x-small] break-all text-current/75">
+										<StyledTeam
+											class="pl-[.5ch] *:data-name:shrink-0 *:data-name:grow"
+											team={atHome ? teams.away.team : teams.home.team}
+										>
+											<small class="line-clamp-1 pl-ch text-[x-small] break-all text-current/50">
 												{venue.name}
 											</small>
 										</StyledTeam>
