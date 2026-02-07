@@ -10,9 +10,9 @@
 	import posthog from 'posthog-js'
 	import type { PageProps } from './$types'
 
-	let { form }: PageProps = $props()
+	let { data, form }: PageProps = $props()
 
-	let endpoint = $derived(form?.endpointPath ?? CUSTOM_ENDPOINT_KEY)
+	let endpoint = $derived(form?.endpointPath ?? data.endpointKey)
 	let distinctId = $state('anonymous')
 
 	$effect(() => {
@@ -49,7 +49,7 @@
 				</div>
 			{/if}
 
-			<ParametersTable {endpoint} />
+			<ParametersTable {endpoint} initialParams={data.initialParams} />
 		</form>
 	</article>
 

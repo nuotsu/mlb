@@ -502,3 +502,46 @@ for (const [label, endpoints] of Object.entries(DIRECTORY)) {
 		ENDPOINTS[endpoint] = params
 	}
 }
+
+export function matchEndpoint(urlPath: string) {
+	for (const key of Object.keys(ENDPOINTS)) {
+		if (key === CUSTOM_ENDPOINT_KEY || !key.startsWith('/api/')) continue
+
+		const keySegments = key.split('/')
+		const urlSegments = urlPath.split('/')
+
+		if (keySegments.length !== urlSegments.length) continue
+
+		const pathParams: Record<string, string> = {}
+		let match = true
+
+		for (let i = 0; i < keySegments.length; i++) {
+			const paramMatch = keySegments[i].match(/^\{(.+)\}$/)
+			if (paramMatch) {
+				pathParams[paramMatch[1]] = urlSegments[i]
+			} else if (keySegments[i] !== urlSegments[i]) {
+				match = false
+				break
+			}
+		}
+
+		if (match) return { key, pathParams }
+	}
+
+	return null
+}
+
+export function endpointToUrl(endpointKey: string) {
+	if (endpointKey === CUSTOM_ENDPOINT_KEY) return '/api'
+
+	const config = ENDPOINTS[endpointKey]
+	let url = endpointKey
+
+	if (config?.pathParams) {
+		for (const [param, values] of Object.entries(config.pathParams)) {
+			url = url.replace(`{${param}}`, values[0]?.value ?? '')
+		}
+	}
+
+	return url
+}
