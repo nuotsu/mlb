@@ -6,17 +6,17 @@
 	const season = $derived(page.data.season as MLB.SeasonDateInfo)
 </script>
 
-<section class="space-y-lh px-ch py-lh text-center">
-	<div class="flex flex-wrap justify-evenly gap-lh">
+<section class="space-y-lh px-ch py-lh">
+	<div class="flex flex-wrap justify-center gap-lh">
 		<Countdown date={season.springStartDate} until="🌻 Spring Training" />
 		<Countdown date="2026-03-04" until="🌎 World Baseball Classic" />
 		<Countdown date={season.regularSeasonStartDate} until="🏟️ Opening Day" />
 	</div>
 
 	<article>
-		<h2 class="text-xl">{season.seasonId} Season</h2>
+		<h2 class="text-center h1">{season.seasonId} Season</h2>
 
-		<table class="mx-auto">
+		<table class="mx-auto text-left">
 			<tbody>
 				<tr>
 					<th>Spring Training</th>
@@ -53,13 +53,13 @@
 
 {#snippet linkedDate(date: string = '', view: 'week' | 'day' = 'week')}
 	<a class="decoration-dashed hover:underline" href="/schedule/{view}/{date}">
-		{formatDate(date + 'T00:00:00', { weekday: 'short', month: 'short', day: 'numeric' })}
+		{formatDate(date + 'T00:00:00', { weekday: 'short', month: 'numeric', day: 'numeric' })}
 	</a>
 {/snippet}
 
 <style>
 	th {
-		font-weight: bold;
+		color: color-mix(in srgb, var(--color-foreground), transparent);
 	}
 
 	th,

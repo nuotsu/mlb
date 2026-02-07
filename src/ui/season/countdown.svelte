@@ -32,7 +32,7 @@
 </script>
 
 {#if timeDiff > 0}
-	<article>
+	<article class="text-center">
 		<div class="flex items-baseline justify-center text-3xl">
 			{#each ['days', 'hr', 'min', 'sec'] as part, i}
 				{@const value = duration[i]}
@@ -44,7 +44,7 @@
 							{isDay ? value : value.toString().padStart(2, '0')}
 						</b>
 
-						<small class="text-sm uppercase">
+						<small class="text-xs text-current/50 uppercase">
 							{#if isDay}
 								{value === 1 ? 'day' : 'days'}
 							{:else}
