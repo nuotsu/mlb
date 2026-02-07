@@ -2,6 +2,7 @@
 	import { page } from '$app/state'
 	import { version } from '$pkg'
 	import {
+		ArrowsDiffIcon,
 		CalendarIcon,
 		CalendarTodayIcon,
 		FlagIcon,
@@ -49,6 +50,11 @@
 			href: '/player',
 			label: 'Player',
 			icon: HelmetIcon,
+		},
+		{
+			href: '/transactions',
+			label: 'Transactions',
+			icon: ArrowsDiffIcon,
 		},
 		// {
 		// 	href: '/chat',

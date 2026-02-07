@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ params }) => {
 				'people',
 				'id,fullName,firstName,lastName,useName,useLastName',
 				'primaryNumber,primaryPosition,abbreviation,active',
-				'currentTeam,preferredTeam,team,name,teamName',
+				'currentTeam,preferredTeam,team,name,clubName,teamName',
 				'stats,group,displayName,splits,season,stat',
 				'avg,homeRuns,rbi,hits,doubles,triples,baseOnBalls,stolenBases,slg',
 				'era,wins,losses,strikeOuts,baseOnBalls,hitBatsmen,saves,whip,inningsPitched',

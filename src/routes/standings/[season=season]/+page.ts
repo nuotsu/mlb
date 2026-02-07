@@ -11,7 +11,7 @@ export const load: PageLoad = async ({ params, url }) => {
 		fields: [
 			'records,division,nameShort',
 			'teamRecords,wins,losses,winningPercentage,sportGamesBack,magicNumber,streak,streakCode,leagueRank',
-			'team,id,name,teamName,abbreviation',
+			'team,id,name,clubName,teamName,abbreviation',
 		],
 		...searchParams,
 	})

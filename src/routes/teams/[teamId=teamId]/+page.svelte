@@ -25,11 +25,11 @@
 		<Logo class="size-[3lh] shrink-0 rounded-none bg-transparent" {team} />
 
 		<h1 class="grid">
-			{#if team.franchiseName !== team.teamName}
+			{#if team.franchiseName !== team.clubName}
 				<span>{team.franchiseName}</span>
 			{/if}
 
-			<strong class="text-3xl">{team.teamName}</strong>
+			<strong class="text-3xl">{team.clubName}</strong>
 		</h1>
 	</div>
 </Header>

@@ -36,10 +36,11 @@
 		class="line-clamp-1 break-all *:decoration-dashed group-has-[a:hover]/team:*:underline"
 		data-name
 	>
-		<span class="@max-[20ch]/team:hidden">{team.name}</span>
-		<span class="@max-[12ch]/team:hidden @min-[20ch]:hidden">{team.teamName}</span>
+		<span class="@max-[24ch]/team:hidden">{team.name}</span>
+		<span class="@max-[18ch]/team:hidden @min-[24ch]:hidden">{team.clubName}</span>
+		<span class="@max-[12ch]/team:hidden @min-[18ch]:hidden">{team.teamName}</span>
 		{#if team.abbreviation}
-			<span class="@max-[7ch]/team:hidden @min-[12ch]/team:hidden">{team.abbreviation}</span>
+			<span class="@max-[8ch]/team:hidden @min-[12ch]/team:hidden">{team.abbreviation}</span>
 		{/if}
 	</div>
 

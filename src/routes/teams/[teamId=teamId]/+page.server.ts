@@ -6,7 +6,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 	const searchParams = Object.fromEntries(url.searchParams.entries())
 
 	const teams = await fetchMLB<MLB.TeamsResponse>(`/api/v1/teams/${params.teamId}`, {
-		fields: ['teams,id,name,franchiseName,teamName', 'sport'],
+		fields: ['teams,id,name,franchiseName,clubName,teamName', 'sport'],
 	})
 
 	const sportId = (teams.teams[0] as MLB.TeamDetailed)?.sport?.id.toString()
@@ -18,7 +18,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 		fields: [
 			'dates,date',
 			'games,gamePk,gameDate',
-			'teams,home,away,team,id,name,teamName,abbreviation',
+			'teams,home,away,team,id,name,clubName,teamName,abbreviation',
 			'venue,sport,name',
 		],
 		hydrate: 'team',

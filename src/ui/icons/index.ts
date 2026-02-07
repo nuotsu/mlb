@@ -1,3 +1,4 @@
+export { default as ArrowsDiffIcon } from './arrows-diff.svelte'
 export { default as ArrowUpIcon } from './arrow-up.svelte'
 export { default as ArrowDownRightIcon } from './arrow-down-right.svelte'
 export { default as CalendarIcon } from './calendar.svelte'

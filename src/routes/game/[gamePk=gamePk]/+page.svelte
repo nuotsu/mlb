@@ -35,7 +35,7 @@
 </svelte:head>
 
 <Metadata
-	title="{[away.teamName, home.teamName].join(' @ ')} ({date}) | MLB.TheOhtani.com"
+	title="{[away.clubName, home.clubName].join(' @ ')} ({date}) | MLB.TheOhtani.com"
 	description="Game details for {[away.name, home.name].join(' at ')} on {date}"
 />
 
