@@ -50,11 +50,11 @@
 			label: 'Player',
 			icon: HelmetIcon,
 		},
-		// {
-		// 	href: '/chat',
-		// 	label: 'Ask Mitch',
-		// 	icon: RobotIcon,
-		// },
+		{
+			href: '/chat',
+			label: 'Ask Mitch',
+			icon: RobotIcon,
+		},
 		{
 			href: '/api',
 			label: 'Stats API Playground',

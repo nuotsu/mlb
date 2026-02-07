@@ -15,7 +15,7 @@
 
 <nav
 	class={cn(
-		'relative z-1 bg-neutral-100/50 p-ch whitespace-nowrap backdrop-blur-xs transition-colors [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width] dark:bg-neutral-800/50',
+		'relative z-1 bg-neutral-100/50 px-ch whitespace-nowrap backdrop-blur-xs transition-colors [grid-area:nav] sm:w-[calc(2ch+1rem)] sm:transition-[width] dark:bg-neutral-800/50',
 		'max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:transition-transform max-sm:active:transition-none max-sm:sidebar-open:translate-x-(--swipe-x) max-sm:sidebar-not-open:-translate-x-full',
 	)}
 	style:--swipe-x="{swipeX}px"
@@ -44,7 +44,7 @@
 <style>
 	nav {
 		padding-left: max(1ch, env(safe-area-inset-left));
-		padding-bottom: max(1ch, env(safe-area-inset-bottom));
+		padding-bottom: env(safe-area-inset-bottom);
 
 		:global(body:has(#sidebar-open:checked)) & {
 			width: calc(200px + env(safe-area-inset-right));
