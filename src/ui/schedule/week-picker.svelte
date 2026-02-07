@@ -5,10 +5,12 @@
 	let {
 		date,
 		onDateChange,
+		href = '/schedule/week',
 		class: className,
 	}: {
 		date: string
 		onDateChange?: (date: string) => void
+		href?: string
 		class?: string
 	} = $props()
 
@@ -36,10 +38,10 @@
 		/>
 	</label>
 
-	<a class="order-first button border-b-0 border-l" href="/schedule/week/{addWeek(-1)}">
+	<a class="order-first button border-b-0 border-l" href="{href}/{addWeek(-1)}">
 		<ChevronLeftIcon />
 	</a>
-	<a class="order-last button border-r border-b-0" href="/schedule/week/{addWeek()}">
+	<a class="order-last button border-r border-b-0" href="{href}/{addWeek()}">
 		<ChevronRightIcon />
 	</a>
 </fieldset>

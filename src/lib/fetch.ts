@@ -109,3 +109,25 @@ export async function fetchLinescore(gamePk: string | number) {
 		],
 	})
 }
+
+export async function fetchTransactions({
+	date,
+	startDate,
+	endDate,
+	...params
+}: {
+	date?: string
+	startDate?: string
+	endDate?: string
+} & Params) {
+	const weekStartDate = date ? getWeekDates(date).startDate : startDate
+	const weekEndDate = date ? getWeekDates(date).endDate : endDate
+
+	return await fetchMLB<MLB.TransactionsResponse>('/api/v1/transactions', {
+		sportId: '1',
+		startDate: formatDate(weekStartDate!, { locale: 'en-CA' }),
+		endDate: formatDate(weekEndDate!, { locale: 'en-CA' }),
+		fields: ['transactions,date,description,typeDesc,toTeam,fromTeam,id,name,person'],
+		...params,
+	})
+}
