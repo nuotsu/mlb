@@ -1,8 +1,8 @@
 import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
 
-export const load = async () => {
+export const load = async ({ params }) => {
 	return {
 		endpointKey: CUSTOM_ENDPOINT_KEY,
-		initialParams: {} as Record<string, string>,
+		initialParams: { custom: `/api/${params.version}/` },
 	}
 }
