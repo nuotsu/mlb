@@ -2,7 +2,10 @@
 	import { ENDPOINTS } from './constants'
 	import ParameterRow from './parameter-row.svelte'
 
-	let { endpoint }: { endpoint: string } = $props()
+	let {
+		endpoint,
+		initialParams = {},
+	}: { endpoint: string; initialParams?: Record<string, string> } = $props()
 
 	const config = $derived(ENDPOINTS[endpoint.split('?')[0]])
 </script>
@@ -26,7 +29,7 @@
 	{/if}
 
 	{#each entries as [parameter, values]}
-		<ParameterRow {parameter} {values} />
+		<ParameterRow {parameter} {values} initialValue={initialParams[parameter]} />
 	{/each}
 {/snippet}
 

@@ -3,17 +3,15 @@
 	import { cn } from '$lib/utils'
 	import { CUSTOM_ENDPOINT_PATH } from './constants'
 
-	let { parameter, values } = $props()
+	let { parameter, values, initialValue }: { parameter: string; values: Docs.EndpointParamProps[]; initialValue?: string } = $props()
 
 	let form = $derived(page.form)
 	let first = $derived(values[0])
 
 	let input = $derived(
-		parameter === 'custom'
-			? page.url.searchParams.has('endpoint')
-				? decodeURIComponent(page.url.searchParams.get('endpoint')!)
-				: (form?.entries[parameter] ?? CUSTOM_ENDPOINT_PATH)
-			: (form?.entries[parameter] ?? (first.empty ? '' : first.value)),
+		form?.entries[parameter]
+			?? initialValue
+			?? (parameter === 'custom' ? CUSTOM_ENDPOINT_PATH : (first.empty ? '' : first.value)),
 	)
 
 	let inputType = $derived(

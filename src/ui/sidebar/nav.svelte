@@ -56,7 +56,7 @@
 		// 	icon: RobotIcon,
 		// },
 		{
-			href: '/api/playground',
+			href: '/api',
 			label: 'Stats API Playground',
 			icon: JsonIcon,
 		},
