@@ -26,7 +26,7 @@
 	const isGamePage = $derived(page.url.pathname === `/game/${game.gamePk}`)
 </script>
 
-<article class="group/game grid items-end {className}" data-gamePk={game.gamePk}>
+<article class="group/game @container/game grid items-end {className}" data-gamePk={game.gamePk}>
 	<div
 		class="relative grid h-6 place-content-center overflow-x-clip text-center text-sm tabular-nums *:leading-none group-has-[[style*=linescore]]/game:h-12"
 		style:grid-area="status"
