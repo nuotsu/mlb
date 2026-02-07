@@ -33,8 +33,8 @@
 
 <Header title="Weekly Schedule" crumbs={[{ name: 'Weekly Schedule' }]}>
 	{#snippet after()}
-		<div class="mx-auto flex items-center gap-ch">
-			<WeekPicker date={currentDate} {onDateChange} />
+		<div class="mx-auto flex flex-wrap items-center gap-ch text-center">
+			<WeekPicker class="grow" date={currentDate} {onDateChange} />
 			<ToggleAllDetails />
 		</div>
 	{/snippet}

@@ -4,10 +4,10 @@
 	import Header from '$ui/header.svelte'
 	import { InfoIcon, LoadingIcon, SendIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
-	import { CUSTOM_ENDPOINT_KEY, ENDPOINTS } from '$ui/playground/constants'
-	import EndpointSelect from '$ui/playground/endpoint-select.svelte'
+	import { ENDPOINTS } from '$ui/playground/constants'
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
 	import Response from '$ui/playground/response.svelte'
+	import SelectEndpoint from '$ui/playground/select-endpoint.svelte'
 	import posthog from 'posthog-js'
 
 	let { children } = $props()
@@ -33,7 +33,7 @@
 			<input name="distinctId" value={distinctId} type="hidden" />
 
 			<div class="flex flex-wrap items-stretch gap-ch max-sm:flex-col">
-				<EndpointSelect bind:value={endpoint} />
+				<SelectEndpoint bind:value={endpoint} />
 
 				<button class="action max-sm:grow max-sm:active:scale-95 sm:order-first" type="submit">
 					Send

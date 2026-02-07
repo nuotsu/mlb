@@ -8,6 +8,7 @@
 	import { ArrowsDiffIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
 	import WeekPicker from '$ui/schedule/week-picker.svelte'
+	import SelectTeam from '$ui/select-team.svelte'
 	import Logo from '$ui/team/logo.svelte'
 	import ToggleAllDetails from '$ui/toggle-all-details.svelte'
 	import type { PageProps } from './$types'
@@ -42,8 +43,9 @@
 
 <Header title="Transactions" crumbs={[{ name: 'Transactions' }]}>
 	{#snippet after()}
-		<div class="mx-auto flex items-center gap-ch">
-			<WeekPicker date={currentDate} {onDateChange} href="/transactions" />
+		<div class="mx-auto flex flex-wrap items-center justify-center gap-ch text-center">
+			<SelectTeam class="button grow" />
+			<WeekPicker class="grow" date={currentDate} {onDateChange} href="/transactions" />
 			<ToggleAllDetails />
 		</div>
 	{/snippet}
@@ -59,7 +61,12 @@
 
 				<article class="flex flex-wrap gap-x-ch gap-y-[.5ch] px-ch">
 					<label class="-order-1 ml-auto">
-						<input name={date} value="all" type="radio" />
+						<input
+							name={date}
+							value="all"
+							type="radio"
+							checked={page.url.searchParams.has('teamId')}
+						/>
 						All ({txns.length})
 					</label>
 
@@ -70,9 +77,7 @@
 						</label>
 
 						<ul class="w-full anim-fade">
-							{$inspect(ts)}
-
-							{#each ts.sort(sortByTeam) as { toTeam, fromTeam, person, description }}
+							{#each ts.sort(sortByTeam) as { id, toTeam, fromTeam, person, description } (id)}
 								<li class="grid grid-cols-[auto_1fr] gap-x-ch border-b border-current/10 py-1">
 									<span class="flex items-center">
 										{#if toTeam}

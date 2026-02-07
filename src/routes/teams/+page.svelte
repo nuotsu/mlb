@@ -3,7 +3,7 @@
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
-	import SportsSelect from '$ui/sports-select.svelte'
+	import SelectSport from '$ui/select-sport.svelte'
 	import Logo from '$ui/team/logo.svelte'
 	import ToggleAllDetails from '$ui/toggle-all-details.svelte'
 	import type { PageProps } from './$types'
@@ -31,7 +31,7 @@
 >
 	{#snippet after()}
 		<div class="mx-auto flex items-center gap-ch">
-			<SportsSelect class="button w-full shrink text-center" />
+			<SelectSport class="button w-full shrink text-center" />
 			<ToggleAllDetails />
 		</div>
 	{/snippet}
