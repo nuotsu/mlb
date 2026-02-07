@@ -1,6 +1,5 @@
-import { playgroundAction } from '$ui/playground/action'
-import type { Actions } from './$types'
+import { redirect } from '@sveltejs/kit'
 
-export const actions = {
-	default: async ({ request }) => playgroundAction({ request }),
-} satisfies Actions
+export const load = async () => {
+	redirect(302, '/api/v1')
+}
