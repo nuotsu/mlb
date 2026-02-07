@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatDate, getToday, slash } from '$lib/temporal'
+	import Empty from '$ui/empty.svelte'
 	import StyledTeam from '$ui/team/styled-team.svelte'
 
 	let {
@@ -27,60 +28,62 @@
 </script>
 
 <article class="space-y-ch">
-	<h2 class="h2 max-sm:px-ch">Schedule</h2>
+	{#if byMonth.length > 0}
+		<h2 class="h2 max-sm:px-ch">Schedule</h2>
 
-	<div class="space-y-px">
-		{#each byMonth as [month, dates], i (month)}
-			<details class="accordion" name="schedule" open={month === currentMonth || i === 0}>
-				<summary
-					class="sticky-below-header z-1 flex items-center gap-ch backdrop-blur-xs max-sm:px-ch"
-				>
-					{formatDate(slash(month + '-01'), { month: 'long', year: 'numeric' })}
-				</summary>
+		<div class="space-y-px">
+			{#each byMonth as [month, dates], i (month)}
+				<details class="accordion" name="schedule" open={month === currentMonth || i === 0}>
+					<summary class="sticky-below-header z-1 backdrop-blur-xs max-sm:px-ch">
+						{formatDate(slash(month + '-01'), { month: 'long', year: 'numeric' })}
+					</summary>
 
-				<ol class="isolate grid overflow-x-auto whitespace-nowrap">
-					{#each dates as { date, games } (date)}
-						{#each games as { gamePk, gameDate, teams, venue } (gamePk)}
-							{@const atHome = teams.home.team.id === team.id}
-							<li class="col-span-full grid grid-cols-subgrid">
-								<a
-									class="group/game col-span-full grid grid-cols-subgrid items-center *:px-[.5ch]"
-									href="/game/{gamePk}"
-								>
-									<time class="contents text-center text-sm *:px-[.5ch]" datetime={gameDate}>
-										<span class="decoration-dashed group-hover/game:underline">
-											{formatDate(slash(date), {
-												weekday: 'short',
-												month: 'numeric',
-												day: 'numeric',
-											})}
+					<ol class="isolate grid overflow-x-auto whitespace-nowrap">
+						{#each dates as { date, games } (date)}
+							{#each games as { gamePk, gameDate, teams, venue } (gamePk)}
+								{@const atHome = teams.home.team.id === team.id}
+								<li class="col-span-full grid grid-cols-subgrid">
+									<a
+										class="group/game col-span-full grid grid-cols-subgrid items-center *:px-[.5ch]"
+										href="/game/{gamePk}"
+									>
+										<time class="contents text-center text-sm *:px-[.5ch]" datetime={gameDate}>
+											<span class="decoration-dashed group-hover/game:underline">
+												{formatDate(slash(date), {
+													weekday: 'short',
+													month: 'numeric',
+													day: 'numeric',
+												})}
+											</span>
+
+											<span>
+												{formatDate(gameDate, {
+													hour: 'numeric',
+													minute: '2-digit',
+												})}
+											</span>
+										</time>
+
+										<span class="pr-ch! text-center text-sm">
+											{atHome ? 'vs' : '@'}
 										</span>
 
-										<span>
-											{formatDate(gameDate, {
-												hour: 'numeric',
-												minute: '2-digit',
-											})}
-										</span>
-									</time>
-
-									<span class="pr-ch! text-center text-sm">
-										{atHome ? 'vs' : '@'}
-									</span>
-
-									<StyledTeam class="pl-[.5ch]" team={atHome ? teams.away.team : teams.home.team}>
-										<small class="line-clamp-1 pl-ch text-[x-small] break-all text-current/75">
-											{venue.name}
-										</small>
-									</StyledTeam>
-								</a>
-							</li>
+										<StyledTeam class="pl-[.5ch]" team={atHome ? teams.away.team : teams.home.team}>
+											<small class="line-clamp-1 pl-ch text-[x-small] break-all text-current/75">
+												{venue.name}
+											</small>
+										</StyledTeam>
+									</a>
+								</li>
+							{/each}
 						{/each}
-					{/each}
-				</ol>
-			</details>
-		{/each}
-	</div>
+					</ol>
+				</details>
+			{/each}
+		</div>
+	{:else}
+		<Empty>No schedule</Empty>
+	{/if}
 </article>
 
 <style>

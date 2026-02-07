@@ -8,14 +8,12 @@
 		children,
 		after,
 		crumbs,
-		afterCrumb,
 	}: {
 		title?: string
 		class?: string
 		children?: Snippet
 		after?: Snippet
 		crumbs?: App.Breadcrumb[]
-		afterCrumb?: Snippet
 	} = $props()
 
 	let offsetHeight = $state(0)
@@ -29,7 +27,7 @@
 	class="sticky top-0 z-10 space-y-[.5ch] border-b border-current/10 bg-background/50 p-ch backdrop-blur-xs dark:border-current/25 {className}"
 	bind:offsetHeight
 >
-	<Breadcrumbs {crumbs} after={afterCrumb} />
+	<Breadcrumbs {crumbs} />
 
 	<div class="flex flex-wrap justify-between gap-x-lh gap-y-ch">
 		<hgroup class="grow">

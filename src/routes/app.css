@@ -216,6 +216,7 @@
 @utility accordion {
 	summary {
 		list-style: none;
+		@apply flex items-center gap-ch;
 
 		&::-webkit-details-marker {
 			display: none;

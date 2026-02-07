@@ -21,9 +21,7 @@
 		{@render list(pitchers, 'Pitchers')}
 
 		<details class="accordion">
-			<summary class="sticky-below-header z-1 flex items-center gap-ch backdrop-blur-xs">
-				Coaches
-			</summary>
+			<summary class="sticky-below-header z-1 backdrop-blur-xs">Coaches</summary>
 
 			<ul class="grid max-sm:px-ch">
 				{#each coaches as { person, jerseyNumber, job } (person.id)}
@@ -51,9 +49,9 @@
 	</div>
 </article>
 
-{#snippet list(arr: MLB.Roster[], label: string, open?: boolean)}
+{#snippet list(arr: MLB.Roster[], label: string)}
 	<details class="accordion" open>
-		<summary class="sticky-below-header z-1 flex items-center gap-ch backdrop-blur-xs">
+		<summary class="sticky-below-header z-1 backdrop-blur-xs">
 			{label}
 		</summary>
 

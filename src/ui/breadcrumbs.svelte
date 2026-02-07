@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state'
-	import type { Snippet } from 'svelte'
 
 	let {
 		crumbs = [],
-		after,
 	}: {
 		crumbs?: App.Breadcrumb[]
-		after?: Snippet
 	} = $props()
 
 	const list: App.Breadcrumb[] = $derived(
@@ -34,12 +31,6 @@
 		{#each list as item, i}
 			{@render crumb(item, i + 1)}
 		{/each}
-
-		{#if after}
-			<li>
-				{@render after?.()}
-			</li>
-		{/if}
 	</ol>
 </nav>
 

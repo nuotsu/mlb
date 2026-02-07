@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import TeamSeason from '$ui/schedule/team-season.svelte'
@@ -36,6 +37,8 @@
 <section class="grid gap-lh py-lh sm:grid-cols-2 sm:px-ch">
 	{#if data.roster.roster}
 		<Roster roster={data.roster.roster} coaches={data.coaches.roster} />
+	{:else}
+		<Empty>No roster</Empty>
 	{/if}
 
 	<TeamSeason schedule={data.schedule} {team} />
