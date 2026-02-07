@@ -107,17 +107,17 @@
 	article {
 		grid-template:
 			'status description' auto
-			'status	boxscore' auto / auto 1fr;
+			'status	boxscore' auto / 7ch 1fr;
 
 		&:global(:has([style*='linescore'])) {
 			grid-template:
 				'status description linescore' auto
-				'status	boxscore linescore' auto / 8ch 16ch minmax(18ch, 1fr);
+				'status	boxscore linescore' auto / 7ch 16ch minmax(18ch, 1fr);
 
 			@media (width < 32rem) {
 				grid-template:
 					'. description description' auto
-					'status boxscore linescore' auto / 8ch 7ch 1fr;
+					'status boxscore linescore' auto / 7ch 6ch 1fr;
 			}
 		}
 	}

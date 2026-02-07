@@ -6,20 +6,28 @@
 
 {#if game.status.abstractGameState === 'Final'}
 	<div class="grid text-left">
-		<StyledTeam team={boxscore.teams.away.team} class="pr-ch">
+		<StyledTeam team={boxscore.teams.away.team} record={game.teams.away.leagueRecord}>
 			{@render score(game.teams.away.score)}
 		</StyledTeam>
-		<StyledTeam team={boxscore.teams.home.team} class="pr-ch">
+		<StyledTeam team={boxscore.teams.home.team} record={game.teams.home.leagueRecord}>
 			{@render score(game.teams.home.score)}
 		</StyledTeam>
 	</div>
 {:else}
 	<div class="grid grid-cols-2 text-center">
-		<StyledTeam team={boxscore.teams.away.team} class="flex-row-reverse pl-ch" />
-		<StyledTeam team={boxscore.teams.home.team} class="pr-ch" />
+		<StyledTeam
+			class="flex-row-reverse pl-[.5ch] *:data-name:flex-row-reverse *:data-name:justify-between"
+			team={boxscore.teams.away.team}
+			record={game.teams.away.leagueRecord}
+		/>
+		<StyledTeam
+			class="pr-[.5ch] *:data-name:justify-between"
+			team={boxscore.teams.home.team}
+			record={game.teams.home.leagueRecord}
+		/>
 	</div>
 {/if}
 
 {#snippet score(score?: number)}
-	<strong class="shrink-0 text-right font-sans tabular-nums">{score}</strong>
+	<strong class="ml-auto shrink-0 pr-[.5ch] text-right font-sans tabular-nums">{score}</strong>
 {/snippet}
