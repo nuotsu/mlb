@@ -14,10 +14,21 @@
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
 
 	let fallback = $state(false)
+	let srcsetValid = $state(false)
+
+	$effect(() => {
+		if (!srcset) return
+
+		const img = new Image()
+		img.src = srcset
+		img.onload = () => (srcsetValid = true)
+	})
 </script>
 
 <picture class="shrink-0">
-	<source {srcset} media={colorSchemeStore.colorScheme === 'dark' ? undefined : '()'} />
+	{#if srcsetValid}
+		<source {srcset} media={colorSchemeStore.colorScheme === 'dark' ? undefined : '()'} />
+	{/if}
 
 	<img
 		class="overflow-hidden text-transparent {className}"

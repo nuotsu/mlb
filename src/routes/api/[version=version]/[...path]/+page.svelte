@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { enhance } from '$app/forms'
+	import Header from '$ui/header.svelte'
 	import { InfoIcon, LoadingIcon, SendIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
 	import { CUSTOM_ENDPOINT_KEY, ENDPOINTS } from '$ui/playground/constants'
@@ -9,9 +10,9 @@
 	import posthog from 'posthog-js'
 	import type { PageProps } from './$types'
 
-	let { form }: PageProps = $props()
+	let { data, form }: PageProps = $props()
 
-	let endpoint = $derived(form?.endpointPath ?? CUSTOM_ENDPOINT_KEY)
+	let endpoint = $derived(form?.endpointPath ?? data.endpointKey)
 	let distinctId = $state('anonymous')
 
 	$effect(() => {
@@ -24,13 +25,11 @@
 	description="A playground for the official MLB Stats API."
 />
 
-<section class="flex flex-col sm:max-h-dvh">
-	<header class="p-ch pb-0 text-center">
-		<h1>Stats API Playground</h1>
-	</header>
+<Header title="Stats API Playground" crumbs={[{ name: 'Stats API Playground' }]} />
 
-	<article class="top-0 z-1 bg-background sm:sticky">
-		<form class="space-ch mx-auto grid max-w-5xl gap-ch p-ch" method="POST" use:enhance>
+<section class="flex flex-col pt-lh sm:max-h-[calc(100dvh-var(--header-height))]">
+	<article class="top-0 z-1 bg-background">
+		<form class="grid gap-ch px-ch" method="POST" use:enhance>
 			<input name="distinctId" value={distinctId} type="hidden" />
 
 			<div class="flex flex-wrap items-stretch gap-ch max-sm:flex-col">
@@ -50,7 +49,7 @@
 				</div>
 			{/if}
 
-			<ParametersTable {endpoint} />
+			<ParametersTable {endpoint} initialParams={data.initialParams} />
 		</form>
 	</article>
 

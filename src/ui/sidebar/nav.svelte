@@ -8,6 +8,7 @@
 		HelmetIcon,
 		JerseyIcon,
 		JsonIcon,
+		RankIcon,
 		RobotIcon,
 	} from '$ui/icons'
 	import type { Component } from 'svelte'
@@ -35,6 +36,11 @@
 			icon: FlagIcon,
 		},
 		{
+			href: '/stats',
+			label: 'Stat Leaders',
+			icon: RankIcon,
+		},
+		{
 			href: '/teams',
 			label: 'Teams',
 			icon: JerseyIcon,
@@ -44,13 +50,13 @@
 			label: 'Player',
 			icon: HelmetIcon,
 		},
+		// {
+		// 	href: '/chat',
+		// 	label: 'Ask Mitch',
+		// 	icon: RobotIcon,
+		// },
 		{
-			href: '/chat',
-			label: 'Ask Mitch',
-			icon: RobotIcon,
-		},
-		{
-			href: '/api/playground',
+			href: '/api',
 			label: 'Stats API Playground',
 			icon: JsonIcon,
 		},
@@ -81,12 +87,14 @@
 		<ul class="mt-auto text-sm sm:sidebar-closed-hidden">
 			<li><ToggleColorScheme /></li>
 			<li>
-				<a href="https://github.com/nuotsu/mlb">
-					View on GitHub
-					<small class="text-current/50">v{version}</small>
-				</a>
+				<a href="https://github.com/nuotsu/mlb"> View on GitHub </a>
 			</li>
 			<li><a href="https://nuotsu.dev">Built by nuotsu</a></li>
+			<li>
+				<small class="text-[xx-small] font-extralight text-current/50">
+					@ {new Date().getFullYear()} MLB.TheOhtani.com. v{version}
+				</small>
+			</li>
 		</ul>
 	</div>
 </Drawer>

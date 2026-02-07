@@ -2,6 +2,7 @@
 	import { page } from '$app/state'
 	import { fetchMLB } from '$lib/fetch'
 	import { debounce } from '$lib/utils'
+	import Empty from '$ui/empty.svelte'
 	import { SearchIcon } from '$ui/icons'
 	import Loading from '$ui/loading.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
@@ -51,9 +52,7 @@
 	{@html `<script type="application/ld+json">${JSON.stringify(searchActionSchema)}<\/script>`}
 </svelte:head>
 
-<search class="mx-auto max-w-3xl space-y-ch">
-	<h1 class="text-center">Player Search</h1>
-
+<search class="space-y-ch">
 	<form role="search">
 		<label class="grid *:col-span-full *:row-span-full">
 			<SearchIcon class="mx-[.5ch] my-auto size-lh shrink-0" />
@@ -62,7 +61,7 @@
 				name="query"
 				class="input h-[1.5lh] w-full px-ch pl-[1.5lh]"
 				type="search"
-				placeholder="Enter a player name..."
+				placeholder="Search for a player..."
 				pattern="\w+"
 				bind:value={query}
 				oninput={debounce(search)}
@@ -75,27 +74,31 @@
 			{#await promise}
 				<Loading>Searching players...</Loading>
 			{:then results}
-				<ul>
-					{#each results.people as person (person.id)}
-						<li>
-							<a class="group/player flex items-center gap-ch" href="/player/{person.id}">
-								<Headshot {person} size={36} class="size-lh shrink-0" />
+				{#if results.people.length}
+					<ul>
+						{#each results.people as person (person.id)}
+							<li>
+								<a class="group/player flex items-center gap-ch" href="/player/{person.id}">
+									<Headshot {person} size={36} class="size-lh shrink-0" />
 
-								<small class="inline-block w-[3ch] text-center">
-									{person.primaryPosition.abbreviation}
-								</small>
+									<small class="inline-block w-[3ch] text-center">
+										{person.primaryPosition.abbreviation}
+									</small>
 
-								<span class="decoration-dashed group-hover/player:underline">
-									{person.fullName}
-								</span>
+									<span class="decoration-dashed group-hover/player:underline">
+										{person.fullName}
+									</span>
 
-								{#if person.primaryNumber}
-									<span>#{person.primaryNumber}</span>
-								{/if}
-							</a>
-						</li>
-					{/each}
-				</ul>
+									{#if person.primaryNumber}
+										<span>#{person.primaryNumber}</span>
+									{/if}
+								</a>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<Empty>No players found</Empty>
+				{/if}
 			{/await}
 		</output>
 	{/if}

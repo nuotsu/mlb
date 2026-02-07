@@ -2,6 +2,13 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { getToday } from '$lib/temporal'
+	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
+
+	let {
+		class: className,
+	}: {
+		class?: string
+	} = $props()
 
 	let year = $derived(Number(page.params.season ?? getToday().getFullYear()))
 
@@ -10,30 +17,29 @@
 	}
 </script>
 
-<fieldset class="flex flex-col items-center text-center">
-	<label for="year" class="block text-sm leading-rlh">Season</label>
+<fieldset class="flex justify-center text-center {className}">
+	<label class="min-w-[8ch]">
+		<input
+			class="min-w-[6ch] appearance-none text-center decoration-dashed hover:underline"
+			id="year"
+			type="number"
+			min="1876"
+			max={getToday().getFullYear()}
+			value={year}
+			onchange={(e) => goto(`/standings/${e.currentTarget.value}`)}
+		/>
+	</label>
 
-	<div class="flex justify-center">
-		<label class="min-w-[8ch]">
-			<input
-				class="min-w-[6ch] appearance-none text-center decoration-dashed hover:underline"
-				id="year"
-				type="number"
-				min="1876"
-				max={getToday().getFullYear()}
-				value={year}
-				onchange={(e) => goto(`/standings/${e.currentTarget.value}`)}
-			/>
-		</label>
-
-		<a class="order-first" href="/standings/{addYear(-1)}">&lt;</a>
-		<a class="order-last" href="/standings/{addYear()}">&gt;</a>
-	</div>
+	<a class="order-first button border-b-0 border-l" href="/standings/{addYear(-1)}"
+		><ChevronLeftIcon /></a
+	>
+	<a class="order-last button border-r border-b-0" href="/standings/{addYear()}"
+		><ChevronRightIcon /></a
+	>
 </fieldset>
 
 <style>
-	label,
-	a {
+	label {
 		padding-inline: 1ch;
 
 		&:hover {

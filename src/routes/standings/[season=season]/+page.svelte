@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import { cn } from '$lib/utils'
+	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import YearPicker from '$ui/schedule/year-picker.svelte'
 	import StyledTeam from '$ui/team/styled-team.svelte'
@@ -14,9 +15,11 @@
 	description="MLB standings for the {page.params.season} season"
 />
 
-<header class="p-ch">
-	<YearPicker />
-</header>
+<Header title="Standings" crumbs={[{ name: 'Standings' }]}>
+	{#snippet after()}
+		<YearPicker class="mx-auto" />
+	{/snippet}
+</Header>
 
 <section
 	class={cn('items-start gap-lh p-ch has-[table]:grid', {
@@ -27,7 +30,7 @@
 	{#each data.standings.records as { division, teamRecords } (division?.id)}
 		<table class="w-full text-center">
 			<thead>
-				<tr class="text-sm text-current/25">
+				<tr class="text-sm text-current/50">
 					<th class="line-clamp-1 break-all text-foreground">{division?.nameShort}</th>
 					<th class="w-[8ch]">W-L</th>
 					<th class="w-[5ch]">%</th>
@@ -38,9 +41,9 @@
 			</thead>
 			<tbody>
 				{#each teamRecords as { team, wins, losses, winningPercentage, sportGamesBack, streak, leagueRank } (team.id)}
-					<tr>
-						<td class="sticky left-0 min-w-[3.5ch]">
-							<StyledTeam class="flex-row-reverse pl-ch text-left" {team} />
+					<tr class="hover:[&>td]:bg-foreground/10">
+						<td class="sticky left-0 min-w-lh @min-[7ch]:min-w-[3.5ch]">
+							<StyledTeam class="text-left" {team} linked />
 						</td>
 						<td class="flex justify-center font-sans tabular-nums">
 							<span class="positive">{wins}</span>
@@ -53,22 +56,23 @@
 								Number(winningPercentage) >= 0.5 ? 'positive' : 'negative',
 							)}>{winningPercentage}</td
 						>
-						<td class={cn('font-sans tabular-nums', sportGamesBack === '-' && 'text-current/25')}
-							>{sportGamesBack}</td
-						>
+						<td class={cn('font-sans tabular-nums', sportGamesBack === '-' && 'text-current/50')}>
+							{sportGamesBack}
+						</td>
 						<td
-							class={cn('font-sans tabular-nums', {
-								positive: streak?.streakCode?.startsWith('W'),
-								negative: streak?.streakCode?.startsWith('L'),
-							})}>{streak?.streakCode}</td
+							class="font-sans tabular-nums"
+							class:positive={streak?.streakCode?.startsWith('W')}
+							class:negative={streak?.streakCode?.startsWith('L')}
 						>
+							{streak?.streakCode}
+						</td>
 						<td class="font-sans tabular-nums">{leagueRank}</td>
 					</tr>
 				{/each}
 			</tbody>
 		</table>
 	{:else}
-		<div class="text-center">No standings</div>
+		<div class="text-center">No standings for {page.params.season} season</div>
 	{/each}
 </section>
 

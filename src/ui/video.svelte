@@ -30,6 +30,7 @@
 				const player = new Hls()
 				player.loadSource(hls)
 				player.attachMedia(video)
+				player.subtitleTrack = -1
 				return () => player.destroy()
 			}
 		} else if (mp4) {
@@ -38,6 +39,4 @@
 	})
 </script>
 
-<video bind:this={video} class={className} {poster} playsinline controls {...props}>
-	<track kind="captions" />
-</video>
+<video bind:this={video} class={className} {poster} playsinline controls {...props}></video>

@@ -7,6 +7,11 @@ declare global {
 		// interface PageData {}
 		// interface PageState {}
 		// interface Platform {}
+
+		interface Breadcrumb {
+			href?: string
+			name?: string
+		}
 	}
 
 	namespace Docs {

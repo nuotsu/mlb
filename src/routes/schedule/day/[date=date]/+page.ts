@@ -1,26 +1,16 @@
-import { fetchMLB } from '$lib/fetch'
-import type { PageLoad } from './$types'
+import { fetchDaySchedule } from '$lib/fetch'
+import { getToday, slash } from '$lib/temporal'
+import { fetchSeasonProgress } from './fetch-season-progress'
 
-export const load: PageLoad = async ({ params, url }) => {
+export const load = async ({ params, url }) => {
 	const sportId = url.searchParams.get('sportId') || '1'
+	const year = (new Date(slash(params.date)).getFullYear() ?? getToday().getFullYear()).toString()
 
-	const schedule = await fetchMLB<MLB.ScheduleResponse>('/api/v1/schedule', {
-		sportId,
-		date: params.date,
-		fields: [
-			'totalGames,dates,date,venue,description,seriesGameNumber,gamesInSeries',
-			'games,gamePk,gameType,gameDate',
-			'status,abstractGameState,detailedState,reason',
-			'flags,noHitter,perfectGame',
-			'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
-			// linescore
-			'linescore,currentInning,scheduledInnings',
-			'innings,num,runs,hits,errors,leftOnBase',
-		],
-		hydrate: 'teams,flags,linescore',
-	})
+	const schedule = await fetchDaySchedule(params.date, sportId)
+	const seasonProgress = await fetchSeasonProgress(sportId, year, schedule)
 
 	return {
 		schedule,
+		seasonProgress,
 	}
 }

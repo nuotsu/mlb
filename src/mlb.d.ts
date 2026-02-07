@@ -415,6 +415,20 @@ declare global {
 			abbreviation: string
 		}
 
+		interface PositionMeta {
+			shortName: string
+			fullName: string
+			abbrev: string
+			code: string
+			type: string
+			formalName: string
+			displayName: string
+			pitcher: boolean
+			gamePosition: boolean
+			fielder: boolean
+			outfield: boolean
+		}
+
 		/**
 		 * Batting side information
 		 */
@@ -457,11 +471,14 @@ declare global {
 			stat: Record<string, number | string>
 			team?: Team
 			player?: Person
+			position?: Position
 			league?: League
 			sport?: Sport
 			gameType?: string
 			numTeams?: number
 			rank?: number
+			name?: string
+			zones?: HotColdZone[]
 		}
 
 		/**
@@ -469,6 +486,16 @@ declare global {
 		 */
 		interface StatType {
 			displayName: string
+		}
+
+		/**
+		 * Hot/Cold zone information
+		 */
+		interface HotColdZone {
+			zone: string
+			color: string
+			temp: string
+			value: string
 		}
 
 		// Game Types
@@ -1285,6 +1312,19 @@ declare global {
 			result: {
 				description: string
 			}
+			about: {
+				atBatIndex: number
+				halfInning: 'top' | 'bottom'
+				isTopInning: boolean
+				inning: number
+				startTime: string
+				endTime: string
+				isComplete: boolean
+				isScoringPlay: boolean
+				hasReview: boolean
+				hasOut: boolean
+				captivatingIndex: number
+			}
 			homeTeamWinProbability: number
 			awayTeamWinProbability: number
 			homeTeamWinProbabilityAdded: number
@@ -1535,6 +1575,29 @@ declare global {
 			pct?: string
 		}
 
+		// Baseball Stats Types
+
+		/**
+		 * Individual baseball stat definition
+		 */
+		interface BaseballStat {
+			name: string
+			lookupParam?: string
+			isCounting: boolean
+			label?: string
+			statGroups: StatGroupRef[]
+			orgTypes: unknown[]
+			highLowTypes: unknown[]
+			streakLevels: unknown[]
+		}
+
+		/**
+		 * Reference to a stat group
+		 */
+		interface StatGroupRef {
+			displayName: 'hitting' | 'pitching' | 'fielding' | 'catching' | 'game'
+		}
+
 		// Stats Leaders Types
 
 		/**
@@ -1670,6 +1733,13 @@ declare global {
 			sortOrder?: number
 			numPlayoffTeams?: number
 			active?: boolean
+		}
+
+		/**
+		 * Sports response
+		 */
+		interface SportsResponse extends ApiResponse<Sport[]> {
+			sports: Sport[]
 		}
 
 		/**

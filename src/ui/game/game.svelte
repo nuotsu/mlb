@@ -26,7 +26,7 @@
 	const isGamePage = $derived(page.url.pathname === `/game/${game.gamePk}`)
 </script>
 
-<article class="group/game grid items-end {className}" data-gamePk={game.gamePk}>
+<article class="group/game @container/game grid items-end {className}" data-gamePk={game.gamePk}>
 	<div
 		class="relative grid h-6 place-content-center overflow-x-clip text-center text-sm tabular-nums *:leading-none group-has-[[style*=linescore]]/game:h-12"
 		style:grid-area="status"
@@ -48,19 +48,20 @@
 		{/if}
 	</div>
 
-	{#if !isGamePage}
-		<span
-			class="group/description grid h-rlh items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
-			style:grid-area="description"
-		>
+	<span
+		class="group/description grid items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
+		class:h-rlh={!isGamePage}
+		style:grid-area="description"
+	>
+		{#if !isGamePage}
 			{#if showDescription}
-				<span>
-					{#if game.description}
-						{game.description}
-					{:else if game.seriesGameNumber && game.gamesInSeries}
+				{#if game.description}
+					<span>{game.description}</span>
+				{:else if game.seriesGameNumber && game.gamesInSeries && game.gamesInSeries > 1}
+					<span class="text-current/50">
 						Series {game.seriesGameNumber} of {game.gamesInSeries}
-					{/if}
-				</span>
+					</span>
+				{/if}
 			{/if}
 
 			{#if flags?.perfectGame || flags?.noHitter}
@@ -74,8 +75,8 @@
 					{/if}
 				</strong>
 			{/if}
-		</span>
-	{/if}
+		{/if}
+	</span>
 
 	<div style:grid-area="boxscore">
 		{#if boxscore}
@@ -105,18 +106,18 @@
 <style>
 	article {
 		grid-template:
-			'status description' 1fr
-			'status	boxscore' auto / auto 1fr;
+			'status description' auto
+			'status	boxscore' auto / 7ch 1fr;
 
 		&:global(:has([style*='linescore'])) {
 			grid-template:
-				'status description linescore' 1lh
-				'status	boxscore linescore' auto / 8ch 16ch minmax(18ch, 1fr);
+				'status description linescore' auto
+				'status	boxscore linescore' auto / 7ch 16ch minmax(18ch, 1fr);
 
 			@media (width < 32rem) {
 				grid-template:
-					'. description description' 1lh
-					'status boxscore linescore' auto / 8ch 7ch 1fr;
+					'. description description' auto
+					'status boxscore linescore' auto / 7ch 6ch 1fr;
 			}
 		}
 	}

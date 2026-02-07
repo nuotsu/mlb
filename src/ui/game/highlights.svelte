@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CollapseIcon, ExpandIcon } from '$ui/icons'
+	import { CollapseHorizontalIcon, ExpandHorizontalIcon } from '$ui/icons'
 	import Video from '$ui/video.svelte'
 
 	let { content }: { content: MLB.GameContent } = $props()
@@ -19,6 +19,7 @@
 	{#each highlights as { title, items }, i}
 		<div class="group/highlight contents">
 			<input
+				class="sr-only"
 				name="highlights"
 				id="highlights-{i}"
 				type="radio"
@@ -29,7 +30,6 @@
 						if (video.id !== `highlights-${i}`) video.pause()
 					})
 				}}
-				hidden
 			/>
 
 			<label
@@ -62,8 +62,8 @@
 		class="group/theater absolute right-0 bottom-0 grid h-lh place-content-center not-hover:text-current/50 not-hover:transition-colors max-md:hidden"
 		title="Theater mode (t)"
 	>
-		<input id="theater-mode" type="checkbox" bind:checked={theaterMode} hidden />
-		<ExpandIcon class="group-has-checked/theater:hidden" />
-		<CollapseIcon class="group-not-has-checked/theater:hidden" />
+		<input class="sr-only" id="theater-mode" type="checkbox" bind:checked={theaterMode} />
+		<ExpandHorizontalIcon class="group-has-checked/theater:hidden" />
+		<CollapseHorizontalIcon class="group-not-has-checked/theater:hidden" />
 	</label>
 </article>

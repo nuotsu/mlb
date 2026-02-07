@@ -16,17 +16,22 @@ export const load: PageServerLoad = async ({ params }) => {
 
 	const game = schedule.dates[0].games.find((game) => game.gamePk === Number(params.gamePk))!
 
-	const feedLive = await fetchfeedLive(params.gamePk)
-	const boxscore = await fetchBoxscore(params.gamePk)
-
-	const winProbability = await fetchMLB<MLB.PlayWinProbability[]>(
-		`/api/v1/game/${params.gamePk}/winProbability`,
-		{ fields: 'result,homeTeamWinProbability,awayTeamWinProbability' },
-	)
-
-	const content = await fetchMLB<MLB.GameContent>(`/api/v1/game/${params.gamePk}/content`, {
-		highlightLimit: '0',
-	})
+	const [feedLive, boxscore, winProbability, content] = await Promise.all([
+		fetchfeedLive(params.gamePk),
+		fetchBoxscore(params.gamePk, {
+			fields: [
+				'boxscoreName',
+				'stats,batting,atBats,hits,runs,rbi,homeRuns,baseOnBalls,strikeOuts',
+				'pitching,inningsPitched,numberOfPitches,earnedRuns',
+			],
+		}),
+		fetchMLB<MLB.PlayWinProbability[]>(`/api/v1/game/${params.gamePk}/winProbability`, {
+			fields: 'result,about,inning,isTopInning,homeTeamWinProbability,awayTeamWinProbability',
+		}),
+		fetchMLB<MLB.GameContent>(`/api/v1/game/${params.gamePk}/content`, {
+			highlightLimit: '0',
+		}),
+	])
 
 	return {
 		game,

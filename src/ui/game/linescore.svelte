@@ -16,7 +16,7 @@
 <div class="no-scrollbar overflow-x-auto" style:grid-area="linescore">
 	<table class="min-w-full table-fixed text-center">
 		<thead>
-			<tr class="align-bottom text-xs opacity-25">
+			<tr class="align-bottom text-xs opacity-40">
 				{#each innings as { num } (num)}
 					<th class="font-sans tabular-nums">{num}</th>
 				{/each}

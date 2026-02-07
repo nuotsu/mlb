@@ -1,9 +1,16 @@
 <script lang="ts">
-	import { goto } from '$app/navigation'
-	import { page } from '$app/state'
-	import { createDateChangeHandler, formatDate, getToday, slash } from '$lib/temporal'
+	import { formatDate, getToday, slash } from '$lib/temporal'
+	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 
-	let date = $derived(page.params.date)
+	let {
+		date,
+		onDateChange,
+		class: className,
+	}: {
+		date: string
+		onDateChange?: (date: string) => void
+		class?: string
+	} = $props()
 
 	function addDay(days: number = 1) {
 		return formatDate(
@@ -11,22 +18,14 @@
 			{ locale: 'en-CA' },
 		)
 	}
-
-	const delayDateChange = createDateChangeHandler(
-		() => date,
-		(newDate) => goto(`/schedule/day/${newDate}`),
-	)
 </script>
 
-<fieldset class="flex flex-col items-center text-center">
-	<a href="/schedule/week/{date}" class="block text-sm leading-rlh">
-		{formatDate(slash(date), { weekday: 'long' })}
-	</a>
-
+<fieldset class="flex flex-col items-center text-center {className}">
 	<div class="flex justify-center">
 		<label class="min-w-[16ch]">
 			{formatDate(slash(date), {
-				month: 'long',
+				month: 'short',
+				weekday: 'short',
 				day: 'numeric',
 				year: 'numeric',
 			})}
@@ -39,18 +38,21 @@
 				max={`${getToday().getFullYear()}-12-31`}
 				value={date}
 				onclick={(e) => (e.target as HTMLInputElement)?.showPicker()}
-				onchange={(e) => delayDateChange(e.currentTarget.value)}
+				onchange={(e) => onDateChange?.(e.currentTarget.value)}
 			/>
 		</label>
 
-		<a class="order-first" href="/schedule/day/{addDay(-1)}">{'<'}</a>
-		<a class="order-last" href="/schedule/day/{addDay()}">{'>'}</a>
+		<a class="order-first button border-b-0 border-l" href="/schedule/day/{addDay(-1)}">
+			<ChevronLeftIcon />
+		</a>
+		<a class="order-last button border-r border-b-0" href="/schedule/day/{addDay()}">
+			<ChevronRightIcon />
+		</a>
 	</div>
 </fieldset>
 
 <style>
-	label,
-	a {
+	label {
 		padding-inline: 1ch;
 
 		&:hover {

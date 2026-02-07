@@ -1,24 +1,38 @@
 <script lang="ts">
+	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
+	import HotColdZones from '$ui/stats/hot-cold-zones.svelte'
+	import YearByYearList from '$ui/stats/year-by-year-list.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
+
 	let person = $derived(
-		data.person as MLB.Person & { currentTeam: MLB.Team; preferredTeam?: { team: MLB.Team } },
+		data.person as MLB.Person & {
+			currentTeam: MLB.Team
+			preferredTeam?: { team: MLB.Team }
+			stats: MLB.PlayerStats[]
+		},
 	)
 
 	const team = $derived(person.active ? person.currentTeam : person.preferredTeam?.team)
 
-	$inspect(data)
+	const isPitcher = $derived(person.primaryPosition?.abbreviation === 'P')
 </script>
 
 <Metadata title="{person.fullName} | MLB.TheOhtani.com" description="{person.fullName} profile" />
 
-<section class="p-ch">
-	<header class="flex flex-wrap items-end gap-ch">
+<Header
+	crumbs={[
+		{ href: '/player', name: 'Players' },
+		team?.id ? { href: `/teams/${team.id}`, name: team?.name } : {},
+		{ name: person.fullName },
+	]}
+>
+	<div class="flex flex-wrap items-end gap-ch">
 		<Headshot
-			class="size-[4lh] shrink-0 rounded-none bg-transparent"
+			class="size-[3lh] shrink-0 rounded-none bg-transparent"
 			{person}
 			size={240}
 			type={person.active ? 'silo' : 'spots'}
@@ -40,16 +54,48 @@
 				{person.primaryPosition.abbreviation}
 			</div>
 		{/if}
+	</div>
+</Header>
 
-		{#if team}
-			<a href="/teams/{team.id}" class="decoration-dashed hover:underline">
-				{team.name}
-			</a>
-		{/if}
-	</header>
+<!-- <img
+	src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/w_426,q_auto:best/v1/people/{person.id}/action/hero/current"
+	alt=""
+/> -->
 
-	<!-- <img
-		src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/w_426,q_auto:best/v1/people/{person.id}/action/hero/current"
-		alt=""
-	/> -->
+<section class="space-y-lh px-ch py-lh">
+	<nav class="flex items-center justify-center gap-ch">
+		<label>
+			<input type="radio" name="stat-group" value="hitting" checked={!isPitcher} />
+			Hitting
+		</label>
+		<label>
+			<input type="radio" name="stat-group" value="pitching" checked={isPitcher} />
+			Pitching
+		</label>
+	</nav>
+
+	<YearByYearList {person} />
+
+	{#if data.hittingHotColdZones}
+		<HotColdZones
+			hotColdZones={data.hittingHotColdZones}
+			baseballStats={data.baseballStats}
+			data-group="hitting"
+		/>
+	{/if}
+
+	{#if data.pitchingHotColdZones}
+		<HotColdZones
+			hotColdZones={data.pitchingHotColdZones}
+			baseballStats={data.baseballStats}
+			data-group="pitching"
+		/>
+	{/if}
 </section>
+
+<style>
+	section:has([value='hitting']:not(:checked)) :global([data-group='hitting']),
+	section:has([value='pitching']:not(:checked)) :global([data-group='pitching']) {
+		display: none;
+	}
+</style>

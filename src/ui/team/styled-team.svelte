@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
 	import { cn } from '$lib/utils'
 	import type { Snippet } from 'svelte'
 	import Logo from './logo.svelte'
@@ -6,62 +7,50 @@
 	let {
 		team,
 		class: className,
+		linked,
+		record,
 		children,
 	}: {
 		team: MLB.Team
 		class?: string
+		linked?: boolean
+		record?: MLB.LeagueRecord
 		children?: Snippet
 	} = $props()
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
-
-	const isDarkOnLightTeam = $derived(
-		[
-			'Asheville Tourists',
-			'Miami Marlins',
-			'Minnesota Golden Gophers',
-			'San Diego Padres',
-			'San Francisco Giants',
-			'Sugar Land Space Cowboys',
-			'Sultanes de Monterrey',
-			'Tampa Bay Rays',
-			'Northeastern Huskies',
-		].includes(team.name) || [51].includes((team as MLB.TeamDetailed).sport?.id!),
-	)
-
-	const isLightOnDarkTeam = $derived(['Hanshin Tigers', 'Tokyo Yomiuri Giants'].includes(team.name))
 </script>
 
 <div
 	class={cn(
-		'@container/team relative flex items-center gap-[.5ch] not-dark:before:opacity-10',
-		isDarkOnLightTeam && 'dark:text-dark',
-		isLightOnDarkTeam && 'dark:text-light',
+		'group/team @container/team relative flex items-center gap-[.5ch]',
+		isDarkOnLightTeam(team) && 'dark:text-dark',
+		isLightOnDarkTeam(team) && 'dark:text-light',
 		className,
 	)}
-	style:--bg="url('{src}/32')"
+	style:--team-bg="url('{src}/32')"
 >
 	<Logo srcset="{src}/72" class="size-lh shrink-0 object-contain" {team} />
 
-	<div class="line-clamp-1 shrink-0 grow break-all">
-		<span class="@max-sm/team:hidden">{team.name}</span>
-		<span class="@max-[12ch]/team:hidden @sm:hidden">{team.teamName}</span>
+	<div class="line-clamp-1 break-all *:decoration-dashed group-has-[a:hover]/team:*:underline">
+		<span class="@max-[20ch]/team:hidden">{team.name}</span>
+		<span class="@max-[12ch]/team:hidden @min-[20ch]:hidden">{team.teamName}</span>
 		{#if team.abbreviation}
 			<span class="@max-[7ch]/team:hidden @min-[12ch]/team:hidden">{team.abbreviation}</span>
 		{/if}
 	</div>
 
-	{@render children?.()}
-</div>
+	{#if record}
+		<small class="font-sans text-xs text-current/50 @max-[7ch]/team:hidden">
+			{record.wins}-{record.losses}
+		</small>
+	{/if}
 
-<style>
-	.\@container\/team:global(:has(picture)::before) {
-		content: '';
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-		background-image: var(--bg);
-		background-size: 1500% 1500%;
-		background-position: 50% 5%;
-	}
-</style>
+	{@render children?.()}
+
+	{#if linked}
+		<a href="/teams/{team.id}" class="absolute inset-0 text-transparent">
+			{team.name}
+		</a>
+	{/if}
+</div>

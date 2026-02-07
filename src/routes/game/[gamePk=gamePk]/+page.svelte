@@ -7,6 +7,7 @@
 	import Highlights from '$ui/game/highlights.svelte'
 	import TopPerformers from '$ui/game/top-performers.svelte'
 	import WinProbability from '$ui/game/win-probability.svelte'
+	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import type { PageProps } from './$types'
 
@@ -38,16 +39,25 @@
 	description="Game details for {[away.name, home.name].join(' at ')} on {date}"
 />
 
-<section class="mx-auto max-w-5xl space-y-lh py-ch *:px-ch">
-	<Game
-		class="sticky top-0 z-1 bg-background/50 backdrop-blur max-sm:px-0"
-		{game}
-		{boxscore}
-		{linescore}
-	/>
+<Header
+	crumbs={[
+		{
+			href: `/schedule/week/${formatDate(game.gameDate, { locale: 'en-CA' })}`,
+			name: 'Weekly Schedule',
+		},
+		{
+			href: `/schedule/day/${formatDate(game.gameDate, { locale: 'en-CA' })}`,
+			name: formatDate(game.gameDate, { weekday: 'short', month: 'short', day: 'numeric' }),
+		},
+		{ name: `${away.abbreviation} @ ${home.abbreviation}` },
+	]}
+>
+	<Game class="w-full" {game} {boxscore} {linescore} />
+</Header>
 
+<section class="mx-auto max-w-5xl space-y-lh py-lh">
 	{#if hasTopPerformers || hasDecisions}
-		<div class="flex flex-wrap gap-ch *:grow">
+		<div class="flex flex-wrap items-start gap-ch px-ch *:grow">
 			{#if hasTopPerformers}
 				<TopPerformers {feedLive} />
 			{/if}
@@ -62,15 +72,23 @@
 		<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
 	{/if}
 
-	<article class="grid items-start gap-ch md:has-[#theater-mode:not(:checked)]:grid-cols-2">
-		{#if hasBattingOrder}
-			<Boxscore {feedLive} {boxscore} />
-		{/if}
-
+	<article
+		class="group/details grid items-center gap-lh md:has-[#theater-mode:not(:checked)]:grid-cols-2"
+	>
 		{#if data.content?.media?.epgAlternate}
 			<Highlights content={data.content} />
+		{/if}
+
+		{#if hasBattingOrder}
+			<Boxscore {boxscore} />
 		{/if}
 
 		<GameData {game} {feedLive} />
 	</article>
 </section>
+
+<style>
+	section {
+		padding-bottom: max(1ch, env(safe-area-inset-bottom));
+	}
+</style>

@@ -1,5 +1,3 @@
-import { debounce } from '$lib/utils'
-
 export function getToday() {
 	return new Date(Date.now() - new Date().getTimezoneOffset() * 60 * 1000)
 }
@@ -18,21 +16,14 @@ export function formatDate(
 	)
 }
 
-export function createDateChangeHandler(
-	getCurrentDate: () => string | undefined,
-	navigate: (date: string) => void,
-	delay: number = 2500,
-) {
-	const debouncedNavigate = debounce(navigate, delay)
+export function formatWeekRange(date: string) {
+	const t = new Date(slash(date))
+	const startDate = new Date(t.setDate(t.getDate() - ((t.getDay() - 1) % 7)))
+	const endDate = new Date(t.setDate(t.getDate() + (6 - ((t.getDay() - 1) % 7))))
+	const isSameMonth = startDate.getMonth() === endDate.getMonth()
 
-	return (newDate: string) => {
-		const newDay = newDate.split('-')[2]
-		const currentDay = getCurrentDate()?.split('-')[2]
-
-		if (newDay !== currentDay) {
-			navigate(newDate)
-		} else {
-			debouncedNavigate(newDate)
-		}
-	}
+	return [
+		formatDate(startDate, { month: 'short', day: 'numeric' }),
+		formatDate(endDate, isSameMonth ? { day: 'numeric' } : { month: 'short', day: 'numeric' }),
+	].join(' - ')
 }

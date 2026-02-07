@@ -19,7 +19,7 @@ export const load: PageServerLoad = async ({ params, url }) => {
 			'dates,date',
 			'games,gamePk,gameDate',
 			'teams,home,away,team,id,name,teamName,abbreviation',
-			'venue,sport',
+			'venue,sport,name',
 		],
 		hydrate: 'team',
 		...searchParams,

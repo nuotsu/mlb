@@ -6,11 +6,18 @@
 	const { gameInfo, weather } = $derived(feedLive.gameData)
 </script>
 
-<dl class="grid grid-cols-[auto_1fr] gap-x-lh [&_dt]:text-current/50">
+<dl class="mx-auto grid max-w-max grid-cols-[auto_1fr] gap-x-lh px-ch [&_dt]:text-current/50">
 	<dt>Date</dt>
 	<dd>
 		<a class="link" href="/schedule/day/{formatDate(game.gameDate, { locale: 'en-CA' })}">
-			{formatDate(game.gameDate, { year: 'numeric', month: 'long', day: 'numeric' })}
+			{formatDate(game.gameDate, {
+				month: 'long',
+				day: 'numeric',
+				year: 'numeric',
+			})}
+			({formatDate(game.gameDate, {
+				weekday: 'long',
+			})})
 		</a>
 	</dd>
 
@@ -23,6 +30,12 @@
 		<dt>Series</dt>
 		<dd>{game.seriesGameNumber} of {game.gamesInSeries}</dd>
 	{/if}
+
+	<dt>Home team</dt>
+	<dd><a class="link" href="/teams/{game.teams.home.team.id}">{game.teams.home.team.name}</a></dd>
+
+	<dt>Away team</dt>
+	<dd><a class="link" href="/teams/{game.teams.away.team.id}">{game.teams.away.team.name}</a></dd>
 
 	<dt>Venue</dt>
 	<dd>{game.venue.name}</dd>
@@ -47,10 +60,4 @@
 			{[condition, temp && `${temp}°F`, wind && `Wind: ${wind} mph`].filter(Boolean).join(' / ')}
 		</dd>
 	{/if}
-
-	<dt>Endpoint</dt>
-	<dd class="*:link">
-		<a href="https://statsapi.mlb.com{game.link}">Official</a> |
-		<a href={game.link}>Playground</a>
-	</dd>
 </dl>
