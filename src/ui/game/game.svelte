@@ -112,12 +112,12 @@
 		&:global(:has([style*='linescore'])) {
 			grid-template:
 				'status description linescore' auto
-				'status	boxscore linescore' auto / 7ch 16ch minmax(18ch, 1fr);
+				'status	boxscore linescore' auto / 7ch 1fr minmax(18ch, 50%);
 
 			@media (width < 32rem) {
 				grid-template:
 					'. description description' auto
-					'status boxscore linescore' auto / 7ch 6ch 1fr;
+					'status boxscore linescore' auto / 7ch minmax(5.5ch, 1fr) 50%;
 			}
 		}
 	}

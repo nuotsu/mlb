@@ -16,12 +16,12 @@
 {:else}
 	<div class="grid grid-cols-2 text-center">
 		<StyledTeam
-			class="flex-row-reverse pl-[.5ch]"
+			class="flex-row-reverse pl-[.5ch] *:data-name:order-last [&_picture]:ml-auto"
 			team={boxscore.teams.away.team}
 			record={game.teams.away.leagueRecord}
 		/>
 		<StyledTeam
-			class="pr-[.5ch]"
+			class="pr-[.5ch] *:data-name:order-last [&_picture]:mr-auto"
 			team={boxscore.teams.home.team}
 			record={game.teams.home.leagueRecord}
 		/>

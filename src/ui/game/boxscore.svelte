@@ -10,17 +10,17 @@
 </script>
 
 <article
-	class="col-span-full grid snap-x snap-mandatory auto-cols-[min(var(--container-sm),calc(100vw-2ch))] grid-flow-col overflow-x-auto sm:grid-cols-2 md:group-has-[#theater-mode:not(:checked)]/details:order-last"
+	class="col-span-full grid snap-x snap-mandatory auto-cols-[min(var(--container-sm),calc(100vw-2ch))] grid-flow-col overflow-x-auto sm:grid-cols-2 sm:px-ch md:group-has-[#theater-mode:not(:checked)]/details:order-last"
 >
 	{@render team(away)}
 	{@render team(home)}
 </article>
 
 {#snippet team(team: MLB.TeamBoxscore)}
-	<article class="snap-center">
-		<StyledTeam team={team.team} />
+	<article class="snap-center bg-background">
+		<StyledTeam team={team.team} class="z-1" />
 
-		<div class="overflow-x-auto whitespace-nowrap">
+		<div class="overflow-x-auto">
 			<table class="table-fixed text-center">
 				<thead class="text-xs text-current/40">
 					<tr>
@@ -56,42 +56,44 @@
 
 		<hr class="my-[.5ch] border-dashed border-current/25" />
 
-		<table class="table-fixed text-center">
-			<thead class="text-xs text-current/40">
-				<tr>
-					<th class="w-full"></th>
-					<th>IP</th>
-					<th>P</th>
-					<th>H</th>
-					<th>R</th>
-					<th>ER</th>
-					<th>K</th>
-					<th>HR</th>
-				</tr>
-			</thead>
-			<tbody>
-				{#each team.pitchers as playerId (playerId)}
-					{@const { stats, ...player } = team.players[`ID${playerId}`]}
-					{#if player.position.abbreviation === 'P'}
-						<tr class="hover:*:bg-foreground/10">
-							{@render p(player)}
+		<div class="overflow-x-auto">
+			<table class="table-fixed text-center">
+				<thead class="text-xs text-current/40">
+					<tr>
+						<th class="w-full"></th>
+						<th>IP</th>
+						<th>P</th>
+						<th>H</th>
+						<th>R</th>
+						<th>ER</th>
+						<th>K</th>
+						<th>HR</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each team.pitchers as playerId (playerId)}
+						{@const { stats, ...player } = team.players[`ID${playerId}`]}
+						{#if player.position.abbreviation === 'P'}
+							<tr class="hover:*:bg-foreground/10">
+								{@render p(player)}
 
-							{#each ['inningsPitched', 'numberOfPitches', 'hits', 'runs', 'earnedRuns', 'strikeOuts', 'homeRuns'] as stat}
-								{@const value = stats?.pitching?.[stat as keyof MLB.PitchingStats]}
-								<td class={cn(Number(value) === 0 && 'text-current/40')}>{value}</td>
-							{/each}
-						</tr>
-					{/if}
-				{/each}
-			</tbody>
-		</table>
+								{#each ['inningsPitched', 'numberOfPitches', 'hits', 'runs', 'earnedRuns', 'strikeOuts', 'homeRuns'] as stat}
+									{@const value = stats?.pitching?.[stat as keyof MLB.PitchingStats]}
+									<td class={cn(Number(value) === 0 && 'text-current/40')}>{value}</td>
+								{/each}
+							</tr>
+						{/if}
+					{/each}
+				</tbody>
+			</table>
+		</div>
 	</article>
 {/snippet}
 
 {#snippet p({ position, person }: MLB.BoxscorePlayer, substituted?: boolean)}
 	<th class="relative min-w-[14ch] text-left">
 		<a href="/player/{person.id}" class="group/player flex items-center gap-ch">
-			<Headshot {person} class="sticky left-ch z-1 size-lh" />
+			<Headshot {person} class="sticky left-0 z-1 size-lh" />
 
 			<span class="line-clamp-1 break-all decoration-dashed group-hover/player:underline">
 				{person.boxscoreName}

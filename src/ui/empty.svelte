@@ -1,10 +1,18 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte'
 
-	let { children }: { children?: Snippet } = $props()
+	let {
+		class: className,
+		children,
+	}: {
+		class?: string
+		children?: Snippet
+	} = $props()
 </script>
 
-<div class="grid place-content-center gap-ch p-lh text-center text-current/40 select-none">
+<div
+	class="grid place-content-center gap-ch p-lh text-center text-current/40 select-none {className}"
+>
 	<span>{':('}</span>
 
 	{#if children}

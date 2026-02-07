@@ -32,7 +32,10 @@
 >
 	<Logo srcset="{src}/72" class="size-lh shrink-0 object-contain" {team} />
 
-	<div class="line-clamp-1 break-all *:decoration-dashed group-has-[a:hover]/team:*:underline">
+	<div
+		class="line-clamp-1 break-all *:decoration-dashed group-has-[a:hover]/team:*:underline"
+		data-name
+	>
 		<span class="@max-[20ch]/team:hidden">{team.name}</span>
 		<span class="@max-[12ch]/team:hidden @min-[20ch]:hidden">{team.teamName}</span>
 		{#if team.abbreviation}
@@ -41,7 +44,7 @@
 	</div>
 
 	{#if record}
-		<small class="font-sans text-xs text-current/50 @max-[7ch]/team:hidden">
+		<small class="font-sans text-xs text-current/50 @max-[12ch]/team:hidden">
 			{record.wins}-{record.losses}
 		</small>
 	{/if}

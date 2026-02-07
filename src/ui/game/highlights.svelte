@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Empty from '$ui/empty.svelte'
 	import { CollapseHorizontalIcon, ExpandHorizontalIcon } from '$ui/icons'
 	import Video from '$ui/video.svelte'
 
@@ -15,7 +16,7 @@
 	}}
 />
 
-<article class="relative flex flex-wrap gap-ch text-center">
+<article class="relative flex flex-wrap gap-ch text-center sm:px-ch">
 	{#each highlights as { title, items }, i}
 		<div class="group/highlight contents">
 			<input
@@ -56,10 +57,13 @@
 				</figure>
 			{/each}
 		</div>
+	{:else}
+		<Empty class="grow">No highlights</Empty>
 	{/each}
 
 	<label
 		class="group/theater absolute right-0 bottom-0 grid h-lh place-content-center not-hover:text-current/50 not-hover:transition-colors max-md:hidden"
+		hidden={!content?.media?.epgAlternate}
 		title="Theater mode (t)"
 	>
 		<input class="sr-only" id="theater-mode" type="checkbox" bind:checked={theaterMode} />

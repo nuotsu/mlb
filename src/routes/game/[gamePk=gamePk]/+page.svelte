@@ -55,7 +55,7 @@
 	<Game class="w-full" {game} {boxscore} {linescore} />
 </Header>
 
-<section class="mx-auto max-w-5xl space-y-lh py-lh">
+<section class="space-y-lh py-lh">
 	{#if hasTopPerformers || hasDecisions}
 		<div class="flex flex-wrap items-start gap-ch px-ch *:grow">
 			{#if hasTopPerformers}
@@ -73,11 +73,9 @@
 	{/if}
 
 	<article
-		class="group/details grid items-center gap-lh md:has-[#theater-mode:not(:checked)]:grid-cols-2"
+		class="group/details grid items-center gap-y-lh md:has-[#theater-mode:not(:checked)]:grid-cols-2"
 	>
-		{#if data.content?.media?.epgAlternate}
-			<Highlights content={data.content} />
-		{/if}
+		<Highlights content={data.content} />
 
 		{#if hasBattingOrder}
 			<Boxscore {boxscore} />
