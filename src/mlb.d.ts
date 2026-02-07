@@ -1882,6 +1882,7 @@ declare global {
 		 * Transaction
 		 */
 		interface Transaction {
+			id: number
 			person: Person
 			date: string
 			effectiveDate?: string

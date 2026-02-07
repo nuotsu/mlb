@@ -3,7 +3,6 @@
 	import { page } from '$app/state'
 	import { fetchTransactions } from '$lib/fetch'
 	import { formatDate } from '$lib/temporal'
-	import { count } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
 	import { ArrowsDiffIcon } from '$ui/icons'
@@ -22,6 +21,21 @@
 		goto(`/transactions/${date}`, {})
 		transactions = await fetchTransactions({ date: currentDate })
 	}
+
+	function processTransactions({ transactions }: MLB.TransactionsResponse) {
+		const processed = new Set<number>()
+		return transactions.filter((t) => {
+			if (processed.has(t.id)) return false
+			processed.add(t.id)
+			return true
+		})
+	}
+
+	function sortByTeam(a: MLB.Transaction, b: MLB.Transaction) {
+		const aTeam = a.toTeam as MLB.Team
+		const bTeam = b.toTeam as MLB.Team
+		return aTeam?.name.localeCompare(bTeam?.name ?? '') ?? 0
+	}
 </script>
 
 <Metadata title="Transactions | MLB.TheOhtani.com" description="MLB transactions" />
@@ -36,8 +50,8 @@
 </Header>
 
 <section class="space-y-px py-lh sm:px-ch">
-	{#if transactions.transactions.length > 0}
-		{#each Map.groupBy(transactions.transactions, (t) => t.date) as [date, txns] (date)}
+	{#if processTransactions(transactions).length > 0}
+		{#each Map.groupBy(processTransactions(transactions), (t) => t.date) as [date, txns] (date)}
 			<details class="accordion" open>
 				<summary class="sticky-below-header z-1 backdrop-blur-xs">
 					{formatDate(date, { weekday: 'short', month: 'short', day: 'numeric' })}
@@ -56,15 +70,17 @@
 						</label>
 
 						<ul class="w-full anim-fade">
-							{#each ts as { toTeam, fromTeam, person, description }}
+							{$inspect(ts)}
+
+							{#each ts.sort(sortByTeam) as { toTeam, fromTeam, person, description }}
 								<li class="grid grid-cols-[auto_1fr] gap-x-ch border-b border-current/10 py-1">
 									<span class="flex items-center">
-										{#if fromTeam}
-											<Logo class="size-lh" team={fromTeam!} />
-											<ArrowsDiffIcon class="size-ch text-current/50" />
-										{/if}
 										{#if toTeam}
 											<Logo class="size-lh" team={toTeam!} />
+										{/if}
+										{#if fromTeam}
+											<ArrowsDiffIcon class="size-ch text-current/50" />
+											<Logo class="size-lh" team={fromTeam!} />
 										{/if}
 									</span>
 
