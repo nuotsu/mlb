@@ -1,7 +1,7 @@
 {
 	"name": "mlb",
 	"private": true,
-	"version": "0.4.55",
+	"version": "0.4.56",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --host",
@@ -24,7 +24,7 @@
 		"prettier-plugin-svelte": "^3.4.1",
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"shiki": "^3.22.0",
-		"svelte": "^5.49.2",
+		"svelte": "^5.50.0",
 		"svelte-check": "^4.3.6",
 		"tailwind-merge": "^3.4.0",
 		"tailwindcss": "^4.1.18",
@@ -34,7 +34,7 @@
 	"dependencies": {
 		"@google/model-viewer": "^4.1.0",
 		"hls.js": "^1.6.15",
-		"posthog-js": "^1.342.0",
-		"posthog-node": "^5.24.10"
+		"posthog-js": "^1.342.1",
+		"posthog-node": "^5.24.11"
 	}
 }

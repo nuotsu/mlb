@@ -1,7 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state'
+	import type { Snippet } from 'svelte'
 
-	let { crumbs = [] }: { crumbs?: App.Breadcrumb[] } = $props()
+	let {
+		crumbs = [],
+		after,
+	}: {
+		crumbs?: App.Breadcrumb[]
+		after?: Snippet
+	} = $props()
 
 	const list: App.Breadcrumb[] = $derived(
 		[{ href: '/', name: 'Home' }, ...crumbs].filter((c) => c.name),
@@ -9,12 +16,7 @@
 </script>
 
 {#snippet crumb({ href, name }: App.Breadcrumb, position: number)}
-	<li
-		class="flex shrink-0 gap-ch"
-		itemprop="itemListElement"
-		itemscope
-		itemtype="https://schema.org/ListItem"
-	>
+	<li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
 		<a href={href ?? page.url.pathname} class="not-hover:text-current/50" itemprop="item">
 			<span itemprop="name">{name}</span>
 		</a>
@@ -32,12 +34,24 @@
 		{#each list as item, i}
 			{@render crumb(item, i + 1)}
 		{/each}
+
+		{#if after}
+			<li>
+				{@render after?.()}
+			</li>
+		{/if}
 	</ol>
 </nav>
 
 <style>
-	li:not(:first-child)::before {
-		content: '/';
-		color: color-mix(in srgb, currentColor 25%, transparent);
+	li {
+		flex-shrink: 0;
+		display: flex;
+		gap: 1ch;
+
+		&:not(:first-child)::before {
+			content: '/';
+			color: color-mix(in srgb, currentColor 25%, transparent);
+		}
 	}
 </style>

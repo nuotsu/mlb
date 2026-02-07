@@ -24,14 +24,13 @@
 	let pitchingSortStat = $derived(page.url.searchParams.get('pitchingSortStat') ?? 'era')
 
 	function withParam(key: string, value: string) {
-		const params = new URLSearchParams(page.url.searchParams)
+		const url = new URL(page.url)
 		if (value) {
-			params.set(key, value)
+			url.searchParams.set(key, value)
 		} else {
-			params.delete(key)
+			url.searchParams.delete(key)
 		}
-		const qs = params.toString()
-		return qs ? `?${qs}` : page.url.pathname
+		return url.toString()
 	}
 </script>
 
@@ -44,7 +43,7 @@
 	title="Stat Leaders"
 	crumbs={[
 		{ href: '/stats', name: 'Stat Leaders' },
-		position ? { href: `/stats?position=${position}`, name: position } : {},
+		position ? { href: page.url.pathname, name: position } : {},
 	]}
 >
 	{#snippet after()}

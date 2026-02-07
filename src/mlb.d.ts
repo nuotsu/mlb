@@ -1736,6 +1736,13 @@ declare global {
 		}
 
 		/**
+		 * Sports response
+		 */
+		interface SportsResponse extends ApiResponse<Sport[]> {
+			sports: Sport[]
+		}
+
+		/**
 		 * Sport information
 		 */
 		interface Sport {
