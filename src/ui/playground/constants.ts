@@ -532,7 +532,7 @@ export function matchEndpoint(urlPath: string) {
 }
 
 export function endpointToUrl(endpointKey: string) {
-	if (endpointKey === CUSTOM_ENDPOINT_KEY) return '/api'
+	if (endpointKey === CUSTOM_ENDPOINT_KEY) return '/api/v1'
 
 	const config = ENDPOINTS[endpointKey]
 	let url = endpointKey

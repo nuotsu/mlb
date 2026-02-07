@@ -9,11 +9,10 @@
 	import ParametersTable from '$ui/playground/parameters-table.svelte'
 	import Response from '$ui/playground/response.svelte'
 	import posthog from 'posthog-js'
-	import type { PageProps } from './$types'
 
-	let { data, form }: PageProps = $props()
+	let { children } = $props()
 
-	let endpoint = $derived(form?.endpointPath ?? data.endpointKey)
+	let endpoint = $derived(page.form?.endpointPath ?? page.data.endpointKey)
 	let distinctId = $state('anonymous')
 
 	$effect(() => {
@@ -50,12 +49,14 @@
 				</div>
 			{/if}
 
-			<ParametersTable {endpoint} initialParams={data.initialParams} />
+			<ParametersTable {endpoint} initialParams={page.data.initialParams} />
 		</form>
 	</article>
 
 	<Response />
 </section>
+
+{@render children()}
 
 <style>
 	:global(body:has(.loading-results) svg.send-icon) {
