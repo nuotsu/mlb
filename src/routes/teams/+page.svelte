@@ -31,8 +31,8 @@
 <section class="grid gap-lh px-ch py-lh md:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]">
 	{#if data.teams?.teams}
 		{#each teamsByLeague as [league, teams] (league)}
-			<details open>
-				<summary class="h2">{league}</summary>
+			<details class="accordion" open>
+				<summary class="sticky-below-header z-1 h2 backdrop-blur-xs">{league}</summary>
 
 				<ul>
 					{#each teams?.sort((a, b) => a.name.localeCompare(b.name)) as team (team.id)}
