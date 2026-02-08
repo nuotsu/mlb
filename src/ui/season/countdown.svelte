@@ -33,7 +33,7 @@
 
 {#if timeDiff > 0}
 	<article class="text-center">
-		<div class="flex grow items-baseline justify-center border border-current/25 p-[.5ch] text-3xl">
+		<div class="flex grow items-baseline justify-center text-3xl">
 			{#each ['days', 'hr', 'min', 'sec'] as part, i}
 				{@const value = duration[i]}
 				{@const isDay = part === 'days'}
