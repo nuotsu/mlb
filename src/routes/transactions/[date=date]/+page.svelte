@@ -7,6 +7,7 @@
 	import Header from '$ui/header.svelte'
 	import { ArrowsDiffIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
+	import Headshot from '$ui/player/headshot.svelte'
 	import WeekPicker from '$ui/schedule/week-picker.svelte'
 	import SelectTeam from '$ui/select-team.svelte'
 	import Logo from '$ui/team/logo.svelte'
@@ -41,7 +42,7 @@
 
 <Metadata title="Transactions | MLB.TheOhtani.com" description="MLB transactions" />
 
-<Header title="Transactions" crumbs={[{ name: 'Transactions' }]}>
+<Header title="Transactions" crumbs={[{ name: 'Transactions', href: '/transactions' }]}>
 	{#snippet after()}
 		<div class="mx-auto flex flex-wrap items-center justify-center gap-ch text-center">
 			<SelectTeam class="button grow" />
@@ -54,47 +55,63 @@
 <section class="space-y-px py-lh sm:px-ch">
 	{#if processTransactions(transactions).length > 0}
 		{#each Map.groupBy(processTransactions(transactions), (t) => t.date) as [date, txns] (date)}
+			{@const grouped = Map.groupBy(txns, (t) => t.typeDesc)}
+
 			<details class="accordion" open>
 				<summary class="sticky-below-header z-1 backdrop-blur-xs">
 					{formatDate(date, { weekday: 'short', month: 'short', day: 'numeric' })}
 				</summary>
 
 				<article class="flex flex-wrap gap-x-ch gap-y-[.5ch] px-ch">
-					<label class="-order-1 ml-auto">
-						<input
-							name={date}
-							value="all"
-							type="radio"
-							checked={page.url.searchParams.has('teamId')}
-						/>
-						All ({txns.length})
-					</label>
-
-					{#each Map.groupBy(txns, (t) => t.typeDesc) as [typeDesc, ts], i}
-						<label class="order-first">
-							<input name={date} type="radio" checked={i === 0} />
-							{typeDesc} ({ts.length})
+					{#if grouped?.size > 1}
+						<label class="-order-1 mb-ch ml-auto">
+							<input
+								name={date}
+								value="all"
+								type="radio"
+								checked={page.url.searchParams.has('teamId')}
+							/>
+							All ({txns.length})
 						</label>
+					{/if}
+
+					{#each grouped as [typeDesc, ts], i}
+						{#if grouped?.size > 1}
+							<label class="order-first">
+								<input name={date} type="radio" checked={i === 0} />
+								{typeDesc} ({ts.length})
+							</label>
+						{/if}
 
 						<ul class="w-full anim-fade">
 							{#each ts.sort(sortByTeam) as { id, toTeam, fromTeam, person, description } (id)}
-								<li class="grid grid-cols-[auto_1fr] gap-x-ch border-b border-current/10 py-1">
-									<span class="flex items-center">
+								<li
+									class="group/transaction relative flex items-center gap-ch border-t border-current/15 py-[.5ch]"
+								>
+									<span class="flex shrink-0 items-center">
 										{#if toTeam}
 											<Logo class="size-lh" team={toTeam!} />
 										{/if}
 										{#if fromTeam}
-											<ArrowsDiffIcon class="size-ch text-current/50" />
+											<ArrowsDiffIcon class="size-ch shrink-0 text-current/50" />
 											<Logo class="size-lh" team={fromTeam!} />
 										{/if}
 									</span>
 
 									{#if person}
-										<a class="decoration-dashed hover:underline" href={`/player/${person?.id}`}>
-											{description}
+										<figure class="shrink-0">
+											<Headshot {person} class="size-lh" />
+										</figure>
+									{/if}
+
+									<p class="leading-tight decoration-dashed group-hover/transaction:underline">
+										{description}
+									</p>
+
+									{#if person}
+										<a class="text-0 absolute inset-0" href="/player/{person.id}">
+											{person.fullName}
 										</a>
-									{:else}
-										<p>{description}</p>
 									{/if}
 								</li>
 							{/each}
