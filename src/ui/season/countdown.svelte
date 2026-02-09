@@ -44,7 +44,9 @@
 							{#each (isDay ? value : value.toString().padStart(2, '0'))
 								.toString()
 								.split('') as number}
-								<span class="inline-block border border-current/25 px-[.2ch]">
+								<span
+									class="inline-block border border-current/10 px-[.2ch] dark:border-current/25"
+								>
 									{#key number}
 										<span class="inline-block anim-fade-to-t">{number}</span>
 									{/key}

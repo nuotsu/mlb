@@ -14,6 +14,8 @@
 	} from '$ui/icons'
 	import type { Component } from 'svelte'
 	import Drawer from './drawer.svelte'
+	import Favorites from './favorites.svelte'
+	import SpoilerPrevention from './spoiler-prevention.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
 
 	const links: {
@@ -91,6 +93,8 @@
 		</ul>
 
 		<ul class="mt-auto text-sm sm:sidebar-closed-hidden">
+			<li><Favorites /></li>
+			<li><SpoilerPrevention /></li>
 			<li><ToggleColorScheme /></li>
 			<li>
 				<a href="https://github.com/nuotsu/mlb"> View on GitHub </a>

@@ -7,6 +7,7 @@
 
 	--color-dark: #000;
 	--color-light: #fff;
+	--color-stroke: color-mix(in srgb, currentColor 10%, transparent);
 
 	--color-background: var(--color-light);
 	--color-foreground: var(--color-dark);
@@ -52,6 +53,7 @@
 		&:has([data-color-scheme='dark']) {
 			--color-background: var(--color-dark);
 			--color-foreground: var(--color-light);
+			--color-stroke: color-mix(in srgb, currentColor 25%, transparent);
 		}
 	}
 
@@ -211,7 +213,7 @@
 
 /* components */
 
-@utility accordion {
+@utility accordion-base {
 	summary {
 		list-style: none;
 		@apply flex items-center gap-ch;
@@ -221,26 +223,43 @@
 		}
 
 		&::after {
-			content: '▹';
-			display: inline-block;
+			content: '';
+			width: 16px;
+			height: 16px;
+			background-color: currentColor;
+			mask-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiIgd2lkdGg9IjE2IiBoZWlnaHQ9IjE2Ij48cGF0aCBkPSJNMTAuMDcyIDguMDI0TDUuNzE1IDMuNjY3bC42MTgtLjYyTDExIDcuNzE2di42MThMNi4zMzMgMTNsLS42MTgtLjYxOSA0LjM1Ny00LjM1N3oiLz48L3N2Zz4=');
+			mask-size: contain;
+			mask-repeat: no-repeat;
 			transition: rotate var(--default-transition-duration) ease-in-out;
-			margin-left: auto;
+			@apply ml-auto inline-block;
+		}
+	}
+
+	&[open] {
+		&::details-content {
+			@apply my-ch;
 		}
 
+		summary::after {
+			rotate: 90deg;
+		}
+	}
+}
+
+@utility accordion {
+	@apply accordion-base;
+
+	summary {
 		@apply border-l bg-neutral-100/50 px-ch hover:bg-neutral-200/50 dark:bg-neutral-800/50 dark:hover:bg-neutral-700/50;
 	}
 
 	&[open] {
 		&::details-content {
-			@apply mt-ch mb-lh;
+			@apply mb-lh;
 		}
 
 		summary {
 			@apply border-accent;
-
-			&::after {
-				rotate: 90deg;
-			}
 		}
 	}
 }

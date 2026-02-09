@@ -40,6 +40,7 @@
 />
 
 <Header
+	class="max-sm:px-0 max-sm:[&_nav]:pl-ch"
 	crumbs={[
 		{
 			href: `/schedule/week/${formatDate(game.gameDate, { locale: 'en-CA' })}`,
