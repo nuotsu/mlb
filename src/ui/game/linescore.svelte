@@ -18,11 +18,11 @@
 		<thead>
 			<tr class="align-bottom text-xs opacity-40">
 				{#each innings as { num } (num)}
-					<th class="font-sans tabular-nums">{num}</th>
+					<th class="tabular-nums">{num}</th>
 				{/each}
 
 				{#each remainingInnings as num (num)}
-					<th class="font-sans tabular-nums">{num}</th>
+					<th class="tabular-nums">{num}</th>
 				{/each}
 
 				<th class="w-[4ch]"><abbr title="Hits">R</abbr></th>
@@ -32,7 +32,7 @@
 			</tr>
 		</thead>
 
-		<tbody class="font-sans tabular-nums">
+		<tbody class="tabular-nums">
 			{#each ['away', 'home'] as const as teamKey}
 				{@const { runs, hits, errors, leftOnBase } = teams?.[teamKey] as MLB.LinescoreTeam}
 

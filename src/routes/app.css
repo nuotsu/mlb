@@ -2,7 +2,6 @@
 @import 'tailwindcss';
 
 @theme {
-	--font-serif: 'Mozilla Headline', sans-serif;
 	--font-sans: 'Geist', monospace;
 	--font-mono: 'Geist Mono', monospace;
 
@@ -40,7 +39,6 @@
 	html {
 		scroll-behavior: smooth;
 		scrollbar-color: var(--color-accent) transparent;
-		@apply font-serif;
 	}
 
 	body {

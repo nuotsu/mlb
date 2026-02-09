@@ -22,7 +22,10 @@
 	</li>
 {/snippet}
 
-<nav class=" text-sm leading-none font-light max-sm:ml-[1.25rlh]" aria-label="Breadcrumb">
+<nav
+	class="relative z-1 text-sm leading-none font-light max-sm:ml-[1.25rlh]"
+	aria-label="Breadcrumb"
+>
 	<ol
 		class="no-scrollbar flex min-h-rlh items-center gap-ch overflow-x-auto text-xs"
 		itemscope

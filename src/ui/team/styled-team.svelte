@@ -38,14 +38,14 @@
 	>
 		<span class="@max-[24ch]/team:hidden">{team.name}</span>
 		<span class="@max-[18ch]/team:hidden @min-[24ch]:hidden">{team.clubName}</span>
-		<span class="@max-[12ch]/team:hidden @min-[18ch]:hidden">{team.teamName}</span>
+		<span class="@max-[14ch]/team:hidden @min-[18ch]:hidden">{team.teamName}</span>
 		{#if team.abbreviation}
-			<span class="@max-[8ch]/team:hidden @min-[12ch]/team:hidden">{team.abbreviation}</span>
+			<span class="@max-[8ch]/team:hidden @min-[14ch]/team:hidden">{team.abbreviation}</span>
 		{/if}
 	</div>
 
 	{#if record}
-		<small class="font-sans text-xs text-current/50 @max-[12ch]/team:hidden">
+		<small class="text-xs whitespace-nowrap text-current/50 @max-[12ch]/team:hidden">
 			{record.wins}-{record.losses}
 		</small>
 	{/if}

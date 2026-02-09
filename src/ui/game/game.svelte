@@ -6,6 +6,7 @@
 	import ProbablePitchers from '$ui/game/probable-pitchers.svelte'
 	import TeamScores from '$ui/game/team-scores.svelte'
 	import Loading from '$ui/loading.svelte'
+	import Bases from './bases.svelte'
 
 	let {
 		game,
@@ -23,34 +24,40 @@
 
 	const { flags } = $derived(game as unknown as { flags: MLB.GameFlags })
 
+	const isFinal = $derived(game.status.abstractGameState === 'Final')
 	const isGamePage = $derived(page.url.pathname === `/game/${game.gamePk}`)
 </script>
 
-<article class="group/game @container/game grid items-end {className}" data-gamePk={game.gamePk}>
+<article
+	class="group/game @container/game isolate grid items-end {className}"
+	data-gamePk={game.gamePk}
+>
 	<div
-		class="relative grid h-6 place-content-center overflow-x-clip text-center text-sm tabular-nums *:leading-none group-has-[[style*=linescore]]/game:h-12"
+		class="relative z-1 grid h-6 text-center *:col-span-full *:row-span-full *:leading-none group-has-[[style*=linescore]]/game:h-12"
 		style:grid-area="status"
 	>
-		{#if game.status.abstractGameState === 'Final'}
+		<Bases className="absolute left-1/2 top-1/2 -translate-1/2 -z-1 m-auto" />
+
+		{#if isFinal}
 			{@const value =
 				game.status.reason || game.status.detailedState || game.status.abstractGameState}
-			<span>
+			<span class="m-auto text-xs font-bold">
 				{value}{#if value === 'Final' && linescore?.currentInning! > linescore?.scheduledInnings!}/{linescore?.currentInning}{/if}
 			</span>
 		{:else}
-			<time datetime={game.gameDate}>
-				{formatDate(game.gameDate, { hour: '2-digit', minute: '2-digit' })}
+			<time class="m-auto text-xs font-bold" datetime={game.gameDate}>
+				{formatDate(game.gameDate, { hour: 'numeric', minute: '2-digit' })}
 			</time>
 		{/if}
 
 		{#if !isGamePage}
-			<a class="absolute inset-0 text-[0px]" href="/game/{game.gamePk}">View details</a>
+			<a class="relative text-[0px]" href="/game/{game.gamePk}">View details</a>
 		{/if}
 	</div>
 
 	<span
 		class="group/description grid items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1"
-		class:h-rlh={!isGamePage}
+		class:min-h-rlh={!isGamePage || (isGamePage && !isFinal)}
 		style:grid-area="description"
 	>
 		{#if !isGamePage}
@@ -90,7 +97,7 @@
 		{/if}
 	</div>
 
-	{#if game.status.abstractGameState === 'Final'}
+	{#if isFinal}
 		{#if linescore}
 			<Linescore {linescore} />
 		{:else}
@@ -105,20 +112,35 @@
 
 <style>
 	article {
+		--status-size: 6ch;
+
 		grid-template:
 			'status description' auto
-			'status	boxscore' auto / 7ch 1fr;
+			'status	boxscore' auto / var(--status-size) 1fr;
 
 		&:global(:has([style*='linescore'])) {
 			grid-template:
 				'status description linescore' auto
-				'status	boxscore linescore' auto / 7ch 1fr minmax(18ch, 50%);
+				'status	boxscore linescore' auto / var(--status-size) 1fr minmax(18ch, 50%);
 
 			@media (width < 32rem) {
 				grid-template:
 					'. description description' auto
-					'status boxscore linescore' auto / 7ch minmax(5.5ch, 1fr) 50%;
+					'status boxscore linescore' auto / var(--status-size) minmax(5.5ch, 1fr) 50%;
 			}
 		}
+	}
+
+	[style*='boxscore'] {
+		--inset: 0.5ch;
+		clip-path: polygon(
+			0 0,
+			100% 0,
+			100% 100%,
+			0 100%,
+			0 calc(50% + var(--inset)),
+			var(--inset) 50%,
+			0 calc(50% - var(--inset))
+		);
 	}
 </style>

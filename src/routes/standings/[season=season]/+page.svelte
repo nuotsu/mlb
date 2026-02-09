@@ -45,28 +45,26 @@
 						<td class="sticky left-0 min-w-lh @min-[8ch]:min-w-[3.5ch]">
 							<StyledTeam class="text-left" {team} linked />
 						</td>
-						<td class="flex justify-center font-sans tabular-nums">
+						<td class="flex justify-center tabular-nums">
 							<span class="positive">{wins}</span>
 							-
 							<span class="negative">{losses}</span>
 						</td>
 						<td
-							class={cn(
-								'font-sans tabular-nums',
-								Number(winningPercentage) >= 0.5 ? 'positive' : 'negative',
-							)}>{winningPercentage}</td
+							class={cn('tabular-nums', Number(winningPercentage) >= 0.5 ? 'positive' : 'negative')}
+							>{winningPercentage}</td
 						>
-						<td class={cn('font-sans tabular-nums', sportGamesBack === '-' && 'text-current/50')}>
+						<td class={cn('tabular-nums', sportGamesBack === '-' && 'text-current/50')}>
 							{sportGamesBack}
 						</td>
 						<td
-							class="font-sans tabular-nums"
+							class="tabular-nums"
 							class:positive={streak?.streakCode?.startsWith('W')}
 							class:negative={streak?.streakCode?.startsWith('L')}
 						>
 							{streak?.streakCode}
 						</td>
-						<td class="font-sans tabular-nums">{leagueRank}</td>
+						<td class="tabular-nums">{leagueRank}</td>
 					</tr>
 				{/each}
 			</tbody>

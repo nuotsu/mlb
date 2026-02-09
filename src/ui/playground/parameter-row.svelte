@@ -3,15 +3,19 @@
 	import { cn } from '$lib/utils'
 	import { CUSTOM_ENDPOINT_PATH } from './constants'
 
-	let { parameter, values, initialValue }: { parameter: string; values: Docs.EndpointParamProps[]; initialValue?: string } = $props()
+	let {
+		parameter,
+		values,
+		initialValue,
+	}: { parameter: string; values: Docs.EndpointParamProps[]; initialValue?: string } = $props()
 
 	let form = $derived(page.form)
 	let first = $derived(values[0])
 
 	let input = $derived(
-		form?.entries[parameter]
-			?? initialValue
-			?? (parameter === 'custom' ? CUSTOM_ENDPOINT_PATH : (first.empty ? '' : first.value)),
+		form?.entries[parameter] ??
+			initialValue ??
+			(parameter === 'custom' ? CUSTOM_ENDPOINT_PATH : first.empty ? '' : first.value),
 	)
 
 	let inputType = $derived(
@@ -42,7 +46,7 @@
 				id={parameter}
 				name={parameter}
 				class={cn(
-					'input-dev field-sizing-content w-full min-w-[8ch] px-[.5ch] font-sans tabular-nums sm:min-w-[16ch] sm:[[type=date]]:max-w-[10ch]',
+					'input-dev field-sizing-content w-full min-w-[8ch] px-[.5ch] tabular-nums sm:min-w-[16ch] sm:[[type=date]]:max-w-[10ch]',
 					hasPresetOptions && 'max-w-[24ch]',
 					!input && '[[type=date]]:text-current/50',
 					['custom', 'fields', 'hydrate', 'timecode'].includes(parameter)

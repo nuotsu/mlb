@@ -5,7 +5,7 @@
 </script>
 
 {#if game.status.abstractGameState === 'Final'}
-	<div class="grid text-left">
+	<div class="grid text-left *:pl-[.25ch]">
 		<StyledTeam team={boxscore.teams.away.team} record={game.teams.away.leagueRecord} linked>
 			{@render score(game.teams.away.score)}
 		</StyledTeam>
@@ -17,13 +17,13 @@
 {:else}
 	<div class="grid grid-cols-2 text-center">
 		<StyledTeam
-			class="flex-row-reverse pl-[.5ch] *:data-name:order-last [&_picture]:ml-auto"
+			class="flex-row-reverse pl-ch *:data-name:order-last [&_picture]:ml-auto"
 			team={boxscore.teams.away.team}
 			record={game.teams.away.leagueRecord}
 			linked
 		/>
 		<StyledTeam
-			class="pr-[.5ch] *:data-name:order-last [&_picture]:mr-auto"
+			class="pr-ch *:data-name:order-last [&_picture]:mr-auto"
 			team={boxscore.teams.home.team}
 			record={game.teams.home.leagueRecord}
 			linked
@@ -32,5 +32,5 @@
 {/if}
 
 {#snippet score(score?: number)}
-	<strong class="ml-auto shrink-0 pr-[.5ch] text-right font-sans tabular-nums">{score}</strong>
+	<strong class="ml-auto shrink-0 pr-[.5ch] text-right tabular-nums">{score}</strong>
 {/snippet}

@@ -31,7 +31,7 @@
 
 <Metadata title="Weekly Schedule | MLB.TheOhtani.com" description="Weekly calendar of MLB games." />
 
-<Header title="Weekly Schedule" crumbs={[{ name: 'Weekly Schedule' }]}>
+<Header title="Weekly Schedule" crumbs={[{ name: 'Weekly Schedule', href: '/schedule/week' }]}>
 	{#snippet after()}
 		<div class="mx-auto flex flex-wrap items-center gap-ch text-center">
 			<WeekPicker class="grow" date={currentDate} {onDateChange} />
@@ -55,7 +55,7 @@
 				</a>
 			</summary>
 
-			<div class="columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
+			<div class="anim-fade columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
 				{#each date.games as game (game.gamePk)}
 					{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
 					<Game {game} {linescore} showDescription />

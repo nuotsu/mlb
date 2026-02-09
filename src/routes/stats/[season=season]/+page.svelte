@@ -109,19 +109,18 @@
 						{#each splits as { player, stat, ...split }}
 							<tr class="hover:[&>td]:bg-foreground/10">
 								{@render p(player as MLB.Person, split as MLB.StatSplit)}
-								<td class="font-sans tabular-nums" class:positive={Number(stat.avg) >= 0.3}>
+								<td class="tabular-nums" class:positive={Number(stat.avg) >= 0.3}>
 									{stat.avg}
 								</td>
-								<td class="font-sans tabular-nums">{stat.homeRuns}</td>
-								<td class="border-r border-current/25 font-sans tabular-nums">{stat.rbi}</td>
-								<td class="font-sans tabular-nums">{stat.hits}</td>
-								<td class="font-sans tabular-nums">{stat.doubles}</td>
-								<td class="border-r border-current/25 font-sans tabular-nums">{stat.triples}</td>
-								<td class="border-r border-current/25 font-sans tabular-nums">{stat.stolenBases}</td
-								>
-								<td class="font-sans tabular-nums">{stat.obp}</td>
-								<td class="font-sans tabular-nums">{stat.slg}</td>
-								<td class="font-sans tabular-nums" class:positive={Number(stat.ops) >= 1}>
+								<td class="tabular-nums">{stat.homeRuns}</td>
+								<td class="border-r border-current/25 tabular-nums">{stat.rbi}</td>
+								<td class="tabular-nums">{stat.hits}</td>
+								<td class="tabular-nums">{stat.doubles}</td>
+								<td class="border-r border-current/25 tabular-nums">{stat.triples}</td>
+								<td class="border-r border-current/25 tabular-nums">{stat.stolenBases}</td>
+								<td class="tabular-nums">{stat.obp}</td>
+								<td class="tabular-nums">{stat.slg}</td>
+								<td class="tabular-nums" class:positive={Number(stat.ops) >= 1}>
 									{stat.ops}
 								</td>
 							</tr>
@@ -178,19 +177,19 @@
 							<tr class="hover:[&>td]:bg-foreground/10">
 								{@render p(player as MLB.Person, split as MLB.StatSplit)}
 								<td
-									class="border-r border-current/25 font-sans tabular-nums"
+									class="border-r border-current/25 tabular-nums"
 									class:positive={Number(stat.era) < 3}
 								>
 									{stat.era}
 								</td>
-								<td class="font-sans tabular-nums">{stat.wins}</td>
-								<td class="font-sans tabular-nums">{stat.losses}</td>
-								<td class="border-r border-current/25 font-sans tabular-nums">{stat.saves}</td>
-								<td class="border-r border-current/25 font-sans tabular-nums">{stat.strikeOuts}</td>
-								<td class="font-sans tabular-nums" class:positive={Number(stat.whip) < 1}>
+								<td class="tabular-nums">{stat.wins}</td>
+								<td class="tabular-nums">{stat.losses}</td>
+								<td class="border-r border-current/25 tabular-nums">{stat.saves}</td>
+								<td class="border-r border-current/25 tabular-nums">{stat.strikeOuts}</td>
+								<td class="tabular-nums" class:positive={Number(stat.whip) < 1}>
 									{stat.whip}
 								</td>
-								<td class="font-sans tabular-nums">{stat.inningsPitched}</td>
+								<td class="tabular-nums">{stat.inningsPitched}</td>
 							</tr>
 						{/each}
 					{/each}
