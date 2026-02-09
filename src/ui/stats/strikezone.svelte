@@ -52,7 +52,7 @@
 	)
 </script>
 
-<figure class="grid w-full place-content-center {className}" {...props}>
+<figure class="grid w-full place-content-center tabular-nums {className}" {...props}>
 	<svg viewBox="0 0 {W} {H}" class="w-full p-px">
 		<path
 			data-zone="11"
@@ -63,7 +63,7 @@
 		/>
 		<text
 			class="text-current/50"
-			x={r(szX / 2)}
+			x={r(szX / 2 + 5)}
 			y={r(szY / 2 - 9)}
 			text-anchor="middle"
 			dominant-baseline="central"
@@ -71,12 +71,13 @@
 			font-size="8">11</text
 		>
 		<text
-			x={r(szX / 2)}
+			x={r(szX / 2 + 5)}
 			y={r(szY / 2 + 3)}
 			text-anchor="middle"
 			dominant-baseline="central"
 			fill="currentColor"
-			font-size="10">{zoneValue['11'] ?? ''}</text
+			font-size="10"
+			font-weight="bold">{zoneValue['11'] ?? ''}</text
 		>
 
 		<path
@@ -88,7 +89,7 @@
 		/>
 		<text
 			class="text-current/50"
-			x={r(W - szX / 2)}
+			x={r(W - szX / 2 - 5)}
 			y={r(szY / 2 - 9)}
 			text-anchor="middle"
 			dominant-baseline="central"
@@ -96,12 +97,13 @@
 			font-size="8">12</text
 		>
 		<text
-			x={r(W - szX / 2)}
+			x={r(W - szX / 2 - 5)}
 			y={r(szY / 2 + 3)}
 			text-anchor="middle"
 			dominant-baseline="central"
 			fill="currentColor"
-			font-size="10">{zoneValue['12'] ?? ''}</text
+			font-size="10"
+			font-weight="bold">{zoneValue['12'] ?? ''}</text
 		>
 
 		<path
@@ -113,7 +115,7 @@
 		/>
 		<text
 			class="text-current/50"
-			x={r(szX / 2)}
+			x={r(szX / 2 + 5)}
 			y={r(H - szY / 2 - 5)}
 			text-anchor="middle"
 			dominant-baseline="central"
@@ -121,12 +123,13 @@
 			font-size="8">13</text
 		>
 		<text
-			x={r(szX / 2)}
+			x={r(szX / 2 + 5)}
 			y={r(H - szY / 2 + 7)}
 			text-anchor="middle"
 			dominant-baseline="central"
 			fill="currentColor"
-			font-size="10">{zoneValue['13'] ?? ''}</text
+			font-size="10"
+			font-weight="bold">{zoneValue['13'] ?? ''}</text
 		>
 
 		<path
@@ -139,7 +142,7 @@
 		/>
 		<text
 			class="text-current/50"
-			x={r(W - szX / 2)}
+			x={r(W - szX / 2 - 5)}
 			y={r(H - szY / 2 - 5)}
 			text-anchor="middle"
 			dominant-baseline="central"
@@ -147,12 +150,13 @@
 			font-size="8">14</text
 		>
 		<text
-			x={r(W - szX / 2)}
+			x={r(W - szX / 2 - 5)}
 			y={r(H - szY / 2 + 7)}
 			text-anchor="middle"
 			dominant-baseline="central"
 			fill="currentColor"
-			font-size="10">{zoneValue['14'] ?? ''}</text
+			font-size="10"
+			font-weight="bold">{zoneValue['14'] ?? ''}</text
 		>
 
 		{#each innerZones as iz (iz.zone)}
@@ -181,7 +185,8 @@
 				text-anchor="middle"
 				dominant-baseline="central"
 				fill="currentColor"
-				font-size="10">{zoneValue[iz.zone] ?? ''}</text
+				font-size="10"
+				font-weight="bold">{zoneValue[iz.zone] ?? ''}</text
 			>
 		{/each}
 
@@ -197,4 +202,3 @@
 		/>
 	</svg>
 </figure>
-

@@ -40,8 +40,16 @@
 
 				{#if !isDay || value}
 					<div class={cn('grid', isDay && 'mr-ch')}>
-						<b class="font-mono tabular-nums">
-							{isDay ? value : value.toString().padStart(2, '0')}
+						<b class="flex gap-x-[.25ch] font-mono tabular-nums">
+							{#each (isDay ? value : value.toString().padStart(2, '0'))
+								.toString()
+								.split('') as number}
+								<span class="inline-block border border-current/25 px-[.2ch]">
+									{#key number}
+										<span class="inline-block anim-fade-to-t">{number}</span>
+									{/key}
+								</span>
+							{/each}
 						</b>
 
 						<small class="text-xs text-current/50 uppercase">
@@ -55,7 +63,7 @@
 				{/if}
 
 				{#if part !== 'days' && i < duration.length - 1}
-					<span class="font-mono tabular-nums">:</span>
+					<span class="px-[.2ch]">:</span>
 				{/if}
 			{/each}
 		</div>

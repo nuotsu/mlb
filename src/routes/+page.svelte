@@ -23,8 +23,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 	<header class="px-ch pt-lh">
 		<h1 class="mx-auto flex max-w-max flex-col" aria-label="Welcome to MLB.TheOhtani.com">
 			<div class="-mb-ch">Welcome to</div>
-			<pre
-				class="overflow-x-auto overflow-y-clip font-mono text-[xx-small] leading-none">{ascii}</pre>
+			<pre class="overflow-x-auto overflow-y-clip text-[xx-small] leading-none">{ascii}</pre>
 			<p class="ml-auto">.TheOhtani.com</p>
 		</h1>
 	</header>

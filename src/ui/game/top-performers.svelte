@@ -43,7 +43,7 @@
 
 				{#if summary}
 					{@const items = summary.split(', ')}
-					<dd class="flex flex-wrap gap-x-[.5ch] leading-none">
+					<dd class="flex flex-wrap gap-x-[.5ch] leading-none tabular-nums">
 						{#each items as item, i}
 							<span>
 								{item}{#if i < items.length - 1},{/if}

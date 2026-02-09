@@ -7,7 +7,7 @@
 </script>
 
 <section class="space-y-lh px-ch py-lh">
-	<div class="flex flex-wrap justify-center gap-lh">
+	<div class="flex flex-wrap justify-center gap-x-[2lh] gap-y-lh">
 		<Countdown date={season.springStartDate} until="🌻 Spring Training" />
 		<Countdown date="2026-03-04" until="🌎 World Baseball Classic" />
 		<Countdown date={season.regularSeasonStartDate} until="🏟️ Opening Day" />
@@ -16,7 +16,7 @@
 	<article>
 		<h2 class="text-center h1">{season.seasonId} Season</h2>
 
-		<table class="mx-auto text-left">
+		<table class="mx-auto text-left tabular-nums">
 			<tbody>
 				<tr>
 					<th>Spring Training</th>

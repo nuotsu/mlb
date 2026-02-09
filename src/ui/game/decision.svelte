@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchMLB } from '$lib/fetch'
+	import Empty from '$ui/empty.svelte'
 	import Loading from '$ui/loading.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 
@@ -22,7 +23,7 @@
 	}
 </script>
 
-<article class="space-y-ch">
+<article class="space-y-ch has-data-empty:hidden">
 	<h2 class="text-xs text-current/50">Decisions</h2>
 
 	<dl class="grid gap-[.5ch]">
@@ -57,7 +58,7 @@
 
 					{#if summary}
 						{@const items = summary.split(', ')}
-						<dd class="flex flex-wrap gap-x-[.5ch] leading-none">
+						<dd class="flex flex-wrap gap-x-[.5ch] leading-none tabular-nums">
 							{#each items as item, i}
 								<span>
 									{item}{#if i < items.length - 1},{/if}
@@ -66,6 +67,8 @@
 						</dd>
 					{/if}
 				</div>
+			{:else}
+				<Empty data-empty>No decisions</Empty>
 			{/each}
 		{/await}
 	</dl>

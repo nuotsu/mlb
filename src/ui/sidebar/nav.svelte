@@ -97,8 +97,9 @@
 			</li>
 			<li><a href="https://nuotsu.dev">Built by nuotsu</a></li>
 			<li>
-				<small class="text-[xx-small] font-extralight text-current/50">
-					@ {new Date().getFullYear()} MLB.TheOhtani.com. v{version}
+				<small class="font-semilight text-[xx-small] text-current/50">
+					@ {new Date().getFullYear()} MLB.TheOhtani.com.
+					<span class="tabular-nums">v{version}</span>
 				</small>
 			</li>
 		</ul>
