@@ -1,8 +1,8 @@
 <script lang="ts">
-	let list = []
+	let list: Array<MLB.Team> = []
 </script>
 
-<details class="accordion-base">
+<details class="accordion-base" open={!!list?.length}>
 	<summary>Favorites</summary>
 
 	{#if list?.length}

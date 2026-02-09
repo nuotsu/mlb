@@ -1,8 +1,8 @@
 <script lang="ts">
-	let list = []
+	let list: Array<number> = []
 </script>
 
-<details class="accordion-base">
+<details class="accordion-base" open={!!list?.length}>
 	<summary>Spoiler Prevention</summary>
 
 	{#if list?.length}
