@@ -13,6 +13,8 @@
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
 
+	let { id, name } = $derived(team)
+
 	let fallback = $state(false)
 	let srcsetValid = $state(false)
 
@@ -34,8 +36,8 @@
 		class="overflow-hidden text-transparent {className}"
 		src={fallback
 			? `${src}/72`
-			: `https://www.mlbstatic.com/team-logos/team-cap-on-light/${team.id}.svg`}
-		alt={team.name}
+			: `https://www.mlbstatic.com/team-logos/team-cap-on-light/${id}.svg`}
+		alt={name}
 		width="300"
 		height="300"
 		draggable="false"

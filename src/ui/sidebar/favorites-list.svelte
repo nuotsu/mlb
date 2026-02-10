@@ -1,17 +1,47 @@
 <script lang="ts">
-	import { favoritesStore } from '$ui/store.svelte'
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
+	import { cn } from '$lib/utils'
+	import { favoritesStore } from '$ui/favorites/store.svelte'
+	import Headshot from '$ui/player/headshot.svelte'
+	import Logo from '$ui/team/logo.svelte'
 
-	let list = $derived(favoritesStore.favorites)
+	function sortByType(a: App.Favorite, b: App.Favorite) {
+		const aType = a.href.includes('team') ? 0 : 1
+		const bType = b.href.includes('team') ? 0 : 1
+		return aType - bType
+	}
 </script>
 
-<details class="accordion-base" open={!!list?.length}>
+<details class="accordion-base" open={!!favoritesStore.favorites?.length}>
 	<summary>Favorites</summary>
 
-	{#if list?.length}
-		<ul>
-			{#each list as favorite (favorite.href)}
+	{#if favoritesStore.favorites?.length}
+		<ul class="grid grid-cols-2 gap-px text-center">
+			{#each favoritesStore.favorites.sort(sortByType) as favorite (favorite.href)}
+				{@const id = Number(favorite.href.split('/').pop())}
+				{@const isTeam = favorite.href.includes('team')}
+
 				<li>
-					<a href={favorite.href}>{favorite.label}</a>
+					<a
+						class={cn(
+							'group/fav relative flex w-full items-center gap-[.5ch] bg-current/5 p-[.25ch]',
+							isTeam && 'before:opacity-10',
+						)}
+						href={favorite.href}
+						style:--team-bg={isTeam
+							? `url(https://midfield.mlbstatic.com/v1/team/${id}/spots/32)`
+							: undefined}
+					>
+						{#if isTeam}
+							<Logo class="size-lh" team={{ id } as MLB.Team} />
+						{:else if favorite.href.includes('player')}
+							<Headshot class="size-lh shrink-0" person={{ id }} size={36} />
+						{/if}
+
+						<span class="line-clamp-1 grow break-all decoration-dashed group-hover/fav:underline">
+							{favorite.label}
+						</span>
+					</a>
 				</li>
 			{/each}
 		</ul>

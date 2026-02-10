@@ -81,7 +81,7 @@
 		{/if}
 	</span>
 
-	<div class="relative z-1" style:grid-area="boxscore">
+	<div class="relative z-1 bg-background" style:grid-area="boxscore">
 		{#if boxscore}
 			<TeamScores {game} {boxscore} />
 		{:else}
@@ -107,7 +107,7 @@
 
 	{#if !isGamePage}
 		<div
-			class="text-center text-xs font-light group-not-hover/game:transition-transform md:group-not-hover/game:-translate-y-full"
+			class="text-center text-xs font-light group-not-hover/game:transition-[translate,opacity] md:group-not-hover/game:-translate-y-full md:group-not-hover/game:opacity-0"
 			style:grid-area="link"
 		>
 			<a

@@ -5,6 +5,7 @@
 	import { formatDate, slash } from '$lib/temporal'
 	import { count } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
+	import { sortGames } from '$ui/favorites/store.svelte'
 	import Game from '$ui/game/game.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
@@ -69,7 +70,7 @@
 				<p class="text-center text-current/50">{count(schedule.totalGames, 'game')}</p>
 			{/if}
 			<div class="columns-[450px] gap-lh space-y-ch *:break-inside-avoid">
-				{#each games as game (game.gamePk)}
+				{#each games.sort(sortGames) as game (game.gamePk)}
 					{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
 					<Game {game} {linescore} showDescription />
 				{/each}

@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import { StarEmptyIcon, StarIcon } from '$ui/icons'
-	import { favoritesStore } from '$ui/store.svelte'
 
 	let {
 		target,
@@ -8,7 +8,7 @@
 		target: App.Favorite
 	} = $props()
 
-	let checked = $derived(favoritesStore.has(target))
+	let checked = $derived(favoritesStore.has(target.href))
 </script>
 
 <label
