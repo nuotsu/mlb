@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation'
-	import { CUSTOM_ENDPOINT_KEY, DIRECTORY, ENDPOINTS, HOST, endpointToUrl } from './constants'
+	import { CUSTOM_ENDPOINT_KEY, DIRECTORY, ENDPOINTS, HOST } from './constants'
+	import { endpointToUrl } from './utils'
 
 	let { protocol, host } = new URL(HOST)
 

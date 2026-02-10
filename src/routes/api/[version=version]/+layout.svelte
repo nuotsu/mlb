@@ -27,7 +27,7 @@
 
 <Header title="Stats API Playground" crumbs={[{ name: 'Stats API Playground' }]} />
 
-<section class="flex flex-col pt-lh sm:max-h-[calc(100dvh-var(--header-height))]">
+<section class="flex flex-col space-y-ch pt-lh sm:max-h-[calc(100dvh-var(--header-height))]">
 	<article class="top-0 z-1 bg-background">
 		<form class="grid gap-ch px-ch" method="POST" use:enhance>
 			<input name="distinctId" value={distinctId} type="hidden" />
