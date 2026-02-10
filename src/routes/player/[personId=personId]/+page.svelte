@@ -123,7 +123,7 @@
 		</label>
 	</nav>
 
-	<div class="grid items-start gap-ch md:grid-cols-2">
+	<div class="grid items-start gap-x-lh gap-y-[2lh] md:grid-cols-2">
 		<article>
 			<h2 class="text-center text-sm text-current/50">Year-by-year Stats</h2>
 			<YearByYearList {person} />
