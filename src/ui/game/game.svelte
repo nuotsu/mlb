@@ -33,10 +33,12 @@
 	data-gamePk={game.gamePk}
 >
 	<div
-		class="relative z-1 m-auto grid h-6 text-center *:leading-none group-has-[[style*=linescore]]/game:h-12"
+		class="relative z-1 m-auto grid h-6 pt-[0.75rlh] text-center *:leading-none group-has-[[style*=linescore]]/game:h-12"
 		style:grid-area="status"
 	>
-		<BaseRunners className="m-auto absolute inset-x-0 top-1/2 -translate-y-1/2 max-w-max" />
+		<BaseRunners
+			className="m-auto absolute left-1/2 top-1/2 -translate-1/2 w-max mt-[.5rlh] max-md:group-has-[[style*=linescore]]/game:mt-[.5lh]"
+		/>
 
 		{#if isFinal}
 			{@const value =
@@ -126,20 +128,20 @@
 
 		grid-template:
 			'status description' auto
-			'status	boxscore' auto
-			'status link' auto / var(--status-size) 1fr;
+			'status boxscore' auto
+			'. link' auto / var(--status-size) 1fr;
 
 		&:global(:has([style*='linescore'])) {
 			grid-template:
 				'status description linescore' auto
-				'status	boxscore linescore' auto
-				'status link' auto / var(--status-size) 1fr minmax(18ch, 50%);
+				'status boxscore linescore' auto
+				'. link .' auto / var(--status-size) 1fr minmax(18ch, 50%);
 
 			@media (width < 32rem) {
 				grid-template:
-					'status description description' auto
+					'. description description' auto
 					'status boxscore linescore' auto
-					'status link' auto / var(--status-size) minmax(5.5ch, 1fr) 50%;
+					'. link .' auto / var(--status-size) minmax(5.5ch, 1fr) 50%;
 			}
 		}
 	}
