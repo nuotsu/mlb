@@ -9,6 +9,7 @@ export const load: PageServerLoad = async ({ params }) => {
 			fields: [
 				'people',
 				'id,fullName,firstName,lastName,useName,useLastName',
+				'birthDate,currentAge,birthCity,birthCountry',
 				'primaryNumber,primaryPosition,abbreviation,active',
 				'currentTeam,preferredTeam,team,name,clubName,teamName',
 				'stats,group,displayName,splits,season,stat',

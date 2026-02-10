@@ -1,7 +1,7 @@
 {
 	"name": "mlb",
 	"private": true,
-	"version": "0.4.75",
+	"version": "0.4.76",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --host",

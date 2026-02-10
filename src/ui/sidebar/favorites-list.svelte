@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
 	import { cn } from '$lib/utils'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
@@ -21,7 +20,7 @@
 				{@const id = Number(favorite.href.split('/').pop())}
 				{@const isTeam = favorite.href.includes('team')}
 
-				<li>
+				<li class="anim-fade-to-r">
 					<a
 						class={cn(
 							'group/fav relative flex w-full items-center gap-[.5ch] bg-current/5 p-[.25ch]',

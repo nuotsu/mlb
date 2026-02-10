@@ -283,22 +283,22 @@
 
 @utility anim-fade-to-l {
 	@apply anim-fade;
-	--x: 1rem;
+	--x: 1ch;
 }
 
 @utility anim-fade-to-r {
 	@apply anim-fade;
-	--x: -1rem;
+	--x: -1ch;
 }
 
 @utility anim-fade-to-t {
 	@apply anim-fade;
-	--y: 1rem;
+	--y: 1ch;
 }
 
 @utility anim-fade-to-b {
 	@apply anim-fade;
-	--y: -1rem;
+	--y: -1ch;
 }
 
 @keyframes anim-fade-to {

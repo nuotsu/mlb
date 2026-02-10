@@ -44,7 +44,7 @@
 		baseballStats?.find((s) => [s.name, s.lookupParam].includes(key))?.lookupParam ?? key
 </script>
 
-<article
+<div
 	class="grid grid-cols-[repeat(auto-fit,minmax(10ch,1fr))] gap-px text-center"
 	ontouchmove={(e) => {
 		const touch = e.touches[0]
@@ -87,7 +87,7 @@
 			{/each}
 		{/if}
 	{/each}
-</article>
+</div>
 
 <style>
 	label:has(:not(input:checked)) + :global([data-stat]) {

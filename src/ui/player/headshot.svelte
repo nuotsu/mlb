@@ -13,10 +13,13 @@
 </script>
 
 <img
-	class="block rounded-full bg-foreground/10 object-contain text-transparent {className}"
+	class="block rounded-full bg-foreground/10 object-contain text-transparent img-fade opacity-0 transition-opacity {className}"
 	src="https://midfield.mlbstatic.com/v1/people/{person.id}/{type}/{size}"
 	width={size}
 	height={size}
 	alt={person.fullName ?? ''}
 	draggable="false"
+	onload={(e) => {
+		e.currentTarget.classList.remove('opacity-0')
+	}}
 />

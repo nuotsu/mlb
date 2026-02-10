@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate, slash } from '$lib/temporal'
 	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
@@ -52,28 +53,65 @@
 	{/snippet}
 </Header>
 
-<!-- <img
-	src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/w_426,q_auto:best/v1/people/{person.id}/action/hero/current"
-	alt=""
-/> -->
+<section class="space-y-lh pb-lh">
+	<header class="grid items-center gap-y-ch md:grid-cols-2">
+		<figure class="max-md:mask-b-from-25% md:mask-r-from-50%">
+			<img
+				class="w-full opacity-0 transition-opacity duration-600"
+				src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/w_1200,q_auto:best/v1/people/{person.id}/action/hero/current"
+				width={1200}
+				height={400}
+				alt=""
+				draggable="false"
+				loading="eager"
+				fetchpriority="high"
+				onload={(e) => {
+					e.currentTarget.classList.remove('opacity-0')
+				}}
+			/>
+		</figure>
 
-<section class="space-y-lh px-ch py-lh">
-	<dl class="mx-auto description-list max-w-max px-ch">
-		{#if person.primaryNumber}
-			<dt>Jersey Number</dt>
-			<dd>
-				#{person.primaryNumber}
-			</dd>
-		{/if}
+		<dl class="mx-auto description-list max-w-max px-ch">
+			{#if person.primaryNumber}
+				<dt>Jersey Number</dt>
+				<dd>
+					#{person.primaryNumber}
+				</dd>
+			{/if}
 
-		{#if person.primaryPosition}
-			<dt>Position</dt>
-			<dd>
-				{person.primaryPosition.abbreviation}
-			</dd>
-		{/if}
-	</dl>
+			{#if person.primaryPosition}
+				<dt>Position</dt>
+				<dd>
+					{person.primaryPosition.abbreviation}
+				</dd>
+			{/if}
 
+			{#if person.birthDate}
+				<dt>Birth Date</dt>
+				<dd>
+					{formatDate(slash(person.birthDate), {
+						month: 'long',
+						day: 'numeric',
+						year: 'numeric',
+					})}
+
+					<small class="inline-block text-current/50">
+						({person.currentAge} years old)
+					</small>
+				</dd>
+			{/if}
+
+			{#if person.birthCity}
+				<dt>Birth City</dt>
+				<dd>
+					{person.birthCity}, {person.birthCountry}
+				</dd>
+			{/if}
+		</dl>
+	</header>
+</section>
+
+<section class="space-y-lh px-ch">
 	<nav class="flex items-center justify-center gap-ch">
 		<label>
 			<input type="radio" name="stat-group" value="hitting" checked={!isPitcher} />
@@ -85,23 +123,29 @@
 		</label>
 	</nav>
 
-	<YearByYearList {person} />
+	<div class="grid items-start gap-ch md:grid-cols-2">
+		<article>
+			<h2 class="text-center text-sm text-current/50">Year-by-year Stats</h2>
+			<YearByYearList {person} />
+		</article>
 
-	{#if data.hittingHotColdZones}
-		<HotColdZones
-			hotColdZones={data.hittingHotColdZones}
-			baseballStats={data.baseballStats}
-			data-group="hitting"
-		/>
-	{/if}
-
-	{#if data.pitchingHotColdZones}
-		<HotColdZones
-			hotColdZones={data.pitchingHotColdZones}
-			baseballStats={data.baseballStats}
-			data-group="pitching"
-		/>
-	{/if}
+		<article>
+			{#if data.hittingHotColdZones}
+				<HotColdZones
+					hotColdZones={data.hittingHotColdZones}
+					baseballStats={data.baseballStats}
+					data-group="hitting"
+				/>
+			{/if}
+			{#if data.pitchingHotColdZones}
+				<HotColdZones
+					hotColdZones={data.pitchingHotColdZones}
+					baseballStats={data.baseballStats}
+					data-group="pitching"
+				/>
+			{/if}
+		</article>
+	</div>
 </section>
 
 <style>

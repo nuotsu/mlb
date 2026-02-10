@@ -13,7 +13,7 @@
 	} & HTMLAttributes<HTMLElement> = $props()
 </script>
 
-<article
+<div
 	class="mx-auto grid max-w-max grid-cols-[auto_auto] grid-rows-[1fr_repeat(var(--count),auto)] items-center overflow-clip"
 	style:--count={(hotColdZones?.splits?.length ?? 0) + 2}
 	{...props}
@@ -42,7 +42,7 @@
 	{/each}
 
 	<HomePlate class="relative col-start-1 row-start-(--count) -mt-lh" />
-</article>
+</div>
 
 <style>
 	label:has(input:not(:checked)) + :global(figure) {
