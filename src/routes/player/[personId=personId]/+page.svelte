@@ -4,6 +4,7 @@
 	import Headshot from '$ui/player/headshot.svelte'
 	import HotColdZones from '$ui/stats/hot-cold-zones.svelte'
 	import YearByYearList from '$ui/stats/year-by-year-list.svelte'
+	import ToggleFavorite from '$ui/toggle-favorite.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
@@ -42,20 +43,28 @@
 			<span>{person.useName || person.firstName}</span>
 			<strong class="text-3xl">{person.useLastName || person.lastName}</strong>
 		</h1>
-
-		{#if person.primaryNumber}
-			<div>
-				#{person.primaryNumber}
-			</div>
-		{/if}
-
-		{#if person.primaryPosition}
-			<div>
-				{person.primaryPosition.abbreviation}
-			</div>
-		{/if}
 	</div>
+
+	{#snippet after()}
+		<ToggleFavorite target={{ href: `/player/${person.id}`, label: person.lastName! }} />
+	{/snippet}
 </Header>
+
+<dl class="mx-auto description-list max-w-max px-ch">
+	{#if person.primaryNumber}
+		<dt>Jersey Number</dt>
+		<dd>
+			#{person.primaryNumber}
+		</dd>
+	{/if}
+
+	{#if person.primaryPosition}
+		<dt>Position</dt>
+		<dd>
+			{person.primaryPosition.abbreviation}
+		</dd>
+	{/if}
+</dl>
 
 <!-- <img
 	src="https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:action:hero:current.jpg/w_426,q_auto:best/v1/people/{person.id}/action/hero/current"

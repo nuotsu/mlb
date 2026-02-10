@@ -13,41 +13,32 @@
 		<Countdown date={season.regularSeasonStartDate} until="🏟️ Opening Day" />
 	</div>
 
-	<article>
+	<article class="space-y-ch">
 		<h2 class="text-center h1">{season.seasonId} Season</h2>
 
-		<table class="mx-auto text-left tabular-nums">
-			<tbody>
-				<tr>
-					<th>Spring Training</th>
-					<td>
-						{@render linkedDate(season.springStartDate)} - {@render linkedDate(
-							season.springEndDate,
-						)}
-					</td>
-				</tr>
-				<tr>
-					<th>Regular Season</th>
-					<td>
-						{@render linkedDate(season.regularSeasonStartDate)}
-						-
-						{@render linkedDate(season.regularSeasonEndDate)}
-					</td>
-				</tr>
-				<tr>
-					<th>All-Star Game</th>
-					<td>{@render linkedDate(season.allStarDate, 'day')}</td>
-				</tr>
-				<tr>
-					<th>Postseason</th>
-					<td>
-						{@render linkedDate(season.postSeasonStartDate)}
-						-
-						{@render linkedDate(season.postSeasonEndDate)}
-					</td>
-				</tr>
-			</tbody>
-		</table>
+		<dl class="mx-auto description-list max-w-max tabular-nums">
+			<dt>Spring Training</dt>
+			<dd>
+				{@render linkedDate(season.springStartDate)} - {@render linkedDate(season.springEndDate)}
+			</dd>
+
+			<dt>Regular Season</dt>
+			<dd>
+				{@render linkedDate(season.regularSeasonStartDate)}
+				-
+				{@render linkedDate(season.regularSeasonEndDate)}
+			</dd>
+
+			<dt>All-Star Game</dt>
+			<dd>{@render linkedDate(season.allStarDate, 'day')}</dd>
+
+			<dt>Postseason</dt>
+			<dd>
+				{@render linkedDate(season.postSeasonStartDate)}
+				-
+				{@render linkedDate(season.postSeasonEndDate)}
+			</dd>
+		</dl>
 	</article>
 </section>
 
@@ -56,14 +47,3 @@
 		{formatDate(date + 'T00:00:00', { weekday: 'short', month: 'numeric', day: 'numeric' })}
 	</a>
 {/snippet}
-
-<style>
-	th {
-		color: color-mix(in srgb, var(--color-foreground), transparent);
-	}
-
-	th,
-	td {
-		padding: 0 1ch;
-	}
-</style>

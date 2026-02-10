@@ -264,6 +264,14 @@
 	}
 }
 
+@utility description-list {
+	@apply grid grid-cols-[auto_1fr] gap-x-lh;
+
+	dt {
+		@apply text-current/50;
+	}
+}
+
 /* anims */
 
 @utility anim-fade {

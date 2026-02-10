@@ -12,6 +12,11 @@ declare global {
 			href?: string
 			name?: string
 		}
+
+		type Favorite = {
+			href: string
+			label: string
+		}
 	}
 
 	namespace Docs {

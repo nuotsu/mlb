@@ -6,7 +6,7 @@
 	const { gameInfo, weather } = $derived(feedLive.gameData)
 </script>
 
-<dl class="mx-auto grid max-w-max grid-cols-[auto_1fr] gap-x-lh px-ch [&_dt]:text-current/50">
+<dl class="mx-auto description-list max-w-max px-ch">
 	<dt>Date</dt>
 	<dd>
 		<a class="link" href="/schedule/day/{formatDate(game.gameDate, { locale: 'en-CA' })}">

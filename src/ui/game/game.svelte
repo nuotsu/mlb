@@ -6,7 +6,7 @@
 	import ProbablePitchers from '$ui/game/probable-pitchers.svelte'
 	import TeamScores from '$ui/game/team-scores.svelte'
 	import Loading from '$ui/loading.svelte'
-	import Bases from './bases.svelte'
+	import BaseRunners from './base-runners.svelte'
 
 	let {
 		game,
@@ -33,10 +33,10 @@
 	data-gamePk={game.gamePk}
 >
 	<div
-		class="relative z-1 grid h-6 text-center *:col-span-full *:row-span-full *:leading-none group-has-[[style*=linescore]]/game:h-12"
+		class="relative z-1 m-auto grid h-6 text-center *:leading-none group-has-[[style*=linescore]]/game:h-12"
 		style:grid-area="status"
 	>
-		<Bases className="absolute left-1/2 top-1/2 -translate-1/2 -z-1 m-auto" />
+		<BaseRunners className="m-auto absolute inset-x-0 top-1/2 -translate-y-1/2 max-w-max" />
 
 		{#if isFinal}
 			{@const value =
@@ -48,10 +48,6 @@
 			<time class="m-auto text-xs font-bold" datetime={game.gameDate}>
 				{formatDate(game.gameDate, { hour: 'numeric', minute: '2-digit' })}
 			</time>
-		{/if}
-
-		{#if !isGamePage}
-			<a class="relative text-[0px]" href="/game/{game.gamePk}">View details</a>
 		{/if}
 	</div>
 
@@ -85,7 +81,7 @@
 		{/if}
 	</span>
 
-	<div style:grid-area="boxscore">
+	<div class="relative z-1" style:grid-area="boxscore">
 		{#if boxscore}
 			<TeamScores {game} {boxscore} />
 		{:else}
@@ -108,6 +104,20 @@
 	{:else}
 		<ProbablePitchers />
 	{/if}
+
+	{#if !isGamePage}
+		<div
+			class="text-center text-xs font-light group-not-hover/game:transition-transform md:group-not-hover/game:-translate-y-full"
+			style:grid-area="link"
+		>
+			<a
+				class="inline-grid h-rlh place-content-center text-current/50 hover:text-current"
+				href="/game/{game.gamePk}"
+			>
+				See details
+			</a>
+		</div>
+	{/if}
 </article>
 
 <style>
@@ -116,17 +126,20 @@
 
 		grid-template:
 			'status description' auto
-			'status	boxscore' auto / var(--status-size) 1fr;
+			'status	boxscore' auto
+			'status link' auto / var(--status-size) 1fr;
 
 		&:global(:has([style*='linescore'])) {
 			grid-template:
 				'status description linescore' auto
-				'status	boxscore linescore' auto / var(--status-size) 1fr minmax(18ch, 50%);
+				'status	boxscore linescore' auto
+				'status link' auto / var(--status-size) 1fr minmax(18ch, 50%);
 
 			@media (width < 32rem) {
 				grid-template:
-					'. description description' auto
-					'status boxscore linescore' auto / var(--status-size) minmax(5.5ch, 1fr) 50%;
+					'status description description' auto
+					'status boxscore linescore' auto
+					'status link' auto / var(--status-size) minmax(5.5ch, 1fr) 50%;
 			}
 		}
 	}
