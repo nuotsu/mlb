@@ -10,6 +10,7 @@
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import WeekPicker from '$ui/schedule/week-picker.svelte'
+	import SelectSport from '$ui/select-sport.svelte'
 	import ToggleAllDetails from '$ui/toggle-all-details.svelte'
 	import type { PageProps } from './$types'
 
@@ -36,6 +37,7 @@
 	{#snippet after()}
 		<div class="mx-auto flex flex-wrap items-center gap-ch text-center">
 			<WeekPicker class="grow" date={currentDate} {onDateChange} />
+			<SelectSport />
 			<ToggleAllDetails />
 		</div>
 	{/snippet}
