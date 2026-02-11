@@ -10,6 +10,7 @@
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import DatePicker from '$ui/schedule/date-picker.svelte'
+	import SelectSport from '$ui/select-sport.svelte'
 	import SeasonProgress from '$ui/season/season-progress.svelte'
 	import type { PageProps } from './$types'
 	import { fetchSeasonProgress } from './fetch-season-progress'
@@ -59,6 +60,7 @@
 	]}
 >
 	{#snippet after()}
+		<SelectSport class="button w-full shrink text-center" />
 		<DatePicker date={currentDate} {onDateChange} class="mx-auto" />
 	{/snippet}
 </Header>
