@@ -46,7 +46,7 @@
 		accent-color: var(--color-accent);
 		caret-color: var(--color-accent);
 
-		@apply bg-neutral-200 text-foreground max-sm:has-[#sidebar-open:checked]:overflow-clip;
+		@apply bg-neutral-100 text-foreground max-sm:has-[#sidebar-open:checked]:overflow-clip;
 
 		&:has([data-color-scheme='dark']) {
 			--color-background: var(--color-dark);

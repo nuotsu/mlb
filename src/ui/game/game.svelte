@@ -2,6 +2,7 @@
 	import { page } from '$app/state'
 	import { fetchBoxscore, fetchLinescore } from '$lib/fetch'
 	import { formatDate } from '$lib/temporal'
+	import { cn } from '$lib/utils'
 	import Linescore from '$ui/game/linescore.svelte'
 	import ProbablePitchers from '$ui/game/probable-pitchers.svelte'
 	import TeamScores from '$ui/game/team-scores.svelte'
@@ -37,7 +38,10 @@
 		style:grid-area="status"
 	>
 		<BaseRunners
-			className="m-auto absolute left-1/2 top-1/2 -translate-1/2 w-max mt-[.5rlh] max-md:group-has-[[style*=linescore]]/game:mt-[.5lh]"
+			className={cn(
+				'm-auto absolute left-1/2 top-1/2 -translate-1/2 w-max max-md:group-has-[[style*=linescore]]/game:mt-[.5lh]',
+				isGamePage && isFinal ? 'mt-[.75ch]' : 'mt-[.5rlh]',
+			)}
 		/>
 
 		{#if isFinal}

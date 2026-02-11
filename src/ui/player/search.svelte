@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dev } from '$app/environment'
 	import { page } from '$app/state'
 	import { fetchMLB } from '$lib/fetch'
 	import { debounce } from '$lib/utils'
@@ -23,7 +24,7 @@
 			names: query,
 			fields: 'people,id,fullName,primaryNumber,primaryPosition,abbreviation',
 		}).then((results) => {
-			posthog.capture('player_search_query', { query })
+			if (!dev) posthog.capture('player_search_query', { query })
 			return results
 		})
 	}
