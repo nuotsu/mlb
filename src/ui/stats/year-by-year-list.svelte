@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state'
+	import Empty from '$ui/empty.svelte'
 	import YearByYear from '$ui/stats/year-by-year.svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
 
@@ -89,6 +90,8 @@
 					{key}
 				/>
 			{/each}
+		{:else}
+			<Empty data-empty>No year-by-year {group} data</Empty>
 		{/if}
 	{/each}
 </div>

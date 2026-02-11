@@ -12,7 +12,7 @@
 </script>
 
 <details class="accordion-base" open={!!favoritesStore.favorites?.length}>
-	<summary>Favorites</summary>
+	<summary class="hover-link">Favorites</summary>
 
 	{#if favoritesStore.favorites?.length}
 		<ul class="grid grid-cols-2 gap-px text-center">

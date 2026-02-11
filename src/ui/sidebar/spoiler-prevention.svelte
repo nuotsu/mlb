@@ -3,7 +3,7 @@
 </script>
 
 <details class="accordion-base" open={!!list?.length}>
-	<summary>Spoiler Prevention</summary>
+	<summary class="hover-link">Spoiler Prevention</summary>
 
 	{#if list?.length}
 		<ul></ul>

@@ -82,7 +82,7 @@
 				<li>
 					<a
 						{href}
-						class="relative flex items-center gap-1"
+						class="relative flex items-center gap-1 hover-link"
 						class:active={page.route.id?.startsWith(href)}
 					>
 						<svelte:component this={icon} />
@@ -96,10 +96,8 @@
 			<li><FavoritesList /></li>
 			<li><SpoilerPrevention /></li>
 			<li><ToggleColorScheme /></li>
-			<li>
-				<a href="https://github.com/nuotsu/mlb"> View on GitHub </a>
-			</li>
-			<li><a href="https://nuotsu.dev">Built by nuotsu</a></li>
+			<li><a class="block hover-link" href="https://github.com/nuotsu/mlb">View on GitHub</a></li>
+			<li><a class="block hover-link" href="https://nuotsu.dev">Built by nuotsu</a></li>
 			<li>
 				<small class="font-semilight text-[xx-small] text-current/50">
 					@ {new Date().getFullYear()} MLB.TheOhtani.com.

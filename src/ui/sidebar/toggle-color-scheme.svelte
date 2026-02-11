@@ -19,6 +19,7 @@
 
 <button
 	id="toggle-color-scheme"
+	class="flex w-full hover-link"
 	data-color-scheme={mode}
 	onclick={() => {
 		colorSchemeStore.colorScheme = mode === 'dark' ? 'light' : 'dark'

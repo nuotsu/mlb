@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { formatDate, slash } from '$lib/temporal'
+	import Empty from '$ui/empty.svelte'
 	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
+	import PlayerInfo from '$ui/player/player-info.svelte'
 	import RosterEntries from '$ui/player/roster-entries.svelte'
 	import HotColdZones from '$ui/stats/hot-cold-zones.svelte'
 	import YearByYearList from '$ui/stats/year-by-year-list.svelte'
@@ -74,43 +75,7 @@
 				/>
 			</figure>
 
-			<dl class="mx-auto description-list max-w-max px-ch">
-				{#if person.primaryNumber}
-					<dt>Jersey Number</dt>
-					<dd>
-						#{person.primaryNumber}
-					</dd>
-				{/if}
-
-				{#if person.primaryPosition}
-					<dt>Position</dt>
-					<dd>
-						{person.primaryPosition.abbreviation}
-					</dd>
-				{/if}
-
-				{#if person.birthDate}
-					<dt>Birth Date</dt>
-					<dd>
-						{formatDate(slash(person.birthDate), {
-							month: 'long',
-							day: 'numeric',
-							year: 'numeric',
-						})}
-
-						<small class="inline-block text-current/50">
-							({person.currentAge} years old)
-						</small>
-					</dd>
-				{/if}
-
-				{#if person.birthCity}
-					<dt>Birth City</dt>
-					<dd>
-						{person.birthCity}, {person.birthCountry}
-					</dd>
-				{/if}
-			</dl>
+			<PlayerInfo {person} />
 		</header>
 	</section>
 
@@ -133,29 +98,33 @@
 			</label>
 		</nav>
 
-		<div class="grid items-start gap-x-lh gap-y-[2lh] md:grid-cols-2">
-			<article>
-				<h2 class="text-center text-sm text-current/50">Year-by-year Stats</h2>
-				<YearByYearList {person} data-group="hitting" />
-			</article>
+		<article class="group/yby">
+			<h2 class="text-center text-sm text-current/50 group-has-data-empty/yby:hidden">
+				Year-by-year Stats
+			</h2>
+			<YearByYearList {person} />
+		</article>
 
-			<article data-group="pitching">
-				{#if data.hittingHotColdZones}
-					<HotColdZones
-						hotColdZones={data.hittingHotColdZones}
-						baseballStats={data.baseballStats}
-						data-group="hitting"
-					/>
-				{/if}
-				{#if data.pitchingHotColdZones}
-					<HotColdZones
-						hotColdZones={data.pitchingHotColdZones}
-						baseballStats={data.baseballStats}
-						data-group="pitching"
-					/>
-				{/if}
-			</article>
-		</div>
+		<article data-group="pitching">
+			{#if data.hittingHotColdZones}
+				<HotColdZones
+					hotColdZones={data.hittingHotColdZones}
+					baseballStats={data.baseballStats}
+					data-group="hitting"
+				/>
+			{/if}
+			{#if data.pitchingHotColdZones}
+				<HotColdZones
+					hotColdZones={data.pitchingHotColdZones}
+					baseballStats={data.baseballStats}
+					data-group="pitching"
+				/>
+			{/if}
+
+			{#if !data.hittingHotColdZones && !data.pitchingHotColdZones}
+				<Empty>No hot/cold zones data</Empty>
+			{/if}
+		</article>
 	</section>
 </div>
 

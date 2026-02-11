@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatDate } from '$lib/temporal'
+	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
 
 	let { game, feedLive }: { game: MLB.Game; feedLive: MLB.LiveGameFeed } = $props()
 
@@ -60,4 +61,17 @@
 			{[condition, temp && `${temp}°F`, wind && `Wind: ${wind} mph`].filter(Boolean).join(' / ')}
 		</dd>
 	{/if}
+
+	<dt>Favorite</dt>
+	<dd>
+		<ToggleFavorite
+			target={{
+				href: `/game/${game.gamePk}`,
+				label: [
+					feedLive.gameData.teams.away.abbreviation,
+					feedLive.gameData.teams.home.abbreviation,
+				].join(' @ '),
+			}}
+		/>
+	</dd>
 </dl>

@@ -36,8 +36,8 @@
 <Header title="Weekly Schedule" crumbs={[{ name: 'Weekly Schedule', href: '/schedule/week' }]}>
 	{#snippet after()}
 		<div class="mx-auto flex flex-wrap items-center gap-ch text-center">
-			<SelectSport class="button w-full shrink text-center" />
-			<WeekPicker class="grow" date={currentDate} {onDateChange} />
+			<SelectSport class="button text-center" />
+			<WeekPicker date={currentDate} {onDateChange} />
 			<ToggleAllDetails />
 		</div>
 	{/snippet}

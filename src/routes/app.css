@@ -203,6 +203,10 @@
 	@apply underline not-hover:decoration-dashed;
 }
 
+@utility hover-link {
+	@apply decoration-dashed hover:underline;
+}
+
 @utility input {
 	@apply border border-current/25 hover:bg-accent/25 focus:relative focus:bg-accent/25;
 }

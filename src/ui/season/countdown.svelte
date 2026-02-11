@@ -41,9 +41,7 @@
 				{#if !isDay || value}
 					<div class={cn('grid', isDay && 'mr-ch')}>
 						<b class="flex gap-x-[.25ch] font-mono tabular-nums">
-							{#each (isDay ? value : value.toString().padStart(2, '0'))
-								.toString()
-								.split('') as number}
+							{#each value.toString().padStart(2, '0').toString().split('') as number}
 								<span
 									class="inline-block overflow-hidden border border-current/10 px-[.2ch] dark:border-current/25"
 								>
@@ -72,7 +70,7 @@
 
 		{#if until}
 			<p>
-				until <a class="decoration-dashed hover:underline" href="/schedule/day/{date}">{until}</a>
+				until <a class="hover-link" href="/schedule/day/{date}">{until}</a>
 			</p>
 		{/if}
 	</article>
