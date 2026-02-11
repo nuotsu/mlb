@@ -3,14 +3,14 @@
 	import SeasonInfo from '$ui/season/season-info.svelte'
 
 	const ascii = `
-$$\\      $$\\ $$\\       $$$$$$$\\  
-$$$\\    $$$ |$$ |      $$  __$$\\ 
+$$\\      $$\\ $$\\       $$$$$$$\\
+$$$\\    $$$ |$$ |      $$  __$$\\
 $$$$\\  $$$$ |$$ |      $$ |  $$ |
 $$\\$$\\$$ $$ |$$ |      $$$$$$$\\ |
-$$ \\$$$  $$ |$$ |      $$  __$$\\ 
+$$ \\$$$  $$ |$$ |      $$  __$$\\
 $$ |\\$  /$$ |$$ |      $$ |  $$ |
 $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
-\\__|     \\__|\\________|\\_______/ 
+\\__|     \\__|\\________|\\_______/
 `
 </script>
 
@@ -19,7 +19,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 	description="A custom MLB scorebug for Major League Baseball (MLB) and other leagues. MLB = Mitchell's Live scoreBug."
 />
 
-<div class="flex min-h-dvh flex-col justify-center">
+<div class="flex h-full flex-col justify-center">
 	<header class="px-ch pt-lh">
 		<h1 class="mx-auto flex max-w-max flex-col" aria-label="Welcome to MLB.TheOhtani.com">
 			<div class="-mb-ch">Welcome to</div>

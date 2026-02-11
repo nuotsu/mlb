@@ -45,15 +45,15 @@
 	body {
 		accent-color: var(--color-accent);
 		caret-color: var(--color-accent);
-		background-color: var(--color-background);
-		color: var(--color-foreground);
 
-		@apply max-sm:has-[#sidebar-open:checked]:overflow-clip;
+		@apply bg-neutral-200 text-foreground max-sm:has-[#sidebar-open:checked]:overflow-clip;
 
 		&:has([data-color-scheme='dark']) {
 			--color-background: var(--color-dark);
 			--color-foreground: var(--color-light);
 			--color-stroke: color-mix(in srgb, currentColor 25%, transparent);
+
+			@apply bg-neutral-900;
 		}
 	}
 
@@ -191,6 +191,7 @@
 }
 
 @utility button {
+	appearance: none;
 	user-select: none;
 	@apply button-base border-b border-current/25 bg-neutral-100/50 hover:border-accent hover:bg-neutral-200/50 active:bg-accent/25! dark:bg-neutral-800/50 dark:hover:bg-neutral-700/50;
 

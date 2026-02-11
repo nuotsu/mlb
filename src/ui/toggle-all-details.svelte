@@ -4,8 +4,8 @@
 
 <button
 	class="not-hover:text-current/50"
-	onclick={() => {
-		const allDetails = document.querySelectorAll('details')
+	onclick={(e) => {
+		const allDetails = (e.target as HTMLElement).closest('main')?.querySelectorAll('details') ?? []
 		const hasOpen = Array.from(allDetails).some((detail) => detail.open)
 
 		allDetails.forEach((detail) => {
