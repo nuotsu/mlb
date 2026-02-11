@@ -49,6 +49,7 @@ export async function fetchWeekSchedule(date: string, sportId = '1') {
 			'dates,date,venue,description,seriesGameNumber,gamesInSeries',
 			'games,gamePk,gameType,gameDate',
 			'status,abstractGameState,detailedState,reason',
+			'probablePitchers',
 			'flags,noHitter,perfectGame',
 			'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
 			'linescore,currentInning,scheduledInnings',

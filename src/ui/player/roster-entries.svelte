@@ -8,7 +8,7 @@
 	function format(date: string) {
 		return [
 			formatDate(slash(date), { month: 'short' }),
-			formatDate(slash(date), { year: '2-digit' }),
+			"'" + formatDate(slash(date), { year: '2-digit' }),
 		].join(' ')
 	}
 </script>

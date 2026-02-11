@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { cn } from '$lib/utils'
+
 	let {
 		person,
 		size = 96,
@@ -13,7 +15,11 @@
 </script>
 
 <img
-	class="block rounded-full bg-foreground/10 object-contain text-transparent img-fade opacity-0 transition-opacity {className}"
+	class={cn(
+		'img-fade block object-contain text-transparent opacity-0 transition-opacity',
+		type !== 'silo' && 'rounded-full bg-foreground/10',
+		className,
+	)}
 	src="https://midfield.mlbstatic.com/v1/people/{person.id}/{type}/{size}"
 	width={size}
 	height={size}

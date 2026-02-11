@@ -33,7 +33,7 @@
 		<output class="relative leading-none" style:--progress="calc({gamesPlayed / total} * 100%)">
 			<div class="absolute bottom-full grid -translate-x-1/2" style:left="var(--progress)">
 				<small class="text-[x-small]">Game</small>
-				<b>{gamesPlayed}</b>
+				<b>{gamesPlayed || 1}</b>
 			</div>
 		</output>
 

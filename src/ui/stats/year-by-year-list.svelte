@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import YearByYear from '$ui/stats/year-by-year.svelte'
+	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {
 		person,
+		...props
 	}: {
 		person: MLB.Person & { stats: MLB.PlayerStats[] }
-	} = $props()
+	} & HTMLAttributes<HTMLDivElement> = $props()
 
 	let baseballStats = $derived(page.data.baseballStats as MLB.BaseballStat[])
 
@@ -44,6 +46,7 @@
 		baseballStats?.find((s) => [s.name, s.lookupParam].includes(key))?.lookupParam ?? key
 </script>
 
+<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="grid grid-cols-[repeat(auto-fit,minmax(10ch,1fr))] gap-px text-center"
 	ontouchmove={(e) => {
@@ -52,6 +55,7 @@
 		const input = element?.closest('label')?.querySelector('input')
 		if (input) input.checked = true
 	}}
+	{...props}
 >
 	{#each Object.entries(statKeys) as [group, keys] (group)}
 		{#if hasStats(group)}

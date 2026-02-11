@@ -103,8 +103,8 @@
 				<Linescore linescore={data} />
 			{/await}
 		{/if}
-	{:else}
-		<ProbablePitchers />
+	{:else if game.status.abstractGameState === 'Preview'}
+		<ProbablePitchers {game} />
 	{/if}
 
 	{#if !isGamePage}
@@ -129,6 +129,7 @@
 		grid-template:
 			'status description' auto
 			'status boxscore' auto
+			'. pregame' auto
 			'. link' auto / var(--status-size) 1fr;
 
 		&:global(:has([style*='linescore'])) {

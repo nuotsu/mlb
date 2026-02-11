@@ -120,12 +120,13 @@
 		</section>
 	{/if}
 
-	<section class="space-y-lh px-ch">
+	<section class="group/stats space-y-lh px-ch">
 		<nav class="flex items-center justify-center gap-ch">
 			<label>
 				<input type="radio" name="stat-group" value="hitting" checked={!isPitcher} />
 				Hitting
 			</label>
+
 			<label>
 				<input type="radio" name="stat-group" value="pitching" checked={isPitcher} />
 				Pitching
@@ -135,10 +136,10 @@
 		<div class="grid items-start gap-x-lh gap-y-[2lh] md:grid-cols-2">
 			<article>
 				<h2 class="text-center text-sm text-current/50">Year-by-year Stats</h2>
-				<YearByYearList {person} />
+				<YearByYearList {person} data-group="hitting" />
 			</article>
 
-			<article>
+			<article data-group="pitching">
 				{#if data.hittingHotColdZones}
 					<HotColdZones
 						hotColdZones={data.hittingHotColdZones}

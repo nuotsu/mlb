@@ -502,4 +502,3 @@ for (const [label, endpoints] of Object.entries(DIRECTORY)) {
 		ENDPOINTS[endpoint] = params
 	}
 }
-
