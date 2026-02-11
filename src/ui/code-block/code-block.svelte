@@ -33,7 +33,10 @@
 	{#if truncated}
 		<menu class="sticky bottom-0 p-ch text-sm">
 			<li>
-				<button class="action-tertiary backdrop-blur-xs" onclick={() => (truncated = false)}>
+				<button
+					class="action-tertiary bg-background/50 backdrop-blur-xs"
+					onclick={() => (truncated = false)}
+				>
 					Show {count(lines.length - MAX_LINES, 'more line', 'more lines')}
 				</button>
 			</li>

@@ -13,30 +13,23 @@ $$ | \_/ $$ |$$$$$$$$\ $$$$$$$  |
 
 > MLB Scorebug & MLB Stats API Playground
 
-## MLB Scorebug
+## Screenshots
 
 - https://mlb.theohtani.com/schedule
 
-![Weekly schedule view](/static/week.png)
+![Weekly schedule view](/static/screenshots/week.png)
 
 > Weekly schedule view
 
-![Game details view](/static/game.png)
+![Game details view](/static/screenshots/game.png)
 
 > Game details view
 
-## MLB Stats API Playground
+![Stats API Playground](/static/screenshots/playground.png)
 
-- https://mlb.theohtani.com/api/playground
+> MLB Stats API Playground
 
-Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view API responses in the playground.
-
-![Games at Dodger Stadium for April 2026](/static/playground.png)
-
-> Games at Dodger Stadium for April 2026
-
-- [https://statsapi.mlb.com/api/...](https://statsapi.mlb.com/api/v1/schedule?sportId=1&startDate=2026-04-01&endDate=2026-04-30&season=2026&teamId=119&venueIds=22&fields=totalGames,dates,games,officialDate,dayNight,teams,team,name)
-- [https://mlb.theohtani.com/api/...](https://mlb.theohtani.com/api/v1/schedule?sportId=1&startDate=2026-04-01&endDate=2026-04-30&season=2026&teamId=119&venueIds=22&fields=totalGames,dates,games,officialDate,dayNight,teams,team,name)
+Replace `https://statsapi.mlb.com/api/v1/...` with `https://mlb.theohtani.com/api/v1/...` to show results in the API Playground.
 
 ## Credits & References
 
@@ -52,6 +45,4 @@ Replace `<statsapi.mlb.com>/api/...` with `<mlb.theohtani.com>/api/...` to view 
 
 ## TODO
 
-- probable pitchers
-- add more prev/next dates in date-picker, if space allows
 - code folding > show children count (use `mutationObserver` attachment)
