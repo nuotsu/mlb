@@ -60,8 +60,8 @@
 	]}
 >
 	{#snippet after()}
+		<SelectSport class="button w-full shrink text-center" />
 		<DatePicker date={currentDate} {onDateChange} class="mx-auto" />
-		<SelectSport />
 	{/snippet}
 </Header>
 
