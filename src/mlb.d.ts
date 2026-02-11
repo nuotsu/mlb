@@ -49,6 +49,7 @@ declare global {
 			franchiseName?: string
 			clubName?: string
 			active?: boolean
+			parentOrgId?: number
 		}
 
 		/**
@@ -95,6 +96,10 @@ declare global {
 			position: Position
 			status: PlayerStatus
 			parentTeamId: number
+			isActive?: boolean
+			startDate?: string
+			endDate?: string
+			team: Team
 		}
 
 		/**

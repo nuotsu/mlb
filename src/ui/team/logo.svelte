@@ -1,15 +1,17 @@
 <script lang="ts">
 	import { colorSchemeStore } from '$ui/store.svelte'
+	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {
 		team,
 		srcset = `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${team.id}.svg`,
 		class: className,
+		...props
 	}: {
 		team: MLB.Team
 		srcset?: string
 		class?: string
-	} = $props()
+	} & HTMLAttributes<HTMLImageElement> = $props()
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
 
@@ -44,5 +46,6 @@
 		onerror={() => {
 			if (!fallback) fallback = true
 		}}
+		{...props}
 	/>
 </picture>
