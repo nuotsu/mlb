@@ -9,6 +9,7 @@
 	import WinProbability from '$ui/game/win-probability.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
+	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
@@ -27,6 +28,10 @@
 	const hasDecisions = $derived(feedLive.liveData.decisions)
 	const hasBattingOrder = $derived(
 		boxscore.teams.away.battingOrder?.length || boxscore.teams.home.battingOrder?.length,
+	)
+
+	const isSpoilerPrevented = $derived(
+		spoilerPreventionStore.has(away.id) || spoilerPreventionStore.has(home.id),
 	)
 </script>
 
@@ -57,29 +62,33 @@
 </Header>
 
 <section class="space-y-lh py-lh">
-	{#if hasTopPerformers || hasDecisions}
-		<div class="flex flex-wrap items-start gap-ch px-ch *:grow">
-			{#if hasTopPerformers}
-				<TopPerformers {feedLive} />
-			{/if}
+	{#if !isSpoilerPrevented}
+		{#if hasTopPerformers || hasDecisions}
+			<div class="flex flex-wrap items-start gap-ch px-ch *:grow">
+				{#if hasTopPerformers}
+					<TopPerformers {feedLive} />
+				{/if}
 
-			{#if hasDecisions}
-				<Decision {feedLive} />
-			{/if}
-		</div>
-	{/if}
+				{#if hasDecisions}
+					<Decision {feedLive} />
+				{/if}
+			</div>
+		{/if}
 
-	{#if Array.isArray(data.winProbability)}
-		<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
+		{#if Array.isArray(data.winProbability)}
+			<WinProbability winProbability={data.winProbability} {boxscore} {linescore} />
+		{/if}
 	{/if}
 
 	<article
 		class="group/details grid items-center gap-y-lh md:has-[#theater-mode:not(:checked)]:grid-cols-2"
 	>
-		<Highlights content={data.content} />
+		{#if !isSpoilerPrevented}
+			<Highlights content={data.content} />
+		{/if}
 
 		{#if hasBattingOrder}
-			<Boxscore {boxscore} />
+			<Boxscore {boxscore} {isSpoilerPrevented} />
 		{/if}
 
 		<GameData {game} {feedLive} />

@@ -1,10 +1,18 @@
 <script lang="ts">
 	import StyledTeam from '$ui/team/styled-team.svelte'
 
-	let { game, boxscore }: { game: MLB.Game; boxscore: MLB.Boxscore } = $props()
+	let {
+		game,
+		boxscore,
+		isSpoilerPrevented,
+	}: {
+		game: MLB.Game
+		boxscore: MLB.Boxscore
+		isSpoilerPrevented?: boolean
+	} = $props()
 </script>
 
-{#if game.status.abstractGameState === 'Final'}
+{#if game.status.abstractGameState === 'Final' && !isSpoilerPrevented}
 	<div class="grid text-left *:pl-[.25ch]">
 		<StyledTeam team={boxscore.teams.away.team} record={game.teams.away.leagueRecord} linked>
 			{@render score(game.teams.away.score)}

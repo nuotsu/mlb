@@ -15,7 +15,7 @@
 	import type { Component } from 'svelte'
 	import Drawer from './drawer.svelte'
 	import FavoritesList from './favorites-list.svelte'
-	import SpoilerPrevention from './spoiler-prevention.svelte'
+	import SpoilerPreventionList from './spoiler-prevention-list.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
 
 	const links: {
@@ -94,7 +94,7 @@
 
 		<ul class="mt-auto text-sm sm:sidebar-closed-hidden">
 			<li><FavoritesList /></li>
-			<li><SpoilerPrevention /></li>
+			<li><SpoilerPreventionList /></li>
 			<li><ToggleColorScheme /></li>
 			<li><a class="block hover-link" href="https://github.com/nuotsu/mlb">View on GitHub</a></li>
 			<li><a class="block hover-link" href="https://nuotsu.dev">Built by nuotsu</a></li>

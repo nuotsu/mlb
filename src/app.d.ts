@@ -17,6 +17,11 @@ declare global {
 			href: string
 			label: string
 		}
+
+		type SpoilerPrevention = {
+			id: number
+			abbreviation: string
+		}
 	}
 
 	namespace Docs {

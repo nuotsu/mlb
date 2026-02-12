@@ -2,6 +2,7 @@
 	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
+	import ToggleSpoilerPrevention from '$ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import TeamSchedule from '$ui/schedule/team-schedule.svelte'
@@ -43,7 +44,8 @@
 	</div>
 
 	{#snippet after()}
-		<div class="ml-auto">
+		<div class="ml-auto flex items-center gap-ch">
+			<ToggleSpoilerPrevention team={{ id: team.id, abbreviation: team.abbreviation! }} />
 			<ToggleFavorite target={{ href: `/teams/${team.id}`, label: team.abbreviation! }} />
 		</div>
 	{/snippet}

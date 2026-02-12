@@ -4,7 +4,13 @@
 	import Headshot from '$ui/player/headshot.svelte'
 	import StyledTeam from '$ui/team/styled-team.svelte'
 
-	let { boxscore }: { boxscore: MLB.Boxscore } = $props()
+	let {
+		boxscore,
+		isSpoilerPrevented,
+	}: {
+		boxscore: MLB.Boxscore
+		isSpoilerPrevented?: boolean
+	} = $props()
 
 	let { away, home } = $derived(boxscore.teams)
 </script>
@@ -37,7 +43,7 @@
 				<tbody>
 					{#each team.batters as playerId (playerId)}
 						{@const { stats, ...player } = team.players[`ID${playerId}`]}
-						{@const substituted = !team.battingOrder.includes(playerId)}
+						{@const substituted = !isSpoilerPrevented && !team.battingOrder.includes(playerId)}
 
 						{#if player.position.abbreviation !== 'P'}
 							<tr class="hover:*:bg-foreground/10" data-substituted={substituted ? '' : undefined}>
@@ -45,7 +51,11 @@
 
 								{#each ['atBats', 'hits', 'runs', 'rbi', 'homeRuns', 'baseOnBalls', 'strikeOuts'] as stat}
 									{@const value = stats?.batting?.[stat as keyof MLB.BattingStats]}
-									<td class={cn(Number(value) === 0 && 'text-current/40')}>{value}</td>
+									<td class={cn(!isSpoilerPrevented && Number(value) === 0 && 'text-current/40')}>
+										{#if !isSpoilerPrevented}
+											{value}
+										{/if}
+									</td>
 								{/each}
 							</tr>
 						{/if}
@@ -71,7 +81,7 @@
 					</tr>
 				</thead>
 				<tbody>
-					{#each team.pitchers as playerId (playerId)}
+					{#each team.pitchers.slice(0, isSpoilerPrevented ? 1 : team.pitchers.length) as playerId (playerId)}
 						{@const { stats, ...player } = team.players[`ID${playerId}`]}
 						{#if player.position.abbreviation === 'P'}
 							<tr class="hover:*:bg-foreground/10">
@@ -79,7 +89,11 @@
 
 								{#each ['inningsPitched', 'numberOfPitches', 'hits', 'runs', 'earnedRuns', 'strikeOuts', 'homeRuns'] as stat}
 									{@const value = stats?.pitching?.[stat as keyof MLB.PitchingStats]}
-									<td class={cn(Number(value) === 0 && 'text-current/40')}>{value}</td>
+									<td class={cn(!isSpoilerPrevented && Number(value) === 0 && 'text-current/40')}>
+										{#if !isSpoilerPrevented}
+											{value}
+										{/if}
+									</td>
 								{/each}
 							</tr>
 						{/if}

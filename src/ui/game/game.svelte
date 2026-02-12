@@ -7,6 +7,7 @@
 	import ProbablePitchers from '$ui/game/probable-pitchers.svelte'
 	import TeamScores from '$ui/game/team-scores.svelte'
 	import Loading from '$ui/loading.svelte'
+	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 	import BaseRunners from './base-runners.svelte'
 
 	let {
@@ -27,24 +28,35 @@
 
 	const isFinal = $derived(game.status.abstractGameState === 'Final')
 	const isGamePage = $derived(page.url.pathname === `/game/${game.gamePk}`)
+
+	const isSpoilerPrevented = $derived(
+		spoilerPreventionStore.has(game.teams.away.team.id) ||
+			spoilerPreventionStore.has(game.teams.home.team.id),
+	)
 </script>
 
 <article
 	class="group/game @container/game isolate grid items-end {className}"
 	data-gamePk={game.gamePk}
+	data-spoiler-prevented={isSpoilerPrevented || undefined}
 >
 	<div
-		class="relative z-1 m-auto grid h-6 pt-[0.75rlh] text-center *:leading-none group-has-[[style*=linescore]]/game:h-12"
+		class={cn(
+			'relative z-1 m-auto grid h-6 pt-[0.75rlh] text-center *:leading-none group-has-[[style*=linescore]]/game:h-12',
+			isSpoilerPrevented && 'h-12',
+		)}
 		style:grid-area="status"
 	>
 		<BaseRunners
 			className={cn(
 				'm-auto absolute left-1/2 top-1/2 -translate-1/2 w-max max-md:group-has-[[style*=linescore]]/game:mt-[.5lh]',
 				isGamePage && isFinal ? 'mt-[.75ch]' : 'mt-[.5rlh]',
+				isSpoilerPrevented && 'mt-[.5rlh]',
+				isFinal && !isSpoilerPrevented && (isGamePage ? 'mt-[.5lh]' : 'mt-[.5rlh]'),
 			)}
 		/>
 
-		{#if isFinal}
+		{#if isFinal && !isSpoilerPrevented}
 			{@const value =
 				game.status.reason || game.status.detailedState || game.status.abstractGameState}
 			<span class="m-auto text-xs font-bold">
@@ -73,7 +85,7 @@
 				{/if}
 			{/if}
 
-			{#if flags?.perfectGame || flags?.noHitter}
+			{#if !isSpoilerPrevented && (flags?.perfectGame || flags?.noHitter)}
 				<strong
 					class="border bg-background font-bold text-red-500 group-has-hover/description:hidden"
 				>
@@ -89,17 +101,17 @@
 
 	<div class="relative z-1 bg-background" style:grid-area="boxscore">
 		{#if boxscore}
-			<TeamScores {game} {boxscore} />
+			<TeamScores {game} {boxscore} {isSpoilerPrevented} />
 		{:else}
 			{#await fetchBoxscore(game.gamePk)}
 				<Loading>Loading...</Loading>
 			{:then data}
-				<TeamScores {game} boxscore={data} />
+				<TeamScores {game} boxscore={data} {isSpoilerPrevented} />
 			{/await}
 		{/if}
 	</div>
 
-	{#if isFinal}
+	{#if isFinal && !isSpoilerPrevented}
 		{#if linescore}
 			<Linescore {linescore} />
 		{:else}
