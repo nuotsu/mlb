@@ -1,10 +1,20 @@
 <script lang="ts">
+	import { browser } from '$app/environment'
+	import { EyeOffIcon } from '$ui/icons'
 	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 	import Logo from '$ui/team/logo.svelte'
+
+	let open = $derived(
+		!!spoilerPreventionStore.teams?.length &&
+			(browser ? localStorage.getItem('sidebar-open') === 'true' : false),
+	)
 </script>
 
-<details class="accordion-base" open={!!spoilerPreventionStore.teams?.length}>
-	<summary class="hover-link">Spoiler Prevention</summary>
+<details class="accordion-base" bind:open>
+	<summary class="hover-link">
+		<EyeOffIcon />
+		<span class="sm:sidebar-closed-hidden">Spoiler Prevention</span>
+	</summary>
 
 	{#if spoilerPreventionStore.teams?.length}
 		<ul class="grid grid-cols-2 gap-px text-center">

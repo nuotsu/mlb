@@ -5,7 +5,9 @@
 		ArrowsDiffIcon,
 		CalendarIcon,
 		CalendarTodayIcon,
+		CodeIcon,
 		FlagIcon,
+		GithubIcon,
 		HelmetIcon,
 		JerseyIcon,
 		JsonIcon,
@@ -18,7 +20,7 @@
 	import SpoilerPreventionList from './spoiler-prevention-list.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
 
-	const links: {
+	const internalLinks: {
 		href: string
 		label: string
 		icon: Component
@@ -69,6 +71,23 @@
 			icon: JsonIcon,
 		},
 	]
+
+	const externalLinks: {
+		href: string
+		label: string
+		icon: Component
+	}[] = [
+		{
+			href: 'https://github.com/nuotsu/mlb',
+			label: 'View on GitHub',
+			icon: GithubIcon,
+		},
+		{
+			href: 'https://nuotsu.dev',
+			label: 'Built by nuotsu',
+			icon: CodeIcon,
+		},
+	]
 </script>
 
 <Drawer>
@@ -77,14 +96,28 @@
 			<a href="/"><strong>MLB</strong>.TheOhtani.com</a>
 		</div>
 
-		<ul class="sidebar-not-open:landscape:max-lg:overflow-clip [&_span]:sm:sidebar-closed-hidden">
-			{#each links as { href, label, icon } (href)}
+		<ul class="sidebar-not-open:landscape:max-lg:overflow-clip">
+			{#each internalLinks as { href, label, icon } (href)}
 				<li>
 					<a
 						{href}
-						class="relative flex items-center gap-1 hover-link"
+						class="relative flex items-center gap-ch hover-link"
 						class:active={page.route.id?.startsWith(href)}
 					>
+						<svelte:component this={icon} />
+						<span class="sm:sidebar-closed-hidden">{label}</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
+
+		<ul class="mt-auto text-sm">
+			<li><FavoritesList /></li>
+			<li><SpoilerPreventionList /></li>
+			<li><ToggleColorScheme /></li>
+			{#each externalLinks as { href, label, icon } (href)}
+				<li class="sm:sidebar-not-open:hidden">
+					<a class="flex items-center gap-ch hover-link" {href}>
 						<svelte:component this={icon} />
 						<span>{label}</span>
 					</a>
@@ -92,19 +125,12 @@
 			{/each}
 		</ul>
 
-		<ul class="mt-auto text-sm sm:sidebar-closed-hidden">
-			<li><FavoritesList /></li>
-			<li><SpoilerPreventionList /></li>
-			<li><ToggleColorScheme /></li>
-			<li><a class="block hover-link" href="https://github.com/nuotsu/mlb">View on GitHub</a></li>
-			<li><a class="block hover-link" href="https://nuotsu.dev">Built by nuotsu</a></li>
-			<li>
-				<small class="font-semilight text-[xx-small] text-current/50">
-					@ {new Date().getFullYear()} MLB.TheOhtani.com.
-					<span class="tabular-nums">v{version}</span>
-				</small>
-			</li>
-		</ul>
+		<small
+			class="font-semilight text-center text-[xx-small] text-current/50 sm:sidebar-not-open:hidden"
+		>
+			@ {new Date().getFullYear()} MLB.TheOhtani.com.
+			<span class="tabular-nums">v{version}</span>
+		</small>
 	</div>
 </Drawer>
 

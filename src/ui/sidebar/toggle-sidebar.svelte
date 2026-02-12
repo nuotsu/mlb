@@ -6,9 +6,30 @@
 	let checked = $derived(browser ? localStorage.getItem('sidebar-open') === 'true' : false)
 	let isMobile = $state(false)
 
+	function handleIconClick(e: MouseEvent) {
+		e.preventDefault()
+		checked = true
+		const details = (e.target as HTMLElement).closest('details')
+		if (details) details.open = true
+	}
+
 	$effect(() => {
 		if (browser) {
 			localStorage.setItem('sidebar-open', checked.toString())
+
+			const drawerDetails = document.querySelectorAll<HTMLDetailsElement>('#drawer details')
+
+			drawerDetails?.forEach((details) => {
+				const summary = details.querySelector<HTMLElement>('summary')
+
+				if (!checked) {
+					details.open = false
+					summary?.addEventListener('click', handleIconClick)
+				} else {
+					summary?.removeEventListener('click', handleIconClick)
+					if (details.querySelectorAll('ul li').length > 0) details.open = true
+				}
+			})
 		}
 	})
 

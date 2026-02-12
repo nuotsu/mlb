@@ -6,41 +6,39 @@
 	const season = $derived(page.data.season as MLB.SeasonDateInfo)
 </script>
 
-<section class="space-y-lh px-ch py-lh">
-	<div class="flex flex-wrap justify-center gap-x-[2lh] gap-y-lh">
-		<Countdown date={season.springStartDate} until="🌻 Spring Training" />
-		<Countdown date="2026-03-04" until="🌎 World Baseball Classic" />
-		<Countdown date={season.regularSeasonStartDate} until="🏟️ Opening Day" />
-	</div>
+<article class="flex flex-wrap justify-center gap-x-[2lh] gap-y-lh">
+	<Countdown date={season.springStartDate} until="🌻 Spring Training" />
+	<Countdown date="2026-03-04" until="🌎 World Baseball Classic" />
+	<Countdown date={season.regularSeasonStartDate} until="🏟️ Opening Day" />
+</article>
 
-	<article class="space-y-ch">
-		<h2 class="text-center h1">{season.seasonId} Season</h2>
+<article class="space-y-ch">
+	<h2 class="text-center h1">{season.seasonId} Season Schedule</h2>
 
-		<dl class="mx-auto description-list max-w-max tabular-nums">
-			<dt>Spring Training</dt>
-			<dd>
-				{@render linkedDate(season.springStartDate)} - {@render linkedDate(season.springEndDate)}
-			</dd>
+	<dl class="mx-auto description-list max-w-max tabular-nums">
+		<dt>Spring Training</dt>
+		<dd>
+			{@render linkedDate(season.springStartDate)} - {@render linkedDate(season.springEndDate)}
+		</dd>
 
-			<dt>Regular Season</dt>
-			<dd>
-				{@render linkedDate(season.regularSeasonStartDate)}
-				-
-				{@render linkedDate(season.regularSeasonEndDate)}
-			</dd>
+		<dt>Regular Season</dt>
+		<dd>
+			{@render linkedDate(season.regularSeasonStartDate)}
+			-
+			{@render linkedDate(season.regularSeasonEndDate)}
+		</dd>
 
-			<dt>All-Star Game</dt>
-			<dd>{@render linkedDate(season.allStarDate, 'day')}</dd>
+		<dt>All-Star Game</dt>
+		<dd>{@render linkedDate(season.allStarDate, 'day')}</dd>
 
-			<dt>Postseason</dt>
-			<dd>
-				{@render linkedDate(season.postSeasonStartDate)}
-				-
-				{@render linkedDate(season.postSeasonEndDate)}
-			</dd>
-		</dl>
-	</article>
-</section>
+		<dt>Postseason</dt>
+		<dd>
+			{@render linkedDate(season.postSeasonStartDate)}
+			-
+			{@render linkedDate(season.postSeasonEndDate)}
+		</dd>
+	</dl>
+</article>
 
 {#snippet linkedDate(date: string = '', view: 'week' | 'day' = 'week')}
 	<a class="hover-link" href="/schedule/{view}/{date}">

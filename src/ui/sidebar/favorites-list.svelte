@@ -1,8 +1,16 @@
 <script lang="ts">
+	import { browser } from '$app/environment'
 	import { cn } from '$lib/utils'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
+	import { StarEmptyIcon } from '$ui/icons'
 	import Headshot from '$ui/player/headshot.svelte'
 	import Logo from '$ui/team/logo.svelte'
+
+	let favorites = $derived(favoritesStore.favorites?.toSorted(sortByType))
+
+	let open = $derived(
+		!!favorites?.length && (browser ? localStorage.getItem('sidebar-open') === 'true' : false),
+	)
 
 	function sortByType(a: App.Favorite, b: App.Favorite) {
 		const aType = a.href.includes('team') ? 0 : 1
@@ -11,12 +19,15 @@
 	}
 </script>
 
-<details class="accordion-base" open={!!favoritesStore.favorites?.length}>
-	<summary class="hover-link">Favorites</summary>
+<details class="accordion-base" bind:open>
+	<summary class="hover-link">
+		<StarEmptyIcon />
+		<span class="sm:sidebar-closed-hidden">Favorites</span>
+	</summary>
 
-	{#if favoritesStore.favorites?.length}
-		<ul class="grid grid-cols-2 gap-px text-center">
-			{#each favoritesStore.favorites.sort(sortByType) as favorite (favorite.href)}
+	{#if favorites?.length}
+		<ul class="grid grid-cols-2 gap-px text-center sm:sidebar-closed-hidden">
+			{#each favorites as favorite (favorite.href)}
 				{@const id = Number(favorite.href.split('/').pop())}
 				{@const isTeam = favorite.href.includes('team')}
 
@@ -37,7 +48,7 @@
 							<Headshot class="size-lh shrink-0" person={{ id }} size={36} />
 						{/if}
 
-						<span class="line-clamp-1 grow break-all decoration-dashed group-hover/fav:underline">
+						<span class="grow truncate decoration-dashed group-hover/fav:underline">
 							{favorite.label}
 						</span>
 					</a>

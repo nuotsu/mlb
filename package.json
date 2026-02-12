@@ -1,7 +1,7 @@
 {
 	"name": "mlb",
 	"private": true,
-	"version": "0.4.87",
+	"version": "0.4.88",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --host",
@@ -34,7 +34,7 @@
 	"dependencies": {
 		"@google/model-viewer": "^4.1.0",
 		"hls.js": "^1.6.15",
-		"posthog-js": "^1.345.5",
+		"posthog-js": "^1.347.0",
 		"posthog-node": "^5.24.15"
 	}
 }
