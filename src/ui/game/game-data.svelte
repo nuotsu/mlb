@@ -32,12 +32,6 @@
 		<dd>{game.seriesGameNumber} of {game.gamesInSeries}</dd>
 	{/if}
 
-	<dt>Home team</dt>
-	<dd><a class="link" href="/teams/{game.teams.home.team.id}">{game.teams.home.team.name}</a></dd>
-
-	<dt>Away team</dt>
-	<dd><a class="link" href="/teams/{game.teams.away.team.id}">{game.teams.away.team.name}</a></dd>
-
 	<dt>Venue</dt>
 	<dd>{game.venue.name}</dd>
 
