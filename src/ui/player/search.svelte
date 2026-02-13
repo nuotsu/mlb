@@ -86,7 +86,7 @@
 						{#each results.people as person (person.id)}
 							<li>
 								<a class="group/player flex items-center gap-ch py-1" href="/player/{person.id}">
-									<Headshot {person} size={48} class="size-[1.5lh] shrink-0" />
+									<Headshot {person} size={48} class="size-[1lh] shrink-0" />
 
 									<small class="inline-block w-[3ch] text-center">
 										{person.primaryPosition.abbreviation}
