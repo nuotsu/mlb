@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatDate, getToday } from '$lib/temporal'
+	import Baseball from '$ui/baseball.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import CountdownList from '$ui/season/countdown-list.svelte'
 	import SeasonInfo from '$ui/season/season-info.svelte'
@@ -41,6 +42,8 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 		<p class="text-center text-balance italic">
 			Track MLB games, explore stats, and query the Stats API, all in one app.
 		</p>
+
+		<Baseball class="mx-auto -my-[2lh] max-w-[16lh] *:text-[xx-small]" />
 	</header>
 
 	<hr class="border-dashed border-stroke" />
