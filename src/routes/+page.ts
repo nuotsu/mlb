@@ -13,7 +13,7 @@ export const load: PageLoad = async () => {
 		fetchMLB<MLB.TransactionsResponse>('/api/v1/transactions', {
 			sportId: '1',
 			date: formatDate(getToday(), { locale: 'en-CA' }),
-			fields: ['transactions,date,description,typeDesc,toTeam,fromTeam,id,name,person'],
+			fields: ['transactions,date,description,typeDesc,toTeam,fromTeam,id,name,fullName,person'],
 		}),
 	])
 
