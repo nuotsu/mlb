@@ -195,7 +195,7 @@
 @utility button {
 	appearance: none;
 	user-select: none;
-	@apply button-base border-b border-current/25 bg-neutral-100/50 hover:border-accent hover:bg-neutral-200/50 active:bg-accent/25! dark:bg-neutral-800/50 dark:hover:bg-neutral-700/50;
+	@apply button-base border-b border-current/25 bg-neutral-100/50 outline-none hover:border-accent hover:bg-neutral-200/50 active:bg-accent/25! dark:bg-neutral-800/50 dark:hover:bg-neutral-700/50;
 
 	&:has(svg:only-child) {
 		padding-inline: 0.5ch;

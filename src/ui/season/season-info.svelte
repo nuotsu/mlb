@@ -1,16 +1,8 @@
 <script lang="ts">
-	import { page } from '$app/state'
 	import { formatDate } from '$lib/temporal'
-	import Countdown from './countdown.svelte'
 
-	const season = $derived(page.data.season as MLB.SeasonDateInfo)
+	let { season }: { season: MLB.SeasonDateInfo } = $props()
 </script>
-
-<article class="flex flex-wrap justify-center gap-x-[2lh] gap-y-lh">
-	<Countdown date={season.springStartDate} until="🌻 Spring Training" />
-	<Countdown date="2026-03-04" until="🌎 World Baseball Classic" />
-	<Countdown date={season.regularSeasonStartDate} until="🏟️ Opening Day" />
-</article>
 
 <article class="space-y-ch">
 	<h2 class="text-center h1">{season.seasonId} Season Schedule</h2>

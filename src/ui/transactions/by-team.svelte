@@ -1,9 +1,14 @@
 <script lang="ts">
+	import Empty from '$ui/empty.svelte'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import Transaction from '$ui/transactions/transaction.svelte'
 	import { processTransactions } from '$ui/transactions/utils'
 
-	let { transactions }: { transactions: MLB.Transaction[] } = $props()
+	let {
+		transactions,
+	}: {
+		transactions: MLB.Transaction[]
+	} = $props()
 
 	const txns = $derived(processTransactions(transactions))
 
@@ -31,28 +36,28 @@
 	)
 </script>
 
-<article>
-	<h2 class="text-center text-sm text-current/50">Recent Transactions</h2>
+<div class="flex flex-col overflow-y-auto border border-stroke">
+	<select class="button block" bind:value={teamId}>
+		<option>All teams ({txns.length})</option>
 
-	<div class="h-[24ch] overflow-y-auto border border-stroke">
-		<select class="sticky top-0 z-1 button block w-full backdrop-blur-xs" bind:value={teamId}>
-			<option>All teams ({txns.length})</option>
+		{#each teams as team (team?.id)}
+			{@const count = txns.filter(
+				(t) => t.toTeam?.id === team?.id || t.fromTeam?.id === team?.id,
+			).length}
 
-			{#each teams as team (team?.id)}
-				{@const count = txns.filter(
-					(t) => t.toTeam?.id === team?.id || t.fromTeam?.id === team?.id,
-				).length}
+			<option value={team?.id}>
+				{team?.name} ({count})
+			</option>
+		{/each}
+	</select>
 
-				<option value={team?.id}>
-					{team?.name} ({count})
-				</option>
-			{/each}
-		</select>
-
-		<ul class="px-ch py-[.5ch]">
+	{#if filteredTxns.length}
+		<ul class="h-[20ch] overflow-y-auto px-ch py-[.5ch]">
 			{#each filteredTxns as transaction (transaction.id)}
 				<Transaction class="anim-fade" {transaction} />
 			{/each}
 		</ul>
-	</div>
-</article>
+	{:else}
+		<Empty class="m-auto">No transactions for today</Empty>
+	{/if}
+</div>

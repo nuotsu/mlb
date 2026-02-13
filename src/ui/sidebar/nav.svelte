@@ -111,7 +111,7 @@
 			{/each}
 		</ul>
 
-		<ul class="mt-auto text-sm">
+		<ul class="mt-auto text-sm sidebar-not-open:landscape:max-lg:overflow-clip">
 			<li><FavoritesList /></li>
 			<li><SpoilerPreventionList /></li>
 			<li><ToggleColorScheme /></li>
