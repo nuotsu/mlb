@@ -48,6 +48,5 @@
 
 	main {
 		grid-area: main;
-		padding-right: max(1ch, env(safe-area-inset-right));
 	}
 </style>

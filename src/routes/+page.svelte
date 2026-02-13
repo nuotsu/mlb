@@ -29,7 +29,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 />
 
 <div
-	class="flex min-h-dvh flex-col justify-center gap-[2lh] px-ch pt-lh pb-[max(1lh,env(safe-area-inset-bottom))]"
+	class="flex min-h-dvh flex-col justify-center gap-[2lh] px-ch pt-[2lh] pb-[max(2lh,env(safe-area-inset-bottom))]"
 >
 	<header class="space-y-ch">
 		<h1 class="mx-auto flex max-w-max flex-col text-xl" aria-label="Welcome to MLB.TheOhtani.com">
@@ -43,20 +43,26 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 		</p>
 	</header>
 
+	<hr class="border-dashed border-stroke" />
+
 	<CountdownList {season} />
 
-	<section class="space-y-ch">
-		<h2 class="text-center h1">{today}</h2>
+	<div
+		class="grid items-start gap-[2lh] sm:grid-cols-[repeat(auto-fit,minmax(var(--container-sm),1fr))]"
+	>
+		<section class="space-y-ch">
+			<h2 class="text-center h1">{today}</h2>
 
-		<article class="[&_ul_p]:text-sm">
-			<header class="flex items-center justify-between gap-ch text-sm">
-				<h2 class="text-center text-current/50">Recent Transactions</h2>
-				<a href="/transactions" class="hover-link">View all</a>
-			</header>
+			<article class="[&_ul_p]:text-sm">
+				<header class="flex items-center justify-between gap-ch text-sm">
+					<h3 class="text-center text-current/50">Recent Transactions</h3>
+					<a href="/transactions" class="hover-link">View all</a>
+				</header>
 
-			<TransactionByTeam transactions={data.transactions.transactions} />
-		</article>
-	</section>
+				<TransactionByTeam transactions={data.transactions.transactions} />
+			</article>
+		</section>
 
-	<SeasonInfo {season} />
+		<SeasonInfo {season} />
+	</div>
 </div>

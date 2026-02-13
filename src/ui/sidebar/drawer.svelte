@@ -30,7 +30,7 @@
 	}}
 	ontouchend={() => {
 		if (browser && swipeX < clientWidth * -0.25) {
-			const input = document.getElementById('sidebar-open') as HTMLInputElement
+			const input = document.querySelector('#sidebar-open') as HTMLInputElement
 			if (input) input.checked = false
 		}
 

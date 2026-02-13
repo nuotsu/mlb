@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatDate } from '$lib/temporal'
+	import { formatDate, getToday } from '$lib/temporal'
 
 	let { season }: { season: MLB.SeasonDateInfo } = $props()
 </script>
@@ -8,6 +8,9 @@
 	<h2 class="text-center h1">{season.seasonId} Season Schedule</h2>
 
 	<dl class="mx-auto description-list max-w-max tabular-nums">
+		<dt>Today's games</dt>
+		<dd>{@render linkedDate(formatDate(getToday(), { locale: 'en-CA' }))}</dd>
+
 		<dt>Spring Training</dt>
 		<dd>
 			{@render linkedDate(season.springStartDate)} - {@render linkedDate(season.springEndDate)}
