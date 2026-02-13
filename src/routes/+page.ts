@@ -1,8 +1,8 @@
 import { fetchMLB } from '$lib/fetch'
 import { formatDate, getToday } from '$lib/temporal'
-import type { PageServerLoad } from './$types'
+import type { PageLoad } from './$types'
 
-export const load: PageServerLoad = async () => {
+export const load: PageLoad = async () => {
 	const year = getToday().getFullYear().toString()
 
 	const [seasons, transactions] = await Promise.all([
