@@ -21,11 +21,11 @@
 
 @custom-variant hover (&:hover);
 
-@custom-variant dark (body:has([data-color-scheme='dark']) &);
-@custom-variant not-dark (body:has(#toggle-color-scheme:not([data-color-scheme='dark'])) &);
+@custom-variant dark (html:has([data-color-scheme='dark']) &);
+@custom-variant not-dark (html:has(#toggle-color-scheme:not([data-color-scheme='dark'])) &);
 
-@custom-variant sidebar-open (body:has(#sidebar-open:checked) &);
-@custom-variant sidebar-not-open (body:has(#sidebar-open:not(:checked)) &);
+@custom-variant sidebar-open (html:has(#sidebar-open:checked) &);
+@custom-variant sidebar-not-open (html:has(#sidebar-open:not(:checked)) &);
 
 @layer base {
 	::selection {
@@ -43,17 +43,19 @@
 	}
 
 	body {
-		accent-color: var(--color-accent);
-		caret-color: var(--color-accent);
+		@apply bg-background text-foreground caret-accent accent-accent max-sm:has-[#sidebar-open:checked]:overflow-clip;
 
-		@apply bg-neutral-100 text-foreground max-sm:has-[#sidebar-open:checked]:overflow-clip;
+		&::before {
+			content: '';
+			@apply fixed inset-0 bg-neutral-100;
+		}
 
 		&:has([data-color-scheme='dark']) {
 			--color-background: var(--color-dark);
 			--color-foreground: var(--color-light);
 			--color-stroke: color-mix(in srgb, currentColor 25%, transparent);
 
-			@apply bg-neutral-900;
+			@apply before:bg-neutral-900;
 		}
 	}
 

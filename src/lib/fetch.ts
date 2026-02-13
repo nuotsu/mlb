@@ -111,7 +111,7 @@ export async function fetchLinescore(gamePk: string | number) {
 	})
 }
 
-export async function fetchTransactions({
+export async function fetchWeekTransactions({
 	date,
 	startDate,
 	endDate,

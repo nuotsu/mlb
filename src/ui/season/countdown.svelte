@@ -42,9 +42,7 @@
 					<div class={cn('grid', isDay && 'mr-ch')}>
 						<b class="flex gap-x-[.25ch] font-mono tabular-nums">
 							{#each value.toString().padStart(2, '0').toString().split('') as number}
-								<span
-									class="inline-block overflow-hidden border border-current/10 px-[.2ch] dark:border-current/25"
-								>
+								<span class="inline-block overflow-hidden border border-stroke px-[.2ch]">
 									{#key number}
 										<span class="inline-block anim-fade-to-t">{number}</span>
 									{/key}
