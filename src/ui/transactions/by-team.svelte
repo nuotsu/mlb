@@ -36,8 +36,8 @@
 	)
 </script>
 
-<div class="flex flex-col overflow-y-auto border border-stroke">
-	<select class="button block" bind:value={teamId}>
+<div class="border border-stroke">
+	<select class="button w-full" bind:value={teamId}>
 		<option>All teams ({txns.length})</option>
 
 		{#each teams as team (team?.id)}
@@ -51,13 +51,15 @@
 		{/each}
 	</select>
 
-	{#if filteredTxns.length}
-		<ul class="h-[20ch] overflow-y-auto px-ch py-[.5ch]">
-			{#each filteredTxns as transaction (transaction.id)}
-				<Transaction class="anim-fade" {transaction} />
-			{/each}
-		</ul>
-	{:else}
-		<Empty class="m-auto">No transactions for today</Empty>
-	{/if}
+	<div class="h-[20ch] overflow-y-auto px-ch py-[.5ch]">
+		{#if filteredTxns.length}
+			<ul>
+				{#each filteredTxns as transaction (transaction.id)}
+					<Transaction class="anim-fade" {transaction} />
+				{/each}
+			</ul>
+		{:else}
+			<Empty class="m-auto h-full">No transactions for today</Empty>
+		{/if}
+	</div>
 </div>

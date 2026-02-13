@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state'
+	import { labelDrag } from '$lib/attachments/label-drag'
 	import Empty from '$ui/empty.svelte'
 	import YearByYear from '$ui/stats/year-by-year.svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
@@ -47,15 +48,9 @@
 		baseballStats?.find((s) => [s.name, s.lookupParam].includes(key))?.lookupParam ?? key
 </script>
 
-<!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class="grid grid-cols-[repeat(auto-fit,minmax(10ch,1fr))] gap-px text-center"
-	ontouchmove={(e) => {
-		const touch = e.touches[0]
-		const element = document.elementFromPoint(touch.clientX, touch.clientY)
-		const input = element?.closest('label')?.querySelector('input')
-		if (input) input.checked = true
-	}}
+	{@attach labelDrag()}
 	{...props}
 >
 	{#each Object.entries(statKeys) as [group, keys] (group)}
@@ -98,6 +93,14 @@
 
 <style>
 	label:has(:not(input:checked)) + :global([data-stat]) {
-		display: none;
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border-width: 0;
 	}
 </style>

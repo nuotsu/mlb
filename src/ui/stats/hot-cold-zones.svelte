@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { labelDrag } from '$lib/attachments/label-drag'
 	import type { HTMLAttributes } from 'svelte/elements'
 	import HomePlate from './home-plate.svelte'
 	import Strikezone from './strikezone.svelte'
@@ -16,12 +17,13 @@
 <div
 	class="mx-auto grid max-w-max grid-cols-[auto_auto] grid-rows-[1fr_repeat(var(--count),auto)] items-center overflow-clip"
 	style:--count={(hotColdZones?.splits?.length ?? 0) + 2}
+	{@attach labelDrag()}
 	{...props}
 >
 	<h2 class="col-start-2 mb-auto text-sm text-current/50">Hot/Cold Zones</h2>
 
 	{#each hotColdZones?.splits as { stat }, i (stat.name)}
-		<label class="order-last col-start-2 flex items-center gap-[.5ch] uppercase">
+		<label class="order-last col-start-2 flex touch-none items-center gap-[.5ch] uppercase">
 			<input
 				class="shrink-0"
 				type="radio"
