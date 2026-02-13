@@ -29,7 +29,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 />
 
 <div
-	class="flex min-h-dvh flex-col justify-center gap-[2lh] px-ch pt-[2lh] pb-[max(2lh,env(safe-area-inset-bottom))]"
+	class="flex min-h-[calc(100dvh-1ch)] flex-col justify-center gap-[2lh] px-ch pt-[2lh] pb-[max(2lh,env(safe-area-inset-bottom))]"
 >
 	<header class="space-y-ch">
 		<h1 class="mx-auto flex max-w-max flex-col text-xl" aria-label="Welcome to MLB.TheOhtani.com">

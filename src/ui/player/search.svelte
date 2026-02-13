@@ -2,12 +2,14 @@
 	import { dev } from '$app/environment'
 	import { page } from '$app/state'
 	import { fetchMLB } from '$lib/fetch'
-	import { debounce } from '$lib/utils'
+	import { count, debounce } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import { SearchIcon } from '$ui/icons'
 	import Loading from '$ui/loading.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 	import posthog from 'posthog-js'
+
+	let { class: className }: { class?: string } = $props()
 
 	let query = $state(page.url.searchParams.get('query') ?? '')
 	let promise: Promise<any> | null = $state(null)
@@ -53,14 +55,14 @@
 	{@html `<script type="application/ld+json">${JSON.stringify(searchActionSchema)}<\/script>`}
 </svelte:head>
 
-<search class="space-y-ch">
+<search class="relative space-y-ch {className}">
 	<form role="search">
 		<label class="grid *:col-span-full *:row-span-full">
 			<SearchIcon class="mx-[.5ch] my-auto size-lh shrink-0" />
 
 			<input
 				name="query"
-				class="input h-[1.5lh] w-full px-ch pl-[1.5lh]"
+				class="input h-[1.5lh] min-w-0 px-ch pl-[1.5lh]"
 				type="search"
 				placeholder="Search for a player..."
 				pattern="\w+"
@@ -71,36 +73,44 @@
 	</form>
 
 	{#if promise}
-		<output for="query" class="mx-auto block max-w-5xl">
-			{#await promise}
-				<Loading>Searching players...</Loading>
-			{:then results}
-				{#if results.people.length}
-					<ul>
-						{#each results.people as person (person.id)}
-							<li>
-								<a class="group/player flex items-center gap-ch" href="/player/{person.id}">
-									<Headshot {person} size={36} class="size-lh shrink-0" />
+		<output for="query" class="absolute inset-x-0 top-full block px-ch">
+			<div
+				class="max-h-[14lh] overflow-y-auto border border-stroke px-ch py-[.5ch] backdrop-blur-xs"
+			>
+				{#await promise}
+					<Loading class="p-ch">Searching players...</Loading>
+				{:then results}
+					{#if results.people.length}
+						<div class="text-sm text-current/50">
+							{count(results.people.length, 'player')} found
+						</div>
 
-									<small class="inline-block w-[3ch] text-center">
-										{person.primaryPosition.abbreviation}
-									</small>
+						<ul>
+							{#each results.people as person (person.id)}
+								<li>
+									<a class="group/player flex items-center gap-ch py-1" href="/player/{person.id}">
+										<Headshot {person} size={48} class="size-[1.5lh] shrink-0" />
 
-									<span class="decoration-dashed group-hover/player:underline">
-										{person.fullName}
-									</span>
+										<small class="inline-block w-[3ch] text-center">
+											{person.primaryPosition.abbreviation}
+										</small>
 
-									{#if person.primaryNumber}
-										<span>#{person.primaryNumber}</span>
-									{/if}
-								</a>
-							</li>
-						{/each}
-					</ul>
-				{:else}
-					<Empty>No players found</Empty>
-				{/if}
-			{/await}
+										<span class="decoration-dashed group-hover/player:underline">
+											{person.fullName}
+										</span>
+
+										{#if person.primaryNumber}
+											<span class="text-current/50">#{person.primaryNumber}</span>
+										{/if}
+									</a>
+								</li>
+							{/each}
+						</ul>
+					{:else}
+						<Empty>No players found</Empty>
+					{/if}
+				{/await}
+			</div>
 		</output>
 	{/if}
 </search>
