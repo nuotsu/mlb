@@ -38,7 +38,7 @@
 	</p>
 
 	{#if person}
-		<a class="text-0 absolute inset-0" href="/player/{person.id}">
+		<a class="absolute inset-0 text-transparent" href="/player/{person.id}">
 			{person.fullName}
 		</a>
 	{/if}

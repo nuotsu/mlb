@@ -37,19 +37,19 @@
 </script>
 
 <div class="border border-stroke">
-	<select class="button w-full" bind:value={teamId}>
-		<option>All teams ({txns.length})</option>
-
-		{#each teams as team (team?.id)}
-			{@const count = txns.filter(
-				(t) => t.toTeam?.id === team?.id || t.fromTeam?.id === team?.id,
-			).length}
-
-			<option value={team?.id}>
-				{team?.name} ({count})
-			</option>
-		{/each}
-	</select>
+	<label>
+		<select class="button w-full" bind:value={teamId}>
+			<option>All teams ({txns.length})</option>
+			{#each teams as team (team?.id)}
+				{@const count = txns.filter(
+					(t) => t.toTeam?.id === team?.id || t.fromTeam?.id === team?.id,
+				).length}
+				<option value={team?.id}>
+					{team?.name} ({count})
+				</option>
+			{/each}
+		</select>
+	</label>
 
 	<div class="h-[20ch] overflow-y-auto px-ch py-[.5ch]">
 		{#if filteredTxns.length}
