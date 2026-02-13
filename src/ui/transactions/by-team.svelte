@@ -37,7 +37,7 @@
 </script>
 
 <div class="border border-stroke">
-	<label>
+	<label aria-label="Select team">
 		<select class="button w-full" bind:value={teamId}>
 			<option>All teams ({txns.length})</option>
 			{#each teams as team (team?.id)}

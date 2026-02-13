@@ -38,7 +38,11 @@
 	</p>
 
 	{#if person}
-		<a class="absolute inset-0 text-transparent" href="/player/{person.id}">
+		<a
+			class="absolute inset-0 text-transparent"
+			href="/player/{person.id}"
+			aria-label={person.fullName}
+		>
 			{person.fullName}
 		</a>
 	{/if}
