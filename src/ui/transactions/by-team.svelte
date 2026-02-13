@@ -20,26 +20,29 @@
 			.sort((a, b) => a?.name.localeCompare(b?.name ?? '') ?? 0),
 	)
 
-	const favoriteTeam = $derived(
+	const favoriteTeamIds = $derived(
 		favoritesStore.favorites
-			.find((f) => f.href.includes('team'))
-			?.href?.split('/')
-			.pop(),
+			.filter((f) => f.href.includes('team'))
+			.map((f) => Number(f.href.split('/').pop())),
 	)
 
-	let teamId = $derived<number | undefined>(favoriteTeam ? Number(favoriteTeam) : undefined)
+	let teamId = $derived<number | 'all'>(
+		favoriteTeamIds.find((id) => txns.some((t) => t.toTeam?.id === id)) ??
+			'all',
+	)
 
 	const filteredTxns = $derived(
-		txns.filter((t) =>
-			isNaN(Number(teamId)) ? true : t.toTeam?.id === teamId || t.fromTeam?.id === teamId,
-		),
+		txns.filter((t) => {
+			if (teamId === 'all') return true
+			return t.toTeam?.id === teamId || t.fromTeam?.id === teamId
+		}),
 	)
 </script>
 
 <div class="border border-stroke">
 	<label aria-label="Select team">
 		<select class="button w-full" bind:value={teamId}>
-			<option>All teams ({txns.length})</option>
+			<option value="all">All teams ({txns.length})</option>
 			{#each teams as team (team?.id)}
 				{@const count = txns.filter(
 					(t) => t.toTeam?.id === team?.id || t.fromTeam?.id === team?.id,
