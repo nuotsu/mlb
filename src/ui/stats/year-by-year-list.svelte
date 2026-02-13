@@ -85,9 +85,9 @@
 					{key}
 				/>
 			{/each}
-		{:else}
-			<Empty data-empty>No year-by-year {group} data</Empty>
 		{/if}
+	{:else}
+		<Empty data-empty>No year-by-year data</Empty>
 	{/each}
 </div>
 

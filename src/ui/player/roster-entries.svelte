@@ -26,7 +26,9 @@
 				/>
 			{/if}
 
-			<Logo srcset="{src}/96" class="size-[2lh] shrink-0 object-contain" {team} title={team.name} />
+			<a href="/teams/{team.id}" class="shrink-0" aria-label={team.name}>
+				<Logo srcset="{src}/96" class="size-[2lh] object-contain" {team} title={team.name} />
+			</a>
 
 			<span class="not-empty:before:content-['#']" data-jersey>{jerseyNumber}</span>
 

@@ -73,44 +73,40 @@
 	</form>
 
 	{#if promise}
-		<output for="query" class="absolute inset-x-0 top-full block px-ch">
-			<div
-				class="max-h-[14lh] overflow-y-auto border border-stroke px-ch py-[.5ch] backdrop-blur-xs"
-			>
-				{#await promise}
-					<Loading class="p-ch">Searching players...</Loading>
-				{:then results}
-					{#if results.people.length}
-						<div class="text-sm text-current/50">
-							{count(results.people.length, 'player')} found
-						</div>
+		<output for="query" class="block px-ch">
+			{#await promise}
+				<Loading class="p-ch">Searching players...</Loading>
+			{:then results}
+				{#if results.people.length}
+					<div class="text-sm text-current/50 max-md:text-center">
+						{count(results.people.length, 'player')} found
+					</div>
 
-						<ul>
-							{#each results.people as person (person.id)}
-								<li>
-									<a class="group/player flex items-center gap-ch py-1" href="/player/{person.id}">
-										<Headshot {person} size={48} class="size-[1.5lh] shrink-0" />
+					<ul>
+						{#each results.people as person (person.id)}
+							<li>
+								<a class="group/player flex items-center gap-ch py-1" href="/player/{person.id}">
+									<Headshot {person} size={48} class="size-[1.5lh] shrink-0" />
 
-										<small class="inline-block w-[3ch] text-center">
-											{person.primaryPosition.abbreviation}
-										</small>
+									<small class="inline-block w-[3ch] text-center">
+										{person.primaryPosition.abbreviation}
+									</small>
 
-										<span class="decoration-dashed group-hover/player:underline">
-											{person.fullName}
-										</span>
+									<span class="decoration-dashed group-hover/player:underline">
+										{person.fullName}
+									</span>
 
-										{#if person.primaryNumber}
-											<span class="text-current/50">#{person.primaryNumber}</span>
-										{/if}
-									</a>
-								</li>
-							{/each}
-						</ul>
-					{:else}
-						<Empty>No players found</Empty>
-					{/if}
-				{/await}
-			</div>
+									{#if person.primaryNumber}
+										<span class="text-current/50">#{person.primaryNumber}</span>
+									{/if}
+								</a>
+							</li>
+						{/each}
+					</ul>
+				{:else}
+					<Empty>No players found</Empty>
+				{/if}
+			{/await}
 		</output>
 	{/if}
 </search>
