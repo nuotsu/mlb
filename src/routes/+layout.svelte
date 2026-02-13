@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment'
 	import { afterNavigate, beforeNavigate } from '$app/navigation'
+	import Offline from '$ui/offline.svelte'
 	import Sidebar from '$ui/sidebar/nav.svelte'
 	import posthog from 'posthog-js'
 	import './app.css'
@@ -20,6 +21,7 @@
 	<link rel="apple-touch-icon" sizes="180x180" href="/favicons/apple-touch-icon.png" />
 
 	<link rel="manifest" href="/manifest.json" />
+	<meta name="theme-color" content="#000000" />
 
 	<link rel="preconnect" href="https://statsapi.mlb.com" />
 	<link rel="preconnect" href="https://www.mlbstatic.com" />
@@ -36,6 +38,8 @@
 		sm:sidebar-open:m-[.5ch] sm:sidebar-open:ml-0 sm:sidebar-open:max-h-[calc(100dvh-1ch)] sm:sidebar-open:rounded-md
 	"
 >
+	<Offline />
+
 	{@render children()}
 </main>
 
