@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { pushState } from '$app/navigation'
 	import { page } from '$app/state'
-	import { fetchWeekSchedule } from '$lib/fetch'
+	import { fetchSeason, fetchWeekSchedule } from '$lib/fetch'
 	import { formatDate, slash } from '$lib/temporal'
 	import { count } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
@@ -10,6 +10,7 @@
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import WeekPicker from '$ui/schedule/week-picker.svelte'
+	import SeasonInfo from '$ui/season/season-info.svelte'
 	import SelectSport from '$ui/select-sport.svelte'
 	import ToggleAllDetails from '$ui/toggle-all-details.svelte'
 	import type { PageProps } from './$types'
@@ -18,16 +19,19 @@
 
 	let currentDate: string = $state(page.params.date!)
 	let schedule: MLB.ScheduleResponse = $derived(data.schedule)
+	let season: MLB.SeasonDateInfo = $derived(data.season)
 
 	$effect(() => {
 		currentDate = page.params.date!
 		schedule = data.schedule
+		season = data.season
 	})
 
 	async function onDateChange(date: string) {
 		currentDate = date
-		pushState(`/schedule/week/${date}`, {})
 		schedule = await fetchWeekSchedule(date)
+		season = await fetchSeason(new Date(slash(date)).getFullYear().toString())
+		pushState(`/schedule/week/${date}`, {})
 	}
 </script>
 
@@ -68,4 +72,9 @@
 	{:else}
 		<Empty>No games</Empty>
 	{/each}
+
+	{#if data.season}
+		<hr class="my-lh border-dashed border-stroke" />
+		<SeasonInfo {season} />
+	{/if}
 </section>

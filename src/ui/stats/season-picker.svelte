@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { getToday } from '$lib/temporal'
+	import { cn } from '$lib/utils'
 	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 
 	let {
@@ -30,7 +31,14 @@
 	<a class="order-first button border-b-0 border-l" href="/stats/{season - 1}{search}">
 		<ChevronLeftIcon />
 	</a>
-	<a class="order-last button border-r border-b-0" href="/stats/{season + 1}{search}">
+
+	<a
+		class={cn(
+			'order-last button border-r border-b-0',
+			season + 1 > getToday().getFullYear() && 'pointer-events-none opacity-50',
+		)}
+		href="/stats/{season + 1}{search}"
+	>
 		<ChevronRightIcon />
 	</a>
 </fieldset>

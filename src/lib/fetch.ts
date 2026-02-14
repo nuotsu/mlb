@@ -30,6 +30,15 @@ export async function fetchMLB<T>(
 
 // presets
 
+export async function fetchSeason(year: string, sportId = '1') {
+	const seasons = await fetchMLB<MLB.SeasonResponse>(`/api/v1/seasons`, {
+		sportId,
+		season: year,
+	})
+
+	return seasons?.seasons?.[0]
+}
+
 export async function fetchWeekSchedule(date: string, sportId = '1') {
 	const { startDate, endDate } = getWeekDates(date)
 

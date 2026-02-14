@@ -4,6 +4,7 @@
 	let {
 		currentDate,
 		seasonProgress,
+		class: className,
 	}: {
 		currentDate: string
 		seasonProgress: {
@@ -12,6 +13,7 @@
 			regularSeasonStartDate?: string
 			regularSeasonEndDate?: string
 		}
+		class?: string
 	} = $props()
 
 	let { gamesPlayed, regularSeasonStartDate, regularSeasonEndDate } = $derived(seasonProgress)
@@ -25,9 +27,7 @@
 </script>
 
 {#if currentTimestamp >= regularSeasonStartTimestamp && currentTimestamp <= regularSeasonEndTimestamp}
-	<article
-		class="sticky bottom-0 grid grid-cols-[auto_1fr_auto] gap-ch border-t border-current/10 bg-background/50 p-ch pt-[1.5lh] text-center text-sm backdrop-blur-xs max-lg:landscape:static dark:border-current/25"
-	>
+	<article class="grid grid-cols-[auto_1fr_auto] gap-ch text-center text-sm {className}">
 		<span>{'1'.padStart(3, '0')}</span>
 
 		<output class="relative leading-none" style:--progress="calc({gamesPlayed / total} * 100%)">

@@ -58,7 +58,7 @@
 				<tr>
 					<th></th>
 
-					<th colspan="3">
+					<th class="w-[8ch]" colspan="3">
 						<select
 							class="button w-full text-center hover:bg-current/10"
 							value={position ?? ''}
@@ -137,11 +137,13 @@
 		</table>
 	</article>
 
+	<hr class="border-dashed border-stroke" />
+
 	<article class="overflow-x-auto has-[table]:flex">
 		<table class="min-w-full table-fixed text-center">
 			<thead class="text-sm">
 				<tr>
-					<th colspan="5"></th>
+					<th class="min-w-[5ch]" colspan="5"></th>
 
 					{#each ['era', 'wins', 'losses', 'saves', 'strikeOuts', 'whip', 'inningsPitched'] as stat}
 						{@const { label, name, lookupParam } =
