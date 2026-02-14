@@ -47,34 +47,42 @@
 >
 	{#if data.teams?.teams}
 		{#each teamsByLeague as [league, teams] (league)}
+			{@const teamsByDivision = Object.entries(
+				Object.groupBy(teams ?? [], (team: MLB.TeamDetailed) => team.division?.nameShort ?? ''),
+			).sort(
+				([, a], [, b]) =>
+					(a?.[0] as MLB.TeamDetailed)?.division?.sortOrder! -
+					(b?.[0] as MLB.TeamDetailed)?.division?.sortOrder!,
+			)}
+
 			<details class="accordion" open>
 				<summary class="sticky-below-header z-1 backdrop-blur-xs">
 					{league || (teamsByLeague.length === 1 ? sport?.abbreviation : 'Other')}
 				</summary>
 
-				<ul class="max-sm:px-ch">
-					{#each teams?.sort((a, b) => a.name.localeCompare(b.name)) as team (team.id)}
-						{@const { nameShort } = (team as MLB.TeamDetailed).division ?? {}}
+				<dl class="max-sm:px-ch">
+					{#each teamsByDivision as [division, divisionTeams] (division)}
+						{#if teamsByDivision.length > 1}
+							<dt class="mb-[.5ch] text-sm text-current/50">
+								{division || 'Other'}
+							</dt>
+						{/if}
 
-						<li>
-							<a class="group/team flex items-center gap-ch" href="/teams/{team.id}">
-								<Logo class="size-lh" {team} />
+						{#each divisionTeams?.sort( (a, b) => a.name.localeCompare(b.name), ) ?? [] as team (team.id)}
+							<dd class="[&:has(+dt)]:mb-ch">
+								<a class="group/team flex items-center gap-ch" href="/teams/{team.id}">
+									<Logo class="size-lh" {team} />
 
-								<span
-									class="line-clamp-1 break-all decoration-dashed group-hover/team:underline max-md:grow"
-								>
-									{team.name}
-								</span>
-
-								{#if nameShort}
-									<small class="line-clamp-1 text-xs break-all text-current/50">
-										{nameShort}
-									</small>
-								{/if}
-							</a>
-						</li>
+									<span
+										class="line-clamp-1 break-all decoration-dashed group-hover/team:underline max-md:grow"
+									>
+										{team.name}
+									</span>
+								</a>
+							</dd>
+						{/each}
 					{/each}
-				</ul>
+				</dl>
 			</details>
 		{/each}
 	{:else}

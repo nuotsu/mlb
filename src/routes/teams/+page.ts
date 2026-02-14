@@ -6,7 +6,11 @@ export const load: PageLoad = async ({ url }) => {
 
 	const teams = await fetchMLB<MLB.TeamsResponse>('/api/v1/teams', {
 		sportId: '1',
-		fields: ['teams,id,name,abbreviation', 'sport,abbreviation', 'league,name,division,nameShort'],
+		fields: [
+			'teams,id,name,abbreviation',
+			'sport,abbreviation',
+			'league,name,division,sortOrder,nameShort',
+		],
 		hydrate: 'sport,division',
 		...searchParams,
 	})

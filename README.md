@@ -17,19 +17,17 @@ $$ | \_/ $$ |$$$$$$$$\ $$$$$$$  |
 
 - https://mlb.theohtani.com/schedule
 
+Weekly schedule view:
 ![Weekly schedule view](/static/screenshots/week.png)
 
-> Weekly schedule view
-
+Game details view:
 ![Game details view](/static/screenshots/game.png)
 
-> Game details view
-
+MLB Stats API Playground:
 ![Stats API Playground](/static/screenshots/playground.png)
 
-> MLB Stats API Playground
-
-Replace `https://statsapi.mlb.com/api/v1/...` with `https://mlb.theohtani.com/api/v1/...` to show results in the API Playground.
+> [!TIP]
+> Replace `https://statsapi.mlb.com/api/v1/...` with `https://mlb.theohtani.com/api/v1/...` to show results in the API Playground.
 
 ## Credits & References
 
