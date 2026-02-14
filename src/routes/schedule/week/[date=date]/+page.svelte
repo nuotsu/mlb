@@ -2,7 +2,7 @@
 	import { pushState } from '$app/navigation'
 	import { page } from '$app/state'
 	import { fetchWeekSchedule } from '$lib/fetch'
-	import { formatDate } from '$lib/temporal'
+	import { formatDate, slash } from '$lib/temporal'
 	import { count } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import { sortGames } from '$ui/favorites/store.svelte'
@@ -47,7 +47,7 @@
 	{#each schedule.dates as date (date.date)}
 		<details class="group accordion" open>
 			<summary class="sticky-below-header z-1 backdrop-blur-xs after:ml-0!">
-				{formatDate(date.date + 'T00:00:00', {
+				{formatDate(slash(date.date), {
 					weekday: 'short',
 					month: 'numeric',
 					day: 'numeric',

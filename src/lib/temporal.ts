@@ -17,7 +17,7 @@ export function formatDate(
 }
 
 export function formatWeekRange(date: string) {
-	const t = new Date(slash(date))
+	const t = new Date(date)
 	const startDate = new Date(t.setDate(t.getDate() - ((t.getDay() - 1) % 7)))
 	const endDate = new Date(t.setDate(t.getDate() + (6 - ((t.getDay() - 1) % 7))))
 	const isSameMonth = startDate.getMonth() === endDate.getMonth()

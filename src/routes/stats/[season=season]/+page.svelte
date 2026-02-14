@@ -60,7 +60,7 @@
 
 					<th colspan="3">
 						<select
-							class="w-full text-center hover:bg-current/10"
+							class="button w-full text-center hover:bg-current/10"
 							value={position ?? ''}
 							onchange={(e) => {
 								const { value } = e.target as HTMLSelectElement

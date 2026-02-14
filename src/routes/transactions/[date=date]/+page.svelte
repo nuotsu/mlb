@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { fetchWeekTransactions } from '$lib/fetch'
-	import { formatDate } from '$lib/temporal'
+	import { formatDate, slash } from '$lib/temporal'
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
@@ -43,7 +43,7 @@
 		{#each Map.groupBy(processedTransactions, (t) => t.date) as [date, txns] (date)}
 			<details class="accordion" open>
 				<summary class="sticky-below-header z-1 backdrop-blur-xs">
-					{formatDate(date, { weekday: 'short', month: 'short', day: 'numeric' })}
+					{formatDate(slash(date), { weekday: 'short', month: 'short', day: 'numeric' })}
 				</summary>
 
 				<TransactionList

@@ -52,8 +52,9 @@
 						</td>
 						<td
 							class={cn('tabular-nums', Number(winningPercentage) >= 0.5 ? 'positive' : 'negative')}
-							>{winningPercentage}</td
 						>
+							{winningPercentage}
+						</td>
 						<td class={cn('tabular-nums', sportGamesBack === '-' && 'text-current/50')}>
 							{sportGamesBack}
 						</td>

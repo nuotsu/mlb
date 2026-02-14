@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatDate, getToday } from '$lib/temporal'
+	import { formatDate, getToday, slash } from '$lib/temporal'
 
 	let { season }: { season: MLB.SeasonDateInfo } = $props()
 </script>
@@ -38,7 +38,7 @@
 {#snippet linkedDate(date: string = '', view: 'week' | 'day' = 'week')}
 	{#if date}
 		<a class="hover-link" href="/schedule/{view}/{date}">
-			{formatDate(date + 'T00:00:00', { weekday: 'short', month: 'numeric', day: 'numeric' })}
+			{formatDate(slash(date), { weekday: 'short', month: 'numeric', day: 'numeric' })}
 		</a>
 	{:else}
 		<span>TBD</span>

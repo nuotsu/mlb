@@ -11,6 +11,7 @@
 
 	let containerWidth = $state(0)
 
+	const isDark = $derived(colorSchemeStore.mode !== 'light')
 	const cols = $derived(Math.floor(Math.min(containerWidth / 7, 80)))
 	const rows = $derived(Math.floor(cols * 0.5))
 
@@ -168,10 +169,11 @@
 		// Seam
 		const sd = seamDistance(rp)
 		const seamW = 0.16
-		const seamFactor = sd < seamW ? 0.3 + 0.7 * (sd / seamW) : 1.0
+		const seamBase = isDark ? 0.1 : 0.3
+		const seamFactor = sd < seamW ? seamBase + (1 - seamBase) * (sd / seamW) : 1.0
 
 		const lightness = Math.min(1, (0.4 + diffuse * 0.5 + spec + rim) * seamFactor)
-		return colorSchemeStore.mode === 'light' ? 1 - lightness : lightness * 0.5
+		return isDark ? lightness * 0.5 : 1 - lightness
 	}
 
 	// --- Pre-compute character shape vectors ---
@@ -247,7 +249,6 @@
 			return ' '
 		}
 
-		const isDark = colorSchemeStore.mode !== 'light'
 		const enhanced = isDark ? cellVec : cellVec.map((v) => Math.pow(v / maxVal, 1.4) * maxVal)
 
 		let bestChar = ' '
@@ -304,7 +305,7 @@
 	// --- Lifecycle ---
 
 	$effect(() => {
-		colorSchemeStore.mode
+		isDark
 		quantCache = new Map()
 	})
 
@@ -397,7 +398,7 @@
 
 <figure {...props} bind:clientWidth={containerWidth}>
 	<pre
-		class="place-content-centercursor-grab grid aspect-square touch-none place-content-center font-mono leading-none tracking-tighter select-none active:cursor-grabbing"
+		class="grid aspect-square cursor-grab touch-none place-content-center font-mono leading-none tracking-tighter select-none active:cursor-grabbing"
 		{onpointerdown}
 		{onpointermove}
 		{onpointerup}
