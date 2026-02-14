@@ -10,8 +10,7 @@
 	let { data }: PageProps = $props()
 	let { season } = $derived(data)
 
-	const ascii = `
-$$\\      $$\\ $$\\       $$$$$$$\\
+	const ascii = `$$\\      $$\\ $$\\       $$$$$$$\\
 $$$\\    $$$ |$$ |      $$  __$$\\
 $$$$\\  $$$$ |$$ |      $$ |  $$ |
 $$\\$$\\$$ $$ |$$ |      $$$$$$$\\ |
@@ -34,7 +33,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 >
 	<header class="space-y-ch">
 		<h1 class="mx-auto flex max-w-max flex-col text-xl" aria-label="Welcome to MLB.TheOhtani.com">
-			<div class="leading-none">Welcome to</div>
+			<div class="mb-1">Welcome to</div>
 			<pre class="-mt-ch overflow-x-auto overflow-y-clip text-[x-small] leading-none">{ascii}</pre>
 			<p class="ml-auto">.TheOhtani.com</p>
 		</h1>
@@ -43,7 +42,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 			Track MLB games, explore stats, and query the Stats API, all in one app.
 		</p>
 
-		<Baseball class="mx-auto -my-[2lh] max-w-[16lh] *:text-[xx-small]" />
+		<Baseball class="mx-auto my-[-5lh] mb-[-8lh] w-[300px] text-[8px]" />
 	</header>
 
 	<hr class="border-dashed border-stroke" />

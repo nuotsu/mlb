@@ -1,22 +1,30 @@
 <script lang="ts">
 	// @reference https://alexharri.com/blog/ascii-rendering
 
+	import { colorSchemeStore } from '$ui/store.svelte'
+	import type { HTMLAttributes } from 'svelte/elements'
+
 	type Vec3 = [number, number, number]
 	type Mat3 = [number, number, number, number, number, number, number, number, number]
 
-	let { class: className }: { class?: string } = $props()
+	let { ...props }: HTMLAttributes<HTMLElement> = $props()
 
 	let containerWidth = $state(0)
 
 	const cols = $derived(Math.floor(Math.min(containerWidth / 7, 80)))
 	const rows = $derived(Math.floor(cols * 0.5))
 
-	// Ball orientation as rotation matrix (row-major)
-	let ballMat: Mat3 = [1, 0, 0, 0, Math.cos(0.3), -Math.sin(0.3), 0, Math.sin(0.3), Math.cos(0.3)]
+	// Ball orientation as rotation matrix (row-major) — start at random orientation
+	let ballMat: Mat3 = (() => {
+		const a = Math.random() * Math.PI * 2
+		const b = Math.random() * Math.PI * 2
+		return matMul(axisAngleMat(1, 0, 0, a), axisAngleMat(0, 1, 0, b))
+	})()
 
 	let isDragging = $state(false)
-	let velocityX = 0
-	let velocityY = 0.4
+	let activePointerId = -1
+	let velocityX = (Math.random() - 0.5) * 0.8
+	let velocityY = (Math.random() - 0.5) * 0.8
 	let lastPointerX = 0
 	let lastPointerY = 0
 	let lastPointerTime = 0
@@ -129,7 +137,7 @@
 
 	function computeLightness(u: number, v: number): number {
 		const RADIUS = 0.9
-		const lightDir: Vec3 = normalize([0.5, 0.8, -0.4])
+		const lightDir: Vec3 = normalize([0.15, 0.25, -1])
 		const viewDir: Vec3 = [0, 0, -1]
 
 		const rayOz = -2
@@ -162,7 +170,8 @@
 		const seamW = 0.16
 		const seamFactor = sd < seamW ? 0.3 + 0.7 * (sd / seamW) : 1.0
 
-		return Math.min(1, (0.15 + diffuse * 0.7 + spec + rim) * seamFactor)
+		const lightness = Math.min(1, (0.4 + diffuse * 0.5 + spec + rim) * seamFactor)
+		return colorSchemeStore.mode === 'light' ? 1 - lightness : lightness * 0.5
 	}
 
 	// --- Pre-compute character shape vectors ---
@@ -238,7 +247,8 @@
 			return ' '
 		}
 
-		const enhanced = cellVec.map((v) => Math.pow(v / maxVal, 1.4) * maxVal)
+		const isDark = colorSchemeStore.mode !== 'light'
+		const enhanced = isDark ? cellVec : cellVec.map((v) => Math.pow(v / maxVal, 1.4) * maxVal)
 
 		let bestChar = ' '
 		let bestDist = Infinity
@@ -294,10 +304,17 @@
 	// --- Lifecycle ---
 
 	$effect(() => {
-		document.fonts.ready.then(() => {
+		colorSchemeStore.mode
+		quantCache = new Map()
+	})
+
+	$effect(() => {
+		document.fonts.load('22px "Geist Mono"').then(() => {
 			charVectors = precomputeCharVectors()
 		})
+	})
 
+	$effect(() => {
 		let animFrame = 0
 		let lastTime = 0
 		let frames = 0
@@ -340,6 +357,8 @@
 	// --- Pointer interaction ---
 
 	function onpointerdown(e: PointerEvent) {
+		if (activePointerId !== -1) return
+		activePointerId = e.pointerId
 		isDragging = true
 		lastPointerX = e.clientX
 		lastPointerY = e.clientY
@@ -350,12 +369,12 @@
 	}
 
 	function onpointermove(e: PointerEvent) {
-		if (!isDragging) return
+		if (!isDragging || e.pointerId !== activePointerId) return
 		const dx = e.clientX - lastPointerX
 		const dy = e.clientY - lastPointerY
 
-		const angleX = dy * 0.01
-		const angleY = dx * 0.01
+		const angleX = -dy * 0.01
+		const angleY = -dx * 0.01
 		ballMat = matMul(axisAngleMat(0, 1, 0, angleY), matMul(axisAngleMat(1, 0, 0, angleX), ballMat))
 
 		const now = performance.now()
@@ -369,17 +388,16 @@
 		lastPointerTime = now
 	}
 
-	function onpointerup() {
+	function onpointerup(e: PointerEvent) {
+		if (e.pointerId !== activePointerId) return
+		activePointerId = -1
 		isDragging = false
 	}
 </script>
 
-<figure
-	class="grid aspect-square place-content-center overflow-hidden text-center {className}"
-	bind:clientWidth={containerWidth}
->
+<figure {...props} bind:clientWidth={containerWidth}>
 	<pre
-		class="block cursor-grab touch-none font-mono leading-[1.05] tracking-tighter select-none active:cursor-grabbing"
+		class="place-content-centercursor-grab grid aspect-square touch-none place-content-center font-mono leading-none tracking-tighter select-none active:cursor-grabbing"
 		{onpointerdown}
 		{onpointermove}
 		{onpointerup}

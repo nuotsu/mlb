@@ -36,7 +36,11 @@
 </article>
 
 {#snippet linkedDate(date: string = '', view: 'week' | 'day' = 'week')}
-	<a class="hover-link" href="/schedule/{view}/{date}">
-		{formatDate(date + 'T00:00:00', { weekday: 'short', month: 'numeric', day: 'numeric' })}
-	</a>
+	{#if date}
+		<a class="hover-link" href="/schedule/{view}/{date}">
+			{formatDate(date + 'T00:00:00', { weekday: 'short', month: 'numeric', day: 'numeric' })}
+		</a>
+	{:else}
+		<span>TBD</span>
+	{/if}
 {/snippet}
