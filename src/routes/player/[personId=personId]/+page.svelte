@@ -131,7 +131,7 @@
 			<YearByYearList {person} />
 		</article>
 
-		<article data-group="pitching">
+		<article>
 			{#if data.hittingHotColdZones}
 				<HotColdZones
 					hotColdZones={data.hittingHotColdZones}

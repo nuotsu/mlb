@@ -22,24 +22,24 @@
 >
 	<h2 class="col-start-2 mb-auto text-sm text-current/50">Hot/Cold Zones</h2>
 
-	{#each hotColdZones?.splits as { stat }, i (stat.name)}
+	{#each hotColdZones?.splits as { zones, name }, i (name)}
 		<label class="order-last col-start-2 flex touch-none items-center gap-[.5ch] uppercase">
 			<input
 				class="shrink-0"
 				type="radio"
 				name="{props['data-group'] ?? 'hitting'}-hotColdZone"
-				value={stat.zone}
+				value={name}
 				checked={i === 0}
 			/>
 
-			<abbr title={String(stat.name)}>
-				{baseballStats?.find((s) => s.name === stat.name)?.lookupParam ?? stat.name}
+			<abbr title={String(name)}>
+				{baseballStats?.find((s) => s.name === name)?.lookupParam ?? name}
 			</abbr>
 		</label>
 
 		<Strikezone
 			class="relative z-1 col-start-1 row-[1/var(--count)] px-ch"
-			zones={stat.zones as unknown as MLB.HotColdZone[]}
+			{zones}
 		/>
 	{/each}
 
