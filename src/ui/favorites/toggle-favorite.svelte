@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { browser, dev } from '$app/environment'
+	import { requestPermission, scheduleForToday } from '$lib/notifications'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import { StarEmptyIcon, StarIcon } from '$ui/icons'
 	import posthog from 'posthog-js'
@@ -11,12 +12,23 @@
 	} = $props()
 
 	let checked = $derived(favoritesStore.has(target.href))
+	const isTeam = target.href.startsWith('/teams/')
 
-	function toggle() {
+	async function toggle() {
+		const isAdding = !checked
 		favoritesStore.toggle(target)
 
-		if (!checked && !dev) {
+		if (isAdding && !dev) {
 			posthog.capture('favorite_added', { href: target.href })
+		}
+
+		if (isAdding && isTeam && browser && 'Notification' in window) {
+			if (Notification.permission === 'default') {
+				await requestPermission()
+			}
+			if (Notification.permission === 'granted') {
+				await scheduleForToday(favoritesStore.favorites)
+			}
 		}
 	}
 </script>

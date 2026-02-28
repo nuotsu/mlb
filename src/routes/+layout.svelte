@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { browser } from '$app/environment'
 	import { afterNavigate, beforeNavigate } from '$app/navigation'
+	import { scheduleForToday } from '$lib/notifications'
+	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import Offline from '$ui/offline.svelte'
 	import Sidebar from '$ui/sidebar/nav.svelte'
 	import posthog from 'posthog-js'
@@ -15,6 +17,12 @@
 		const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
 		document.cookie = `tz=${tz};path=/;max-age=31536000;SameSite=Lax`
 	}
+
+	$effect(() => {
+		if (!browser || typeof Notification === 'undefined') return
+		if (Notification.permission !== 'granted') return
+		scheduleForToday(favoritesStore.favorites)
+	})
 </script>
 
 <svelte:head>
