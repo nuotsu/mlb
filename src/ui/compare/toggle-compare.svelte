@@ -1,5 +1,4 @@
 <script lang="ts">
-	import 'ios-vibrator-pro-max'
 	import { compareStore } from '$ui/compare/store.svelte'
 	import { SplitFilledIcon, SplitIcon } from '$ui/icons'
 
@@ -21,7 +20,6 @@
 		type="checkbox"
 		{checked}
 		onchange={toggle}
-		onclick={() => navigator.vibrate?.(10)}
 	/>
 
 	<SplitIcon class="size-lh group-has-checked/compare:hidden" />

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import 'ios-vibrator-pro-max'
 	import { dev } from '$app/environment'
 	import { EyeIcon, EyeOffIcon } from '$ui/icons'
 	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
@@ -34,7 +33,6 @@
 		value={team.id}
 		{checked}
 		onchange={toggle}
-		onclick={() => navigator.vibrate?.(10)}
 	/>
 
 	<EyeIcon class=" group-has-checked/spoiler:hidden" />

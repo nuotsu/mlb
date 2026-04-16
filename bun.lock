@@ -8,7 +8,6 @@
         "@google/model-viewer": "^4.2.0",
         "@modelcontextprotocol/sdk": "^1.29.0",
         "hls.js": "^1.6.16",
-        "ios-vibrator-pro-max": "^2.0.2",
         "posthog-js": "1.368.0",
         "posthog-node": "5.29.2",
         "rehype-autolink-headings": "^7.1.0",
@@ -533,8 +532,6 @@
     "immediate": ["immediate@3.0.6", "", {}, "sha512-XXOFtyqDjNDAQxVfYxuF7g9Il/IbWmmlQg2MYKOH8ExIT1qg6xc4zyS3HaEEATgs1btfzxq15ciUiY7gjSXRGQ=="],
 
     "inherits": ["inherits@2.0.4", "", {}, "sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ=="],
-
-    "ios-vibrator-pro-max": ["ios-vibrator-pro-max@2.0.2", "", {}, "sha512-jc1UOrFhm7PAXnWc6jgRsS25rCTMUWxiICKHbqYgtfTC5zpUeF5fzNOwAoxTziPvOwxm/gTBhCSkmIqirPtWrg=="],
 
     "ip-address": ["ip-address@10.1.0", "", {}, "sha512-XXADHxXmvT9+CRxhXg56LJovE+bmWnEWB78LB83VZTprKTmaC5QfruXocxzTZ2Kl0DNwKuBdlIhjL8LeY8Sf8Q=="],
 

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import 'ios-vibrator-pro-max'
 	import { dev } from '$app/environment'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import { StarEmptyIcon, StarIcon } from '$ui/icons'
@@ -35,7 +34,6 @@
 		value={target.href}
 		{checked}
 		onchange={toggle}
-		onclick={() => navigator.vibrate?.(10)}
 	/>
 
 	<StarEmptyIcon class="group-has-checked/fav:hidden" />
