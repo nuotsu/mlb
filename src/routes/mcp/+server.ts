@@ -1,6 +1,7 @@
 import { getPostHogClient } from '$lib/server/posthog.js'
 import { createMcpServer } from '$lib/mcp/server.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
+import { env } from '$env/dynamic/private'
 import type { RequestHandler } from './$types'
 
 export const config = {
@@ -9,7 +10,7 @@ export const config = {
 
 const CORS = {
 	'Access-Control-Allow-Origin': '*',
-	'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+	'Access-Control-Allow-Methods': 'POST, OPTIONS',
 	'Access-Control-Allow-Headers': 'Content-Type, Accept, Authorization',
 	'Access-Control-Max-Age': '86400',
 }
@@ -20,10 +21,39 @@ function withCors(response: Response): Response {
 	return new Response(response.body, { status: response.status, headers })
 }
 
+function unauthorized(): Response {
+	return withCors(
+		new Response('Unauthorized', {
+			status: 401,
+			headers: { 'Cache-Control': 'no-store' },
+		}),
+	)
+}
+
+function checkAuthorized(request: Request): Response | null {
+	const secret = env.MCP_SECRET
+	if (!secret) return null
+	const auth = request.headers.get('authorization')
+	if (auth === `Bearer ${secret}`) return null
+	return unauthorized()
+}
+
 export const OPTIONS: RequestHandler = () => new Response(null, { status: 204, headers: CORS })
 
+/** SSE GET holds connections until Vercel timeout; use POST-only or local stdio MCP. */
+export const GET: RequestHandler = () =>
+	withCors(
+		new Response('MCP SSE is disabled on the hosted endpoint. Use POST or local stdio MCP.', {
+			status: 405,
+			headers: { 'Cache-Control': 'public, max-age=86400' },
+		}),
+	)
+
 async function handle(request: Request): Promise<Response> {
-	const body = request.method === 'POST' ? await request.clone().json().catch(() => null) : null
+	const denied = checkAuthorized(request)
+	if (denied) return denied
+
+	const body = await request.clone().json().catch(() => null)
 	const method = body?.method as string | undefined
 
 	if (method) {
@@ -47,4 +77,3 @@ async function handle(request: Request): Promise<Response> {
 }
 
 export const POST: RequestHandler = ({ request }) => handle(request)
-export const GET: RequestHandler = ({ request }) => handle(request)

@@ -1,4 +1,14 @@
 {
+	"headers": [
+		{
+			"source": "/game/(.*)",
+			"headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+		},
+		{
+			"source": "/schedule/(.*)",
+			"headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
+		}
+	],
 	"rewrites": [
 		{
 			"source": "/ph/static/:path(.*)",

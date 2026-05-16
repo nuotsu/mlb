@@ -1,10 +1,12 @@
 import { fetchDaySchedule, fetchSeason } from '$lib/fetch/presets'
 import { fetchMLB } from '$lib/fetch'
+import { cacheControlForScheduleDay } from '$lib/server/traffic'
 import { getToday, slash } from '$lib/temporal'
 import { fetchSeasonProgress } from './fetch-season-progress'
 
-export const load = async ({ params, url, depends }) => {
+export const load = async ({ params, url, depends, setHeaders }) => {
 	depends('schedule:day')
+	setHeaders({ 'cache-control': cacheControlForScheduleDay(params.date) })
 
 	const sportId = url.searchParams.get('sportId') || '1'
 	const year = (new Date(slash(params.date)).getFullYear() ?? getToday().getFullYear()).toString()

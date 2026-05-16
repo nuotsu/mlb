@@ -1,8 +1,10 @@
 import { fetchMLB } from '$lib/fetch'
 import { fetchBoxscore, fetchfeedLive, fetchWinProbability } from '$lib/fetch/presets'
+import { cacheControlForGame } from '$lib/server/traffic'
+import { error } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ params, fetch }) => {
+export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 	const schedule = await fetchMLB<MLB.ScheduleResponse>(
 		`/api/v1/schedule`,
 		{
@@ -18,10 +20,21 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 		},
 		{ fetch },
 	)
-	const game = schedule?.dates?.[0].games.find((game) => game.gamePk === Number(params.gamePk))!
+
+	const game = schedule?.dates?.[0]?.games.find((g) => g.gamePk === Number(params.gamePk))
+	if (!game) {
+		setHeaders({ 'cache-control': 'public, s-maxage=86400, stale-while-revalidate=604800' })
+		error(404, 'Game not found')
+	}
+
+	const state = game.status.abstractGameState
+	setHeaders({ 'cache-control': cacheControlForGame(state) })
+
+	const isFinal = state === 'Final'
+	const isLive = state === 'Live'
 
 	const [feedLiveResult, boxscoreResult, contentResult] = await Promise.allSettled([
-		fetchfeedLive(params.gamePk),
+		isLive ? fetchfeedLive(params.gamePk) : Promise.resolve(null),
 		fetchBoxscore(params.gamePk),
 		fetchMLB<MLB.GameContent>(`/api/v1/game/${params.gamePk}/content`, undefined, { fetch }),
 	])
@@ -30,7 +43,7 @@ export const load: PageServerLoad = async ({ params, fetch }) => {
 	const boxscore = boxscoreResult.status === 'fulfilled' ? boxscoreResult.value : null
 	const content = contentResult.status === 'fulfilled' ? contentResult.value : null
 
-	const winProbability = await fetchWinProbability(params.gamePk).catch(() => null)
+	const winProbability = isLive ? await fetchWinProbability(params.gamePk).catch(() => null) : null
 
 	return {
 		schedule,

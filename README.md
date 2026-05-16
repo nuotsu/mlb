@@ -34,11 +34,17 @@ An [MCP](https://modelcontextprotocol.io) server that exposes the MLB Stats API 
 ### Setup
 
 **Claude Desktop / Cursor / other MCP clients:**
+
+Hosted HTTP MCP uses **POST only** (SSE `GET` is disabled to avoid Vercel function timeouts). Optional auth: set `MCP_SECRET` on Vercel and send `Authorization: Bearer <secret>`.
+
 ```json
 {
   "mcpServers": {
     "mlb": {
-      "url": "https://mlb.theohtani.com/mcp"
+      "url": "https://mlb.theohtani.com/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_MCP_SECRET"
+      }
     }
   }
 }
