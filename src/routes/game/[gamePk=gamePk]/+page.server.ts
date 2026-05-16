@@ -1,6 +1,6 @@
 import { fetchMLB } from '$lib/fetch'
 import { fetchBoxscore, fetchfeedLive, fetchWinProbability } from '$lib/fetch/presets'
-import { cacheControlForGame } from '$lib/server/traffic'
+import { cacheControlForGame } from '$lib/cache-control'
 import { error } from '@sveltejs/kit'
 import type { PageServerLoad } from './$types'
 

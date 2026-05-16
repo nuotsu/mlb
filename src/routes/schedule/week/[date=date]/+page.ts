@@ -1,6 +1,6 @@
 import { fetchSeason, fetchWeekSchedule } from '$lib/fetch/presets'
 import { fetchMLB } from '$lib/fetch'
-import { cacheControlForScheduleWeek } from '$lib/server/traffic'
+import { cacheControlForScheduleWeek } from '$lib/cache-control'
 import { slash } from '$lib/temporal.js'
 
 export const load = async ({ params, url, depends, fetch, setHeaders }) => {

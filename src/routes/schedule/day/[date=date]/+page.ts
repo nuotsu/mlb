@@ -1,6 +1,6 @@
 import { fetchDaySchedule, fetchSeason } from '$lib/fetch/presets'
 import { fetchMLB } from '$lib/fetch'
-import { cacheControlForScheduleDay } from '$lib/server/traffic'
+import { cacheControlForScheduleDay } from '$lib/cache-control'
 import { getToday, slash } from '$lib/temporal'
 import { fetchSeasonProgress } from './fetch-season-progress'
 
