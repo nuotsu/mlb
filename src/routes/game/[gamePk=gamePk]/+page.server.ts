@@ -34,7 +34,7 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 	const isLive = state === 'Live'
 
 	const [feedLiveResult, boxscoreResult, contentResult] = await Promise.allSettled([
-		isLive ? fetchfeedLive(params.gamePk) : Promise.resolve(null),
+		isLive || isFinal ? fetchfeedLive(params.gamePk) : Promise.resolve(null),
 		fetchBoxscore(params.gamePk),
 		fetchMLB<MLB.GameContent>(`/api/v1/game/${params.gamePk}/content`, undefined, { fetch }),
 	])
@@ -43,7 +43,7 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 	const boxscore = boxscoreResult.status === 'fulfilled' ? boxscoreResult.value : null
 	const content = contentResult.status === 'fulfilled' ? contentResult.value : null
 
-	const winProbability = isLive ? await fetchWinProbability(params.gamePk).catch(() => null) : null
+	const winProbability = isLive || isFinal ? await fetchWinProbability(params.gamePk).catch(() => null) : null
 
 	return {
 		schedule,
