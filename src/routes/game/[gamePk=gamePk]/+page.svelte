@@ -161,7 +161,7 @@
 				isFinal && 'order-first',
 			)}
 		>
-			<GameData {game} {feedLive} />
+			<GameData {game} {feedLive} seriesRecord={data.seriesRecord} />
 
 			<hr class="my-ch border-dashed border-stroke" />
 
