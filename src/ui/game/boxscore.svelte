@@ -129,7 +129,7 @@
 						<tbody>
 							{#each team.pitchers.slice(0, isSpoilerPrevented ? 1 : team.pitchers.length) as playerId (playerId)}
 								{@const { stats, seasonStats, ...player } = team.players[`ID${playerId}`]}
-								{#if player?.position?.abbreviation === 'P'}
+								{#if player?.position?.abbreviation === 'P' || !!stats?.pitching}
 									<tr class="hover:*:bg-foreground/10">
 										{@render p(player)}
 
