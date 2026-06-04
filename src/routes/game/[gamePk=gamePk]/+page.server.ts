@@ -45,6 +45,55 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 
 	const winProbability = isLive || isFinal ? await fetchWinProbability(params.gamePk).catch(() => null) : null
 
+	let seriesRecord: { homeWins: number; awayWins: number } | null = null
+	if (game.gamesInSeries && game.gamesInSeries > 1) {
+		try {
+			const officialDate = game.officialDate || game.gameDate.split('T')[0]
+			const startDate = new Date(officialDate)
+			startDate.setDate(startDate.getDate() - 7)
+			const startDateStr = startDate.toISOString().split('T')[0]
+
+			const homeTeamId = game.teams.home.team.id
+			const awayTeamId = game.teams.away.team.id
+
+			const seriesSchedule = await fetchMLB<MLB.ScheduleResponse>(
+				'/api/v1/schedule',
+				{
+					sportId: '1',
+					teamId: String(homeTeamId),
+					startDate: startDateStr,
+					endDate: officialDate,
+					fields: [
+						'dates,games,gamePk,gamesInSeries',
+						'status,abstractGameState',
+						'teams,home,away,team,id,score',
+					],
+				},
+				{ fetch },
+			)
+
+			const allGames = seriesSchedule?.dates?.flatMap((d) => d.games) ?? []
+			const seriesGames = allGames.filter(
+				(g) =>
+					g.gamesInSeries === game.gamesInSeries &&
+					g.teams.home.team.id === homeTeamId &&
+					g.teams.away.team.id === awayTeamId &&
+					g.status.abstractGameState === 'Final',
+			)
+
+			seriesRecord = {
+				homeWins: seriesGames.filter(
+					(g) => (g.teams.home.score ?? 0) > (g.teams.away.score ?? 0),
+				).length,
+				awayWins: seriesGames.filter(
+					(g) => (g.teams.away.score ?? 0) > (g.teams.home.score ?? 0),
+				).length,
+			}
+		} catch {
+			seriesRecord = null
+		}
+	}
+
 	return {
 		schedule,
 		game,
@@ -52,5 +101,6 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 		boxscore,
 		winProbability,
 		content,
+		seriesRecord,
 	}
 }

@@ -24,6 +24,26 @@
 	let seasonProgress = $derived(data.seasonProgress)
 	let season: MLB.SeasonDateInfo = $derived(data.season)
 
+	const seriesRecords = $derived(
+		(() => {
+			const map = new Map<string, { homeWins: number; awayWins: number }>()
+			for (const date of (data.seriesContext?.dates ?? [])) {
+				for (const g of date.games) {
+					if (!g.gamesInSeries || g.gamesInSeries <= 1) continue
+					if (g.status.abstractGameState !== 'Final') continue
+					const key = `${g.teams.home.team.id}-${g.teams.away.team.id}`
+					const rec = map.get(key) ?? { homeWins: 0, awayWins: 0 }
+					const hs = g.teams.home.score ?? 0
+					const as_ = g.teams.away.score ?? 0
+					if (hs > as_) rec.homeWins++
+					else if (as_ > hs) rec.awayWins++
+					map.set(key, rec)
+				}
+			}
+			return map
+		})(),
+	)
+
 	$effect(() => {
 		currentDate = page.params.date!
 		schedule = data.schedule
@@ -114,7 +134,7 @@
 		>
 			{#each processedGames as game (game.gamePk)}
 				{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
-				<Game {game} {linescore} showDescription showLiveDetails />
+				<Game {game} {linescore} showDescription showLiveDetails seriesRecord={seriesRecords.get(`${game.teams.home.team.id}-${game.teams.away.team.id}`)} />
 			{/each}
 		</div>
 	{/if}

@@ -5,10 +5,12 @@
 	let {
 		game,
 		feedLive,
+		seriesRecord,
 		class: className,
 	}: {
 		game: MLB.Game
 		feedLive: MLB.LiveGameFeed
+		seriesRecord?: { homeWins: number; awayWins: number } | null
 	} & HTMLAttributes<HTMLDListElement> = $props()
 
 	const { gameInfo, weather } = $derived(feedLive.gameData)
@@ -37,7 +39,12 @@
 
 	{#if game.seriesGameNumber && game.gamesInSeries}
 		<dt>Series</dt>
-		<dd>{game.seriesGameNumber} of {game.gamesInSeries}</dd>
+		<dd>
+			{game.seriesGameNumber} of {game.gamesInSeries}
+			{#if seriesRecord && seriesRecord.homeWins + seriesRecord.awayWins > 0}
+				(Home {seriesRecord.homeWins}-{seriesRecord.awayWins})
+			{/if}
+		</dd>
 	{/if}
 
 	<dt>Venue</dt>

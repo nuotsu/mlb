@@ -21,6 +21,7 @@
 		linescore,
 		showDescription,
 		showLiveDetails,
+		seriesRecord,
 		class: className = '',
 	}: {
 		game: MLB.Game
@@ -28,6 +29,7 @@
 		linescore?: MLB.Linescore
 		showDescription?: boolean
 		showLiveDetails?: boolean
+		seriesRecord?: { homeWins: number; awayWins: number } | null
 		class?: string
 	} = $props()
 
@@ -105,6 +107,9 @@
 			{:else if game.seriesGameNumber && game.gamesInSeries && game.gamesInSeries > 1}
 				<span class="text-current/50">
 					Series {game.seriesGameNumber} of {game.gamesInSeries}
+					{#if seriesRecord && seriesRecord.homeWins + seriesRecord.awayWins > 0}
+						(Home {seriesRecord.homeWins}-{seriesRecord.awayWins})
+					{/if}
 				</span>
 			{/if}
 		{/if}
