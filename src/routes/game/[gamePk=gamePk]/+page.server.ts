@@ -59,14 +59,14 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 			const seriesSchedule = await fetchMLB<MLB.ScheduleResponse>(
 				'/api/v1/schedule',
 				{
-					sportId: 1,
-					teamId: homeTeamId,
+					sportId: '1',
+					teamId: String(homeTeamId),
 					startDate: startDateStr,
 					endDate: officialDate,
 					fields: [
 						'dates,games,gamePk,gamesInSeries',
 						'status,abstractGameState',
-						'teams,home,away,team,id,isWinner',
+						'teams,home,away,team,id,score',
 					],
 				},
 				{ fetch },
@@ -82,8 +82,12 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 			)
 
 			seriesRecord = {
-				homeWins: seriesGames.filter((g) => g.teams.home.isWinner).length,
-				awayWins: seriesGames.filter((g) => g.teams.away.isWinner).length,
+				homeWins: seriesGames.filter(
+					(g) => (g.teams.home.score ?? 0) > (g.teams.away.score ?? 0),
+				).length,
+				awayWins: seriesGames.filter(
+					(g) => (g.teams.away.score ?? 0) > (g.teams.home.score ?? 0),
+				).length,
 			}
 		} catch {
 			seriesRecord = null
