@@ -26,6 +26,12 @@ export function cacheControlForScheduleWeek(weekStartDate: string) {
 	return 'public, s-maxage=3600, stale-while-revalidate=86400'
 }
 
+export function cacheControlForSeasonPage(season: string | number) {
+	const current = getScheduleToday().getFullYear()
+	if (Number(season) < current) return 'public, s-maxage=604800, stale-while-revalidate=2592000'
+	return 'public, s-maxage=900, stale-while-revalidate=3600'
+}
+
 export function cacheControlForGame(state: MLB.Game['status']['abstractGameState'] | undefined) {
 	switch (state) {
 		case 'Final':

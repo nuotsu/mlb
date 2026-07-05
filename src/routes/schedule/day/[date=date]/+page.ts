@@ -2,7 +2,14 @@ import { fetchDaySchedule, fetchSeason } from '$lib/fetch/presets'
 import { fetchMLB } from '$lib/fetch'
 import { cacheControlForScheduleDay } from '$lib/cache-control'
 import { getToday, slash } from '$lib/temporal'
+import { error } from '@sveltejs/kit'
 import { fetchSeasonProgress } from './fetch-season-progress'
+
+// A 500 here invites crawler retries; dates MLB has no data for are a 404, not a server error.
+function notFoundOnMissingData(e: unknown): never {
+	if (e instanceof Error && e.message.startsWith('MLB API 404')) error(404, 'No MLB data for this date')
+	throw e
+}
 
 export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 	depends('schedule:day')
@@ -36,7 +43,7 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 			},
 			{ fetch },
 		),
-	])
+	]).catch(notFoundOnMissingData)
 
 	const availableSportIds = [...new Set(leagues.map((l) => l.sport?.id).filter(Boolean))] as number[]
 	const seasonProgress = await fetchSeasonProgress(sportId, year, schedule)

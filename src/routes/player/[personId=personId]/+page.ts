@@ -1,7 +1,9 @@
 import { fetchMLB } from '$lib/fetch'
 import type { PageLoad } from './$types'
 
-export const load: PageLoad = async ({ params, url, fetch }) => {
+export const load: PageLoad = async ({ params, url, fetch, setHeaders }) => {
+	setHeaders({ 'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400' })
+
 	const personId = params.personId
 
 	const [person, baseballStats] = await Promise.all([

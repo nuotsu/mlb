@@ -4,7 +4,9 @@ import { formatDate, getToday } from '$lib/temporal'
 import { getAllBlogs } from '$ui/blog/get-blog'
 import type { PageLoad } from './$types'
 
-export const load: PageLoad = async ({ fetch }) => {
+export const load: PageLoad = async ({ fetch, setHeaders }) => {
+	setHeaders({ 'cache-control': 'public, s-maxage=300, stale-while-revalidate=3600' })
+
 	const year = getToday().getFullYear().toString()
 
 	const [seasonResult, transactionsResult] = await Promise.allSettled([

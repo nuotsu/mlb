@@ -1,7 +1,10 @@
+import { cacheControlForSeasonPage } from '$lib/cache-control'
 import { fetchMLB } from '$lib/fetch'
 import type { PageLoad } from './$types'
 
-export const load: PageLoad = async ({ params, url, fetch }) => {
+export const load: PageLoad = async ({ params, url, fetch, setHeaders }) => {
+	setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
+
 	const hittingSortStat = url.searchParams.get('hittingSortStat') ?? 'homeRuns'
 	const pitchingSortStat = url.searchParams.get('pitchingSortStat') ?? 'era'
 	const gameType = url.searchParams.get('gameType') ?? 'R'

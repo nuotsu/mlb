@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment'
 	import { fetchMLB } from '$lib/fetch'
 	import { getToday } from '$lib/temporal'
 	import Empty from '$ui/empty.svelte'
@@ -37,12 +38,17 @@
 	}}
 />
 
-{#await fetchHotColdZones()}
+{#if browser}
+	{#await fetchHotColdZones()}
+		<Loading class="justify-center">Loading hot/cold zones...</Loading>
+	{:then hotColdZones}
+		{#if hotColdZones}
+			<HotColdZones {hotColdZones} {baseballStats} data-group={group} />
+		{:else}
+			<Empty>No hot/cold zones data</Empty>
+		{/if}
+	{/await}
+{:else}
+	<!-- Skip during SSR: the fetch can't finish before the response streams, so it only holds the serverless instance open. -->
 	<Loading class="justify-center">Loading hot/cold zones...</Loading>
-{:then hotColdZones}
-	{#if hotColdZones}
-		<HotColdZones {hotColdZones} {baseballStats} data-group={group} />
-	{:else}
-		<Empty>No hot/cold zones data</Empty>
-	{/if}
-{/await}
+{/if}

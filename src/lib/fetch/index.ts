@@ -14,7 +14,7 @@ export async function fetchMLB<T>(
 	}
 
 	try {
-		const response = await _fetch(url.toString(), { signal: AbortSignal.timeout(10_000) })
+		const response = await _fetch(url.toString(), { signal: AbortSignal.timeout(5_000) })
 
 		if (!response.ok) {
 			const body = await response.text().catch(() => '(unreadable body)')
