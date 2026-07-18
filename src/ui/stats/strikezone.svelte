@@ -18,10 +18,12 @@
 	const min = $derived(Math.min(...values))
 	const max = $derived(Math.max(...values))
 
-	function zoneOpacity(zone: string) {
+	function zoneFill(zone: string) {
 		const v = Number(zoneValue[zone])
-		if (isNaN(v) || max === min) return 0
-		return (v - min) / (max - min)
+		if (isNaN(v) || max === min) return 'transparent'
+		const t = (v - min) / (max - min)
+		// Diverging scale: red below the midpoint, green above, transparent at the middle
+		return `oklch(0.7 0.17 ${t < 0.5 ? 25 : 145} / ${Math.abs(t - 0.5) * 2})`
 	}
 
 	const r = (n: number) => Math.round(n * 10) / 10
@@ -57,7 +59,7 @@
 		<path
 			data-zone="11"
 			d="M0 0 L{midX} 0 L{midX} {szY} L{szX} {szY} L{szX} {midY} L0 {midY} Z"
-			fill="oklch(0.7 0.17 145 / {zoneOpacity('11')})"
+			fill={zoneFill('11')}
 			stroke="currentColor"
 			stroke-width="1"
 		/>
@@ -83,7 +85,7 @@
 		<path
 			data-zone="12"
 			d="M{midX} 0 L{W} 0 L{W} {midY} L{szX + szW} {midY} L{szX + szW} {szY} L{midX} {szY} Z"
-			fill="oklch(0.7 0.17 145 / {zoneOpacity('12')})"
+			fill={zoneFill('12')}
 			stroke="currentColor"
 			stroke-width="1"
 		/>
@@ -109,7 +111,7 @@
 		<path
 			data-zone="13"
 			d="M0 {midY} L{szX} {midY} L{szX} {szY + szH} L{midX} {szY + szH} L{midX} {H} L0 {H} Z"
-			fill="oklch(0.7 0.17 145 / {zoneOpacity('13')})"
+			fill={zoneFill('13')}
 			stroke="currentColor"
 			stroke-width="1"
 		/>
@@ -136,7 +138,7 @@
 			data-zone="14"
 			d="M{szX + szW} {midY} L{W} {midY} L{W} {H} L{midX} {H} L{midX} {szY + szH} L{szX +
 				szW} {szY + szH} Z"
-			fill="oklch(0.7 0.17 145 / {zoneOpacity('14')})"
+			fill={zoneFill('14')}
 			stroke="currentColor"
 			stroke-width="1"
 		/>
@@ -166,7 +168,7 @@
 				y={iz.y}
 				width={cellW}
 				height={cellH}
-				fill="oklch(0.7 0.17 145 / {zoneOpacity(iz.zone)})"
+				fill={zoneFill(iz.zone)}
 				stroke="currentColor"
 				stroke-width="1"
 			/>
