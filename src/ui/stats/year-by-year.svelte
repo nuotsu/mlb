@@ -254,7 +254,7 @@
 					{formatValue(minPoint.value)}
 				</text>
 
-				<!-- Active point vertical guide -->
+				<!-- Active point guides -->
 				{#if activePoint}
 					<line
 						class="stroke-current/50"
@@ -262,6 +262,15 @@
 						y1={activePoint.y}
 						x2={activePoint.x}
 						y2={height - 18}
+						stroke-width="0.5"
+						stroke-dasharray="4,4"
+					/>
+					<line
+						class="stroke-current/50"
+						x1={padding.left}
+						y1={activePoint.y}
+						x2={width - padding.right}
+						y2={activePoint.y}
 						stroke-width="0.5"
 						stroke-dasharray="4,4"
 					/>
