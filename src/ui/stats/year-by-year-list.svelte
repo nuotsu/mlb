@@ -43,7 +43,10 @@
 
 	const hasStats = $derived(
 		person.stats?.some(
-			(s) => (s.group as unknown as MLB.StatGroupRef)?.displayName === group && s.splits?.length,
+			(s) =>
+				s.type?.displayName === 'yearByYear' &&
+				(s.group as unknown as MLB.StatGroupRef)?.displayName === group &&
+				s.splits?.length,
 		),
 	)
 

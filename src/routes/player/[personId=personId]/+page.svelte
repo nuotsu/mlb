@@ -9,6 +9,7 @@
 	import HotColdZonesList from '$ui/player/hot-cold-zones-list.svelte'
 	import PlayerInfo from '$ui/player/player-info.svelte'
 	import RosterEntries from '$ui/player/roster-entries.svelte'
+	import SeasonSplits from '$ui/player/season-splits.svelte'
 	import YearByYearList from '$ui/stats/year-by-year-list.svelte'
 	import type { PageProps } from './$types'
 
@@ -118,6 +119,8 @@
 	{#each ['hitting', 'pitching'] as const as group}
 		<section class="group/stats space-y-lh px-ch has-data-empty:hidden">
 			<Divider class="capitalize">{group} stats</Divider>
+
+			<SeasonSplits {group} {person} baseballStats={data.baseballStats} />
 
 			<div
 				class="grid items-start gap-[2lh] md:grid-cols-[repeat(auto-fit,minmax(var(--container-sm),1fr))]"

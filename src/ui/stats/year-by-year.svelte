@@ -18,12 +18,17 @@
 	const statInfo = $derived(baseballStats?.find((s) => [s.name, s.lookupParam].includes(key)))
 
 	let width = $state(0)
+	let activeSeason = $state<number | null>(null)
 	const height = 150
 	const padding = { top: 16, bottom: 18, left: 20, right: 20 }
 	const chartHeight = height - padding.top - padding.bottom
 
 	const splits = $derived(
-		stats.find((s) => (s.group as unknown as MLB.StatGroupRef).displayName === group)?.splits,
+		stats.find(
+			(s) =>
+				s.type?.displayName === 'yearByYear' &&
+				(s.group as unknown as MLB.StatGroupRef).displayName === group,
+		)?.splits,
 	)
 
 	const parseValue = (val: unknown): number => {
@@ -153,6 +158,31 @@
 		}
 		return val.toFixed(0)
 	}
+
+	const activePoint = $derived(scaledPoints.find((p) => p.season === activeSeason) ?? null)
+
+	const isMinOrMax = (point: { season: number }) =>
+		point.season === maxPoint.season || point.season === minPoint.season
+
+	const setActiveFromPointer = (e: PointerEvent) => {
+		if (scaledPoints.length === 0) return
+		const rect = (e.currentTarget as SVGSVGElement).getBoundingClientRect()
+		const x = e.clientX - rect.left
+		let nearest = scaledPoints[0]
+		let nearestDist = Math.abs(nearest.x - x)
+		for (const point of scaledPoints) {
+			const dist = Math.abs(point.x - x)
+			if (dist < nearestDist) {
+				nearest = point
+				nearestDist = dist
+			}
+		}
+		activeSeason = nearest.season
+	}
+
+	const clearActiveIfMouse = (e: PointerEvent) => {
+		if (e.pointerType === 'mouse') activeSeason = null
+	}
 </script>
 
 {#if dataPoints.length > 0}
@@ -170,7 +200,19 @@
 		</figcaption>
 
 		{#if width > 0}
-			<svg class="w-full" viewBox="0 0 {width} {height}">
+			<svg
+				class="w-full touch-pan-y"
+				viewBox="0 0 {width} {height}"
+				role="img"
+				aria-label="Year-by-year {key} chart"
+				onpointerdown={setActiveFromPointer}
+				onpointermove={setActiveFromPointer}
+				onpointerleave={clearActiveIfMouse}
+				onpointercancel={clearActiveIfMouse}
+			>
+				<!-- Invisible hit area for nearest-x interaction -->
+				<rect width={width} height={height} fill="transparent" />
+
 				<!-- Min/max value guidelines -->
 				<line
 					class="stroke-current/25"
@@ -226,12 +268,30 @@
 
 				<!-- Data points -->
 				{#each scaledPoints as point (point.season)}
-					<circle cx={point.x} cy={point.y} r="2" fill="var(--color-accent,currentColor)" />
+					<circle
+						cx={point.x}
+						cy={point.y}
+						r={point.season === activeSeason ? 3.5 : 2}
+						fill="var(--color-accent,currentColor)"
+					/>
 				{/each}
+
+				<!-- Active point value tooltip -->
+				{#if activePoint && !isMinOrMax(activePoint)}
+					<text
+						fill="var(--color-accent,currentColor)"
+						x={activePoint.x}
+						y={activePoint.y - 6}
+						text-anchor="middle"
+						font-size="12"
+					>
+						{formatValue(activePoint.value)}
+					</text>
+				{/if}
 
 				<!-- Season labels -->
 				{#each scaledPoints as point, i (point.season)}
-					{#if i === 0 || i === scaledPoints.length - 1 || point.season === (lowerIsBetter ? minPoint.season : maxPoint.season) || point.season === (lowerIsBetter ? maxPoint.season : minPoint.season)}
+					{#if i === 0 || i === scaledPoints.length - 1 || point.season === (lowerIsBetter ? minPoint.season : maxPoint.season) || point.season === (lowerIsBetter ? maxPoint.season : minPoint.season) || point.season === activeSeason}
 						<text
 							class="fill-current/50"
 							x={point.x}
