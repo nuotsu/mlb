@@ -50,14 +50,20 @@
 	/** Prefer per-team stints; drop team-less combined totals when a season has team rows. */
 	const seasonRows = $derived(
 		yearByYearSplits
-			.filter((split) => {
+			.map((split, index) => ({ split, index }))
+			.filter(({ split }) => {
 				const sameSeason = yearByYearSplits.filter((s) => s.season === split.season)
 				if (sameSeason.length > 1) {
 					return !!split.team
 				}
 				return true
 			})
-			.sort((a, b) => Number(b.season ?? 0) - Number(a.season ?? 0)),
+			// Same-season stints arrive chronologically; reverse so the latest team is on top
+			.sort(
+				(a, b) =>
+					Number(b.split.season ?? 0) - Number(a.split.season ?? 0) || b.index - a.index,
+			)
+			.map(({ split }) => split),
 	)
 
 	const hasStats = $derived(seasonRows.length > 0)
