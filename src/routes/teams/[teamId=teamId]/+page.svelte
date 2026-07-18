@@ -8,6 +8,7 @@
 	import ToggleSpoilerPrevention from '$ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
 	import Logo from '$ui/team/logo.svelte'
 	import Roster from '$ui/team/roster.svelte'
+	import SeriesCalendar from '$ui/team/series-calendar.svelte'
 	import TeamCalendar from '$ui/team/team-calendar.svelte'
 	import type { PageProps } from './$types'
 
@@ -70,6 +71,10 @@
 <section class="grid gap-lh pt-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
 	<div class="px-ch">
 		<TeamCalendar {team} />
+	</div>
+
+	<div class="space-y-ch">
+		<SeriesCalendar {team} />
 	</div>
 
 	<div class="space-y-ch">
