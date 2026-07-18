@@ -254,6 +254,19 @@
 					{formatValue(minPoint.value)}
 				</text>
 
+				<!-- Active point vertical guide -->
+				{#if activePoint}
+					<line
+						class="stroke-current/50"
+						x1={activePoint.x}
+						y1={activePoint.y}
+						x2={activePoint.x}
+						y2={height - 18}
+						stroke-width="0.5"
+						stroke-dasharray="4,4"
+					/>
+				{/if}
+
 				<!-- Main curve -->
 				{#if scaledPoints.length >= 2}
 					<path
@@ -279,7 +292,7 @@
 				<!-- Active point value tooltip -->
 				{#if activePoint && !isMinOrMax(activePoint)}
 					<text
-						fill="var(--color-accent,currentColor)"
+						fill="currentColor"
 						x={activePoint.x}
 						y={activePoint.y - 6}
 						text-anchor="middle"
