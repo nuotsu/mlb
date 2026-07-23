@@ -63,14 +63,14 @@ export const fetchfeedLive = createFetcher<[gamePk: string | number], MLB.LiveGa
 		params: {
 			fields: [
 				'gamePk,gameData,liveData',
-				'players,fullName,lastName',
+				'players,id,fullName,lastName,boxscoreName',
 				'gameInfo,firstPitch,attendance,gameDurationMinutes',
 				'weather,condition,temp,wind',
 				'teams,home,away',
 				'linescore,currentInning,scheduledInnings,innings,num,runs,hits,errors,leftOnBase',
 				'boxscore,position,abbreviation,topPerformers,type,player,boxscoreName,stats,batting,pitching,summary',
 				'decisions,winner,loser,save,id',
-				'plays,allPlays,result,description,about,inning,isTopInning,atBatIndex,isScoringPlay,runnerIndex,count,balls,strikes,outs,awayScore,homeScore',
+				'plays,allPlays,result,description,event,eventType,rbi,about,inning,isTopInning,atBatIndex,isScoringPlay,runnerIndex,count,balls,strikes,outs,awayScore,homeScore,matchup,batter,id,fullName,boxscoreName,playEvents,hitData,launchSpeed,launchAngle,totalDistance,trajectory,coordinates,coordX,coordY',
 			],
 		},
 	}),

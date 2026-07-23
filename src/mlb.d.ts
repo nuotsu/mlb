@@ -823,11 +823,24 @@ declare global {
 			details?: PitchDetails
 			count?: Count
 			pitchData?: PitchData
+			hitData?: HitData
 			index?: number
 			startTime?: string
 			endTime?: string
 			isPitch?: boolean
 			type?: string
+		}
+
+		/**
+		 * Hit data (Statcast)
+		 */
+		interface HitData {
+			launchSpeed?: number
+			launchAngle?: number
+			totalDistance?: number
+			trajectory?: string
+			hardness?: string
+			coordinates?: HitCoordinates
 		}
 
 		/**
