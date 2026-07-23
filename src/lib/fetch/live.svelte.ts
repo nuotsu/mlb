@@ -35,10 +35,12 @@ export function fetchLiveMLB<T>(
 
 	revalidate()
 
-	const timer = setInterval(revalidate, options.interval)
+	const timer = options.interval ? setInterval(revalidate, options.interval) : undefined
 
 	$effect(() => {
-		return () => clearInterval(timer)
+		return () => {
+			if (timer) clearInterval(timer)
+		}
 	})
 
 	return {

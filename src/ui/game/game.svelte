@@ -38,17 +38,26 @@
 	const isFinal = $derived(game.status.abstractGameState === 'Final')
 	const isLive = $derived(game.status.abstractGameState === 'Live')
 
+	const isGamePage = $derived(page.url.pathname === `/game/${game.gamePk}`)
+
+	const isSpoilerPrevented = $derived(
+		spoilerPreventionStore.has(game.teams.away.team.id) ||
+			spoilerPreventionStore.has(game.teams.home.team.id),
+	)
+
 	const { data: liveGame } = $derived(
 		isLive
 			? fetchLiveMLB<MLB.LiveGameFeed>(`/api/v1.1/game/${game.gamePk}/feed/live`, {
 					fields: [
 						'gameData,liveData,linescore,boxscore',
+						'absChallenges,hasChallenges,usedSuccessful,usedFailed,remaining',
 						'fullName,players,stats,pitching,batting,numberOfPitches,summary',
 						'teams,away,home,runs,offense,defense,first,second,third',
 						'balls,strikes,outs',
 						'currentInning,currentInningOrdinal,inningHalf,inningState',
 						'plays,currentPlay,result,description,eventType,rbi,about,isScoringPlay',
 						'playEvents,isPitch,index,details,type,isBall,isStrike,isInPlay,call,pitchData,startSpeed',
+						'reviewDetails,inProgress,challengeTeamId,reviewType',
 						'matchup,pitcher,batter,id,lastInitName,pitchHand,batSide,code,onDeck,inHole',
 					],
 					hydrate: 'flags,linescore',
@@ -56,12 +65,33 @@
 			: { data: undefined },
 	)
 
-	const isGamePage = $derived(page.url.pathname === `/game/${game.gamePk}`)
-
-	const isSpoilerPrevented = $derived(
-		spoilerPreventionStore.has(game.teams.away.team.id) ||
-			spoilerPreventionStore.has(game.teams.home.team.id),
+	const { data: absFeed } = $derived(
+		isFinal && !isSpoilerPrevented
+			? fetchLiveMLB<Pick<MLB.LiveGameFeed, 'gameData'>>(
+					`/api/v1.1/game/${game.gamePk}/feed/live`,
+					{
+						fields: [
+							'gameData,absChallenges,hasChallenges,away,home,usedSuccessful,usedFailed,remaining',
+						],
+					},
+					{ interval: 0 },
+				)
+			: { data: undefined },
 	)
+
+	const absChallenges = $derived(
+		liveGame?.gameData?.absChallenges ?? absFeed?.gameData?.absChallenges,
+	)
+
+	const absChallengeTeamId = $derived.by(() => {
+		const events = liveGame?.liveData?.plays?.currentPlay?.playEvents ?? []
+		for (let i = events.length - 1; i >= 0; i--) {
+			const details = events[i]?.reviewDetails
+			if (details?.inProgress && details.challengeTeamId != null) {
+				return details.challengeTeamId
+			}
+		}
+	})
 </script>
 
 <article
@@ -133,6 +163,8 @@
 				{game}
 				{boxscore}
 				linescore={liveGame?.liveData?.linescore}
+				{absChallenges}
+				{absChallengeTeamId}
 				{isSpoilerPrevented}
 			/>
 		{:else}
@@ -143,6 +175,8 @@
 					{game}
 					boxscore={data}
 					linescore={liveGame?.liveData?.linescore}
+					{absChallenges}
+					{absChallengeTeamId}
 					{isSpoilerPrevented}
 				/>
 			{/await}

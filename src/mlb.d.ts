@@ -613,6 +613,7 @@ declare global {
 			weather?: Weather
 			gameInfo?: GameInfo
 			review?: Review
+			absChallenges?: AbsChallenges
 			flags?: GameFlags
 			alerts?: unknown[]
 			probablePitchers?: {
@@ -829,6 +830,18 @@ declare global {
 			endTime?: string
 			isPitch?: boolean
 			type?: string
+			reviewDetails?: ReviewDetails
+		}
+
+		/**
+		 * ABS / replay review details on a play event
+		 */
+		interface ReviewDetails {
+			isOverturned?: boolean
+			inProgress?: boolean
+			reviewType?: string
+			challengeTeamId?: number
+			player?: Person
 		}
 
 		/**
@@ -1325,6 +1338,24 @@ declare global {
 		 */
 		interface ReviewTeam {
 			used: number
+			remaining: number
+		}
+
+		/**
+		 * ABS challenge information
+		 */
+		interface AbsChallenges {
+			hasChallenges: boolean
+			away: AbsChallengeTeam
+			home: AbsChallengeTeam
+		}
+
+		/**
+		 * Team ABS challenge counts
+		 */
+		interface AbsChallengeTeam {
+			usedSuccessful: number
+			usedFailed: number
 			remaining: number
 		}
 
