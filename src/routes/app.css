@@ -309,6 +309,10 @@
 	a {
 		@apply link;
 	}
+
+	img {
+		@apply w-full;
+	}
 }
 
 @utility full-bleed {
