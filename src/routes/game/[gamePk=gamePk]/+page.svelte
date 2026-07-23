@@ -15,6 +15,7 @@
 	import Game from '$ui/game/game.svelte'
 	import Highlights from '$ui/game/highlights.svelte'
 	import HomeRuns from '$ui/game/home-runs.svelte'
+	import Reviews from '$ui/game/reviews.svelte'
 	import TopPerformers from '$ui/game/top-performers.svelte'
 	import WinProbability from '$ui/game/win-probability.svelte'
 	import Header from '$ui/header.svelte'
@@ -55,6 +56,15 @@
 	const hasDecisions = $derived(feedLive?.liveData.decisions)
 	const hasHomeRuns = $derived(
 		feedLive?.liveData.plays.allPlays?.some((play) => play.result?.eventType === 'home_run'),
+	)
+	const hasReviews = $derived(
+		feedLive?.liveData.plays.allPlays?.some(
+			(play) =>
+				play.playEvents?.some((event) => event.reviewDetails) ||
+				/challenged \([^)]+\), call on the field was (confirmed|overturned|upheld)/i.test(
+					play.result?.description ?? '',
+				),
+		),
 	)
 	const hasBattingOrder = $derived(
 		boxscore?.teams.away.battingOrder?.length || boxscore?.teams.home.battingOrder?.length,
@@ -187,7 +197,7 @@
 		</div>
 	{/if}
 
-	{#if !isSpoilerPrevented && feedLive && (hasTopPerformers || hasDecisions || hasHomeRuns)}
+	{#if !isSpoilerPrevented && feedLive && (hasTopPerformers || hasDecisions || hasHomeRuns || hasReviews)}
 		<div
 			class="col-span-full flex flex-wrap items-start justify-evenly gap-lh px-[2ch] *:grow *:only:mx-auto *:only:max-w-max"
 		>
@@ -201,6 +211,10 @@
 
 			{#if hasHomeRuns}
 				<HomeRuns {feedLive} />
+			{/if}
+
+			{#if hasReviews}
+				<Reviews {feedLive} />
 			{/if}
 		</div>
 	{/if}
