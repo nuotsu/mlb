@@ -25,6 +25,20 @@
 		</dd>
 	{/if}
 
+	{#if person.height && person.weight}
+		<dt>H/W</dt>
+		<dd>
+			{person.height} / {person.weight} lbs
+		</dd>
+	{/if}
+
+	{#if person.batSide && person.pitchHand}
+		<dt>Bats / Throws</dt>
+		<dd>
+			{person.batSide.code} / {person.pitchHand.code}
+		</dd>
+	{/if}
+
 	{#if person.birthDate}
 		<dt>Birth Date</dt>
 		<dd>
