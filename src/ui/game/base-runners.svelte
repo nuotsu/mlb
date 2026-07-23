@@ -32,8 +32,8 @@
 				'order-2': base === 0,
 				'order-1': base === 1,
 				'order-3': base === 2,
-				'border-accent/50': isTopOrBottom,
-				'border-accent bg-accent': runner,
+				'border-foreground/50': isTopOrBottom,
+				'border-foreground bg-foreground': runner,
 			})}
 			title={runner
 				? `${typeof runner === 'string' ? `${runner} on ` : ''}${base === 0 ? '1st' : base === 1 ? '2nd' : '3rd'} base`
