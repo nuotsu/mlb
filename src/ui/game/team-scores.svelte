@@ -30,8 +30,28 @@
 			{@const homeActive = teamKey === 'home' && linescore?.inningState === 'Bottom'}
 			{@const remaining = absChallenges?.[teamKey]?.remaining ?? 0}
 			{@const challenging = absChallengeTeamId === team.id}
+			{@const isActive = isLive && (awayActive || homeActive)}
 
 			<div class="flex items-center gap-[.25ch]">
+				{#if showAbsChallenges}
+					<span
+						class={cn(
+							'inline-flex shrink-0 flex-col items-center justify-center gap-[.15lh]',
+							challenging && 'animate-pulse',
+						)}
+						aria-label="{remaining} ABS challenge{remaining === 1 ? '' : 's'} remaining"
+					>
+						{#each [0, 1] as i (i)}
+							<span
+								class={cn(
+									'block size-[.15lh]',
+									i < remaining ? 'bg-tmobile' : 'bg-current/25',
+								)}
+							></span>
+						{/each}
+					</span>
+				{/if}
+
 				<StyledTeam
 					class="min-w-0 grow bg-background"
 					team={team}
@@ -46,29 +66,10 @@
 						{/if}
 					</strong>
 
-					{#if game.status.abstractGameState === 'Live' && (awayActive || homeActive)}
-						<span class="absolute inset-y-0 right-full w-[.5ch] animate-pulse bg-accent"></span>
+					{#if isActive}
+						<span class="absolute inset-y-0 left-full w-[.3ch] animate-pulse bg-accent"></span>
 					{/if}
 				</StyledTeam>
-
-				{#if showAbsChallenges}
-					<span
-						class={cn(
-							'inline-flex shrink-0 flex-col items-center justify-center gap-[.15lh]',
-							challenging && 'animate-pulse',
-						)}
-						aria-label="{remaining} ABS challenge{remaining === 1 ? '' : 's'} remaining"
-					>
-						{#each [0, 1] as i (i)}
-							<span
-								class={cn(
-										'block size-[.15lh]',
-									i < remaining ? 'bg-tmobile' : 'bg-current/25',
-								)}
-							></span>
-						{/each}
-					</span>
-				{/if}
 			</div>
 		{/each}
 	</div>

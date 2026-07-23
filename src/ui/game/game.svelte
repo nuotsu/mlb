@@ -244,16 +244,4 @@
 			}
 		}
 	}
-
-	[style*='boxscore'] {
-		clip-path: polygon(
-			-1ch 0,
-			100% 0,
-			100% 100%,
-			-1ch 100%,
-			-1ch calc(50% + 1.5ch),
-			0.4ch 50%,
-			-1ch calc(50% - 1.5ch)
-		);
-	}
 </style>
