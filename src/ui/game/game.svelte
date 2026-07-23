@@ -157,7 +157,7 @@
 		{/if}
 	</span>
 
-	<div class="relative z-1 bg-background has-data-loading:h-full" style:grid-area="boxscore">
+	<div class="relative z-1 has-data-loading:h-full has-data-loading:bg-background" style:grid-area="boxscore">
 		{#if boxscore}
 			<TeamScores
 				{game}

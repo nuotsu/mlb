@@ -33,7 +33,7 @@
 
 			<div class="flex items-center gap-[.25ch]">
 				<StyledTeam
-					class="min-w-0 grow"
+					class="min-w-0 grow bg-background"
 					team={team}
 					record={game.teams[teamKey].leagueRecord}
 					linked
@@ -73,7 +73,7 @@
 		{/each}
 	</div>
 {:else}
-	<div class="grid grid-cols-2 text-center">
+	<div class="grid grid-cols-2 bg-background text-center">
 		<StyledTeam
 			class="flex-row-reverse pl-ch *:data-name:order-last [&_picture]:ml-auto"
 			team={boxscore.teams.away.team}
