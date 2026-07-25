@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { fetchMLB } from '$lib/fetch'
@@ -12,13 +13,29 @@
 	} = $props()
 
 	let team = $derived(page.url.searchParams.get('teamId') ?? '')
+	let teams = $state<MLB.Team[] | undefined>()
 
-	async function fetchTeams() {
-		return await fetchMLB<MLB.TeamsResponse>('/api/v1/teams', {
-			sportId: sportId ?? page.url.searchParams.get('sportId') ?? '1',
+	$effect(() => {
+		if (!browser) return
+
+		const id = sportId ?? page.url.searchParams.get('sportId') ?? '1'
+		let cancelled = false
+
+		fetchMLB<MLB.TeamsResponse>('/api/v1/teams', {
+			sportId: id,
 			fields: ['teams,id,name'],
 		})
-	}
+			.then((data) => {
+				if (!cancelled) teams = data.teams
+			})
+			.catch(() => {
+				if (!cancelled) teams = []
+			})
+
+		return () => {
+			cancelled = true
+		}
+	})
 </script>
 
 <select
@@ -38,11 +55,9 @@
 >
 	<option value="" selected={!team}>All teams</option>
 
-	{#await fetchTeams() then { teams }}
-		{#each teams.sort((a, b) => a.name.localeCompare(b.name)) as t (t.id)}
-			<option value={t.id} selected={t.id === Number(team)}>
-				{t.name}
-			</option>
-		{/each}
-	{/await}
+	{#each [...(teams ?? [])].sort((a, b) => a.name.localeCompare(b.name)) as t (t.id)}
+		<option value={t.id} selected={t.id === Number(team)}>
+			{t.name}
+		</option>
+	{/each}
 </select>

@@ -1,5 +1,18 @@
+import { error } from '@sveltejs/kit'
 import { HOST } from '$ui/playground/constants'
 import { fetchLiveMLB } from './live.svelte'
+
+const TIMEOUT_MS = 10_000
+const MAX_ATTEMPTS = 2
+
+function isTimeoutError(error: unknown) {
+	return (
+		error instanceof Error &&
+		(error.name === 'TimeoutError' ||
+			error.name === 'AbortError' ||
+			error.message.includes('aborted due to timeout'))
+	)
+}
 
 export async function fetchMLB<T>(
 	endpoint: string,
@@ -13,39 +26,59 @@ export async function fetchMLB<T>(
 		url.searchParams.set(key, typeof value !== 'string' ? value.flat().join(',') : value)
 	}
 
-	try {
-		const response = await _fetch(url.toString(), { signal: AbortSignal.timeout(5_000) })
+	const decodedUrl = decodeURIComponent(url.toString())
+	let lastError: unknown
 
-		if (!response.ok) {
-			const body = await response.text().catch(() => '(unreadable body)')
-			const error = new Error(`MLB API ${response.status}: ${url.pathname}`)
-			console.error('[fetchMLB] HTTP error', {
-				status: response.status,
-				url: decodeURIComponent(url.toString()),
-				body,
-			})
-			throw error
-		}
+	for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+		try {
+			const response = await _fetch(url.toString(), { signal: AbortSignal.timeout(TIMEOUT_MS) })
 
-		const json = await response.json()
-		if (typeof json?.messageNumber === 'number') {
-			const err = new Error(`MLB API error: ${json.message ?? 'unknown'} (${url.pathname})`)
-			console.error('[fetchMLB] Error body on 200', {
-				messageNumber: json.messageNumber,
-				message: json.message,
-				url: decodeURIComponent(url.toString()),
+			if (!response.ok) {
+				const body = await response.text().catch(() => '(unreadable body)')
+				const httpError = new Error(`MLB API ${response.status}: ${url.pathname}`)
+				console.error('[fetchMLB] HTTP error', {
+					status: response.status,
+					url: decodedUrl,
+					body,
+				})
+				throw httpError
+			}
+
+			const json = await response.json()
+			if (typeof json?.messageNumber === 'number') {
+				const apiError = new Error(`MLB API error: ${json.message ?? 'unknown'} (${url.pathname})`)
+				console.error('[fetchMLB] Error body on 200', {
+					messageNumber: json.messageNumber,
+					message: json.message,
+					url: decodedUrl,
+				})
+				throw apiError
+			}
+			return json as T
+		} catch (err) {
+			lastError = err
+			if (err instanceof Error && err.message.startsWith('MLB API')) throw err
+
+			if (isTimeoutError(err) && attempt < MAX_ATTEMPTS) {
+				console.warn('[fetchMLB] Timeout, retrying', { url: decodedUrl, attempt })
+				continue
+			}
+
+			console.error('[fetchMLB] Unexpected error', {
+				url: decodedUrl,
+				error: err instanceof Error ? { message: err.message, stack: err.stack } : err,
 			})
 			throw err
 		}
-		return json as T
-	} catch (error) {
-		if (error instanceof Error && error.message.startsWith('MLB API')) throw error
-		console.error('[fetchMLB] Unexpected error', {
-			url: decodeURIComponent(url.toString()),
-			error: error instanceof Error ? { message: error.message, stack: error.stack } : error,
-		})
-		throw error
 	}
+
+	throw lastError
+}
+
+/** Map MLB API 404s to SvelteKit 404s so missing data isn't a 500. */
+export function notFoundOnMlb404(e: unknown, message = 'Not found'): never {
+	if (e instanceof Error && e.message.startsWith('MLB API 404')) error(404, message)
+	throw e
 }
 
 export function createPreset<TArgs extends unknown[], T>(

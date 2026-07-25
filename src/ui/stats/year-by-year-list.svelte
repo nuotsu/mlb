@@ -54,7 +54,11 @@
 		baseballStats?.find((s) => [s.name, s.lookupParam].includes(key))?.lookupParam ?? key
 </script>
 
-<article class="group/yby grid grid-cols-3 gap-px text-center" {@attach labelDrag()} {...props}>
+<article
+	class="group/yby relative grid grid-cols-3 gap-px text-center"
+	{@attach labelDrag()}
+	{...props}
+>
 	{#if hasStats}
 		<h2 class="col-span-full text-center text-sm text-current/50 group-has-data-empty/yby:hidden">
 			Year-by-year
@@ -62,7 +66,7 @@
 
 		{#each statKeys[group] as key, i (key)}
 			<label
-				class="order-last button-base touch-none border-b border-current/25 bg-neutral-200/50 uppercase has-checked:border-accent has-checked:font-bold dark:bg-neutral-800/50 dark:has-checked:text-accent"
+				class="relative order-last button-base touch-none border-b border-current/25 bg-neutral-200/50 uppercase has-checked:border-accent has-checked:font-bold dark:bg-neutral-800/50 dark:has-checked:text-accent"
 				data-group={group}
 			>
 				<input class="sr-only" type="radio" name="{group}-stat" value={key} checked={i === 0} />
@@ -100,5 +104,6 @@
 		clip-path: inset(50%);
 		white-space: nowrap;
 		border-width: 0;
+		pointer-events: none;
 	}
 </style>

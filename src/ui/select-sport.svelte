@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { fetchMLB } from '$lib/fetch'
@@ -13,12 +14,26 @@
 	} = $props()
 
 	let sport = $derived(page.url.searchParams.get('sportId') ?? '1')
+	let sports = $state<MLB.Sport[] | undefined>()
 
-	async function fetchSports() {
-		return await fetchMLB<MLB.SportsResponse>('/api/v1/sports', {
+	$effect(() => {
+		if (!browser) return
+
+		let cancelled = false
+		fetchMLB<MLB.SportsResponse>('/api/v1/sports', {
 			fields: ['sports,id,name,abbreviation'],
 		})
-	}
+			.then((data) => {
+				if (!cancelled) sports = data.sports
+			})
+			.catch(() => {
+				if (!cancelled) sports = []
+			})
+
+		return () => {
+			cancelled = true
+		}
+	})
 </script>
 
 <label
@@ -43,16 +58,14 @@
 			goto(url.toString())
 		}}
 	>
-		{#await fetchSports() then { sports }}
-			{#each sports as sportId}
-				<option
-					value={sportId.id}
-					selected={sportId.id === Number(sport)}
-					disabled={available && !available.includes(sportId.id)}
-				>
-					{sportId.name}
-				</option>
-			{/each}
-		{/await}
+		{#each sports ?? [] as sportId}
+			<option
+				value={sportId.id}
+				selected={sportId.id === Number(sport)}
+				disabled={available && !available.includes(sportId.id)}
+			>
+				{sportId.name}
+			</option>
+		{/each}
 	</select>
 </label>

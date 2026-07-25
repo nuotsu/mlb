@@ -1,14 +1,11 @@
 import { fetchSeason, fetchWeekSchedule } from '$lib/fetch/presets'
-import { fetchMLB } from '$lib/fetch'
+import { fetchMLB, notFoundOnMlb404 } from '$lib/fetch'
 import { cacheControlForScheduleWeek } from '$lib/cache-control'
 import { slash } from '$lib/temporal.js'
-import { error } from '@sveltejs/kit'
 
 // A 500 here invites crawler retries; dates MLB has no data for are a 404, not a server error.
-function notFoundOnMissingData(e: unknown): never {
-	if (e instanceof Error && e.message.startsWith('MLB API 404')) error(404, 'No MLB data for this date')
-	throw e
-}
+const notFoundOnMissingData = (e: unknown): never =>
+	notFoundOnMlb404(e, 'No MLB data for this date')
 
 export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 	depends('schedule:week')
