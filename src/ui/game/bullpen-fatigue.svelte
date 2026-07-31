@@ -224,7 +224,7 @@
 						</a>
 
 						<div
-							class="hp-bar relative h-[.5lh] min-w-0 flex-1 rounded-sm"
+							class="hp-bar relative h-[.5lh] max-w-[16ch] min-w-0 flex-1 rounded-sm"
 							style:--hp="calc({row.hp} * 100%)"
 							style:--hp-fill={fatigueColor(row.hp)}
 							title="Fatigue {Math.round(row.fatigue)}"
