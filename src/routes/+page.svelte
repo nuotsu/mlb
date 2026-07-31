@@ -6,6 +6,7 @@
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import { ChevronRightIcon, StarEmptyIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
+	import QuickSearch from '$ui/quick-search.svelte'
 	import Calendar from '$ui/schedule/calendar.svelte'
 	import CountdownList from '$ui/season/countdown-list.svelte'
 	import SeasonInfo from '$ui/season/season-info.svelte'
@@ -65,6 +66,8 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 			</p>
 
 			<Baseball class="mx-auto my-[-5lh] mb-[-8lh] w-[300px] text-[8px]" />
+
+			<QuickSearch class="mx-auto mt-lh! w-full max-w-sm" />
 		</header>
 
 		<hr class="border-dashed border-stroke" />
