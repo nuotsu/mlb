@@ -133,7 +133,7 @@
 <section class="group/game-page grid gap-[2lh] py-lh md:grid-cols-2">
 	{#if !isSpoilerPrevented && Array.isArray(winProbability) && (isLive || isFinal)}
 		<article
-			class="col-span-full grid gap-y-lh max-lg:*:max-h-[14lh] lg:grid-cols-3 lg:h-[14lh] lg:max-h-[14lh] lg:*:min-h-0"
+			class="col-span-full grid gap-y-lh lg:grid-cols-3 lg:h-[14lh] lg:max-h-[14lh] lg:*:min-h-0"
 		>
 			{#if isLive || isFinal}
 				<AtBatSequence
@@ -142,6 +142,7 @@
 				/>
 
 				<AllPlays
+					class="max-lg:max-h-[14lh]"
 					{awayTeam}
 					{homeTeam}
 					{linescore}

@@ -337,7 +337,7 @@
 		<div
 			class={cn(
 				'flex h-[10lh] shrink-0 items-stretch gap-ch overflow-hidden p-ch',
-				isLefty && 'flex-row-reverse',
+				!isLefty && 'flex-row-reverse',
 			)}
 			onmouseleave={() => (hoveredPitch = null)}
 		>
