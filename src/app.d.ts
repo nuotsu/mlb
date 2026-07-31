@@ -71,6 +71,7 @@ declare global {
 			description?: string
 			image?: string
 			tags?: string[]
+			draft?: boolean
 		}
 	}
 }
