@@ -1,8 +1,10 @@
 <script lang="ts">
+	import { dev } from '$app/environment'
 	import { goto } from '$app/navigation'
 	import { resolveQuery } from '$lib/quick-search'
 	import { cn } from '$lib/utils'
 	import { SearchIcon } from '$ui/icons'
+	import posthog from 'posthog-js'
 
 	let { class: className }: { class?: string } = $props()
 
@@ -17,7 +19,9 @@
 
 		resolving = true
 		try {
-			await goto(await resolveQuery(q))
+			const href = await resolveQuery(q)
+			if (!dev) posthog.capture('quick_search_query', { query: q, href })
+			await goto(href)
 		} finally {
 			resolving = false
 		}
