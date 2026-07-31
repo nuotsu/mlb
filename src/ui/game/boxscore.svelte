@@ -31,6 +31,7 @@
 </script>
 
 <article
+	id="boxscore"
 	class="grid snap-x snap-mandatory auto-cols-[min(var(--container-sm),calc(100vw-2ch))] grid-flow-col overflow-x-auto sm:grid-cols-2 sm:px-ch {className}"
 >
 	{@render team(away)}

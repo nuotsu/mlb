@@ -9,6 +9,7 @@
 	import Hint from '$ui/onboarding/hint.svelte'
 	import InstallHint from '$ui/onboarding/install-hint.svelte'
 	import { HINTS } from '$ui/onboarding/store.svelte'
+	import QuickSearch from '$ui/quick-search.svelte'
 	import Calendar from '$ui/schedule/calendar.svelte'
 	import CountdownList from '$ui/season/countdown-list.svelte'
 	import SeasonInfo from '$ui/season/season-info.svelte'
@@ -71,6 +72,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 
 			<Baseball class="mx-auto my-[-5lh] mb-[-8lh] w-[300px] text-[8px]" />
 
+			<QuickSearch class="mx-auto mt-lh! w-full max-w-sm" />
 			<InstallHint class="mx-auto max-w-md" />
 		</header>
 
