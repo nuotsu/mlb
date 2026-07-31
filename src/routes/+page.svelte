@@ -4,8 +4,11 @@
 	import Baseball from '$ui/baseball.svelte'
 	import Rollup from '$ui/blog/rollup.svelte'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
-	import { ChevronRightIcon, StarEmptyIcon } from '$ui/icons'
+	import { ChevronRightIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
+	import Hint from '$ui/onboarding/hint.svelte'
+	import InstallHint from '$ui/onboarding/install-hint.svelte'
+	import { HINTS } from '$ui/onboarding/store.svelte'
 	import Calendar from '$ui/schedule/calendar.svelte'
 	import CountdownList from '$ui/season/countdown-list.svelte'
 	import SeasonInfo from '$ui/season/season-info.svelte'
@@ -26,10 +29,12 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 \\__|     \\__|\\________|\\_______/
 `
 
-	const favoriteTeam = favoritesStore.favorites
-		.find((f) => f.href.includes('team'))
-		?.href.split('/')
-		.pop()
+	const favoriteTeam = $derived(
+		favoritesStore.favorites
+			.find((f) => f.href.includes('team'))
+			?.href.split('/')
+			.pop(),
+	)
 
 	async function fetchFavoriteTeam() {
 		const {
@@ -65,6 +70,8 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 			</p>
 
 			<Baseball class="mx-auto my-[-5lh] mb-[-8lh] w-[300px] text-[8px]" />
+
+			<InstallHint class="mx-auto max-w-md" />
 		</header>
 
 		<hr class="border-dashed border-stroke" />
@@ -93,14 +100,13 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 				{:else}
 					<h2 class="text-center h1">Calendar</h2>
 					<Calendar class="border-t border-stroke" />
-					<div
-						class="flex items-center justify-center gap-[.5ch] text-center text-sm text-current/50"
-					>
-						<StarEmptyIcon class="size-lh shrink-0" />
-						<p class="text-left">
-							<a class="link" href="/teams">Favorite a team</a> to view their schedule.
-						</p>
-					</div>
+					<Hint id={HINTS.FAVORITE_TEAM} title="Favorite a team in 3 steps">
+						<ol>
+							<li>Open <a href="/teams">Teams</a>.</li>
+							<li>Tap the star next to your team.</li>
+							<li>Come back here — their schedule shows up on the home page.</li>
+						</ol>
+					</Hint>
 				{/if}
 			</section>
 
