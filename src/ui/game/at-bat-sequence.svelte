@@ -61,6 +61,13 @@
 	const strikes = $derived(count?.strikes ?? 0)
 	const outs = $derived(count?.outs ?? 0)
 
+	/** SVG has no z-index — paint order is document order, so draw the hovered pitch last. */
+	const paintOrder = $derived.by(() => {
+		const order = pitches.map((_, i) => i)
+		if (hoveredPitch == null || hoveredPitch >= order.length) return order
+		return [...order.filter((i) => i !== hoveredPitch), hoveredPitch]
+	})
+
 	const isLefty = $derived(play?.matchup?.batSide?.code === 'L')
 	const pitchHand = $derived(play?.matchup?.pitchHand?.code)
 	const batSide = $derived(play?.matchup?.batSide?.code)
@@ -372,7 +379,8 @@
 						stroke-width="1.5"
 					/>
 
-					{#each pitches as pitch, i (pitch.index ?? i)}
+					{#each paintOrder as i (pitches[i].index ?? i)}
+						{@const pitch = pitches[i]}
 						{@const pX = pitch.pitchData?.coordinates?.pX}
 						{@const pZ = pitch.pitchData?.coordinates?.pZ}
 						{@const color = pitchColor(pitch.details)}

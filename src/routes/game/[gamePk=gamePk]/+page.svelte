@@ -153,7 +153,9 @@
 			{/if}
 
 			{#if Array.isArray(winProbability)}
-				<div class="flex h-full min-h-0 flex-col gap-ch">
+				<!-- The chart derives its viewBox from its own measured height, so it needs a
+				     definite height to size against — `h-full` alone leaves it unbounded here. -->
+				<div class="flex h-full min-h-0 flex-col gap-ch max-lg:h-[8lh]">
 					<h2 class="shrink-0 px-ch text-xs text-current/40">Win Probability</h2>
 					<WinProbability
 						class="min-h-0 grow"

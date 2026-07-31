@@ -210,7 +210,7 @@
 							href="/player/{row.person.id}"
 							class="group/player flex min-w-0 shrink-0 items-center gap-x-ch"
 						>
-							<Headshot person={row.person} size={36} class="size-lh shrink-0" />
+							<Headshot person={row.person} size={72} class="size-lh shrink-0" />
 							<span
 								class="line-clamp-1 w-[12ch] break-all text-sm decoration-dashed group-hover/player:underline sm:w-[14ch]"
 							>
