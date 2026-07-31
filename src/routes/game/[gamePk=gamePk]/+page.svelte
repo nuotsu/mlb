@@ -136,6 +136,11 @@
 			class="col-span-full grid gap-y-lh max-lg:*:max-h-[14lh] lg:grid-cols-3 lg:h-[14lh] lg:max-h-[14lh] lg:*:min-h-0"
 		>
 			{#if isLive || isFinal}
+				<AtBatSequence
+					plays={feedLive?.liveData?.plays}
+					players={feedLive?.gameData?.players}
+				/>
+
 				<AllPlays
 					{awayTeam}
 					{homeTeam}
@@ -143,11 +148,6 @@
 					status={game?.status}
 					plays={feedLive?.liveData?.plays}
 					onPlayHover={(i) => (hoveredAtBatIndex = i)}
-				/>
-
-				<AtBatSequence
-					plays={feedLive?.liveData?.plays}
-					players={feedLive?.gameData?.players}
 				/>
 			{/if}
 
