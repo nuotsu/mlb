@@ -44,20 +44,13 @@ You can favorite players and individual games the same way. Stars live in the pa
 
 ## Install it like an app (no App Store)
 
-This site can sit on your home screen or dock like a normal app. Same site, full screen, one tap away.
+This site can sit on your home screen like a regular app. Same site, full screen, one tap away — no App Store needed.
 
 **On iPhone / iPad (Safari):**
 
-1. Tap the Share button.
+1. Tap the **Share** button (the square with an arrow).
 2. Scroll and tap **Add to Home Screen**.
-3. Tap **Add**.
-
-**On Android / Chrome / Edge:**
-
-- Tap **Install app** if you see the tip on the home page, or
-- Open the browser menu and choose **Install app** / **Add to Home screen**.
-
-You don't need the App Store or Play Store. It's just a shortcut that opens this site without the browser chrome.
+3. Tap **Add** — the icon appears on your home screen.
 
 ## A quick tour of the sidebar
 
