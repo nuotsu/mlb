@@ -4,6 +4,8 @@
 	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
+	import Hint from '$ui/onboarding/hint.svelte'
+	import { HINTS } from '$ui/onboarding/store.svelte'
 	import SelectSport from '$ui/select-sport.svelte'
 	import ToggleSpoilerPrevention from '$ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
 	import Logo from '$ui/team/logo.svelte'
@@ -34,6 +36,16 @@
 		</div>
 	{/snippet}
 </Header>
+
+<Hint id={HINTS.FAVORITE_BENEFITS} title="What favoriting does" class="mx-ch mt-ch">
+	<p>Tap the star next to a team. Favorites are saved on this device and unlock:</p>
+	<ul>
+		<li>Their games pin to the top of the schedule</li>
+		<li>Their calendar shows on the home page</li>
+		<li>Quick links in the sidebar</li>
+		<li>Highlighted players in boxscores</li>
+	</ul>
+</Hint>
 
 <section
 	class={cn(
@@ -66,7 +78,7 @@
 							</dt>
 						{/if}
 
-						{#each divisionTeams?.sort( (a, b) => a.name.localeCompare(b.name), ) ?? [] as team (team.id)}
+						{#each divisionTeams?.sort( (a, b) => a.name.localeCompare(b.name) ) ?? [] as team (team.id)}
 							<dd class="flex items-center gap-ch [&:has(+dt)]:mb-ch">
 								<a class="group/team flex grow items-center gap-ch" href="/teams/{team.id}">
 									<Logo class="size-lh" {team} />
