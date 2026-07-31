@@ -7,17 +7,23 @@
 	let {
 		plays,
 		players,
+		status,
 	}: {
 		plays?: MLB.Plays
 		players?: Record<string, MLB.Person>
+		status?: MLB.GameStatus
 	} = $props()
 
 	const allPlays = $derived(plays?.allPlays ?? [])
 	const lastIndex = $derived(Math.max(0, allPlays.length - 1))
 
-	/** `null` means follow the latest at-bat as new ones arrive. */
+	/** Completed games read from the first at-bat; live ones follow the latest. */
+	const isFinal = $derived(status?.abstractGameState === 'Final')
+	const defaultIndex = $derived(isFinal ? 0 : lastIndex)
+
+	/** `null` means follow `defaultIndex` as new at-bats arrive. */
 	let pinnedIndex = $state<number | null>(null)
-	const selectedIndex = $derived(pinnedIndex ?? lastIndex)
+	const selectedIndex = $derived(pinnedIndex ?? defaultIndex)
 
 	let hoveredPitch = $state<number | null>(null)
 	let pitchListEl = $state<HTMLOListElement | null>(null)
@@ -30,7 +36,7 @@
 
 	function go(delta: number) {
 		const next = Math.min(lastIndex, Math.max(0, selectedIndex + delta))
-		pinnedIndex = next === lastIndex ? null : next
+		pinnedIndex = next === defaultIndex ? null : next
 		hoveredPitch = null
 	}
 
@@ -127,7 +133,7 @@
 	}
 
 	function selectAtBat(index: number) {
-		pinnedIndex = index === lastIndex ? null : index
+		pinnedIndex = index === defaultIndex ? null : index
 		hoveredPitch = null
 	}
 

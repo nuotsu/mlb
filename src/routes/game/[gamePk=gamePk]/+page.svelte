@@ -139,6 +139,7 @@
 				<AtBatSequence
 					plays={feedLive?.liveData?.plays}
 					players={feedLive?.gameData?.players}
+					status={game?.status}
 				/>
 
 				<AllPlays
