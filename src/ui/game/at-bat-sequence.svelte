@@ -7,17 +7,23 @@
 	let {
 		plays,
 		players,
+		status,
 	}: {
 		plays?: MLB.Plays
 		players?: Record<string, MLB.Person>
+		status?: MLB.GameStatus
 	} = $props()
 
 	const allPlays = $derived(plays?.allPlays ?? [])
 	const lastIndex = $derived(Math.max(0, allPlays.length - 1))
 
-	/** `null` means follow the latest at-bat as new ones arrive. */
+	/** Completed games read from the first at-bat; live ones follow the latest. */
+	const isFinal = $derived(status?.abstractGameState === 'Final')
+	const defaultIndex = $derived(isFinal ? 0 : lastIndex)
+
+	/** `null` means follow `defaultIndex` as new at-bats arrive. */
 	let pinnedIndex = $state<number | null>(null)
-	const selectedIndex = $derived(pinnedIndex ?? lastIndex)
+	const selectedIndex = $derived(pinnedIndex ?? defaultIndex)
 
 	let hoveredPitch = $state<number | null>(null)
 	let pitchListEl = $state<HTMLOListElement | null>(null)
@@ -30,7 +36,7 @@
 
 	function go(delta: number) {
 		const next = Math.min(lastIndex, Math.max(0, selectedIndex + delta))
-		pinnedIndex = next === lastIndex ? null : next
+		pinnedIndex = next === defaultIndex ? null : next
 		hoveredPitch = null
 	}
 
@@ -60,6 +66,13 @@
 	const balls = $derived(count?.balls ?? 0)
 	const strikes = $derived(count?.strikes ?? 0)
 	const outs = $derived(count?.outs ?? 0)
+
+	/** SVG has no z-index — paint order is document order, so draw the hovered pitch last. */
+	const paintOrder = $derived.by(() => {
+		const order = pitches.map((_, i) => i)
+		if (hoveredPitch == null || hoveredPitch >= order.length) return order
+		return [...order.filter((i) => i !== hoveredPitch), hoveredPitch]
+	})
 
 	const isLefty = $derived(play?.matchup?.batSide?.code === 'L')
 	const pitchHand = $derived(play?.matchup?.pitchHand?.code)
@@ -120,7 +133,7 @@
 	}
 
 	function selectAtBat(index: number) {
-		pinnedIndex = index === lastIndex ? null : index
+		pinnedIndex = index === defaultIndex ? null : index
 		hoveredPitch = null
 	}
 
@@ -337,7 +350,7 @@
 		<div
 			class={cn(
 				'flex h-[10lh] shrink-0 items-stretch gap-ch overflow-hidden p-ch',
-				isLefty && 'flex-row-reverse',
+				!isLefty && 'flex-row-reverse',
 			)}
 			onmouseleave={() => (hoveredPitch = null)}
 		>
@@ -372,7 +385,8 @@
 						stroke-width="1.5"
 					/>
 
-					{#each pitches as pitch, i (pitch.index ?? i)}
+					{#each paintOrder as i (pitches[i].index ?? i)}
+						{@const pitch = pitches[i]}
 						{@const pX = pitch.pitchData?.coordinates?.pX}
 						{@const pZ = pitch.pitchData?.coordinates?.pZ}
 						{@const color = pitchColor(pitch.details)}

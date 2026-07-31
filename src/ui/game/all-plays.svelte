@@ -13,6 +13,7 @@
 		status,
 		plays,
 		onPlayHover,
+		class: className,
 	}: {
 		awayTeam?: MLB.Team
 		homeTeam?: MLB.Team
@@ -20,6 +21,7 @@
 		status?: MLB.GameStatus
 		plays?: MLB.Plays
 		onPlayHover?: (atBatIndex: number | null) => void
+		class?: string
 	} = $props()
 
 	function ordinal(n: number) {
@@ -71,7 +73,10 @@
 </script>
 
 <div
-	class="group/plays mx-ch flex h-full min-h-0 flex-col overflow-hidden border border-stroke text-sm"
+	class={cn(
+		'group/plays mx-ch flex h-full min-h-0 flex-col overflow-hidden border border-stroke text-sm',
+		className,
+	)}
 	role="group"
 	onmouseleave={() => onPlayHover?.(null)}
 >

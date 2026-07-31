@@ -203,28 +203,33 @@
 				<Empty>No bullpen usage</Empty>
 			</div>
 		{:else}
-			<ul class={cn('grid gap-px px-rch max-sm:px-ch', className)}>
+			<!-- Column tracks are shared across rows via subgrid so the gauge and pitch
+			     counts line up. `justify-start` keeps the auto tracks from stretching into
+			     the free space, which is what left a dead gap after short names. -->
+			<ul
+				class={cn(
+					'grid grid-cols-[minmax(10ch,auto)_auto_minmax(4ch,16ch)_auto] justify-start gap-px px-rch max-sm:px-ch',
+					className,
+				)}
+			>
 				{#each rows as row (row.person.id)}
-					<li class="flex items-center gap-x-ch hover:bg-current/10">
+					<li
+						class="col-span-full grid grid-cols-subgrid items-center gap-x-ch hover:bg-current/10"
+					>
 						<a
 							href="/player/{row.person.id}"
-							class="group/player flex min-w-0 shrink-0 items-center gap-x-ch"
+							class="group/player flex min-w-0 items-center gap-x-ch"
 						>
-							<Headshot person={row.person} size={36} class="size-lh shrink-0" />
-							<span
-								class="line-clamp-1 w-[12ch] break-all text-sm decoration-dashed group-hover/player:underline sm:w-[14ch]"
-							>
+							<Headshot person={row.person} size={72} class="size-lh shrink-0" />
+							<span class="truncate text-sm decoration-dashed group-hover/player:underline">
 								{row.person.lastInitName}
 							</span>
-							{#if row.throwSide}
-								<small class="w-[1.5ch] shrink-0 text-xs text-current/40 no-underline">
-									{row.throwSide}
-								</small>
-							{/if}
 						</a>
 
+						<small class="text-xs text-current/40 no-underline">{row.throwSide ?? ''}</small>
+
 						<div
-							class="hp-bar relative h-[.5lh] min-w-0 flex-1 rounded-sm"
+							class="hp-bar relative h-[.5lh] rounded-sm"
 							style:--hp="calc({row.hp} * 100%)"
 							style:--hp-fill={fatigueColor(row.hp)}
 							title="Fatigue {Math.round(row.fatigue)}"
@@ -235,7 +240,7 @@
 							aria-label="{row.person.lastInitName} bullpen health"
 						></div>
 
-						<span class="w-[12ch] shrink-0 text-right text-xs text-current/60 tabular-nums">
+						<span class="text-right text-xs whitespace-nowrap text-current/60 tabular-nums">
 							{row.inningsPitched} IP · {row.pitches}
 						</span>
 					</li>

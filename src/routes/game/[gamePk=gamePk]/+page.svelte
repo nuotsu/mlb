@@ -133,15 +133,17 @@
 <section class="group/game-page grid gap-[2lh] py-lh md:grid-cols-2">
 	{#if !isSpoilerPrevented && Array.isArray(winProbability) && (isLive || isFinal)}
 		<article
-			class="col-span-full grid gap-y-lh max-lg:*:max-h-[14lh] lg:grid-cols-3 lg:h-[14lh] lg:max-h-[14lh] lg:*:min-h-0"
+			class="col-span-full grid gap-y-lh lg:grid-cols-3 lg:h-[14lh] lg:max-h-[14lh] lg:*:min-h-0"
 		>
 			{#if isLive || isFinal}
 				<AtBatSequence
 					plays={feedLive?.liveData?.plays}
 					players={feedLive?.gameData?.players}
+					status={game?.status}
 				/>
 
 				<AllPlays
+					class="max-lg:max-h-[14lh]"
 					{awayTeam}
 					{homeTeam}
 					{linescore}
@@ -152,7 +154,9 @@
 			{/if}
 
 			{#if Array.isArray(winProbability)}
-				<div class="flex h-full min-h-0 flex-col gap-ch">
+				<!-- The chart derives its viewBox from its own measured height, so it needs a
+				     definite height to size against — `h-full` alone leaves it unbounded here. -->
+				<div class="flex h-full min-h-0 flex-col gap-ch max-lg:h-[8lh]">
 					<h2 class="shrink-0 px-ch text-xs text-current/40">Win Probability</h2>
 					<WinProbability
 						class="min-h-0 grow"
