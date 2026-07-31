@@ -31,6 +31,9 @@
 
 			<div class="grid gap-[.5ch] self-center">
 				<a class="line-clamp-3 decoration-dashed group-hover/post:underline" {href}>
+					{#if post.draft}
+						<span class="text-accent">[Draft]</span>
+					{/if}
 					{post.title}
 					<span class="absolute inset-0"></span>
 				</a>
