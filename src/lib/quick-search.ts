@@ -49,6 +49,18 @@ const DATE_OFFSETS: Record<string, number> = {
 	tomorrow: 1,
 }
 
+const WEEKDAYS: Record<string, number> = {
+	sunday: 0,
+	monday: 1,
+	tuesday: 2,
+	wednesday: 3,
+	thursday: 4,
+	friday: 5,
+	saturday: 6,
+}
+
+const WEEKDAY_PATTERN = Object.keys(WEEKDAYS).join('|')
+
 const INTENTS = {
 	boxscore: /\bbox\s?scores?\b/,
 	standings: /\bstandings?\b/,
@@ -58,8 +70,10 @@ const INTENTS = {
 } as const
 
 /** Words that carry intent/date meaning and should be stripped before a player name lookup */
-const NOISE_WORDS =
-	/\b(today|tonight|yesterday|tomorrow|profiles?|players?|pages?|shows?|views?|open|go|to|me|my|for|the|a|an|of|all|seasons?|years?|career)\b/g
+const NOISE_WORDS = new RegExp(
+	`\\b(today|tonight|yesterday|tomorrow|this|next|${WEEKDAY_PATTERN}|profiles?|players?|pages?|shows?|views?|open|go|to|me|my|for|the|a|an|of|all|seasons?|years?|career)\\b`,
+	'g',
+)
 
 const INTENT_WORDS =
 	/\b(box\s?scores?|standings?|stats?|leaders?|leaderboards?|matchups?|schedules?|games?|scores?|playing|rosters?|teams?|club)\b/g
@@ -78,12 +92,21 @@ function extractPlayerName(q: string) {
 	return q.replace(INTENT_WORDS, ' ').replace(NOISE_WORDS, ' ').replace(/\s+/g, ' ').trim()
 }
 
+function teamAliases(team: Team) {
+	const aliases = [team.name, team.clubName, team.abbreviation]
+	// "dodger game" should match Dodgers (skip Red/White Sox)
+	if (/s$/i.test(team.clubName) && !/sox$/i.test(team.clubName)) {
+		aliases.push(team.clubName.slice(0, -1))
+	}
+	return aliases
+}
+
 function matchTeam(q: string) {
 	let matched: Team | undefined
 	let matchedAlias = ''
 
 	for (const team of TEAMS) {
-		for (const alias of [team.name, team.clubName, team.abbreviation]) {
+		for (const alias of teamAliases(team)) {
 			const a = alias.toLowerCase()
 			// abbreviations must match as standalone words; longer aliases win
 			if (a.length > matchedAlias.length && new RegExp(`\\b${a}\\b`).test(q)) {
@@ -97,14 +120,27 @@ function matchTeam(q: string) {
 }
 
 function matchDate(q: string) {
-	const word = Object.keys(DATE_OFFSETS).find((w) => new RegExp(`\\b${w}\\b`).test(q))
 	const date = getToday()
-	if (word) date.setDate(date.getDate() + DATE_OFFSETS[word])
 
-	return {
-		date: formatDate(date, { locale: 'en-CA' }),
-		explicit: !!word,
+	const relative = Object.keys(DATE_OFFSETS).find((w) => new RegExp(`\\b${w}\\b`).test(q))
+	if (relative) {
+		date.setDate(date.getDate() + DATE_OFFSETS[relative])
+		return { date: formatDate(date, { locale: 'en-CA' }), explicit: true }
 	}
+
+	const weekdayMatch = q.match(new RegExp(`\\b(?:(this|next)\\s+)?(${WEEKDAY_PATTERN})\\b`))
+	if (weekdayMatch) {
+		const [, modifier, weekday] = weekdayMatch
+		const target = WEEKDAYS[weekday]
+		const todayDow = date.getDay()
+		let delta = (target - todayDow + 7) % 7
+		// "next saturday" skips today when today is already that weekday
+		if (modifier === 'next' && delta === 0) delta = 7
+		date.setDate(date.getDate() + delta)
+		return { date: formatDate(date, { locale: 'en-CA' }), explicit: true }
+	}
+
+	return { date: formatDate(date, { locale: 'en-CA' }), explicit: false }
 }
 
 async function findGame(teamId: number, date: string) {
