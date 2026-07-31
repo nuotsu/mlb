@@ -229,7 +229,13 @@
 	{/if}
 
 	{#if hasBattingOrder || hasBench}
-		<Boxscore class="col-span-full" {boxscore} {isSpoilerPrevented} />
+		<Boxscore
+			class="col-span-full"
+			{boxscore}
+			gameDate={game?.gameDate}
+			players={feedLive?.gameData?.players as Record<string, MLB.Person> | undefined}
+			{isSpoilerPrevented}
+		/>
 	{/if}
 </section>
 

@@ -63,7 +63,7 @@ export const fetchfeedLive = createFetcher<[gamePk: string | number], MLB.LiveGa
 		params: {
 			fields: [
 				'gamePk,gameData,liveData',
-				'players,id,fullName,lastName,boxscoreName',
+				'players,id,fullName,lastName,boxscoreName,pitchHand,code',
 				'gameInfo,firstPitch,attendance,gameDurationMinutes',
 				'weather,condition,temp,wind',
 				'teams,home,away,id,name,abbreviation,teamName',
@@ -114,6 +114,22 @@ export const fetchWinProbability = createFetcher<
 			'result,about,inning,isTopInning,isScoringPlay,atBatIndex,halfInning,homeTeamWinProbability,awayTeamWinProbability,homeTeamWinProbabilityAdded',
 	},
 }))
+
+export async function fetchPitchingGameLogs(
+	personIds: (string | number)[],
+	season: string | number,
+) {
+	if (!personIds.length) return { people: [] } as MLB.PersonResponse
+
+	return fetchMLB<MLB.PersonResponse>('/api/v1/people', {
+		personIds: personIds.map(String),
+		hydrate: `stats(group=[pitching],type=[gameLog],season=${season})`,
+		fields: [
+			'people,id,lastName,lastInitName,pitchHand,code',
+			'stats,type,displayName,group,splits,date,stat,numberOfPitches,inningsPitched,gamesStarted',
+		],
+	})
+}
 
 export async function fetchWeekTransactions({
 	date,

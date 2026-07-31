@@ -474,6 +474,7 @@ declare global {
 		interface StatSplit {
 			group?: 'pitching' | 'hitting' | 'fielding'
 			season?: string
+			date?: string
 			stat: Record<string, number | string>
 			team?: Team
 			player?: Person

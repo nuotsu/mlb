@@ -2,6 +2,7 @@
 	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
+	import BullpenFatigue from '$ui/game/bullpen-fatigue.svelte'
 	import { ArrowDownRightIcon } from '$ui/icons'
 	import Headshot from '$ui/player/headshot.svelte'
 	import ToggleSpoilerPrevention from '$ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
@@ -10,10 +11,14 @@
 
 	let {
 		boxscore,
+		gameDate,
+		players,
 		isSpoilerPrevented,
 		class: className,
 	}: {
 		boxscore?: MLB.Boxscore | null
+		gameDate?: string
+		players?: Record<string, MLB.Person> | null
 		isSpoilerPrevented?: boolean
 	} & HTMLAttributes<HTMLDivElement> = $props()
 
@@ -170,6 +175,11 @@
 						</tbody>
 					</table>
 				</div>
+
+				{#if gameDate && !isSpoilerPrevented}
+					<hr class="my-[.5ch] border-dashed border-current/25" />
+					<BullpenFatigue {team} {gameDate} />
+				{/if}
 			{:else if team.bench?.length || team.bullpen?.length}
 				{#if team.bench?.length}
 					<div class="overflow-x-auto">
@@ -217,6 +227,9 @@
 
 {#snippet p({ position, person }: MLB.BoxscorePlayer, substituted?: boolean)}
 	{@const isFavorite = favoritesStore.has(`/player/${person.id}`)}
+	{@const throwSide = players?.[`ID${person.id}`]?.pitchHand?.code}
+	{@const sideLabel =
+		position?.abbreviation === 'P' ? (throwSide ?? position.abbreviation) : position?.abbreviation}
 
 	<th class={cn('sticky left-0 z-1 min-w-lh', isFavorite && 'bg-accent')}>
 		<a href="/player/{person.id}">
@@ -242,7 +255,7 @@
 			</span>
 
 			<small class="w-[3ch] shrink-0 text-center text-xs text-current/40 no-underline">
-				{position?.abbreviation}
+				{sideLabel}
 			</small>
 		</a>
 	</th>
