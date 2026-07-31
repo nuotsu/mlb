@@ -59,7 +59,10 @@ const INTENTS = {
 
 /** Words that carry intent/date meaning and should be stripped before a player name lookup */
 const NOISE_WORDS =
-	/\b(today|tonight|yesterday|tomorrow|profiles?|players?|pages?|shows?|views?|open|go|to|me|for|the|a|an|of)\b/g
+	/\b(today|tonight|yesterday|tomorrow|profiles?|players?|pages?|shows?|views?|open|go|to|me|my|for|the|a|an|of|all|seasons?|years?|career)\b/g
+
+const INTENT_WORDS =
+	/\b(box\s?scores?|standings?|stats?|leaders?|leaderboards?|matchups?|schedules?|games?|scores?|playing|rosters?|teams?|club)\b/g
 
 function normalize(query: string) {
 	return query
@@ -68,6 +71,11 @@ function normalize(query: string) {
 		.replace(/[^a-z0-9\s.-]/g, ' ')
 		.replace(/\s+/g, ' ')
 		.trim()
+}
+
+/** Leftover tokens after stripping intents/noise — treated as a player name candidate */
+function extractPlayerName(q: string) {
+	return q.replace(INTENT_WORDS, ' ').replace(NOISE_WORDS, ' ').replace(/\s+/g, ' ').trim()
 }
 
 function matchTeam(q: string) {
@@ -110,13 +118,23 @@ async function findGame(teamId: number, date: string) {
 	return teamGames.find((game) => game.status?.abstractGameState === 'Live') ?? teamGames[0]
 }
 
-async function findPlayer(name: string) {
+async function searchPeople(name: string) {
 	const { people = [] } = await fetchMLB<MLB.PersonResponse>('/api/v1/people/search', {
 		names: name,
 		fields: 'people,id,fullName,active',
 	})
 
 	return people.find((person) => person.active) ?? people[0]
+}
+
+async function findPlayer(name: string) {
+	const player = await searchPeople(name)
+	if (player) return player
+
+	// "ohtanis seasons stats" → leftover "ohtanis"; retry without a trailing possessive s
+	if (name.length > 3 && /[a-z]s$/i.test(name)) {
+		return searchPeople(name.replace(/s$/i, ''))
+	}
 }
 
 /**
@@ -129,11 +147,12 @@ export async function resolveQuery(query: string): Promise<string> {
 
 	const team = matchTeam(q)
 	const { date, explicit: hasDate } = matchDate(q)
-
-	if (INTENTS.standings.test(q)) return '/standings'
+	const name = extractPlayerName(q)
 
 	const wantsBoxscore = INTENTS.boxscore.test(q)
 	const wantsSchedule = INTENTS.schedule.test(q)
+	const wantsStandings = INTENTS.standings.test(q)
+	const wantsStats = INTENTS.stats.test(q)
 
 	if (team) {
 		if (wantsBoxscore || wantsSchedule || hasDate) {
@@ -144,21 +163,19 @@ export async function resolveQuery(query: string): Promise<string> {
 		return `/teams/${team.id}`
 	}
 
-	if (INTENTS.stats.test(q)) return '/stats'
-	if (wantsSchedule || wantsBoxscore) return `/schedule/day/${date}`
-
-	// assume the rest is a player name
-	const name = q
-		.replace(INTENTS.teamPage, ' ')
-		.replace(NOISE_WORDS, ' ')
-		.replace(/\s+/g, ' ')
-		.trim()
-
+	// Prefer a player when the query still has a name remnant after stripping intents
+	// ("show my ohtanis seasons stats" → Ohtani, not /stats)
 	if (name.length >= 3) {
 		const player = await findPlayer(name)
 		if (player) return `/player/${player.id}`
-		return `/player?query=${encodeURIComponent(name)}`
+		if (!wantsStandings && !wantsStats && !wantsSchedule && !wantsBoxscore) {
+			return `/player?query=${encodeURIComponent(name)}`
+		}
 	}
+
+	if (wantsStandings) return '/standings'
+	if (wantsStats) return '/stats'
+	if (wantsSchedule || wantsBoxscore) return `/schedule/day/${date}`
 
 	return '/player'
 }
