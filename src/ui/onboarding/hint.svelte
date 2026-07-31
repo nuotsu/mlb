@@ -23,7 +23,7 @@
 
 {#if visible}
 	<aside
-		class="relative flex gap-ch border border-stroke bg-neutral-100/50 p-ch text-sm backdrop-blur-[4px] dark:bg-neutral-800/50 {className}"
+		class="relative flex gap-ch border border-accent bg-neutral-100/50 p-ch text-sm backdrop-blur-[4px] dark:bg-neutral-800/50 {className}"
 		{...props}
 	>
 		<InfoIcon class="mt-[.15lh] size-lh shrink-0 text-accent" aria-hidden="true" />
