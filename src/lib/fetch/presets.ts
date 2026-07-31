@@ -71,7 +71,7 @@ export const fetchfeedLive = createFetcher<[gamePk: string | number], MLB.LiveGa
 				'linescore,currentInning,scheduledInnings,innings,num,runs,hits,errors,leftOnBase',
 				'boxscore,position,abbreviation,topPerformers,type,player,boxscoreName,stats,batting,pitching,summary',
 				'decisions,winner,loser,save,id',
-				'plays,allPlays,result,description,event,eventType,rbi,about,inning,isTopInning,atBatIndex,isScoringPlay,hasReview,runnerIndex,count,balls,strikes,outs,awayScore,homeScore,matchup,batter,pitcher,id,fullName,boxscoreName,playEvents,details,reviewDetails,isOverturned,inProgress,challengeTeamId,reviewType,player,hitData,launchSpeed,launchAngle,totalDistance,trajectory,coordinates,coordX,coordY',
+				'plays,allPlays,result,description,event,eventType,rbi,about,inning,isTopInning,atBatIndex,isScoringPlay,hasOut,hasReview,runnerIndex,count,balls,strikes,outs,awayScore,homeScore,matchup,batter,pitcher,batSide,pitchHand,code,id,fullName,lastName,boxscoreName,playEvents,isPitch,details,isBall,isStrike,isInPlay,call,reviewDetails,isOverturned,inProgress,challengeTeamId,reviewType,player,hitData,launchSpeed,launchAngle,totalDistance,trajectory,coordinates,coordX,coordY,pitchData,startSpeed,strikeZoneTop,strikeZoneBottom,pX,pZ,pfxX,pfxZ,x0,y0,z0,vX0,vY0,vZ0,aX,aY,aZ,type',
 			],
 		},
 	}),

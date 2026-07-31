@@ -13,3 +13,9 @@ export function isLightOnDarkTeam(team?: MLB.Team) {
 
 	return ['Hanshin Tigers', 'Tokyo Yomiuri Giants'].includes(team.name)
 }
+
+/** White → red text color for pitch velocity (mph). Full red at 100+. */
+export function pitchSpeedColor(mph: number, min = 70, max = 100) {
+	const t = Math.min(1, Math.max(0, (mph - min) / (max - min)))
+	return `color-mix(in oklab, var(--color-red-500) ${Math.round(t * 100)}%, white)`
+}

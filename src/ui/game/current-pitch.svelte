@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { pitchSpeedColor } from '$lib/colors'
 	import { cn } from '$lib/utils'
 
 	let { liveGame }: { liveGame?: MLB.LiveGameFeed } = $props()
@@ -12,6 +13,7 @@
 	<div class="min-h-rlh border-dashed border-stroke text-[x-small]" class:border-t={!!pitch}>
 		{#if pitch?.details}
 			{@const { type, isBall, isStrike, isInPlay, description, call } = pitch.details}
+			{@const speed = pitch.pitchData?.startSpeed}
 			<p class="flex h-rlh anim-fade-to-r items-center justify-center gap-x-ch">
 				<span
 					class={cn(
@@ -38,9 +40,9 @@
 					</span>
 				{/if}
 
-				{#if pitch.pitchData?.startSpeed}
-					<span class="relative leading-none">
-						{pitch.pitchData?.startSpeed}
+				{#if speed}
+					<span class="relative leading-none" style:color={pitchSpeedColor(speed)}>
+						{speed}
 						<small class="absolute top-full left-1/2 -translate-x-1/2 text-[7px]">mph</small>
 					</span>
 				{/if}

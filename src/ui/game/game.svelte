@@ -219,7 +219,7 @@
 
 <style>
 	article {
-		--status-size: 6ch;
+		--status-size: 5ch;
 
 		grid-template:
 			'. description' auto
@@ -232,7 +232,7 @@
 				'. description linescore' auto
 				'status boxscore linescore' auto
 				'bso matchup plays' auto
-				'. link link' auto / var(--status-size) 1fr minmax(18ch, 50%);
+				'. link link' auto / var(--status-size) 1fr minmax(18ch, 57%);
 
 			@media (width < 32rem) {
 				grid-template:
@@ -240,7 +240,7 @@
 					'status boxscore linescore' auto
 					'bso matchup matchup' auto
 					'bso plays plays' auto
-					'. link link' auto / var(--status-size) minmax(5.5ch, 1fr) 50%;
+					'. link link' auto / var(--status-size) minmax(5.5ch, 1fr) 57%;
 			}
 		}
 	}

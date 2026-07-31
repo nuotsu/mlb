@@ -71,11 +71,11 @@
 </script>
 
 <div
-	class="group/plays mx-ch border border-stroke text-sm"
+	class="group/plays mx-ch flex h-full min-h-0 flex-col overflow-hidden border border-stroke text-sm"
 	role="group"
 	onmouseleave={() => onPlayHover?.(null)}
 >
-	<fieldset class="flex flex-wrap gap-x-ch border-b border-stroke px-ch py-[.5ch]">
+	<fieldset class="flex shrink-0 flex-wrap gap-x-ch border-b border-stroke px-ch py-[.5ch]">
 		<label>
 			<input name="plays" type="radio" checked={status?.abstractGameState === 'Live'} />
 			All plays
@@ -93,7 +93,7 @@
 	</fieldset>
 
 	{#if groupedPlays.length}
-		<div class="h-[12lh] overflow-y-auto" bind:this={container}>
+		<div class="min-h-[12lh] grow overflow-y-auto" bind:this={container}>
 			{#each groupedPlays as group (group.key)}
 				<div
 					data-has-scoring={group.hasScoring ? '' : undefined}
@@ -159,6 +159,6 @@
 			{/each}
 		</div>
 	{:else}
-		<Empty class="p-ch">No plays</Empty>
+		<Empty class="grow p-ch">No plays</Empty>
 	{/if}
 </div>

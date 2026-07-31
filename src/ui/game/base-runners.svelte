@@ -28,7 +28,7 @@
 		{@const runner = runners[base]}
 
 		<div
-			class={cn('aspect-square size-[1.25lh] border border-stroke transition-colors', {
+			class={cn('aspect-square size-lh border border-stroke transition-colors', {
 				'order-2': base === 0,
 				'order-1': base === 1,
 				'order-3': base === 2,

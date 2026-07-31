@@ -18,6 +18,15 @@
 	let width = $state(0)
 	let height = $state(150)
 	const padding = 2
+	/** Inning labels sit above the plot; team halves split the remaining height 1:1. */
+	const labelBand = $derived(Math.max(22, height * 0.1))
+	const plotTop = $derived(labelBand)
+	const plotHeight = $derived(Math.max(height - labelBand, 1))
+	const plotMid = $derived(plotTop + plotHeight / 2)
+
+	function probToY(homeWinPct: number) {
+		return plotTop + (homeWinPct / 100) * plotHeight
+	}
 
 	const maxInningInData = $derived(
 		winProbability.reduce((max, d) => Math.max(max, d.about?.inning ?? 0), 0),
@@ -87,7 +96,7 @@
 	const pathData = $derived(() => {
 		const points = winProbability.map((d, i) => ({
 			x: dataIndexToX(i),
-			y: (d.homeTeamWinProbability / 100) * height,
+			y: probToY(d.homeTeamWinProbability),
 		}))
 
 		if (points.length < 2) return ''
@@ -124,7 +133,7 @@
 
 		const points = winProbability.map((d, i) => ({
 			x: dataIndexToX(i),
-			y: (d.homeTeamWinProbability / 100) * height,
+			y: probToY(d.homeTeamWinProbability),
 		}))
 
 		const i = hoveredDataIndex
@@ -160,58 +169,120 @@
 		}
 		return result
 	})
+	const awayTeamId = $derived(boxscore?.teams.away.team.id)
+	const homeTeamId = $derived(boxscore?.teams.home.team.id)
+
+	let hoveredInning = $state<number | null>(null)
+	let hoveredHalf = $state<'away' | 'home' | null>(null)
+
+	function setHover(inning: number, half: 'away' | 'home') {
+		hoveredInning = inning
+		hoveredHalf = half
+	}
+
+	function clearHover() {
+		hoveredInning = null
+		hoveredHalf = null
+	}
+
+	function teamSpotBg(teamId?: number) {
+		if (!teamId) return undefined
+		return `url(https://midfield.mlbstatic.com/v1/team/${teamId}/spots/32) 50% 5% / 1000% 4500% no-repeat`
+	}
 </script>
 
-<figure class="grid px-ch *:col-span-full *:row-span-full {className}" bind:clientWidth={width}>
+<figure class="grid h-full min-h-0 px-ch *:col-span-full *:row-span-full {className}">
+	{#if awayTeamId}
+		<div
+			class="pointer-events-none self-start opacity-25"
+			style:margin-top="{labelBand}px"
+			style:height="calc((100% - {labelBand}px) / 2)"
+			style:background={teamSpotBg(awayTeamId)}
+			aria-hidden="true"
+		></div>
+	{/if}
+
+	{#if homeTeamId}
+		<div
+			class="pointer-events-none self-end opacity-25"
+			style:height="calc((100% - {labelBand}px) / 2)"
+			style:background={teamSpotBg(homeTeamId)}
+			aria-hidden="true"
+		></div>
+	{/if}
+
 	<figcaption
-		class="mr-auto grid grid-cols-2 text-center text-[xx-small] text-current/25 uppercase sm:text-xs"
+		class="pointer-events-none relative z-1 mr-auto grid grid-cols-2 text-center text-[xx-small] text-current uppercase sm:text-xs"
 		style:writing-mode="vertical-rl"
+		style:margin-top="{labelBand}px"
+		style:height="calc(100% - {labelBand}px)"
 	>
-		<span>{boxscore?.teams.away.team.abbreviation ?? 'Away'}</span>
-		<span>{boxscore?.teams.home.team.abbreviation ?? 'Home'}</span>
+		<span class="transition-opacity {hoveredHalf === 'away' ? 'opacity-100' : 'opacity-25'}">
+			{boxscore?.teams.away.team.abbreviation ?? 'Away'}
+		</span>
+		<span class="transition-opacity {hoveredHalf === 'home' ? 'opacity-100' : 'opacity-25'}">
+			{boxscore?.teams.home.team.abbreviation ?? 'Home'}
+		</span>
 	</figcaption>
 
-	<svg class="w-full grow" viewBox="0 {-padding} {width} {height + padding * 2}">
+	<svg
+		class="relative z-1 h-full min-h-0 w-full"
+		bind:clientWidth={width}
+		bind:clientHeight={height}
+		viewBox="0 {-padding} {Math.max(width, 1)} {Math.max(height, 1) + padding * 2}"
+		preserveAspectRatio="none"
+		onmouseleave={clearHover}
+	>
 		{#each inningDividers() as inning, i (inning.num)}
 			{#if i > 0}
 				<line
-					class="stroke-current/25"
+					class="pointer-events-none stroke-current/25"
 					x1={inning.startX}
-					y1={0}
+					y1={labelBand}
 					x2={inning.startX}
-					y2={height}
+					y2={height + padding}
 					stroke-width="0.5"
 				/>
 			{/if}
 
 			{#if inning.midX !== undefined}
 				<line
-					class="stroke-current/15"
+					class="pointer-events-none stroke-current/15"
 					x1={inning.midX}
-					y1={height * 0.2}
+					y1={labelBand}
 					x2={inning.midX}
-					y2={height}
+					y2={height + padding}
 					stroke-width="1"
 					stroke-dasharray="4,4"
 				/>
 			{/if}
 
-			<text class="fill-current/25" x={inning.centerX} y={12} text-anchor="middle" font-size="16">
+			<text
+				class="pointer-events-none transition-opacity {hoveredInning === inning.num
+					? 'fill-current'
+					: 'fill-current/25'}"
+				x={inning.centerX}
+				y={labelBand * 0.55}
+				text-anchor="middle"
+				dominant-baseline="middle"
+				font-size={Math.min(16, labelBand * 0.7)}
+			>
 				{inning.num}
 			</text>
 		{/each}
 
 		<line
-			class="stroke-current/25"
+			class="pointer-events-none stroke-current/25"
 			x1={0}
-			y1={height / 2}
+			y1={plotMid}
 			x2={width}
-			y2={height / 2}
+			y2={plotMid}
 			stroke-width="0.5"
 			stroke-dasharray="4,4"
 		/>
 
 		<path
+			class="pointer-events-none"
 			d={pathData()}
 			fill="none"
 			stroke="var(--color-accent,currentColor)"
@@ -222,6 +293,7 @@
 
 		{#if highlightPathData()}
 			<path
+				class="pointer-events-none"
 				d={highlightPathData()}
 				fill="none"
 				stroke={colorSchemeStore.colorScheme === 'dark' ? 'currentColor' : 'var(--color-green-500)'}
@@ -231,5 +303,27 @@
 				opacity="0.85"
 			/>
 		{/if}
+
+		{#each inningDividers() as inning (inning.num)}
+			{@const w = Math.max(inning.endX - inning.startX, 0)}
+			<rect
+				x={inning.startX}
+				y={plotTop}
+				width={w}
+				height={plotHeight / 2}
+				fill="transparent"
+				role="presentation"
+				onmouseenter={() => setHover(inning.num, 'away')}
+			/>
+			<rect
+				x={inning.startX}
+				y={plotMid}
+				width={w}
+				height={plotHeight / 2}
+				fill="transparent"
+				role="presentation"
+				onmouseenter={() => setHover(inning.num, 'home')}
+			/>
+		{/each}
 	</svg>
 </figure>

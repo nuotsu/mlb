@@ -45,7 +45,7 @@
 	<dd class="flex items-center gap-[inherit]">
 		{#each Array.from({ length: max }) as _, i (`${value} ${i}`)}
 			<span
-				class="inline-block aspect-square size-[.8lh] shrink-0 rounded-full bg-linear-to-b to-foreground/10 transition-colors dark:to-foreground/25"
+				class="inline-block aspect-square size-[.75lh] shrink-0 rounded-full bg-linear-to-b to-foreground/10 transition-colors dark:to-foreground/25"
 				style:background={i < value ? color : undefined}
 			></span>
 		{/each}

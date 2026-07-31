@@ -9,6 +9,7 @@
 	import { cn } from '$lib/utils'
 	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
 	import AllPlays from '$ui/game/all-plays.svelte'
+	import AtBatSequence from '$ui/game/at-bat-sequence.svelte'
 	import Boxscore from '$ui/game/boxscore.svelte'
 	import Decision from '$ui/game/decision.svelte'
 	import GameData from '$ui/game/game-data.svelte'
@@ -131,19 +132,9 @@
 
 <section class="group/game-page grid gap-[2lh] py-lh md:grid-cols-2">
 	{#if !isSpoilerPrevented && Array.isArray(winProbability) && (isLive || isFinal)}
-		<article class="col-span-full grid gap-y-lh md:grid-cols-[2fr_1fr]">
-			{#if Array.isArray(winProbability)}
-				<div class="grow space-y-ch">
-					<h2 class="px-ch text-xs text-current/40">Win Probability</h2>
-					<WinProbability
-						{winProbability}
-						boxscore={boxscore ?? undefined}
-						{linescore}
-						{hoveredAtBatIndex}
-					/>
-				</div>
-			{/if}
-
+		<article
+			class="col-span-full grid gap-y-lh max-lg:*:max-h-[14lh] lg:grid-cols-3 lg:h-[14lh] lg:max-h-[14lh] lg:*:min-h-0"
+		>
 			{#if isLive || isFinal}
 				<AllPlays
 					{awayTeam}
@@ -153,6 +144,24 @@
 					plays={feedLive?.liveData?.plays}
 					onPlayHover={(i) => (hoveredAtBatIndex = i)}
 				/>
+
+				<AtBatSequence
+					plays={feedLive?.liveData?.plays}
+					players={feedLive?.gameData?.players}
+				/>
+			{/if}
+
+			{#if Array.isArray(winProbability)}
+				<div class="flex h-full min-h-0 flex-col gap-ch">
+					<h2 class="shrink-0 px-ch text-xs text-current/40">Win Probability</h2>
+					<WinProbability
+						class="min-h-0 grow"
+						{winProbability}
+						boxscore={boxscore ?? undefined}
+						{linescore}
+						{hoveredAtBatIndex}
+					/>
+				</div>
 			{/if}
 		</article>
 	{/if}
