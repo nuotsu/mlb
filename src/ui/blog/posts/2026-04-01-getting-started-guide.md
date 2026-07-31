@@ -1,10 +1,9 @@
 ---
 slug: getting-started-guide
-date: 2026-07-31
+date: 2026-04-01
 title: Getting Started with MLB.TheOhtani.com
 description: What this app does, how to favorite a team, and how to install it on your phone — a plain-language guide for first-time visitors.
 image: /screenshots/schedule.png
-draft: true
 tags:
   - App
   - Guide
