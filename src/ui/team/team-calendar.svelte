@@ -153,7 +153,7 @@
 										<Headshot
 											person={confirmedPast.get(gamePk)!}
 											class="order-first -ml-px size-lh shrink-0"
-											size={48}
+											size={72}
 											type="silo"
 											title={confirmedPast.get(gamePk)!.fullName}
 										/>
@@ -168,7 +168,7 @@
 														'order-first -ml-px size-lh shrink-0',
 														!confirmed && 'opacity-50',
 													)}
-													size={48}
+													size={72}
 													type="silo"
 													title={pitcher.fullName}
 												/>
@@ -181,7 +181,7 @@
 												<Headshot
 													{person}
 													class="order-first -ml-px size-lh shrink-0"
-													size={48}
+													size={72}
 													type="silo"
 													title={person.fullName}
 												/>

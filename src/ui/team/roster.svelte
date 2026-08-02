@@ -29,7 +29,7 @@
 					class="flex grow items-center gap-x-ch decoration-dashed hover:underline"
 					href="/player/{person.id}"
 				>
-					<Headshot {person} size={36} class="size-lh shrink-0" />
+					<Headshot {person} size={72} class="size-lh shrink-0" />
 
 					<span class="line-clamp-1 break-all">
 						{(person as MLB.Person).lastFirstName}
