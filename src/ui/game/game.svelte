@@ -108,7 +108,7 @@
 	>
 		<div
 			class={cn(
-				'absolute top-1/2 left-1/2 -z-1 -translate-1/2 has-data-runner-active:z-10',
+				'absolute top-1/2 left-1/2 -z-1 -translate-1/2',
 				isGamePage &&
 					game.status.abstractGameState !== 'Preview' &&
 					!isSpoilerPrevented &&
