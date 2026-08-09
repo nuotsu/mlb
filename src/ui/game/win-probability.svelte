@@ -211,26 +211,13 @@
 		></div>
 	{/if}
 
-	<figcaption
-		class="pointer-events-none relative z-1 mr-auto grid grid-cols-2 text-center text-[xx-small] text-current uppercase sm:text-xs"
-		style:writing-mode="vertical-rl"
-		style:margin-top="{labelBand}px"
-		style:height="calc(100% - {labelBand}px)"
-	>
-		<span class="transition-opacity {hoveredHalf === 'away' ? 'opacity-100' : 'opacity-25'}">
-			{boxscore?.teams.away.team.abbreviation ?? 'Away'}
-		</span>
-		<span class="transition-opacity {hoveredHalf === 'home' ? 'opacity-100' : 'opacity-25'}">
-			{boxscore?.teams.home.team.abbreviation ?? 'Home'}
-		</span>
-	</figcaption>
-
 	<svg
 		class="relative z-1 h-full min-h-0 w-full"
 		bind:clientWidth={width}
 		bind:clientHeight={height}
 		viewBox="0 {-padding} {Math.max(width, 1)} {Math.max(height, 1) + padding * 2}"
 		preserveAspectRatio="none"
+		role="presentation"
 		onmouseleave={clearHover}
 	>
 		{#each inningDividers() as inning, i (inning.num)}
@@ -326,4 +313,18 @@
 			/>
 		{/each}
 	</svg>
+
+	<figcaption
+		class="pointer-events-none relative z-1 mr-auto grid grid-cols-2 text-center text-[xx-small] text-current uppercase sm:text-xs"
+		style:writing-mode="vertical-rl"
+		style:margin-top="{labelBand}px"
+		style:height="calc(100% - {labelBand}px)"
+	>
+		<span class="transition-opacity {hoveredHalf === 'away' ? 'opacity-100' : 'opacity-25'}">
+			{boxscore?.teams.away.team.abbreviation ?? 'Away'}
+		</span>
+		<span class="transition-opacity {hoveredHalf === 'home' ? 'opacity-100' : 'opacity-25'}">
+			{boxscore?.teams.home.team.abbreviation ?? 'Home'}
+		</span>
+	</figcaption>
 </figure>
