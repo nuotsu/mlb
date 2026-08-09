@@ -352,6 +352,7 @@
 				'flex h-[10lh] shrink-0 items-stretch gap-ch overflow-hidden p-ch',
 				!isLefty && 'flex-row-reverse',
 			)}
+			role="presentation"
 			onmouseleave={() => (hoveredPitch = null)}
 		>
 			<div class="relative h-full min-w-0 grow basis-0">

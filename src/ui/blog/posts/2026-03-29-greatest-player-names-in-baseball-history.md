@@ -11,7 +11,7 @@ tags:
 
 Baseball has been around since the 1800s, which means the stats database is sitting on a goldmine of names that would never make it past a modern HR department. I went digging. Here's what I found.
 
-![](/blog/coco-crisp.png)
+![Coco Crisp's player card](/blog/coco-crisp.png)
 
 ## Old-Timey Nicknames as Official Names
 

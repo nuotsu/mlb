@@ -49,7 +49,7 @@ I spent a season being annoyed by this. And then I stopped being annoyed and sta
 
 ## What I Actually Built (_Scorebug #4_)
 
-![](/screenshots/schedule.png)
+![Schedule page showing live scorebugs for the day's games](/screenshots/schedule.png)
 
 [Mitchell's Live ScoreBug](/) is a baseball stats and live scores web app. The core idea is simple: everything you want to know about a game or a player, fast, with a design that doesn't make you want to close the tab.
 
