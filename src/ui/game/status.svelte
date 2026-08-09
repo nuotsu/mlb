@@ -18,9 +18,10 @@
 
 {#if game.status.abstractGameState === 'Final' && !isSpoilerPrevented}
 	{@const value = game.status.reason || game.status.detailedState || game.status.abstractGameState}
+	{@const isExtraInnings = value === 'Final' && linescore?.currentInning! > linescore?.scheduledInnings!}
 	<b class={cn(value.includes(':') ? 'text-[x-small]' : 'text-xs')}>
-		<span>{value}</span
-		>{#if value === 'Final' && linescore?.currentInning! > linescore?.scheduledInnings!}/{linescore?.currentInning}{/if}
+		<span>{isExtraInnings ? 'F' : value}</span
+		>{#if isExtraInnings}/{linescore?.currentInning}{/if}
 	</b>
 {:else if game.status.abstractGameState === 'Live' && !isSpoilerPrevented}
 	<Inning linescore={liveGame?.liveData?.linescore} />
