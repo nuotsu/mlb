@@ -12,6 +12,17 @@
 	} = $props()
 
 	let { toTeam, fromTeam, person, description } = $derived(transaction)
+
+	let descriptionParts = $derived.by(() => {
+		if (!person?.fullName) return null
+		const i = description.indexOf(person.fullName)
+		if (i === -1) return null
+		return {
+			before: description.slice(0, i),
+			match: description.slice(i, i + person.fullName.length),
+			after: description.slice(i + person.fullName.length),
+		}
+	})
 </script>
 
 <li
@@ -34,7 +45,11 @@
 	{/if}
 
 	<p class="leading-tight decoration-dashed group-hover/transaction:underline">
-		{description}
+		{#if descriptionParts}
+			{descriptionParts.before}<strong>{descriptionParts.match}</strong>{descriptionParts.after}
+		{:else}
+			{description}
+		{/if}
 	</p>
 
 	{#if person}

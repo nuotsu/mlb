@@ -148,7 +148,7 @@ export async function fetchWeekTransactions({
 		sportId: '1',
 		startDate: formatDate(weekStartDate!, { locale: 'en-CA' }),
 		endDate: formatDate(weekEndDate!, { locale: 'en-CA' }),
-		fields: ['transactions,date,description,typeDesc,toTeam,fromTeam,id,name,person'],
+		fields: ['transactions,date,description,typeDesc,toTeam,fromTeam,id,name,fullName,person'],
 		...params,
 	})
 }
