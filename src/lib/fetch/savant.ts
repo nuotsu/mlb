@@ -142,7 +142,7 @@ export async function fetchLongestHomeRuns(
 	{
 		season,
 		gameType = 'R',
-		limit = 30,
+		limit = 20,
 	}: { season: string | number; gameType?: string; limit?: number },
 	{ fetch: _fetch = fetch }: { fetch?: typeof fetch } = {},
 ): Promise<LongestHomeRun[]> {

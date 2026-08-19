@@ -259,7 +259,7 @@
 
 	<hr class="border-dashed border-stroke" />
 
-	<article class="overflow-x-auto has-[table]:flex">
+	<article class="overflow-x-auto overflow-y-hidden has-[table]:flex">
 		{#await data.longestHomeRuns}
 			<Loading class="w-full justify-center p-lh text-current/40">Loading longest HRs...</Loading>
 		{:then longestHomeRuns}
