@@ -1,9 +1,15 @@
 import { cacheControlForSeasonPage } from '$lib/cache-control'
 import { fetchMLB } from '$lib/fetch'
+import type { LongestHomeRun } from '$lib/fetch/savant'
 import type { PageLoad } from './$types'
 
-export const load: PageLoad = async ({ params, url, fetch, setHeaders }) => {
+export const load: PageLoad = async ({ params, url, data, fetch, setHeaders }) => {
 	setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
+
+	// A universal load replaces server data, so forward the streamed promise explicitly.
+	const { longestHomeRuns } = (data ?? {}) as {
+		longestHomeRuns?: Promise<LongestHomeRun[] | null>
+	}
 
 	const hittingSortStat = url.searchParams.get('hittingSortStat') ?? 'homeRuns'
 	const pitchingSortStat = url.searchParams.get('pitchingSortStat') ?? 'era'
@@ -78,6 +84,7 @@ export const load: PageLoad = async ({ params, url, fetch, setHeaders }) => {
 	] as number[]
 
 	return {
+		longestHomeRuns: longestHomeRuns ?? Promise.resolve(null),
 		baseballStats,
 		hittingLeaders: {
 			sortStat: hittingSortStat,

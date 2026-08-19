@@ -5,10 +5,12 @@
 	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
+	import Loading from '$ui/loading.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 	import SelectGameType from '$ui/select-game-type.svelte'
 	import SelectSport from '$ui/select-sport.svelte'
+	import LongestHomeRuns from '$ui/stats/longest-home-runs.svelte'
 	import SelectSeason from '$ui/stats/select-season.svelte'
 	import type { PageProps } from './$types'
 
@@ -253,6 +255,16 @@
 				{/if}
 			</tbody>
 		</table>
+	</article>
+
+	<hr class="border-dashed border-stroke" />
+
+	<article class="overflow-x-auto has-[table]:flex">
+		{#await data.longestHomeRuns}
+			<Loading class="w-full justify-center p-lh text-current/40">Loading longest HRs...</Loading>
+		{:then longestHomeRuns}
+			<LongestHomeRuns homeRuns={longestHomeRuns} />
+		{/await}
 	</article>
 </section>
 
