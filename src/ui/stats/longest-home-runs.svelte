@@ -8,13 +8,14 @@
 
 	let { homeRuns }: { homeRuns: LongestHomeRun[] | null } = $props()
 
+	// `table-fixed` sizes columns from the first row, so widths live on the header cells
 	const COLUMNS = [
-		{ key: 'dist', label: 'Projected distance (ft)' },
-		{ key: 'ev', label: 'Exit velocity (mph)' },
-		{ key: 'la', label: 'Launch angle' },
-		{ key: 'date', label: 'Game date' },
-		{ key: 'opp', label: 'Opponent' },
-		{ key: 'p', label: 'Pitcher' },
+		{ key: 'dist', label: 'Projected distance (ft)', width: 'w-[8ch]' },
+		{ key: 'ev', label: 'Exit velocity (mph)', width: 'w-[8ch]' },
+		{ key: 'la', label: 'Launch angle', width: 'w-[7ch]' },
+		{ key: 'date', label: 'Game date', width: 'w-[9ch]' },
+		{ key: 'opp', label: 'Opponent', width: 'w-[8ch]' },
+		{ key: 'p', label: 'Pitcher', width: 'w-[16ch] min-w-[16ch]' },
 	]
 </script>
 
@@ -25,8 +26,8 @@
 				<span class="block px-[.5ch] text-left uppercase">Longest HRs</span>
 			</th>
 
-			{#each COLUMNS as { key, label }}
-				<th class="px-[.5ch]">
+			{#each COLUMNS as { key, label, width }}
+				<th class={cn('px-[.5ch] whitespace-nowrap', width)}>
 					<abbr title={label}>
 						<span class={cn('block uppercase', key === 'dist' ? 'font-bold' : 'text-current/40')}>
 							{key}
@@ -88,7 +89,7 @@
 						{hr.launchAngle != null ? `${Math.round(hr.launchAngle)}°` : '—'}
 					</td>
 
-					<td class="text-xs tabular-nums">
+					<td class="text-xs whitespace-nowrap tabular-nums">
 						{#if hr.gamePk}
 							<a class="decoration-dashed hover:underline" href="/game/{hr.gamePk}">
 								{formatDate(hr.date, { month: 'short', day: 'numeric' })}
@@ -98,15 +99,15 @@
 						{/if}
 					</td>
 
-					<td class="text-xs text-current/50">
+					<td class="text-xs whitespace-nowrap text-current/50">
 						{hr.isHome ? 'vs' : '@'}
 						{opponent?.abbreviation ?? ''}
 					</td>
 
-					<td class="text-xs">
+					<td class="pitcher text-xs whitespace-nowrap">
 						{#if pitcher?.id}
 							<a
-								class="line-clamp-1 break-all decoration-dashed hover:underline"
+								class="decoration-dashed hover:underline"
 								href="/player/{pitcher.id}"
 								title={pitcher.fullName}
 							>
@@ -134,5 +135,9 @@
 	td {
 		padding-inline: 1ch;
 		min-width: 4ch;
+	}
+
+	td.pitcher {
+		min-width: 16ch;
 	}
 </style>
