@@ -15,7 +15,7 @@
 		{ key: 'la', title: 'LA', label: 'Launch angle', width: 'w-[7ch]' },
 		{ key: 'date', title: 'Date', label: 'Game date', width: 'w-[9ch]' },
 		{ key: 'opp', title: 'OPP', label: 'Opponent', width: 'w-[8ch]' },
-		{ key: 'p', title: 'P', label: 'Pitcher', width: 'w-[20ch] min-w-[16ch]' },
+		{ key: 'p', title: 'Pitcher', label: 'Pitcher', width: 'w-[20ch] min-w-[16ch]' },
 	]
 </script>
 
@@ -77,7 +77,7 @@
 						{team?.abbreviation ?? ''}
 					</th>
 
-					<td class="font-bold tabular-nums" class:positive={hr.distance >= 450}>
+					<td class="tabular-nums" class:positive={hr.distance >= 450}>
 						{Math.round(hr.distance)}
 					</td>
 
