@@ -62,6 +62,11 @@
 				return hitHasOut ? null : (play?.result?.event ?? null)
 		}
 	})
+	const hrDistance = $derived(
+		play?.result?.eventType === 'home_run' && hitData?.totalDistance != null
+			? Math.round(hitData.totalDistance)
+			: null,
+	)
 	const count = $derived(play?.count)
 	const balls = $derived(count?.balls ?? 0)
 	const strikes = $derived(count?.strikes ?? 0)
@@ -517,7 +522,7 @@
 				>
 					{play.result.description}
 				</p>
-				{#if hitData?.launchSpeed != null || hitData?.launchAngle != null}
+				{#if hrDistance != null || hitData?.launchSpeed != null || hitData?.launchAngle != null}
 					<p class="mt-[.15lh] flex flex-wrap items-baseline gap-x-[.5ch] tabular-nums">
 						{#if hitHasOut}
 							<span class="text-red-500">Out</span>
@@ -526,9 +531,15 @@
 							<span class="text-blue-500">{hitOutcomeLabel}</span>
 						{/if}
 						{#if hitHasOut || hitOutcomeLabel}
-							{#if hitData.launchSpeed != null || hitData.launchAngle != null}
+							{#if hrDistance != null || hitData.launchSpeed != null || hitData.launchAngle != null}
 								<span class="text-current/40">·</span>
 							{/if}
+						{/if}
+						{#if hrDistance != null}
+							<span>{hrDistance} ft</span>
+						{/if}
+						{#if hrDistance != null && (hitData.launchSpeed != null || hitData.launchAngle != null)}
+							<span class="text-current/40">·</span>
 						{/if}
 						{#if hitData.launchSpeed != null}
 							<span>{hitData.launchSpeed.toFixed(1)} mph</span>
