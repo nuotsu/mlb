@@ -10,12 +10,12 @@
 
 	// `table-fixed` sizes columns from the first row, so widths live on the header cells
 	const COLUMNS = [
-		{ key: 'dist', label: 'Projected distance (ft)', width: 'w-[8ch]' },
-		{ key: 'ev', label: 'Exit velocity (mph)', width: 'w-[8ch]' },
-		{ key: 'la', label: 'Launch angle', width: 'w-[7ch]' },
-		{ key: 'date', label: 'Game date', width: 'w-[9ch]' },
-		{ key: 'opp', label: 'Opponent', width: 'w-[8ch]' },
-		{ key: 'p', label: 'Pitcher', width: 'w-[16ch] min-w-[16ch]' },
+		{ key: 'dist', title: 'Dist', label: 'Projected distance (ft)', width: 'w-[8ch]' },
+		{ key: 'ev', title: 'Velo', label: 'Exit velocity (mph)', width: 'w-[8ch]' },
+		{ key: 'la', title: 'LA', label: 'Launch angle', width: 'w-[7ch]' },
+		{ key: 'date', title: 'Date', label: 'Game date', width: 'w-[9ch]' },
+		{ key: 'opp', title: 'OPP', label: 'Opponent', width: 'w-[8ch]' },
+		{ key: 'p', title: 'P', label: 'Pitcher', width: 'w-[20ch] min-w-[16ch]' },
 	]
 </script>
 
@@ -26,11 +26,11 @@
 				<span class="block px-[.5ch] text-left uppercase">Longest HRs</span>
 			</th>
 
-			{#each COLUMNS as { key, label, width }}
+			{#each COLUMNS as { key, title, label, width }}
 				<th class={cn('px-[.5ch] whitespace-nowrap', width)}>
 					<abbr title={label}>
-						<span class={cn('block uppercase', key === 'dist' ? 'font-bold' : 'text-current/40')}>
-							{key}
+						<span class={cn('block', key === 'dist' ? 'font-bold' : 'text-current/40')}>
+							{title}
 						</span>
 					</abbr>
 				</th>
@@ -104,13 +104,15 @@
 						{opponent?.abbreviation ?? ''}
 					</td>
 
-					<td class="pitcher text-xs whitespace-nowrap">
+					<td class="pitcher text-left whitespace-nowrap">
 						{#if pitcher?.id}
 							<a
-								class="decoration-dashed hover:underline"
+								class="flex items-center gap-ch decoration-dashed hover:underline"
 								href="/player/{pitcher.id}"
 								title={pitcher.fullName}
 							>
+								<Headshot person={pitcher} class="size-lh shrink-0" />
+
 								{pitcher.lastName ?? pitcher.boxscoreName ?? pitcher.fullName ?? pitcher.id}
 							</a>
 						{:else}
