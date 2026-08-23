@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { browser } from '$app/environment'
 	import { fetchPitchingGameLogs } from '$lib/fetch/presets'
-	import { formatDate, slash } from '$lib/temporal'
+	import { daysBetween, formatDate, slash } from '$lib/temporal'
 	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Loading from '$ui/loading.svelte'
@@ -49,12 +49,6 @@
 
 	function outsToIp(outs: number) {
 		return `${Math.floor(outs / 3)}.${outs % 3}`
-	}
-
-	function daysBetween(from: string, to: string) {
-		const a = new Date(slash(from)).getTime()
-		const b = new Date(slash(to)).getTime()
-		return Math.round((b - a) / 86_400_000)
 	}
 
 	function fatigueColor(hp: number) {

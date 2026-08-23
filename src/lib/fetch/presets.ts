@@ -131,6 +131,47 @@ export async function fetchPitchingGameLogs(
 	})
 }
 
+/**
+ * Every player under team control, including the 60-day IL (who are off the
+ * 40-man) and day-to-day players. The default `active` roster type omits them.
+ */
+export async function fetchFullRoster(
+	teamId: string | number,
+	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
+) {
+	return fetchMLB<MLB.RosterResponse>(
+		`/api/v1/teams/${teamId}/roster`,
+		{
+			rosterType: 'fullRoster',
+			hydrate: 'person',
+			fields: [
+				'roster,startDate,endDate',
+				'person,id,lastName,lastFirstName',
+				'position,code,abbreviation',
+				'status,code,description',
+			],
+		},
+		{ fetch: _fetch },
+	)
+}
+
+export async function fetchTeamTransactions(
+	{ teamId, startDate, endDate, ...params }: { teamId: string | number } & Fetch.Params,
+	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
+) {
+	return fetchMLB<MLB.TransactionsResponse>(
+		'/api/v1/transactions',
+		{
+			teamId: String(teamId),
+			startDate,
+			endDate,
+			fields: ['transactions,id,date,effectiveDate,description,typeCode,typeDesc', 'person,id'],
+			...params,
+		},
+		{ fetch: _fetch },
+	)
+}
+
 export async function fetchWeekTransactions({
 	date,
 	startDate,
