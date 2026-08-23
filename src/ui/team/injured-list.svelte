@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { formatDate, formatRelativeDays } from '$lib/temporal'
-	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 	import type { InjuredPlayer } from './injured-list'
 
@@ -52,23 +51,18 @@
 					<span class="text-current/50">—</span>
 				{/if}
 			</small>
-
-			<ToggleFavorite
-				class="col-start-4 row-span-2 row-start-1 shrink-0 self-center sm:col-start-5 sm:row-span-1"
-				target={{ href: `/player/${player.person.id}`, label: player.person.lastName! }}
-			/>
 		</dd>
 	{/each}
 </dl>
 
 <style>
 	dl {
-		grid-template-columns: auto 1fr auto auto;
+		grid-template-columns: auto 1fr auto;
 	}
 
 	@media (width >= 40rem) {
 		dl {
-			grid-template-columns: auto 1fr minmax(0, 1fr) auto auto;
+			grid-template-columns: auto 1fr minmax(0, 1fr) auto;
 		}
 	}
 </style>
