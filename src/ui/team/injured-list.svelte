@@ -31,26 +31,25 @@
 				<span class="line-clamp-1 break-all">{player.person.lastFirstName}</span>
 			</a>
 
-			<small
-				class="col-start-2 row-start-2 line-clamp-1 break-all text-current/70 sm:col-start-3 sm:row-start-1"
-			>
-				{player.reason ?? '—'}
-			</small>
+			{#if player.reason}
+				<small
+					class="col-start-2 row-start-2 line-clamp-1 break-all text-current/70 sm:col-start-3 sm:row-start-1"
+				>
+					{player.reason}
+				</small>
+			{/if}
 
-			<small class="col-start-3 row-start-2 shrink-0 text-right sm:col-start-4 sm:row-start-1">
-				{#if player.eligibleDate}
+			{#if player.eligibleDate}
+				<small class="col-start-3 row-start-2 shrink-0 text-right sm:col-start-4 sm:row-start-1">
 					{formatDate(player.eligibleDate, { month: 'short', day: 'numeric' })}
 					<span class="text-current/50">({formatRelativeDays(player.eligibleDate)})</span>
-				{:else if player.daysOnIL != null}
+				</small>
+			{:else if player.daysOnIL != null}
+				<small class="col-start-3 row-start-2 shrink-0 text-right sm:col-start-4 sm:row-start-1">
 					{player.label}
-					<span class="text-current/50">
-						({player.daysOnIL}
-						{player.daysOnIL === 1 ? 'day' : 'days'})
-					</span>
-				{:else}
-					<span class="text-current/50">—</span>
-				{/if}
-			</small>
+					<span class="text-current/50">({player.daysOnIL}d)</span>
+				</small>
+			{/if}
 		</dd>
 	{/each}
 </dl>

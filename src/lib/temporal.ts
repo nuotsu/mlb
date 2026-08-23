@@ -31,13 +31,16 @@ export function addDays(date: string, days: number) {
 	return formatDate(d, { locale: 'en-CA' })
 }
 
-/** "today" / "tomorrow" / "in 12 days" / "12 days ago", relative to `from`. */
+/** "today" / "tomorrow" / "in 12d" / "12d ago", relative to `from`. */
 export function formatRelativeDays(
 	date: Date | string,
-	from: Date | string = getToday(),
-	locale = 'en-US',
+	{
+		from = getToday(),
+		locale = 'en-US',
+		style = 'narrow',
+	}: { from?: Date | string; locale?: string; style?: Intl.RelativeTimeFormatStyle } = {},
 ) {
-	return new Intl.RelativeTimeFormat(locale, { numeric: 'auto' }).format(
+	return new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style }).format(
 		daysBetween(from, date),
 		'day',
 	)
