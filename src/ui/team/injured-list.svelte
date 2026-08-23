@@ -42,12 +42,14 @@
 			{#if player.eligibleDate}
 				<small class="col-start-3 row-start-2 shrink-0 text-right sm:col-start-4 sm:row-start-1">
 					{formatDate(player.eligibleDate, { month: 'short', day: 'numeric' })}
-					<span class="text-current/50">({formatRelativeDays(player.eligibleDate)})</span>
+					<span class="text-current/50 tabular-nums"
+						>({formatRelativeDays(player.eligibleDate)})</span
+					>
 				</small>
 			{:else if player.daysOnIL != null}
 				<small class="col-start-3 row-start-2 shrink-0 text-right sm:col-start-4 sm:row-start-1">
 					{player.label}
-					<span class="text-current/50">({player.daysOnIL}d)</span>
+					<span class="text-current/50 tabular-nums">({player.daysOnIL}d)</span>
 				</small>
 			{/if}
 		</dd>
