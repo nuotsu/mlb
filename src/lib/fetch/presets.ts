@@ -132,17 +132,19 @@ export async function fetchPitchingGameLogs(
 }
 
 /**
- * Every player under team control, including the 60-day IL (who are off the
- * 40-man) and day-to-day players. The default `active` roster type omits them.
+ * A team's roster with player statuses. `40Man` is the big-league roster;
+ * `fullRoster` widens it to everyone under team control, which is the only
+ * place 60-day IL players appear — they don't hold a 40-man spot.
  */
-export async function fetchFullRoster(
+export async function fetchRosterByType(
 	teamId: string | number,
+	rosterType: '40Man' | 'fullRoster',
 	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
 ) {
 	return fetchMLB<MLB.RosterResponse>(
 		`/api/v1/teams/${teamId}/roster`,
 		{
-			rosterType: 'fullRoster',
+			rosterType,
 			hydrate: 'person',
 			fields: [
 				'roster,startDate,endDate',

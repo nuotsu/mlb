@@ -84,11 +84,15 @@ function transactionDate(transaction: MLB.Transaction) {
  * The Stats API carries the IL type but no reason and no return date, so the
  * reason is parsed from the placing transaction and the return date is derived
  * as start + term — that is, the earliest date the player becomes eligible.
+ *
+ * Pass `fortyManIds` to keep the list to big leaguers. Players on the 60-day IL
+ * are kept regardless, since being placed on it is what removed them from the
+ * 40-man in the first place.
  */
 export function buildInjuredList(
 	roster: MLB.Roster[],
 	transactions: MLB.Transaction[],
-	today: Date | string = getToday(),
+	{ fortyManIds, today = getToday() }: { fortyManIds?: Set<number>; today?: Date | string } = {},
 ): InjuredPlayer[] {
 	/** Most recent IL placement per player */
 	const placements = new Map<number, MLB.Transaction>()
@@ -111,6 +115,8 @@ export function buildInjuredList(
 			if (!term) return []
 
 			const person = entry.person as MLB.Person
+			if (fortyManIds && !fortyManIds.has(person.id) && term.days !== 60) return []
+
 			const placement = placements.get(person.id)
 			const startDate = placement ? transactionDate(placement) : (entry.startDate ?? null)
 

@@ -1,5 +1,5 @@
 import { fetchMLB } from '$lib/fetch'
-import { fetchFullRoster, fetchTeamTransactions } from '$lib/fetch/presets'
+import { fetchRosterByType, fetchTeamTransactions } from '$lib/fetch/presets'
 import { formatDate, getToday } from '$lib/temporal'
 import { buildInjuredList } from '$ui/team/injured-list'
 import type { PageServerLoad } from './$types'
@@ -46,13 +46,16 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 		coaches,
 
 		/**
-		 * Streamed so the page paints without waiting on two more requests. The
+		 * Streamed so the page paints without waiting on three more requests. The
 		 * Stats API has no injury reason or return date, so both are derived: the
-		 * reason from the placing transaction, the date from IL start + term.
+		 * reason from the placing transaction, the date from IL start + term. The
+		 * 40-man roster keeps the list to big leaguers; the full roster is what
+		 * carries the 60-day IL players, who hold no 40-man spot.
 		 * Failures resolve to `null` so the section degrades instead of erroring.
 		 */
 		injuredList: Promise.all([
-			fetchFullRoster(params.teamId, { fetch }),
+			fetchRosterByType(params.teamId, 'fullRoster', { fetch }),
+			fetchRosterByType(params.teamId, '40Man', { fetch }),
 			fetchTeamTransactions(
 				{
 					teamId: params.teamId,
@@ -62,8 +65,11 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 				{ fetch },
 			),
 		])
-			.then(([fullRoster, transactions]) =>
-				buildInjuredList(fullRoster.roster ?? [], transactions.transactions ?? [], today),
+			.then(([fullRoster, fortyMan, transactions]) =>
+				buildInjuredList(fullRoster.roster ?? [], transactions.transactions ?? [], {
+					fortyManIds: new Set((fortyMan.roster ?? []).map(({ person }) => person.id)),
+					today,
+				}),
 			)
 			.catch((e) => {
 				console.error('[injuredList]', e)
