@@ -17,6 +17,35 @@ export function formatDate(
 	)
 }
 
+/** Whole days from `from` to `to`; negative when `to` is earlier. */
+export function daysBetween(from: Date | string, to: Date | string) {
+	const a = (typeof from === 'string' ? new Date(slash(from)) : from).getTime()
+	const b = (typeof to === 'string' ? new Date(slash(to)) : to).getTime()
+	return Math.round((b - a) / 86_400_000)
+}
+
+/** Adds `days` to a YYYY-MM-DD date, returning the same format. */
+export function addDays(date: string, days: number) {
+	const d = new Date(slash(date))
+	d.setDate(d.getDate() + days)
+	return formatDate(d, { locale: 'en-CA' })
+}
+
+/** "today" / "tomorrow" / "in 12d" / "12d ago", relative to `from`. */
+export function formatRelativeDays(
+	date: Date | string,
+	{
+		from = getToday(),
+		locale = 'en-US',
+		style = 'narrow',
+	}: { from?: Date | string; locale?: string; style?: Intl.RelativeTimeFormatStyle } = {},
+) {
+	return new Intl.RelativeTimeFormat(locale, { numeric: 'auto', style }).format(
+		daysBetween(from, date),
+		'day',
+	)
+}
+
 export function formatWeekRange(date: string) {
 	const t = new Date(date)
 	const startDate = new Date(t.setDate(t.getDate() - ((t.getDay() + 6) % 7)))

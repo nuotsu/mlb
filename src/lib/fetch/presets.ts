@@ -131,6 +131,49 @@ export async function fetchPitchingGameLogs(
 	})
 }
 
+/**
+ * A team's roster with player statuses. `40Man` is the big-league roster;
+ * `fullRoster` widens it to everyone under team control, which is the only
+ * place 60-day IL players appear — they don't hold a 40-man spot.
+ */
+export async function fetchRosterByType(
+	teamId: string | number,
+	rosterType: '40Man' | 'fullRoster',
+	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
+) {
+	return fetchMLB<MLB.RosterResponse>(
+		`/api/v1/teams/${teamId}/roster`,
+		{
+			rosterType,
+			hydrate: 'person',
+			fields: [
+				'roster,startDate,endDate',
+				'person,id,lastName,lastFirstName',
+				'position,code,abbreviation',
+				'status,code,description',
+			],
+		},
+		{ fetch: _fetch },
+	)
+}
+
+export async function fetchTeamTransactions(
+	{ teamId, startDate, endDate, ...params }: { teamId: string | number } & Fetch.Params,
+	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
+) {
+	return fetchMLB<MLB.TransactionsResponse>(
+		'/api/v1/transactions',
+		{
+			teamId: String(teamId),
+			startDate,
+			endDate,
+			fields: ['transactions,id,date,effectiveDate,description,typeCode,typeDesc', 'person,id'],
+			...params,
+		},
+		{ fetch: _fetch },
+	)
+}
+
 export async function fetchWeekTransactions({
 	date,
 	startDate,

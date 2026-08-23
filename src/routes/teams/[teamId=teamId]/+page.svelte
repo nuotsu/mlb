@@ -4,8 +4,10 @@
 	import Empty from '$ui/empty.svelte'
 	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
 	import Header from '$ui/header.svelte'
+	import Loading from '$ui/loading.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import ToggleSpoilerPrevention from '$ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
+	import InjuredList from '$ui/team/injured-list.svelte'
 	import Logo from '$ui/team/logo.svelte'
 	import Roster from '$ui/team/roster.svelte'
 	import SeriesCalendar from '$ui/team/series-calendar.svelte'
@@ -87,5 +89,19 @@
 		{:else}
 			<Empty>No roster</Empty>
 		{/if}
+	</div>
+
+	<div class="space-y-ch">
+		<Divider>Injured List</Divider>
+
+		{#await data.injuredList}
+			<Loading class="justify-center p-lh text-current/40">Loading injured list...</Loading>
+		{:then injuredList}
+			{#if injuredList?.length}
+				<InjuredList players={injuredList} />
+			{:else}
+				<Empty>{injuredList ? 'No players on the IL' : 'Failed to load injured list'}</Empty>
+			{/if}
+		{/await}
 	</div>
 </section>
