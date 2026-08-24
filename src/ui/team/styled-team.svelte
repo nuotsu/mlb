@@ -53,7 +53,8 @@
 	{@render children?.()}
 
 	{#if linked}
-		<a href="/teams/{team.id}" class="absolute inset-0 text-transparent">
+		<!-- clipped: the label is only an accessible name, and it would otherwise wrap past the box -->
+		<a href="/teams/{team.id}" class="absolute inset-0 overflow-clip text-transparent">
 			{team.name}
 		</a>
 	{/if}

@@ -2,9 +2,11 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
+	import { formatDate } from '$lib/temporal'
 	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
+	import { ArrowUpIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
 	import SelectGameType from '$ui/select-game-type.svelte'
 	import SelectSport from '$ui/select-sport.svelte'
@@ -13,6 +15,8 @@
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
+
+	const since = $derived(formatDate(data.comparisonDate, { month: 'short', day: 'numeric' }))
 
 	const leagueGroups = $derived(
 		Object.groupBy(data.standings.records, (record) => record.league?.id ?? 0),
@@ -92,58 +96,85 @@
 				})}
 			>
 				{#each divisions as { division, teamRecords }, i (i)}
-					<table class="w-full text-center">
-						<thead>
-							<tr class="text-sm text-current/50 *:font-normal">
-								<th class="line-clamp-1 break-all text-foreground">
-									{division?.nameShort}
-								</th>
-								<th class="w-[8ch]">W-L</th>
-								<th class="w-[5ch]">%</th>
-								<th class="w-[5ch]">GB</th>
-								<th class="w-[5ch]">Strk</th>
-								<th class="w-[5ch]">#</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each teamRecords as { team, wins, losses, winningPercentage, gamesBack, streak, leagueRank } (team.id)}
-								<tr class="hover:[&>td]:bg-foreground/10">
-									<td
-										class={cn('sticky left-0 min-w-lh @min-[8ch]:min-w-[3.5ch]', {
-											'dark:text-dark': isDarkOnLightTeam(team),
-											'dark:text-light': isLightOnDarkTeam(team),
-										})}
+					<div class="overflow-x-auto overflow-y-hidden">
+						<table class="w-max min-w-full text-center">
+							<thead>
+								<tr class="text-sm text-current/50 *:font-normal">
+									<th
+										class="sticky left-0 z-1 min-w-[10ch] bg-background text-left text-foreground"
 									>
-										<StyledTeam class="text-left" {team} linked />
-									</td>
-									<td class="flex justify-center tabular-nums">
-										<span class="positive">{wins}</span>
-										-
-										<span class="negative">{losses}</span>
-									</td>
-									<td
-										class={cn(
-											'tabular-nums',
-											Number(winningPercentage) >= 0.5 ? 'positive' : 'negative',
-										)}
-									>
-										{winningPercentage}
-									</td>
-									<td class={cn('tabular-nums', gamesBack === '0' && 'text-current/50')}>
-										{gamesBack === '0' ? '-' : gamesBack}
-									</td>
-									<td
-										class="tabular-nums"
-										class:positive={streak?.streakCode?.startsWith('W')}
-										class:negative={streak?.streakCode?.startsWith('L')}
-									>
-										{streak?.streakCode}
-									</td>
-									<td class="tabular-nums">{leagueRank}</td>
+										<span class="line-clamp-1 break-all">{division?.nameShort}</span>
+									</th>
+									<th class="w-[8ch]">W-L</th>
+									<th class="w-[5ch]">%</th>
+									<th class="w-[5ch]">GB</th>
+									<th class="w-[5ch]">Strk</th>
+									<th class="w-[5ch]">#</th>
+									<th class="w-[8ch]">Change</th>
 								</tr>
-							{/each}
-						</tbody>
-					</table>
+							</thead>
+							<tbody>
+								{#each teamRecords as { team, wins, losses, winningPercentage, gamesBack, streak, leagueRank } (team.id)}
+									{@const change = data.rankChanges[team.id]}
+									<tr class="hover:[&>td]:bg-foreground/10">
+										<td
+											class={cn('sticky left-0 z-1 min-w-[10ch] bg-background', {
+												'dark:text-dark': isDarkOnLightTeam(team),
+												'dark:text-light': isLightOnDarkTeam(team),
+											})}
+										>
+											<StyledTeam class="text-left" {team} linked />
+										</td>
+										<td class="flex justify-center tabular-nums">
+											<span class="positive">{wins}</span>
+											-
+											<span class="negative">{losses}</span>
+										</td>
+										<td
+											class={cn(
+												'tabular-nums',
+												Number(winningPercentage) >= 0.5 ? 'positive' : 'negative',
+											)}
+										>
+											{winningPercentage}
+										</td>
+										<td class={cn('tabular-nums', gamesBack === '0' && 'text-current/50')}>
+											{gamesBack === '0' ? '-' : gamesBack}
+										</td>
+										<td
+											class="tabular-nums"
+											class:positive={streak?.streakCode?.startsWith('W')}
+											class:negative={streak?.streakCode?.startsWith('L')}
+										>
+											{streak?.streakCode}
+										</td>
+										<td class="tabular-nums">{leagueRank}</td>
+										<td
+											class="tabular-nums"
+											class:positive={change > 0}
+											class:negative={change < 0}
+										>
+											{#if change}
+												<span
+													class="inline-flex items-center gap-[.25ch]"
+													title="{change > 0 ? 'Up' : 'Down'} {Math.abs(change)} since {since}"
+												>
+													<ArrowUpIcon
+														class={cn('size-[1em]', change < 0 && 'rotate-180')}
+														role="img"
+														aria-label={change > 0 ? 'Up' : 'Down'}
+													/>
+													{Math.abs(change)}
+												</span>
+											{:else}
+												<span class="text-current/50">-</span>
+											{/if}
+										</td>
+									</tr>
+								{/each}
+							</tbody>
+						</table>
+					</div>
 				{/each}
 			</div>
 		</div>
