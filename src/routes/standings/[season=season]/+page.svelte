@@ -96,7 +96,7 @@
 				})}
 			>
 				{#each divisions as { division, teamRecords }, i (i)}
-					<div class="overflow-x-auto">
+					<div class="overflow-x-auto overflow-y-hidden">
 						<table class="w-max min-w-full text-center">
 							<thead>
 								<tr class="text-sm text-current/50 *:font-normal">
