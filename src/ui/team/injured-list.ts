@@ -24,6 +24,20 @@ const IL_STATUS = /injured list|day-to-day/i
 const IL_ACTIVATION = /activated|reinstated/i
 const DAY_TERM = /^(\d+)-day/i
 
+/**
+ * Injuries the transaction text says a player isn't coming back from on the
+ * minimum term. Ordered most specific first — a Tommy John announcement also
+ * says "surgery", and a season-ending one often says both.
+ */
+const OUTLOOKS: { pattern: RegExp; label: string }[] = [
+	{
+		pattern: /season[-\s]ending|out for the (?:remainder of the )?season/i,
+		label: 'Out for season',
+	},
+	{ pattern: /tommy john/i, label: 'Tommy John' },
+	{ pattern: /surgery|surgical/i, label: 'Surgery' },
+]
+
 export type InjuredPlayer = {
 	person: MLB.Person
 	position: MLB.Position
@@ -33,8 +47,16 @@ export type InjuredPlayer = {
 	startDate: string | null
 	/** Injury text parsed out of the placing transaction */
 	reason: string | null
-	/** Earliest date the player may be activated; `null` for day-to-day */
+	/**
+	 * Earliest date the player may be activated under his IL term — an
+	 * eligibility floor, never a projection of when he'll actually play. The
+	 * Stats API publishes no expected return date.
+	 */
 	eligibleDate: string | null
+	/** Days from today to `eligibleDate`; negative once that date has passed */
+	daysUntilEligible: number | null
+	/** Why the eligibility date is moot, e.g. `Surgery`, when the API says so */
+	outlook: string | null
 	daysOnIL: number | null
 }
 
@@ -74,16 +96,56 @@ export function parseInjuryReason(description: string | undefined) {
 	return dayToDay ?? null
 }
 
+/**
+ * Short label for an injury the player won't return from on the minimum term,
+ * or `null` when the text gives no such signal.
+ */
+export function parseOutlook(...texts: (string | null | undefined)[]) {
+	const haystack = texts.filter(Boolean).join(' ')
+	if (!haystack) return null
+
+	return OUTLOOKS.find(({ pattern }) => pattern.test(haystack))?.label ?? null
+}
+
 /** Retroactive date where the API gives one, otherwise the announcement date. */
 function transactionDate(transaction: MLB.Transaction) {
 	return transaction.effectiveDate ?? transaction.date
 }
 
+/** The placements making up the player's current, unbroken IL stint. */
+function currentStint(transactions: MLB.Transaction[]) {
+	const placements: MLB.Transaction[] = []
+	let lastActivation: string | null = null
+
+	for (const transaction of transactions) {
+		const description = transaction.description ?? ''
+		if (!IL_STATUS.test(description)) continue
+
+		const date = transactionDate(transaction)
+
+		if (IL_ACTIVATION.test(description)) {
+			if (!lastActivation || date > lastActivation) lastActivation = date
+			continue
+		}
+
+		placements.push(transaction)
+	}
+
+	return placements
+		.filter((transaction) => !lastActivation || transactionDate(transaction) > lastActivation)
+		.sort((a, b) => transactionDate(a).localeCompare(transactionDate(b)))
+}
+
 /**
  * Joins the full roster against recent transactions to produce the IL rows.
  * The Stats API carries the IL type but no reason and no return date, so the
- * reason is parsed from the placing transaction and the return date is derived
- * as start + term — that is, the earliest date the player becomes eligible.
+ * reason is parsed from the placing transaction and the date is derived as
+ * start + term — the earliest date the player is eligible to be activated,
+ * which is a floor rather than a forecast.
+ *
+ * The stint start is the *earliest* placement since the player's last
+ * activation, not the latest: a transfer from the 10-day to the 60-day IL is
+ * its own transaction, but the 60 days still run from the original placement.
  *
  * Pass `fortyManIds` to keep the list to big leaguers. Players on the 60-day IL
  * are kept regardless, since being placed on it is what removed them from the
@@ -94,19 +156,15 @@ export function buildInjuredList(
 	transactions: MLB.Transaction[],
 	{ fortyManIds, today = getToday() }: { fortyManIds?: Set<number>; today?: Date | string } = {},
 ): InjuredPlayer[] {
-	/** Most recent IL placement per player */
-	const placements = new Map<number, MLB.Transaction>()
+	/** Every transaction that mentions the IL, per player */
+	const byPlayer = new Map<number, MLB.Transaction[]>()
 
 	for (const transaction of transactions) {
 		const id = transaction.person?.id
 		if (id == null) continue
 		if (!IL_STATUS.test(transaction.description ?? '')) continue
-		if (IL_ACTIVATION.test(transaction.description ?? '')) continue
 
-		const current = placements.get(id)
-		if (!current || transactionDate(transaction) > transactionDate(current)) {
-			placements.set(id, transaction)
-		}
+		byPlayer.set(id, [...(byPlayer.get(id) ?? []), transaction])
 	}
 
 	return roster
@@ -117,8 +175,16 @@ export function buildInjuredList(
 			const person = entry.person as MLB.Person
 			if (fortyManIds && !fortyManIds.has(person.id) && term.days !== 60) return []
 
-			const placement = placements.get(person.id)
-			const startDate = placement ? transactionDate(placement) : (entry.startDate ?? null)
+			const stint = currentStint(byPlayer.get(person.id) ?? [])
+			const [placement] = stint
+			const latest = stint.at(-1)
+
+			// The roster entry can be reset by a transfer, the transaction window
+			// can cut off the original placement — whichever is earlier is the one
+			// the term actually counts from.
+			const startDate = earliest(placement && transactionDate(placement), entry.startDate)
+
+			const eligibleDate = startDate && term.days != null ? addDays(startDate, term.days) : null
 
 			return {
 				person,
@@ -126,16 +192,29 @@ export function buildInjuredList(
 				status: entry.status,
 				label: term.label,
 				startDate,
-				reason: parseInjuryReason(placement?.description),
-				eligibleDate: startDate && term.days != null ? addDays(startDate, term.days) : null,
+				// A transfer often restates the injury, but not always; fall back to
+				// the placement that opened the stint.
+				reason: parseInjuryReason(latest?.description) ?? parseInjuryReason(placement?.description),
+				eligibleDate,
+				daysUntilEligible: eligibleDate ? daysBetween(today, eligibleDate) : null,
+				outlook: parseOutlook(...stint.map(({ description }) => description)),
 				daysOnIL: startDate ? daysBetween(startDate, today) : null,
 			}
 		})
 		.sort((a, b) => byReturn(a) - byReturn(b) || compareEligible(a, b) || compareName(a, b))
 }
 
-/** Day-to-day players return soonest; players with no known date sort last. */
+/** The earlier of two dates, ignoring the ones we don't have. */
+function earliest(...dates: (string | null | undefined)[]) {
+	return dates.filter((date): date is string => !!date).sort()[0] ?? null
+}
+
+/**
+ * Day-to-day players return soonest, then those with a known eligibility date;
+ * players we can't date at all, and those an outlook says are out a while, last.
+ */
 function byReturn(player: InjuredPlayer) {
+	if (player.outlook) return 3
 	if (player.label === 'DTD') return 0
 	return player.eligibleDate ? 1 : 2
 }

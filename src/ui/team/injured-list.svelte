@@ -10,7 +10,12 @@
 	<dt class="col-span-full grid grid-cols-subgrid gap-x-ch text-sm text-current/50 max-sm:hidden">
 		<span class="col-start-3">Player</span>
 		<span class="col-start-4">Reason</span>
-		<span class="col-start-5 text-right">Exp. Return</span>
+		<span
+			class="col-start-5 text-right"
+			title="Earliest date the player may be activated under his IL term — not a projected return"
+		>
+			Eligible
+		</span>
 	</dt>
 
 	{#each players as player (player.person.id)}
@@ -43,12 +48,26 @@
 				</small>
 			{/if}
 
-			{#if player.eligibleDate}
+			{#if player.outlook}
+				<small class="col-start-4 row-start-2 shrink-0 text-right sm:col-start-5 sm:row-start-1">
+					{player.outlook}
+					{#if player.daysOnIL != null}
+						<span class="text-current/50 tabular-nums">({player.daysOnIL}d)</span>
+					{/if}
+				</small>
+			{:else if player.eligibleDate && (player.daysUntilEligible ?? 0) > 0}
 				<small class="col-start-4 row-start-2 shrink-0 text-right sm:col-start-5 sm:row-start-1">
 					{formatDate(player.eligibleDate, { month: 'short', day: 'numeric' })}
 					<span class="text-current/50 tabular-nums"
 						>({formatRelativeDays(player.eligibleDate)})</span
 					>
+				</small>
+			{:else if player.eligibleDate}
+				<small class="col-start-4 row-start-2 shrink-0 text-right sm:col-start-5 sm:row-start-1">
+					Eligible
+					{#if player.daysOnIL != null}
+						<span class="text-current/50 tabular-nums">({player.daysOnIL}d)</span>
+					{/if}
 				</small>
 			{:else if player.daysOnIL != null}
 				<small class="col-start-4 row-start-2 shrink-0 text-right sm:col-start-5 sm:row-start-1">
