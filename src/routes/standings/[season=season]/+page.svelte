@@ -160,7 +160,7 @@
 													title="{change > 0 ? 'Up' : 'Down'} {Math.abs(change)} since {since}"
 												>
 													<ArrowUpIcon
-														class={cn('size-[1em]', change < 0 && 'rotate-180')}
+														class={cn('size-[.85em]', change < 0 && 'rotate-180')}
 														role="img"
 														aria-label={change > 0 ? 'Up' : 'Down'}
 													/>
