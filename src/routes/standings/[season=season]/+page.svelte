@@ -139,9 +139,9 @@
 									<th class="w-[5ch]">GB</th>
 									<th class="w-[5ch]">Strk</th>
 									{#if showMagicNumber}
-										<th class="w-[8ch]">Magic #</th>
+										<th class="w-[6ch]">Magic</th>
 									{/if}
-									<th class="w-[5ch]">#</th>
+									<th class="w-[6ch]">Rank</th>
 									<th class="w-[8ch]">↑/↓</th>
 								</tr>
 							</thead>
