@@ -110,7 +110,7 @@
 									<th class="w-[5ch]">GB</th>
 									<th class="w-[5ch]">Strk</th>
 									<th class="w-[5ch]">#</th>
-									<th class="w-[8ch]">Change</th>
+									<th class="w-[8ch]">↑/↓</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -160,7 +160,7 @@
 													title="{change > 0 ? 'Up' : 'Down'} {Math.abs(change)} since {since}"
 												>
 													<ArrowUpIcon
-														class={cn('size-[1em]', change < 0 && 'rotate-180')}
+														class={cn('size-[.85em]', change < 0 && 'rotate-180')}
 														role="img"
 														aria-label={change > 0 ? 'Up' : 'Down'}
 													/>
