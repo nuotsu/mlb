@@ -117,13 +117,7 @@
 		{@const divisions = removeDuplicates((records ?? []).sort(sortOrder))}
 		<div class="flex flex-col gap-ch">
 			<h2 class="px-ch text-sm text-current/50">{divisions?.[0]?.league?.name}</h2>
-			<div
-				class={cn('grid items-start gap-[2lh]', {
-					'sm:grid-cols-2 lg:grid-cols-3':
-						(divisions?.length ?? 0) > 4 || (divisions?.length ?? 0) === 3,
-					'sm:grid-cols-2': (divisions?.length ?? 0) === 4 || (divisions?.length ?? 0) === 2,
-				})}
-			>
+			<div class="grid items-start gap-[2lh]">
 				{#each divisions as { division, teamRecords }, i (i)}
 					<div class="overflow-x-auto overflow-y-hidden">
 						<table class="w-max min-w-full text-center">
