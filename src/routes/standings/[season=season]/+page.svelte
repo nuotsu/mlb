@@ -137,10 +137,10 @@
 									<th class="w-[8ch]">W-L</th>
 									<th class="w-[5ch]">%</th>
 									<th class="w-[5ch]">GB</th>
+									<th class="w-[5ch]">Strk</th>
 									{#if showMagicNumber}
 										<th class="w-[8ch]">Magic #</th>
 									{/if}
-									<th class="w-[5ch]">Strk</th>
 									<th class="w-[5ch]">#</th>
 									<th class="w-[8ch]">↑/↓</th>
 								</tr>
@@ -176,6 +176,13 @@
 										<td class={cn('tabular-nums', gamesBack === '0' && 'text-current/50')}>
 											{gamesBack === '0' ? '-' : gamesBack}
 										</td>
+										<td
+											class="tabular-nums"
+											class:positive={streak?.streakCode?.startsWith('W')}
+											class:negative={streak?.streakCode?.startsWith('L')}
+										>
+											{streak?.streakCode}
+										</td>
 										{#if showMagicNumber}
 											<td class={cn('tabular-nums', magic?.tone)}>
 												{#if magic}
@@ -185,13 +192,6 @@
 												{/if}
 											</td>
 										{/if}
-										<td
-											class="tabular-nums"
-											class:positive={streak?.streakCode?.startsWith('W')}
-											class:negative={streak?.streakCode?.startsWith('L')}
-										>
-											{streak?.streakCode}
-										</td>
 										<td class="tabular-nums">{leagueRank}</td>
 										<td
 											class="tabular-nums"
