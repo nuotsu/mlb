@@ -110,7 +110,7 @@
 									<th class="w-[5ch]">GB</th>
 									<th class="w-[5ch]">Strk</th>
 									<th class="w-[5ch]">#</th>
-									<th class="w-[8ch]">Change</th>
+									<th class="w-[8ch]">↑/↓</th>
 								</tr>
 							</thead>
 							<tbody>
