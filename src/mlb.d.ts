@@ -1606,6 +1606,11 @@ declare global {
 			leagueRecord: LeagueRecord
 			records: Records
 			divisionLeader?: boolean
+			/** Wins needed to clinch the division; only present for the team in front. */
+			magicNumber?: string
+			/** Games until elimination from the division race; `'E'` once eliminated. */
+			eliminationNumber?: string
+			clinched?: boolean
 			wins: number
 			losses: number
 			runDifferential: number

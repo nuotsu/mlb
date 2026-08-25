@@ -64,7 +64,7 @@ export function registerStandingsTools(server: McpServer) {
 					const gb = tr.gamesBack === '0' ? '-' : tr.gamesBack ?? '-'
 					const lastTen = tr.records?.splitRecords?.find((s: { type: string }) => s.type === 'lastTen')
 					const l10 = lastTen ? `${lastTen.wins}-${lastTen.losses}` : '-'
-					const clinched = (tr as unknown as { clinched?: boolean }).clinched ? ' ✓' : ''
+					const clinched = tr.clinched ? ' ✓' : ''
 					lines.push(`| ${i + 1} | ${team}${clinched} | ${lr?.wins ?? 0} | ${lr?.losses ?? 0} | ${lr?.pct ?? '.000'} | ${gb} | ${streak} | ${l10} |`)
 				})
 			}

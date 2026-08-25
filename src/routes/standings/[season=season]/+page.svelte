@@ -22,6 +22,35 @@
 		Object.groupBy(data.standings.records, (record) => record.league?.id ?? 0),
 	)
 
+	// Magic and elimination numbers only exist for the regular season.
+	const showMagicNumber = $derived(data.standingsType === 'regularSeason')
+
+	/**
+	 * The magic number for the team in front, and its mirror image — the number of games until
+	 * elimination — for everyone chasing. MLB sends these as strings that can also be `'-'` (not
+	 * yet meaningful) or `'E'` (eliminated), and only fills in `magicNumber` for the leader.
+	 */
+	function magicNumber({ magicNumber, eliminationNumber, clinched }: MLB.TeamRecord) {
+		// Before `clinched`, so a team that has locked up a wild card but is still chasing the
+		// division keeps showing that race's number.
+		if (magicNumber && !isNaN(Number(magicNumber)))
+			return { text: magicNumber, title: `${magicNumber} to clinch the division`, tone: 'positive' }
+
+		if (clinched) return { text: '✓', title: 'Clinched a playoff spot', tone: 'positive' }
+
+		if (eliminationNumber === 'E')
+			return { text: 'E', title: 'Eliminated from the division race', tone: 'negative' }
+
+		if (eliminationNumber && !isNaN(Number(eliminationNumber)))
+			return {
+				text: eliminationNumber,
+				title: `${eliminationNumber} from elimination`,
+				tone: 'negative',
+			}
+
+		return null
+	}
+
 	function sortOrder(
 		a: (typeof data.standings.records)[number],
 		b: (typeof data.standings.records)[number],
@@ -109,13 +138,19 @@
 									<th class="w-[5ch]">%</th>
 									<th class="w-[5ch]">GB</th>
 									<th class="w-[5ch]">Strk</th>
-									<th class="w-[5ch]">#</th>
+									{#if showMagicNumber}
+										<th class="w-[6ch]">Magic</th>
+									{/if}
+									<th class="w-[6ch]">Rank</th>
 									<th class="w-[8ch]">↑/↓</th>
 								</tr>
 							</thead>
 							<tbody>
-								{#each teamRecords as { team, wins, losses, winningPercentage, gamesBack, streak, leagueRank } (team.id)}
+								{#each teamRecords as record (record.team.id)}
+									{@const { team, wins, losses, winningPercentage, gamesBack, streak, leagueRank } =
+										record}
 									{@const change = data.rankChanges[team.id]}
+									{@const magic = magicNumber(record)}
 									<tr class="hover:[&>td]:bg-foreground/10">
 										<td
 											class={cn('sticky left-0 z-1 min-w-[10ch] bg-background', {
@@ -148,6 +183,15 @@
 										>
 											{streak?.streakCode}
 										</td>
+										{#if showMagicNumber}
+											<td class={cn('tabular-nums', magic?.tone)}>
+												{#if magic}
+													<span title={magic.title}>{magic.text}</span>
+												{:else}
+													<span class="text-current/50">-</span>
+												{/if}
+											</td>
+										{/if}
 										<td class="tabular-nums">{leagueRank}</td>
 										<td
 											class="tabular-nums"
