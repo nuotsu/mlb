@@ -117,20 +117,19 @@
 		{@const divisions = removeDuplicates((records ?? []).sort(sortOrder))}
 		<div class="flex flex-col gap-ch">
 			<h2 class="px-ch text-sm text-current/50">{divisions?.[0]?.league?.name}</h2>
-			<div
-				class={cn('grid items-start gap-[2lh]', {
-					'sm:grid-cols-2 lg:grid-cols-3':
-						(divisions?.length ?? 0) > 4 || (divisions?.length ?? 0) === 3,
-					'sm:grid-cols-2': (divisions?.length ?? 0) === 4 || (divisions?.length ?? 0) === 2,
-				})}
-			>
+			<div class="grid items-start gap-[2lh]">
 				{#each divisions as { division, teamRecords }, i (i)}
 					<div class="overflow-x-auto overflow-y-hidden">
 						<table class="w-max min-w-full text-center">
 							<thead>
 								<tr class="text-sm text-current/50 *:font-normal">
+									<!--
+										Once there's room for it, the team column is pinned to 24ch: a percentage
+										width keeps the table's slack away from it, so the stat columns take that
+										space instead of the name stretching across the row.
+									-->
 									<th
-										class="sticky left-0 z-1 min-w-[10ch] bg-background text-left text-foreground"
+										class="sticky left-0 z-1 min-w-[10ch] bg-background text-left text-foreground md:w-[1%] md:min-w-[24ch]"
 									>
 										<span class="line-clamp-1 break-all">{division?.nameShort}</span>
 									</th>
@@ -153,10 +152,13 @@
 									{@const magic = magicNumber(record)}
 									<tr class="hover:[&>td]:bg-foreground/10">
 										<td
-											class={cn('sticky left-0 z-1 min-w-[10ch] bg-background', {
-												'dark:text-dark': isDarkOnLightTeam(team),
-												'dark:text-light': isLightOnDarkTeam(team),
-											})}
+											class={cn(
+												'sticky left-0 z-1 min-w-[10ch] bg-background md:w-[1%] md:min-w-[24ch]',
+												{
+													'dark:text-dark': isDarkOnLightTeam(team),
+													'dark:text-light': isLightOnDarkTeam(team),
+												},
+											)}
 										>
 											<StyledTeam class="text-left" {team} linked />
 										</td>
