@@ -30,6 +30,14 @@
 		return n + (s[(v - 20) % 10] || s[v] || s[0])
 	}
 
+	const HIT_EVENT_TYPES = new Set(['single', 'double', 'triple', 'home_run'])
+	const IN_PLAY_NO_OUT_EVENT_TYPES = new Set(['field_error', 'fielders_choice', 'catcher_interf'])
+
+	function isHitOrInPlayNoOut(result: MLB.PlayResult, about: MLB.PlayAbout) {
+		if (HIT_EVENT_TYPES.has(result.eventType)) return true
+		return !about.hasOut && IN_PLAY_NO_OUT_EVENT_TYPES.has(result.eventType)
+	}
+
 	const groupedPlays = $derived.by(() => {
 		const groups: {
 			label: string
@@ -120,8 +128,11 @@
 					<ol class="px-ch">
 						{#each group.plays as { about, result, runnerIndex, count } (about.atBatIndex)}
 							<li
-								class="flex anim-fade items-center gap-ch border-dashed border-stroke py-[.5ch] leading-tight group-has-[[value='scoring']:checked]/plays:not-data-scoring:hidden group-not-has-[[value='scoring']:checked]/plays:data-scoring:positive group-not-has-[[value='scoring']:checked]/plays:data-scoring:dark:text-accent [&+&]:border-t"
+								class="flex anim-fade items-center gap-ch border-dashed border-stroke py-[.5ch] leading-tight group-has-[[value='scoring']:checked]/plays:not-data-scoring:hidden group-not-has-[[value='scoring']:checked]/plays:data-hit:text-blue-500 group-not-has-[[value='scoring']:checked]/plays:data-scoring:positive group-not-has-[[value='scoring']:checked]/plays:data-hit:dark:text-blue-400 group-not-has-[[value='scoring']:checked]/plays:data-scoring:dark:text-accent [&+&]:border-t"
 								data-scoring={about.isScoringPlay ? '' : undefined}
+								data-hit={!about.isScoringPlay && isHitOrInPlayNoOut(result, about)
+									? ''
+									: undefined}
 								onmouseenter={() => about.isScoringPlay && onPlayHover?.(about.atBatIndex)}
 							>
 								<div class="shrink-0 py-[.5ch] text-[5px]">
