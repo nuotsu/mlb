@@ -87,7 +87,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 			style:--height="30ch"
 		>
 			{#if season}
-				<SeasonInfo {season} bordered />
+				<SeasonInfo {season} bordered showFavoriteTeams />
 			{/if}
 
 			<section class="space-y-ch">
