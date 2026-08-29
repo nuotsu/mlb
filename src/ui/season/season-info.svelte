@@ -2,8 +2,18 @@
 	import { formatDate, getToday, slash } from '$lib/temporal'
 	import { cn } from '$lib/utils'
 	import { ChevronRightIcon } from '$ui/icons'
+	import FavoriteTeamGames from './favorite-team-games.svelte'
 
-	let { season, bordered }: { season: MLB.SeasonDateInfo; bordered?: boolean } = $props()
+	let {
+		season,
+		bordered,
+		showFavoriteTeams,
+	}: {
+		season: MLB.SeasonDateInfo
+		bordered?: boolean
+		/** Adds a row per favorited team with today's game — homepage only */
+		showFavoriteTeams?: boolean
+	} = $props()
 </script>
 
 {#if season}
@@ -18,6 +28,10 @@
 						{@render linkedDate(formatDate(getToday(), { locale: 'en-CA' }), 'day')}
 						<ChevronRightIcon class="size-[.8lh]" />
 					</dd>
+
+					{#if showFavoriteTeams}
+						<FavoriteTeamGames />
+					{/if}
 
 					<hr class="col-span-full my-ch border-dashed border-stroke" />
 				{/if}
