@@ -5,7 +5,6 @@
 	import { cn } from '$lib/utils'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
-	import StyledTeam from '$ui/team/styled-team.svelte'
 
 	type FavoriteTeamGames = {
 		team: MLB.TeamDetailed
@@ -28,7 +27,7 @@
 		const {
 			teams: [team],
 		} = await fetchMLB<{ teams: MLB.TeamDetailed[] }>(`/api/v1/teams/${teamId}`, {
-			fields: ['teams,id,name,clubName,teamName,abbreviation,sport'],
+			fields: ['teams,id,name,clubName,sport'],
 		})
 
 		// `sportId` comes from the team so non-MLB favorites resolve too
@@ -39,7 +38,7 @@
 			fields: [
 				'dates,games,gamePk,gameDate',
 				'status,abstractGameState,detailedState,reason',
-				'teams,home,away,team,id,name,clubName,teamName,abbreviation,score,isWinner',
+				'teams,home,away,team,id,name,clubName,score,isWinner',
 				'linescore,currentInning,inningState,scheduledInnings',
 			],
 			hydrate: 'team,linescore',
@@ -81,7 +80,7 @@
 					>
 						<small class="text-xs">{isHome ? 'vs' : '@'}</small>
 
-						<StyledTeam class="w-[20ch]" team={opponent} />
+						<span>{opponent.clubName ?? opponent.name}</span>
 
 						{#if state === 'Preview'}
 							<time class="text-sm whitespace-nowrap" datetime={game.gameDate}>
