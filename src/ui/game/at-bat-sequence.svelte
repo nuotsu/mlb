@@ -8,10 +8,13 @@
 		plays,
 		players,
 		status,
+		pinnedIndex = $bindable(null),
 	}: {
 		plays?: MLB.Plays
 		players?: Record<string, MLB.Person>
 		status?: MLB.GameStatus
+		/** `null` means follow `defaultIndex` as new at-bats arrive. */
+		pinnedIndex?: number | null
 	} = $props()
 
 	const allPlays = $derived(plays?.allPlays ?? [])
@@ -21,8 +24,6 @@
 	const isFinal = $derived(status?.abstractGameState === 'Final')
 	const defaultIndex = $derived(isFinal ? 0 : lastIndex)
 
-	/** `null` means follow `defaultIndex` as new at-bats arrive. */
-	let pinnedIndex = $state<number | null>(null)
 	const selectedIndex = $derived(pinnedIndex ?? defaultIndex)
 
 	let hoveredPitch = $state<number | null>(null)
@@ -44,9 +45,7 @@
 	const pitches = $derived(play?.playEvents?.filter((e) => e.isPitch) ?? [])
 	const hitData = $derived(play?.playEvents?.find((e) => e.hitData)?.hitData)
 	const hitHasOut = $derived(Boolean(play?.about?.hasOut))
-	const hitIsScoring = $derived(
-		Boolean(play?.about?.isScoringPlay) || (play?.result?.rbi ?? 0) > 0,
-	)
+	const hitIsScoring = $derived(Boolean(play?.about?.isScoringPlay) || (play?.result?.rbi ?? 0) > 0)
 	const hitOutcomeLabel = $derived.by(() => {
 		const eventType = play?.result?.eventType
 		switch (eventType) {
@@ -89,9 +88,7 @@
 	function lastName(person?: MLB.Person) {
 		if (!person) return ''
 		const fromRoster =
-			person.id != null
-				? (players?.[`ID${person.id}`] as MLB.Person | undefined)
-				: undefined
+			person.id != null ? (players?.[`ID${person.id}`] as MLB.Person | undefined) : undefined
 		return (
 			fromRoster?.lastName ??
 			person.lastName ??
@@ -432,8 +429,8 @@
 								{@const { x, y } = toSvg(pX, pZ)}
 								<circle cx={x} cy={y} r={active ? 8 : 7} fill={color} />
 								<text
-									x={x}
-									y={y}
+									{x}
+									{y}
 									text-anchor="middle"
 									dominant-baseline="central"
 									fill="var(--color-dark)"
@@ -452,8 +449,9 @@
 					aria-label={`${balls} ball${balls === 1 ? '' : 's'}, ${strikes} strike${strikes === 1 ? '' : 's'}, ${outs} out${outs === 1 ? '' : 's'}`}
 				>
 					<span>
-						<span class="text-accent">{balls}</span><span class="text-light">-</span
-						><span class="text-yellow-300">{strikes}</span>
+						<span class="text-accent">{balls}</span><span class="text-light">-</span><span
+							class="text-yellow-300">{strikes}</span
+						>
 					</span>
 
 					<span class="flex items-center gap-[.25ch]" aria-hidden="true">
@@ -503,8 +501,7 @@
 							<span class="min-w-0 grow truncate">{pitchTypeLabel(type?.description)}</span>
 
 							{#if speed != null}
-								<span class="shrink-0" style:color={pitchSpeedColor(speed)}
-									>{speed.toFixed(1)}</span
+								<span class="shrink-0" style:color={pitchSpeedColor(speed)}>{speed.toFixed(1)}</span
 								>
 							{/if}
 						</li>
@@ -515,11 +512,7 @@
 
 		{#if play.result?.description}
 			<div class="shrink-0 border-t border-dashed border-stroke px-ch py-[.25ch] text-xs">
-				<p
-					class={cn(
-						hitIsScoring ? 'text-accent' : 'text-current/60',
-					)}
-				>
+				<p class={cn(hitIsScoring ? 'text-accent' : 'text-current/60')}>
 					{play.result.description}
 				</p>
 				{#if hrDistance != null || hitData?.launchSpeed != null || hitData?.launchAngle != null}

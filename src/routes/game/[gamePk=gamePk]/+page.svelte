@@ -82,6 +82,17 @@
 	const homeTeam = $derived(boxscore?.teams.home.team ?? game?.teams?.home?.team)
 
 	let hoveredAtBatIndex = $state<number | null>(null)
+	let pinnedAtBatIndex = $state<number | null>(null)
+
+	function selectAtBatFromPlay(atBatIndex: number) {
+		const allPlays = feedLive?.liveData?.plays?.allPlays ?? []
+		const index = allPlays.findIndex((play) => play.about.atBatIndex === atBatIndex)
+		if (index === -1) return
+
+		const lastIndex = Math.max(0, allPlays.length - 1)
+		const defaultIndex = isFinal ? 0 : lastIndex
+		pinnedAtBatIndex = index === defaultIndex ? null : index
+	}
 </script>
 
 <svelte:head>
@@ -133,13 +144,14 @@
 <section class="group/game-page grid gap-[2lh] py-lh md:grid-cols-2">
 	{#if !isSpoilerPrevented && Array.isArray(winProbability) && (isLive || isFinal)}
 		<article
-			class="col-span-full grid gap-y-lh lg:grid-cols-3 lg:h-[14lh] lg:max-h-[14lh] lg:*:min-h-0"
+			class="col-span-full grid gap-y-lh lg:h-[14lh] lg:max-h-[14lh] lg:grid-cols-3 lg:*:min-h-0"
 		>
 			{#if isLive || isFinal}
 				<AtBatSequence
 					plays={feedLive?.liveData?.plays}
 					players={feedLive?.gameData?.players}
 					status={game?.status}
+					bind:pinnedIndex={pinnedAtBatIndex}
 				/>
 
 				<AllPlays
@@ -150,6 +162,7 @@
 					status={game?.status}
 					plays={feedLive?.liveData?.plays}
 					onPlayHover={(i) => (hoveredAtBatIndex = i)}
+					onPlayClick={selectAtBatFromPlay}
 				/>
 			{/if}
 

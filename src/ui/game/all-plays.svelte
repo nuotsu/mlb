@@ -13,6 +13,7 @@
 		status,
 		plays,
 		onPlayHover,
+		onPlayClick,
 		class: className,
 	}: {
 		awayTeam?: MLB.Team
@@ -21,6 +22,7 @@
 		status?: MLB.GameStatus
 		plays?: MLB.Plays
 		onPlayHover?: (atBatIndex: number | null) => void
+		onPlayClick?: (atBatIndex: number) => void
 		class?: string
 	} = $props()
 
@@ -128,46 +130,52 @@
 					<ol class="px-ch">
 						{#each group.plays as { about, result, runnerIndex, count } (about.atBatIndex)}
 							<li
-								class="flex anim-fade items-center gap-ch border-dashed border-stroke py-[.5ch] leading-tight group-has-[[value='scoring']:checked]/plays:not-data-scoring:hidden group-not-has-[[value='scoring']:checked]/plays:data-hit:text-blue-500 group-not-has-[[value='scoring']:checked]/plays:data-scoring:positive group-not-has-[[value='scoring']:checked]/plays:data-hit:dark:text-blue-400 group-not-has-[[value='scoring']:checked]/plays:data-scoring:dark:text-accent [&+&]:border-t"
+								class="anim-fade border-dashed border-stroke leading-tight group-has-[[value='scoring']:checked]/plays:not-data-scoring:hidden group-not-has-[[value='scoring']:checked]/plays:data-hit:text-blue-500 group-not-has-[[value='scoring']:checked]/plays:data-scoring:positive group-not-has-[[value='scoring']:checked]/plays:data-hit:dark:text-blue-400 group-not-has-[[value='scoring']:checked]/plays:data-scoring:dark:text-accent [&+&]:border-t"
 								data-scoring={about.isScoringPlay ? '' : undefined}
 								data-hit={!about.isScoringPlay && isHitOrInPlayNoOut(result, about)
 									? ''
 									: undefined}
 								onmouseenter={() => about.isScoringPlay && onPlayHover?.(about.atBatIndex)}
 							>
-								<div class="shrink-0 py-[.5ch] text-[5px]">
-									<BaseRunners {runnerIndex} />
-									<BSO {count} hideLabels />
-								</div>
-
-								<p class="grow">{result.description}</p>
-
-								{#if about.isScoringPlay && awayTeam && homeTeam}
-									<div
-										class="flex shrink-0 items-center justify-center gap-x-px text-center text-xs leading-none tabular-nums *:pb-[.5ch]"
-									>
-										<div
-											class={cn(
-												group.label.includes('Top')
-													? 'bg-accent/15 font-bold positive dark:text-accent'
-													: 'text-foreground',
-											)}
-										>
-											<Logo class="size-rlh" team={awayTeam} />
-											<div>{result.awayScore}</div>
-										</div>
-										<div
-											class={cn(
-												!group.label.includes('Top')
-													? 'bg-accent/15 font-bold positive dark:text-accent'
-													: 'text-foreground',
-											)}
-										>
-											<Logo class="size-rlh" team={homeTeam} />
-											<div>{result.homeScore}</div>
-										</div>
+								<button
+									type="button"
+									class="flex w-full cursor-pointer items-center gap-ch py-[.5ch] text-left hover:bg-foreground/5"
+									onclick={() => onPlayClick?.(about.atBatIndex)}
+								>
+									<div class="shrink-0 py-[.5ch] text-[5px]">
+										<BaseRunners {runnerIndex} />
+										<BSO {count} hideLabels />
 									</div>
-								{/if}
+
+									<p class="grow">{result.description}</p>
+
+									{#if about.isScoringPlay && awayTeam && homeTeam}
+										<div
+											class="flex shrink-0 items-center justify-center gap-x-px text-center text-xs leading-none tabular-nums *:pb-[.5ch]"
+										>
+											<div
+												class={cn(
+													group.label.includes('Top')
+														? 'bg-accent/15 font-bold positive dark:text-accent'
+														: 'text-foreground',
+												)}
+											>
+												<Logo class="size-rlh" team={awayTeam} />
+												<div>{result.awayScore}</div>
+											</div>
+											<div
+												class={cn(
+													!group.label.includes('Top')
+														? 'bg-accent/15 font-bold positive dark:text-accent'
+														: 'text-foreground',
+												)}
+											>
+												<Logo class="size-rlh" team={homeTeam} />
+												<div>{result.homeScore}</div>
+											</div>
+										</div>
+									{/if}
+								</button>
 							</li>
 						{/each}
 					</ol>
