@@ -3,6 +3,7 @@
 	import { version } from '$pkg'
 	import {
 		ArrowsDiffIcon,
+		BatIcon,
 		CalendarIcon,
 		CalendarTodayIcon,
 		FlagIcon,
@@ -50,6 +51,11 @@
 				href: '/stats',
 				label: 'Stat Leaders',
 				icon: RankIcon,
+			},
+			{
+				href: '/team-stats',
+				label: 'Team Stats',
+				icon: BatIcon,
 			},
 		],
 		Browse: [

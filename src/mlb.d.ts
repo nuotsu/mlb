@@ -459,6 +459,14 @@ declare global {
 		}
 
 		/**
+		 * Team stats response — the same envelope as player stats, except each
+		 * split totals a team rather than a player
+		 */
+		interface TeamStatsResponse extends ApiResponse<PlayerStats[]> {
+			stats: PlayerStats[]
+		}
+
+		/**
 		 * Player stats summary
 		 */
 		interface PlayerStats {
@@ -475,6 +483,8 @@ declare global {
 			group?: 'pitching' | 'hitting' | 'fielding'
 			season?: string
 			date?: string
+			/** 1-12, on `byMonth` splits */
+			month?: number
 			stat: Record<string, number | string>
 			team?: Team
 			player?: Person
