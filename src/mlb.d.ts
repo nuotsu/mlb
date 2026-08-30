@@ -483,8 +483,6 @@ declare global {
 			group?: 'pitching' | 'hitting' | 'fielding'
 			season?: string
 			date?: string
-			/** 1-12, on `byMonth` splits */
-			month?: number
 			stat: Record<string, number | string>
 			team?: Team
 			player?: Person

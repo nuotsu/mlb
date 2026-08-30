@@ -26,20 +26,39 @@ export const load: PageLoad = async ({ params, url, fetch, setHeaders }) => {
 			? requestedMonth
 			: null
 
+	/**
+	 * A month is asked for as an explicit date range: this endpoint totals a range
+	 * per team, but rejects the `byMonth` stat type outright.
+	 */
+	const range = month
+		? {
+				stats: 'byDateRange',
+				startDate: `${params.season}-${`${month}`.padStart(2, '0')}-01`,
+				// Day 0 of the next month is the last day of this one.
+				endDate: `${params.season}-${`${month}`.padStart(2, '0')}-${new Date(season, month, 0).getDate()}`,
+			}
+		: { stats: 'season' }
+
+	/**
+	 * A rejected stat query leaves the rest of the page standing — the tables say
+	 * so rather than taking the whole route down with them.
+	 */
 	const fetchTeamStats = (group: StatGroup, stats: string[]) =>
 		fetchMLB<MLB.TeamStatsResponse>(
 			'/api/v1/teams/stats',
 			{
-				// `byMonth` splits a team's season into one row per month; `season` is the single total.
-				stats: month ? 'byMonth' : 'season',
+				...range,
 				group,
 				season: params.season,
 				gameType,
 				sportIds: sportId,
-				fields: ['stats,splits,month', 'team,id,name', `stat,${stats.join(',')}`],
+				fields: ['stats,splits', 'team,id,name', `stat,${stats.join(',')}`],
 			},
 			{ fetch },
-		)
+		).catch((e) => {
+			console.error(`[team-stats] ${group}`, e)
+			return null
+		})
 
 	const [baseballStats, { teams }, hitting, pitching, { leagues }, seasonInfo] = await Promise.all([
 		fetchMLB<MLB.BaseballStat[]>('/api/v1/baseballStats', undefined, { fetch }),
@@ -90,10 +109,9 @@ export const load: PageLoad = async ({ params, url, fetch, setHeaders }) => {
 		(leagues ?? []).map((l) => [l.id, l.abbreviation || l.nameShort || l.name] as const),
 	)
 
-	const rowsFor = ({ stats }: MLB.TeamStatsResponse) =>
-		(stats ?? [])
+	const rowsFor = (response: MLB.TeamStatsResponse | null) =>
+		(response?.stats ?? [])
 			.flatMap((s) => s.splits ?? [])
-			.filter((split) => !month || split.month === month)
 			.flatMap((split) => {
 				const team = split.team && teamsById.get(split.team.id)
 				if (!team) return []
@@ -131,6 +149,7 @@ export const load: PageLoad = async ({ params, url, fetch, setHeaders }) => {
 			param: 'hittingSortStat',
 			sortStat: hittingSortStat,
 			stats: HITTING_STATS,
+			unavailable: !hitting,
 			rows: rankTeams(rowsFor(hitting), hittingSortStat, 'hitting'),
 		},
 		pitching: {
@@ -138,6 +157,7 @@ export const load: PageLoad = async ({ params, url, fetch, setHeaders }) => {
 			param: 'pitchingSortStat',
 			sortStat: pitchingSortStat,
 			stats: PITCHING_STATS,
+			unavailable: !pitching,
 			rows: rankTeams(rowsFor(pitching), pitchingSortStat, 'pitching'),
 		},
 		availableSportIds,

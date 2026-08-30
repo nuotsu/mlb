@@ -114,7 +114,10 @@
 	{@render statTable('Pitching', data.pitching)}
 </section>
 
-{#snippet statTable(heading: string, { group, param, sortStat, stats, rows }: StatTable)}
+{#snippet statTable(
+	heading: string,
+	{ group, param, sortStat, stats, rows, unavailable }: StatTable,
+)}
 	<article class="space-y-ch">
 		<h2 class="px-ch text-sm text-current/50">
 			{heading} — {period}
@@ -204,7 +207,9 @@
 					{:else}
 						<tr>
 							<td colspan={stats.length + 2}>
-								<Empty>No {group} stats</Empty>
+								<Empty>
+									{unavailable ? `Couldn't load ${group} stats` : `No ${group} stats`}
+								</Empty>
 							</td>
 						</tr>
 					{/if}
