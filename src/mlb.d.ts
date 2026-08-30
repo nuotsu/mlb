@@ -459,6 +459,14 @@ declare global {
 		}
 
 		/**
+		 * Team stats response — the same envelope as player stats, except each
+		 * split totals a team rather than a player
+		 */
+		interface TeamStatsResponse extends ApiResponse<PlayerStats[]> {
+			stats: PlayerStats[]
+		}
+
+		/**
 		 * Player stats summary
 		 */
 		interface PlayerStats {

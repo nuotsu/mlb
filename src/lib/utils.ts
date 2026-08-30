@@ -29,3 +29,17 @@ export function shuffle<T>(arr: T[]): T[] {
 	}
 	return a
 }
+
+const ORDINAL_SUFFIXES: Record<Intl.LDMLPluralRule, string> = {
+	zero: 'th',
+	one: 'st',
+	two: 'nd',
+	few: 'rd',
+	many: 'th',
+	other: 'th',
+}
+
+/** 1 → "1st", 15 → "15th" */
+export function ordinal(n: number) {
+	return `${n}${ORDINAL_SUFFIXES[new Intl.PluralRules('en-US', { type: 'ordinal' }).select(n)]}`
+}

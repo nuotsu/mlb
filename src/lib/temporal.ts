@@ -57,3 +57,8 @@ export function formatWeekRange(date: string) {
 		formatDate(endDate, isSameMonth ? { day: 'numeric' } : { month: 'short', day: 'numeric' }),
 	].join(' - ')
 }
+
+/** "August" for 8 — `month` is 1-12. */
+export function monthName(month: number, options: Intl.DateTimeFormatOptions = { month: 'long' }) {
+	return formatDate(new Date(2000, month - 1, 1), options)
+}
