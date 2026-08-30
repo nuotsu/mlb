@@ -30,6 +30,32 @@ export const PITCHING_STATS = [
 	'homeRuns',
 ]
 
+/**
+ * What each column is headed by. The Stats API's `lookupParam` covers most of
+ * these, but not all of them, and a header reading "stolenBases" is worse than
+ * one reading "SB" — so the abbreviations live here instead.
+ */
+export const ABBREVIATIONS: Record<string, string> = {
+	avg: 'AVG',
+	doubles: '2B',
+	era: 'ERA',
+	hits: 'H',
+	homeRuns: 'HR',
+	inningsPitched: 'IP',
+	losses: 'L',
+	obp: 'OBP',
+	ops: 'OPS',
+	rbi: 'RBI',
+	runs: 'R',
+	saves: 'SV',
+	slg: 'SLG',
+	stolenBases: 'SB',
+	strikeOuts: 'K',
+	triples: '3B',
+	whip: 'WHIP',
+	wins: 'W',
+}
+
 type Rankable = {
 	team: MLB.TeamDetailed
 	stat: Record<string, number | string>

@@ -12,19 +12,11 @@
 	import SelectSeason from '$ui/stats/select-season.svelte'
 	import StyledTeam from '$ui/team/styled-team.svelte'
 	import type { PageData, PageProps } from './$types'
-	import type { StatGroup } from './rank'
+	import { ABBREVIATIONS, type StatGroup } from './rank'
 
 	let { data }: PageProps = $props()
 
 	type StatTable = PageData['hitting']
-
-	/** Stats whose `lookupParam` isn't the abbreviation everyone reads them by */
-	const SHORT: Record<string, string> = {
-		doubles: '2B',
-		triples: '3B',
-		strikeOuts: 'K',
-		inningsPitched: 'IP',
-	}
 
 	let period = $derived(
 		data.month ? `${monthName(data.month)} ${page.params.season}` : page.params.season,
@@ -34,7 +26,7 @@
 		const meta = data.baseballStats.find((s) => [s.name, s.lookupParam].includes(stat))
 
 		return {
-			short: SHORT[stat] ?? meta?.lookupParam ?? stat,
+			short: ABBREVIATIONS[stat] ?? meta?.lookupParam ?? stat,
 			full: meta?.label ?? meta?.name ?? stat,
 		}
 	}
