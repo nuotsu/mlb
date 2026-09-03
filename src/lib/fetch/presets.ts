@@ -131,6 +131,29 @@ export async function fetchPitchingGameLogs(
 	})
 }
 
+/** One season of a player's per-game splits for a stat group, oldest first as the API returns them. */
+export async function fetchGameLog(
+	personId: string | number,
+	group: 'hitting' | 'pitching',
+	season: string | number,
+) {
+	const { stats } = await fetchMLB<MLB.PlayerStatsResponse>(`/api/v1/people/${personId}/stats`, {
+		stats: 'gameLog',
+		group,
+		season: String(season),
+		fields: [
+			'stats,type,displayName,group,splits',
+			'date,isHome,isWin,season',
+			'opponent,id,name,abbreviation',
+			'game,gamePk',
+			'stat,atBats,runs,hits,doubles,triples,homeRuns,rbi,baseOnBalls,strikeOuts,stolenBases,avg',
+			'inningsPitched,earnedRuns,numberOfPitches,era,wins,losses,saves,holds,blownSaves',
+		],
+	})
+
+	return stats?.[0]?.splits ?? []
+}
+
 /**
  * A team's roster with player statuses. `40Man` is the big-league roster;
  * `fullRoster` widens it to everyone under team control, which is the only

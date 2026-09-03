@@ -494,6 +494,11 @@ declare global {
 			rank?: number
 			name?: string
 			zones?: HotColdZone[]
+			/** gameLog-only fields */
+			opponent?: Team
+			isHome?: boolean
+			isWin?: boolean
+			game?: Pick<Game, 'gamePk'> & Partial<Pick<Game, 'link' | 'gameNumber' | 'dayNight'>>
 		}
 
 		/**

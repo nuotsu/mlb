@@ -1,10 +1,10 @@
 <script lang="ts">
 	import ToggleCompare from '$ui/compare/toggle-compare.svelte'
-	import Divider from '$ui/divider.svelte'
 	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
 	import Draft from '$ui/player/draft.svelte'
+	import GameLog from '$ui/player/game-log.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 	import HotColdZonesList from '$ui/player/hot-cold-zones-list.svelte'
 	import PlayerInfo from '$ui/player/player-info.svelte'
@@ -27,6 +27,24 @@
 	)
 
 	const team = $derived(person.active ? person.currentTeam : person.preferredTeam?.team)
+
+	const hasGroup = (group: 'hitting' | 'pitching') =>
+		!!person.stats?.some(
+			(s) =>
+				s.type?.displayName === 'yearByYear' &&
+				(s.group as unknown as MLB.StatGroupRef)?.displayName === group &&
+				s.splits?.length,
+		)
+
+	const groups = $derived((['hitting', 'pitching'] as const).filter(hasGroup))
+
+	const isPitcher = $derived(
+		['P', 'TWP'].includes(person.primaryPosition?.abbreviation ?? '') ||
+			person.primaryPosition?.code === '1',
+	)
+
+	/** Pitchers (two-way included) open on pitching; otherwise the first group with data */
+	const defaultGroup = $derived(isPitcher && groups.includes('pitching') ? 'pitching' : groups[0])
 </script>
 
 <svelte:head>
@@ -116,21 +134,52 @@
 		</section>
 	{/if}
 
-	{#each ['hitting', 'pitching'] as const as group}
-		<section class="group/stats space-y-lh px-ch has-data-empty:hidden">
-			<Divider class="capitalize">{group} stats</Divider>
+	{#if groups.length}
+		<div class="space-y-lh px-ch">
+			<fieldset class="flex justify-center gap-ch">
+				<legend class="sr-only">Stats group</legend>
 
-			<SeasonSplits {group} {person} baseballStats={data.baseballStats} />
+				{#each groups as group (group)}
+					<label
+						class="button rounded-full capitalize has-checked:border-accent has-checked:bg-accent/25 has-checked:font-bold has-focus-visible:ring-2 has-focus-visible:ring-accent dark:has-checked:text-accent"
+					>
+						<input
+							class="sr-only"
+							type="radio"
+							name="stats-group"
+							value={group}
+							checked={group === defaultGroup}
+						/>
+						{group}
+					</label>
+				{/each}
+			</fieldset>
 
-			<div
-				class="grid items-start gap-[2lh] md:grid-cols-[repeat(auto-fit,minmax(var(--container-sm),1fr))]"
-			>
-				<YearByYearList {group} {person} />
+			{#each groups as group (group)}
+				<section class="space-y-lh" data-stats-group={group}>
+					<SeasonSplits {group} {person} baseballStats={data.baseballStats} />
 
-				<article class="space-y-lh">
-					<HotColdZonesList {group} {person} baseballStats={data.baseballStats} />
-				</article>
-			</div>
-		</section>
-	{/each}
+					<GameLog {group} {person} baseballStats={data.baseballStats} />
+
+					<div
+						class="grid items-start gap-[2lh] md:grid-cols-[repeat(auto-fit,minmax(var(--container-sm),1fr))]"
+					>
+						<YearByYearList {group} {person} />
+
+						<article class="space-y-lh">
+							<HotColdZonesList {group} {person} baseballStats={data.baseballStats} />
+						</article>
+					</div>
+				</section>
+			{/each}
+		</div>
+	{/if}
 </div>
+
+<style>
+	/* Only the checked pill's section shows; no JS involved */
+	fieldset:has([value='hitting']:checked) ~ [data-stats-group='pitching'],
+	fieldset:has([value='pitching']:checked) ~ [data-stats-group='hitting'] {
+		display: none;
+	}
+</style>
