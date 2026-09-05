@@ -26,7 +26,16 @@
 			'slg',
 			'ops',
 		],
-		pitching: ['era', 'wins', 'losses', 'saves', 'strikeOuts', 'whip', 'inningsPitched'],
+		pitching: [
+			'era',
+			'gamesPlayed',
+			'wins',
+			'losses',
+			'saves',
+			'strikeOuts',
+			'whip',
+			'inningsPitched',
+		],
 	} as const
 
 	const borderKeys = {
@@ -60,8 +69,7 @@
 			})
 			// Same-season stints arrive chronologically; reverse so the latest team is on top
 			.sort(
-				(a, b) =>
-					Number(b.split.season ?? 0) - Number(a.split.season ?? 0) || b.index - a.index,
+				(a, b) => Number(b.split.season ?? 0) - Number(a.split.season ?? 0) || b.index - a.index,
 			)
 			.map(({ split }) => split),
 	)
@@ -75,6 +83,7 @@
 		if (key === 'doubles') return { abbr: '2B', title: label ?? name ?? '2B' }
 		if (key === 'triples') return { abbr: '3B', title: label ?? name ?? '3B' }
 		if (key === 'strikeOuts') return { abbr: 'K', title: label ?? name ?? 'K' }
+		if (key === 'gamesPlayed') return { abbr: 'G', title: label ?? name ?? 'Games' }
 
 		return { abbr: lookupParam ?? key, title: label ?? name ?? key }
 	}
