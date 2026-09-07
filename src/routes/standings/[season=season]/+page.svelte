@@ -6,7 +6,7 @@
 	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
-	import { ArrowUpIcon } from '$ui/icons'
+	import { ArrowUpIcon, TrophyIcon } from '$ui/icons'
 	import Metadata from '$ui/metadata.svelte'
 	import SelectGameType from '$ui/select-game-type.svelte'
 	import SelectSport from '$ui/select-sport.svelte'
@@ -129,6 +129,12 @@
 				<SelectSport available={data.availableSportIds} />
 				<SelectGameType class="button text-center" available={data.availableGameTypes} />
 			</div>
+			{#if data.standingsType === 'postseason'}
+				<a class="button flex items-center gap-[.5ch]" href="/postseason/{page.params.season}">
+					<TrophyIcon class="size-[1em]" />
+					Bracket
+				</a>
+			{/if}
 			<SelectSeason
 				onchange={(e) =>
 					goto(`/standings/${(e.currentTarget as HTMLSelectElement).value}${page.url.search}`)}

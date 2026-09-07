@@ -11,6 +11,7 @@ const staticRoutes: {
 	{ route: '/schedule/day', priority: '0.8' },
 	{ route: '/schedule/week', priority: '0.8' },
 	{ route: '/standings', priority: '0.8' },
+	{ route: '/postseason', priority: '0.8' },
 	{ route: '/stats', priority: '0.8' },
 	{ route: '/team-stats', priority: '0.8' },
 	{ route: '/teams', priority: '0.8' },
