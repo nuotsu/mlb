@@ -1616,8 +1616,13 @@ declare global {
 			divisionLeader?: boolean
 			/** Wins needed to clinch the division; only present for the team in front. */
 			magicNumber?: string
-			/** Games until elimination from the division race; `'E'` once eliminated. */
+			/**
+			 * Games until elimination from the division race; `'E'` once eliminated, `'-'` while not
+			 * yet meaningful. A division-eliminated team can still be alive for a wild card.
+			 */
 			eliminationNumber?: string
+			/** Games until elimination from the wild card race; `'E'` once eliminated. */
+			wildCardEliminationNumber?: string
 			clinched?: boolean
 			wins: number
 			losses: number
