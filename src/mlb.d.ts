@@ -1541,6 +1541,31 @@ declare global {
 		/**
 		 * Schedule response
 		 */
+		/**
+		 * Postseason series schedule (`/api/v1/schedule/postseason/series`)
+		 */
+		interface PostseasonSeriesResponse {
+			totalItems: number
+			totalGames: number
+			totalGamesInProgress: number
+			series: PostseasonSeries[]
+		}
+
+		interface PostseasonSeries {
+			series: {
+				/** e.g. `2024-D-1` */
+				id: string
+				sortNumber?: number
+				isDefault?: boolean
+				/** `F` Wild Card, `D` Division Series, `L` League Championship, `W` World Series */
+				gameType?: string
+			}
+			totalItems: number
+			totalGames: number
+			totalGamesInProgress: number
+			games: Game[]
+		}
+
 		interface ScheduleResponse extends ApiResponse<ScheduleDate[]> {
 			totalItems: number
 			totalEvents: number

@@ -13,6 +13,7 @@
 		JsonIcon,
 		MegaphoneIcon,
 		RankIcon,
+		TrophyIcon,
 	} from '$ui/icons'
 	import type { Component } from 'svelte'
 	import CompareList from './compare-list.svelte'
@@ -46,6 +47,11 @@
 				href: '/standings',
 				label: 'Standings',
 				icon: FlagIcon,
+			},
+			{
+				href: '/postseason',
+				label: 'Postseason',
+				icon: TrophyIcon,
 			},
 			{
 				href: '/stats',
