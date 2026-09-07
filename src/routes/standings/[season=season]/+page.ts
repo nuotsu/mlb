@@ -78,7 +78,7 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 			fields: [
 				'records,sport,division,nameShort,league,springLeague,id,name',
 				'teamRecords,wins,losses,winningPercentage,gamesBack,streak,streakCode,leagueRank,divisionRank',
-				'magicNumber,eliminationNumber,clinched',
+				'magicNumber,eliminationNumber,wildCardEliminationNumber,clinched',
 				'team,id,name,clubName,teamName,abbreviation',
 			],
 		}),

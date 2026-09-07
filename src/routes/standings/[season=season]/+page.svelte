@@ -29,26 +29,51 @@
 	 * The magic number for the team in front, and its mirror image — the number of games until
 	 * elimination — for everyone chasing. MLB sends these as strings that can also be `'-'` (not
 	 * yet meaningful) or `'E'` (eliminated), and only fills in `magicNumber` for the leader.
+	 *
+	 * `eliminationNumber` only covers the division race, and by September most of a division is
+	 * out of that while still chasing a wild card. A team is only shown as eliminated once it's
+	 * out of both races; until then it shows the number for whichever race it's still alive in.
 	 */
-	function magicNumber({ magicNumber, eliminationNumber, clinched }: MLB.TeamRecord) {
+	function magicNumber({
+		magicNumber,
+		eliminationNumber,
+		wildCardEliminationNumber,
+		clinched,
+	}: MLB.TeamRecord) {
 		// Before `clinched`, so a team that has locked up a wild card but is still chasing the
 		// division keeps showing that race's number.
-		if (magicNumber && !isNaN(Number(magicNumber)))
+		if (isNumeric(magicNumber))
 			return { text: magicNumber, title: `${magicNumber} to clinch the division`, tone: 'positive' }
 
 		if (clinched) return { text: '✓', title: 'Clinched a playoff spot', tone: 'positive' }
 
-		if (eliminationNumber === 'E')
-			return { text: 'E', title: 'Eliminated from the division race', tone: 'negative' }
-
-		if (eliminationNumber && !isNaN(Number(eliminationNumber)))
+		if (isNumeric(eliminationNumber))
 			return {
 				text: eliminationNumber,
-				title: `${eliminationNumber} from elimination`,
+				title: `${eliminationNumber} from elimination in the division race`,
 				tone: 'negative',
 			}
 
+		if (eliminationNumber !== 'E') return null
+
+		if (isNumeric(wildCardEliminationNumber))
+			return {
+				text: wildCardEliminationNumber,
+				title: `Out of the division race; ${wildCardEliminationNumber} from wild card elimination`,
+				tone: 'negative',
+			}
+
+		// Seasons without a wild card never send `wildCardEliminationNumber`, so being out of the
+		// division race is the whole story there. `'-'` means the wild card race is still open.
+		if (wildCardEliminationNumber === 'E' || wildCardEliminationNumber == null)
+			return { text: 'E', title: 'Eliminated from postseason contention', tone: 'negative' }
+
 		return null
+	}
+
+	/** MLB's standings numbers are strings; `'-'` and `'E'` aren't numbers. */
+	function isNumeric(value: string | undefined): value is string {
+		return value !== undefined && value !== '' && !isNaN(Number(value))
 	}
 
 	function sortOrder(
