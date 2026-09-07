@@ -33,7 +33,7 @@ export const load: PageLoad = async ({ params, setHeaders }) => {
 					standingsType: 'regularSeason',
 					fields: [
 						'records,league,id,teamRecords,team,name',
-						'divisionLeader,wildCardRank,leagueRank,clinched,wins,losses,winningPercentage',
+						'divisionLeader,divisionRank,wildCardRank,leagueRank,clinched,wins,losses,winningPercentage',
 					],
 				}).catch(() => null)
 			: null,
@@ -46,7 +46,13 @@ export const load: PageLoad = async ({ params, setHeaders }) => {
 		]),
 	)
 
-	const bracket = buildBracket({ season, series, teams: teamInfo, standings })
+	const bracket = buildBracket({
+		season,
+		series,
+		teams: teamInfo,
+		standings,
+		project: isCurrentSeason,
+	})
 
 	setHeaders({
 		'cache-control': bracket?.live

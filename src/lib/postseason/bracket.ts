@@ -199,38 +199,66 @@ function leagueFromDescription(text?: string): LeagueSide | undefined {
 	if (/\bNL\b|National/.test(text)) return 'NL'
 }
 
+/**
+ * MLB publishes the postseason schedule before the field is set, with stand-in teams
+ * ("TBD", "AL Wild Card 1", ...) in the slots. Those aren't teams: when the season's club
+ * list is known, anything not on it is a placeholder; otherwise fall back to the name.
+ */
+function isPlaceholder(gameTeam: MLB.GameTeam | undefined, teams: Map<number, TeamInfo>) {
+	const team = gameTeam?.team
+	if (!team?.id) return true
+	if (teams.size) return !teams.has(team.id)
+	return /\bTB[AD]\b|winner|loser|seed|wild card|champion/i.test(team.name ?? '')
+}
+
 function parseRealSeries(
 	response: MLB.PostseasonSeriesResponse | null | undefined,
 	teams: Map<number, TeamInfo>,
 ): RealSeries[] {
-	return (response?.series ?? [])
-		.map((entry, index) => {
-			const games = [...(entry.games ?? [])].sort(
-				(a, b) =>
-					(a.seriesGameNumber ?? 0) - (b.seriesGameNumber ?? 0) ||
-					a.gameDate.localeCompare(b.gameDate),
-			)
-			const first = games[0]
-			const round = (entry.series?.gameType ?? first?.gameType) as Round
-			const teamIds = [
-				...new Set(games.flatMap((g) => [g.teams.away.team.id, g.teams.home.team.id])),
-			].filter(Boolean)
-			const league =
-				teamIds.map((id) => teams.get(id)?.league).find(Boolean) ??
-				leagueFromDescription(first?.description ?? first?.seriesDescription)
-			const order = Number(entry.series?.id?.split('-').at(-1)) || entry.series?.sortNumber || index
+	return (
+		(response?.series ?? [])
+			.map((entry, index) => {
+				const games = [...(entry.games ?? [])]
+					.filter((g) => g?.teams?.away && g?.teams?.home)
+					.sort(
+						(a, b) =>
+							(a.seriesGameNumber ?? 0) - (b.seriesGameNumber ?? 0) ||
+							(a.gameDate ?? '').localeCompare(b.gameDate ?? ''),
+					)
+				const first = games[0]
+				const round = (entry.series?.gameType ?? first?.gameType) as Round
+				const teamIds = [
+					...new Set(
+						games.flatMap((g) =>
+							[g.teams.away, g.teams.home]
+								.filter((t) => !isPlaceholder(t, teams))
+								.map((t) => t.team.id),
+						),
+					),
+				]
+				const league =
+					teamIds.map((id) => teams.get(id)?.league).find(Boolean) ??
+					leagueFromDescription(first?.description ?? first?.seriesDescription)
+				const order =
+					Number(entry.series?.id?.split('-').at(-1)) || entry.series?.sortNumber || index
 
-			return { round, order, league, games, teamIds, assigned: false }
-		})
-		.filter((s) => s.games.length > 0 && ['F', 'D', 'L', 'W'].includes(s.round))
-		.sort((a, b) => a.order - b.order)
+				return { round, order, league, games, teamIds, assigned: false }
+			})
+			// A series with no actual team in it yet hasn't been decided by anything.
+			.filter((s) => s.teamIds.length > 0 && ['F', 'D', 'L', 'W'].includes(s.round))
+			.sort((a, b) => a.order - b.order)
+	)
 }
 
 function isFinal(game: MLB.Game) {
 	return game.status?.abstractGameState === 'Final'
 }
 
-function teamFromGame(gameTeam: MLB.GameTeam, teams: Map<number, TeamInfo>): BracketTeam {
+function teamFromGame(
+	gameTeam: MLB.GameTeam,
+	teams: Map<number, TeamInfo>,
+): BracketTeam | undefined {
+	if (isPlaceholder(gameTeam, teams)) return
 	const info = teams.get(gameTeam.team.id)?.team
 	return { id: gameTeam.team.id, name: info?.name ?? gameTeam.team.name }
 }
@@ -263,8 +291,8 @@ function placeTeams(
 	const home = teamFromGame(first.teams.home, teams)
 	const away = teamFromGame(first.teams.away, teams)
 
-	const cameThrough = (team: BracketTeam) =>
-		previousRound.find((s) => !s.assigned && s.teamIds.includes(team.id))
+	const cameThrough = (team?: BracketTeam) =>
+		team && previousRound.find((s) => !s.assigned && s.teamIds.includes(team.id))
 
 	// Previous-round series already wired into this round by a sibling processed earlier.
 	const attached = new Set(siblings.flatMap((t) => [t.top.feeder, t.bottom.feeder]).filter(Boolean))
@@ -363,9 +391,17 @@ export interface BuildOptions {
 	teams: Map<number, TeamInfo>
 	/** Regular-season standings, used to project the bracket before MLB publishes it. */
 	standings?: MLB.StandingsResponse | null
+	/** Draw the bracket from standings when MLB hasn't set the field yet (the current season). */
+	project?: boolean
 }
 
-export function buildBracket({ season, series, teams, standings }: BuildOptions): Bracket | null {
+export function buildBracket({
+	season,
+	series,
+	teams,
+	standings,
+	project = false,
+}: BuildOptions): Bracket | null {
 	const format = formatFor(season)
 	if (!format) return null
 
@@ -391,20 +427,25 @@ export function buildBracket({ season, series, teams, standings }: BuildOptions)
 			const first = ws.games[0]
 			const home = teamFromGame(first.teams.home, teams)
 			const away = teamFromGame(first.teams.away, teams)
-			const homeLeague =
-				teams.get(home.id)?.league ?? (al?.winner?.id === home.id ? 'AL' : undefined)
-			const [alTeam, nlTeam] = homeLeague === 'NL' ? [away, home] : [home, away]
+			const sideOf = (team?: BracketTeam) =>
+				team &&
+				(teams.get(team.id)?.league ??
+					(al?.winner?.id === team.id ? 'AL' : nl?.winner?.id === team.id ? 'NL' : undefined))
+			const [alTeam, nlTeam] =
+				sideOf(home) === 'NL' || sideOf(away) === 'AL' ? [away, home] : [home, away]
 			worldSeries.top.team = alTeam
 			worldSeries.bottom.team = nlTeam
 		}
 		applyResults(worldSeries, ws)
-	} else if (standings && isProjectableFormat(format)) {
+	} else if (project && isProjectableFormat(format)) {
 		projected = true
 		for (const rounds of [alRounds, nlRounds]) {
 			rounds.forEach((templates, r) => attachRemaining(templates, rounds[r - 1]))
 		}
-		seedFromStandings(alRounds, standings, 'AL')
-		seedFromStandings(nlRounds, standings, 'NL')
+		if (standings) {
+			seedFromStandings(alRounds, standings, 'AL', teams)
+			seedFromStandings(nlRounds, standings, 'NL', teams)
+		}
 	} else {
 		return null
 	}
@@ -447,17 +488,23 @@ function seedFromStandings(
 	byRound: BracketSeries[][],
 	standings: MLB.StandingsResponse,
 	league: LeagueSide,
+	teams: Map<number, TeamInfo>,
 ) {
-	const records = standings.records
-		.filter((r) => leagueSide(r.league?.id) === league)
-		.flatMap((r) => r.teamRecords)
+	// The record's own league is authoritative; the club list covers a response without it.
+	const records = (standings.records ?? []).flatMap((r) =>
+		(r.teamRecords ?? []).filter(
+			(t) => (leagueSide(r.league?.id) ?? teams.get(t.team?.id)?.league) === league,
+		),
+	)
 
 	const byRecord = (a: MLB.TeamRecord, b: MLB.TeamRecord) =>
 		Number(b.winningPercentage) - Number(a.winningPercentage) || b.wins - a.wins
 
-	const leaders = records.filter((r) => r.divisionLeader).sort(byRecord)
+	const isLeader = (r: MLB.TeamRecord) => r.divisionLeader ?? r.divisionRank === '1'
+
+	const leaders = records.filter(isLeader).sort(byRecord)
 	const wildCards = records
-		.filter((r) => !r.divisionLeader)
+		.filter((r) => !isLeader(r))
 		.sort(
 			(a, b) =>
 				(Number(a.wildCardRank) || Infinity) - (Number(b.wildCardRank) || Infinity) ||
