@@ -18,6 +18,7 @@
 			'avg',
 			'homeRuns',
 			'rbi',
+			'atBats',
 			'hits',
 			'doubles',
 			'triples',
@@ -80,6 +81,7 @@
 		const { label, name, lookupParam } =
 			baseballStats.find((s) => [s.name, s.lookupParam].includes(key)) ?? {}
 
+		if (key === 'atBats') return { abbr: 'AB', title: label ?? name ?? 'At Bats' }
 		if (key === 'doubles') return { abbr: '2B', title: label ?? name ?? '2B' }
 		if (key === 'triples') return { abbr: '3B', title: label ?? name ?? '3B' }
 		if (key === 'strikeOuts') return { abbr: 'K', title: label ?? name ?? 'K' }
