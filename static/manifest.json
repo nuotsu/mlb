@@ -1,8 +1,10 @@
 {
+	"id": "/",
 	"name": "MLB",
 	"short_name": "MLB",
 	"description": "MLB Scorebug",
 	"start_url": "/",
+	"scope": "/",
 	"display": "standalone",
 	"background_color": "#000000",
 	"theme_color": "#000000",
@@ -10,17 +12,26 @@
 		{
 			"src": "/favicons/favicon-48x48.png",
 			"sizes": "48x48",
-			"type": "image/png"
+			"type": "image/png",
+			"purpose": "any"
+		},
+		{
+			"src": "/favicons/apple-touch-icon.png",
+			"sizes": "180x180",
+			"type": "image/png",
+			"purpose": "any"
 		},
 		{
 			"src": "/favicons/android-chrome-192x192.png",
 			"sizes": "192x192",
-			"type": "image/png"
+			"type": "image/png",
+			"purpose": "any"
 		},
 		{
 			"src": "/favicons/android-chrome-512x512.png",
 			"sizes": "512x512",
-			"type": "image/png"
+			"type": "image/png",
+			"purpose": "any"
 		}
 	]
 }
