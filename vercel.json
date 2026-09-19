@@ -1,6 +1,10 @@
 {
 	"headers": [
 		{
+			"source": "/manifest.json",
+			"headers": [{ "key": "Content-Type", "value": "application/manifest+json; charset=utf-8" }]
+		},
+		{
 			"source": "/game/(.*)",
 			"headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
 		},
