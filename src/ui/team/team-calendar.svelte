@@ -25,15 +25,27 @@
 		confirmedPast: Map<number, MLB.Person>
 	}
 
+	/**
+	 * Build the rotation from recent completed starts, ordered by when each
+	 * pitcher last started. Scanning backwards keeps the latest starter at the
+	 * end of the list, so predictions always have a slot to continue from — a
+	 * spot start or bullpen game earlier in the window would otherwise truncate
+	 * the rotation before the latest starter and drop every prediction.
+	 */
 	function extractRotation(pitchers: MLB.Person[]): MLB.Person[] {
 		const rotation: MLB.Person[] = []
 		const seen = new Set<number>()
-		for (const p of pitchers) {
+		for (let i = pitchers.length - 1; i >= 0; i--) {
+			const p = pitchers[i]
 			if (seen.has(p.id)) break
 			seen.add(p.id)
-			rotation.push(p)
+			rotation.unshift(p)
 		}
-		return rotation.length >= 3 ? rotation : pitchers.slice(-7)
+		if (rotation.length >= 2) return rotation
+
+		// Back-to-back starts by the same pitcher leave no cycle to walk —
+		// fall back to every distinct starter in the window, oldest first
+		return pitchers.filter((p, i) => pitchers.findIndex((q) => q.id === p.id) === i)
 	}
 
 	async function fetchProbablePitcher(gamePk: number): Promise<MLB.Person | null> {
@@ -72,10 +84,14 @@
 			.flatMap(({ games }) => games)
 			.sort((a, b) => a.gameDate.localeCompare(b.gameDate))
 
-		// Fetch pitchers for the last 7 completed games (rotation) + next 10 upcoming
-		// games (to sync confirmed pitchers into the rotation before predicting)
-		const pastGames = allGames.filter((g) => g.status.abstractGameState === 'Final').slice(-7)
-		const upcomingGames = allGames.filter((g) => g.status.abstractGameState === 'Preview').slice(0, 10)
+		// Fetch pitchers for the last 10 completed games (rotation) + next 10 upcoming
+		// games (to sync confirmed pitchers into the rotation before predicting).
+		// 10 covers a full turn through a six-man rotation even when a start or two
+		// comes back without a probable pitcher.
+		const pastGames = allGames.filter((g) => g.status.abstractGameState === 'Final').slice(-10)
+		const upcomingGames = allGames
+			.filter((g) => g.status.abstractGameState === 'Preview')
+			.slice(0, 10)
 
 		const fetchResults = await Promise.all(
 			[...pastGames, ...upcomingGames].map(
@@ -91,7 +107,9 @@
 		)
 
 		// Build the rotation from confirmed past pitchers in order
-		const pastPitcherList = pastGames.map((g) => fetched.get(g.gamePk)).filter((p): p is MLB.Person => !!p)
+		const pastPitcherList = pastGames
+			.map((g) => fetched.get(g.gamePk))
+			.filter((p): p is MLB.Person => !!p)
 		const rotation = extractRotation(pastPitcherList)
 		const lastConfirmed = pastPitcherList.at(-1)
 		let rotationPos =
