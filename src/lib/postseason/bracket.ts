@@ -254,6 +254,10 @@ function isFinal(game: MLB.Game) {
 	return game.status?.abstractGameState === 'Final'
 }
 
+function isLive(game: MLB.Game) {
+	return game.status?.abstractGameState === 'Live'
+}
+
 function teamFromGame(
 	gameTeam: MLB.GameTeam,
 	teams: Map<number, TeamInfo>,
@@ -336,7 +340,7 @@ function applyResults(target: BracketSeries, real: RealSeries | undefined) {
 	top.wins = countWins(real.games, top.team?.id)
 	bottom.wins = countWins(real.games, bottom.team?.id)
 	target.gamesPlayed = real.games.filter(isFinal).length
-	target.live = real.games.some((g) => g.status?.abstractGameState === 'Live')
+	target.live = real.games.some(isLive)
 
 	if (top.wins >= target.gamesToWin) target.winner = top.team
 	else if (bottom.wins >= target.gamesToWin) target.winner = bottom.team
@@ -407,6 +411,11 @@ export function buildBracket({
 
 	const reals = parseRealSeries(series, teams)
 	const hasRealData = reals.length > 0
+	// MLB fills in teams as they lock up their seeds, often one league before the other. Until
+	// a game has been played, the standings give the whole field; the schedule would leave
+	// every slot empty that hasn't been confirmed yet.
+	const underway = reals.some((r) => r.games.some((g) => isFinal(g) || isLive(g)))
+	const shouldProject = project && isProjectableFormat(format) && !underway
 
 	const alRounds = buildLeagueTemplate(format.rounds, 'AL')
 	const nlRounds = buildLeagueTemplate(format.rounds, 'NL')
@@ -418,7 +427,16 @@ export function buildBracket({
 
 	let projected = false
 
-	if (hasRealData) {
+	if (shouldProject) {
+		projected = true
+		for (const rounds of [alRounds, nlRounds]) {
+			rounds.forEach((templates, r) => attachRemaining(templates, rounds[r - 1]))
+		}
+		if (standings) {
+			seedFromStandings(alRounds, standings, 'AL', teams)
+			seedFromStandings(nlRounds, standings, 'NL', teams)
+		}
+	} else if (hasRealData) {
 		fillLeague(alRounds, reals, 'AL', teams)
 		fillLeague(nlRounds, reals, 'NL', teams)
 
@@ -437,15 +455,6 @@ export function buildBracket({
 			worldSeries.bottom.team = nlTeam
 		}
 		applyResults(worldSeries, ws)
-	} else if (project && isProjectableFormat(format)) {
-		projected = true
-		for (const rounds of [alRounds, nlRounds]) {
-			rounds.forEach((templates, r) => attachRemaining(templates, rounds[r - 1]))
-		}
-		if (standings) {
-			seedFromStandings(alRounds, standings, 'AL', teams)
-			seedFromStandings(nlRounds, standings, 'NL', teams)
-		}
 	} else {
 		return null
 	}
