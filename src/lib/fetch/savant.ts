@@ -253,3 +253,118 @@ export async function fetchLongestHomeRuns(
 		description: hr.description,
 	}))
 }
+
+/** Pitch codes that aren't real offerings: pitchouts, intentional and automatic balls/strikes, unknown. */
+const NON_PITCHES = new Set(['PO', 'FO', 'IN', 'AB', 'AS', 'UN'])
+
+export interface PitchArsenalPitch {
+	/** Statcast pitch code, e.g. `FF`. */
+	code: string
+	name: string
+	count: number
+	/** Share of the pitcher's tracked pitches, 0–1. */
+	usage: number
+	/** Release speed in mph. */
+	speed: { min: number; avg: number; max: number }
+	/** Induced vertical break in inches. Positive is rise relative to a spinless pitch. */
+	verticalBreak?: { low: number; avg: number; high: number }
+	/** Horizontal break in inches from the pitcher's view. Positive is arm side. */
+	horizontalBreak?: { low: number; avg: number; high: number }
+}
+
+function percentile(sorted: number[], p: number) {
+	const index = (sorted.length - 1) * p
+	const lower = Math.floor(index)
+	const upper = Math.ceil(index)
+	return sorted[lower] + (sorted[upper] - sorted[lower]) * (index - lower)
+}
+
+const average = (values: number[]) => values.reduce((sum, v) => sum + v, 0) / values.length
+
+/**
+ * Movement spreads are the 10th–90th percentile so a few mis-tracked or
+ * mis-tagged pitches don't stretch the range. Speed keeps its true min and max.
+ */
+function spread(values: number[]) {
+	if (!values.length) return undefined
+	const sorted = [...values].sort((a, b) => a - b)
+	return { low: percentile(sorted, 0.1), avg: average(values), high: percentile(sorted, 0.9) }
+}
+
+/** Group Statcast pitch rows by pitch type into usage, speed, and movement. */
+export function summarizeArsenal(rows: Record<string, string>[]): PitchArsenalPitch[] {
+	const byType = new Map<
+		string,
+		{ name: string; count: number; speeds: number[]; vertical: number[]; horizontal: number[] }
+	>()
+
+	for (const row of rows) {
+		const code = row.pitch_type?.trim()
+		if (!code || NON_PITCHES.has(code)) continue
+
+		const entry = byType.get(code) ?? {
+			name: row.pitch_name?.trim() || code,
+			count: 0,
+			speeds: [],
+			vertical: [],
+			horizontal: [],
+		}
+		entry.count++
+
+		const speed = toNumber(row.release_speed)
+		if (speed != null) entry.speeds.push(speed)
+
+		// pfx_* are feet from the catcher's view; flip x for righties so arm side is positive.
+		const pfxX = toNumber(row.pfx_x)
+		const pfxZ = toNumber(row.pfx_z)
+		if (pfxZ != null) entry.vertical.push(pfxZ * 12)
+		if (pfxX != null) entry.horizontal.push(pfxX * 12 * (row.p_throws === 'R' ? -1 : 1))
+
+		byType.set(code, entry)
+	}
+
+	const total = [...byType.values()].reduce((sum, { count }) => sum + count, 0)
+
+	return [...byType.entries()]
+		.filter(([, { speeds }]) => speeds.length)
+		.map(([code, { name, count, speeds, vertical, horizontal }]) => ({
+			code,
+			name,
+			count,
+			usage: count / total,
+			speed: { min: Math.min(...speeds), avg: average(speeds), max: Math.max(...speeds) },
+			verticalBreak: spread(vertical),
+			horizontalBreak: spread(horizontal),
+		}))
+		.sort((a, b) => b.count - a.count)
+}
+
+/**
+ * A pitcher's regular-season arsenal from Baseball Savant's pitch-level
+ * Statcast search. Savant only covers MLB, with pitch tracking from 2008 on.
+ */
+export async function fetchPitchArsenal(
+	{ personId, season }: { personId: string | number; season: string | number },
+	{ fetch: _fetch = fetch }: { fetch?: typeof fetch } = {},
+): Promise<PitchArsenalPitch[]> {
+	const rows = await fetchStatcastSearch(
+		{
+			all: 'true',
+			type: 'details',
+			player_type: 'pitcher',
+			'pitchers_lookup[]': String(personId),
+			hfSea: `${season}|`,
+			hfGT: 'R|',
+			min_pitches: '0',
+			min_results: '0',
+			min_abs: '0',
+			group_by: 'name',
+			sort_col: 'pitches',
+			player_event_sort: 'api_p_release_speed',
+			sort_order: 'desc',
+		},
+		_fetch,
+	)
+
+	return summarizeArsenal(rows)
+}
