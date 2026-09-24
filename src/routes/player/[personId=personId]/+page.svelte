@@ -7,6 +7,7 @@
 	import Draft from '$ui/player/draft.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 	import HotColdZonesList from '$ui/player/hot-cold-zones-list.svelte'
+	import PitchArsenal from '$ui/player/pitch-arsenal.svelte'
 	import PlayerInfo from '$ui/player/player-info.svelte'
 	import RosterEntries from '$ui/player/roster-entries.svelte'
 	import SeasonSplits from '$ui/player/season-splits.svelte'
@@ -121,6 +122,10 @@
 			<Divider class="capitalize">{group} stats</Divider>
 
 			<SeasonSplits {group} {person} baseballStats={data.baseballStats} />
+
+			{#if group === 'pitching'}
+				<PitchArsenal {person} />
+			{/if}
 
 			<div
 				class="grid items-start gap-[2lh] md:grid-cols-[repeat(auto-fit,minmax(var(--container-sm),1fr))]"
