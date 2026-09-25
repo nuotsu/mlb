@@ -15,8 +15,9 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 				'flags,noHitter,perfectGame',
 				'status,abstractGameState,detailedState,reason',
 				'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
+				'broadcasts,callSign,isNational',
 			],
-			hydrate: 'flags',
+			hydrate: 'flags,broadcasts(all)',
 		},
 		{ fetch },
 	)

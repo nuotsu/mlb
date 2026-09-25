@@ -35,8 +35,9 @@ export async function fetchWeekSchedule(date: string, sportId = '1') {
 			'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
 			'linescore,currentInning,scheduledInnings',
 			'innings,num,runs,hits,errors,leftOnBase',
+			'broadcasts,callSign,isNational',
 		],
-		hydrate: 'flags,linescore',
+		hydrate: 'flags,linescore,broadcasts(all)',
 	})
 }
 
@@ -52,8 +53,9 @@ export async function fetchDaySchedule(date: string, sportId = '1') {
 			'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
 			'linescore,currentInning,scheduledInnings',
 			'innings,num,runs,hits,errors,leftOnBase',
+			'broadcasts,callSign,isNational',
 		],
-		hydrate: 'teams,flags,linescore',
+		hydrate: 'teams,flags,linescore,broadcasts(all)',
 	})
 }
 
