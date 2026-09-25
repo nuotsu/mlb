@@ -164,11 +164,12 @@
 
 	{#if onAppleTV}
 		<span
-			class="flex h-rlh items-center self-end justify-self-end px-ch text-[#fff]"
+			class="self-end justify-self-end px-ch text-xs text-[#fff]"
 			style:grid-area="description"
 			title="Streaming on Apple TV"
 		>
-			<AppleTVIcon class="h-[0.8em] w-auto" />
+			<!-- The glyph's baseline sits 3/24 above the SVG's bottom edge, so drop it by that much. -->
+			<AppleTVIcon class="inline-block h-[1em] w-auto align-[-0.125em]" />
 		</span>
 	{/if}
 
