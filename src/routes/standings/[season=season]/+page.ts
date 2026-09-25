@@ -1,5 +1,6 @@
 import { cacheControlForSeasonPage } from '$lib/cache-control'
 import { fetchMLB } from '$lib/fetch'
+import { wildCardSpots } from '$lib/postseason/bracket'
 import { addDays, formatDate, getToday } from '$lib/temporal'
 import type { PageLoad } from './$types'
 
@@ -10,7 +11,22 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 	setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
 
 	const sportId = url.searchParams.get('sportId') ?? '1'
-	const gameType = url.searchParams.get('gameType') ?? 'R'
+	const requestedGameType = url.searchParams.get('gameType') ?? 'R'
+
+	/**
+	 * - `division`: each league split into its divisions (the default)
+	 * - `playoff`: each league's division leaders and wild card race, from the regular season
+	 * - `mlb`: every team ranked together, from the regular season
+	 */
+	const view =
+		sportId === '1' && requestedGameType === 'P'
+			? 'playoff'
+			: sportId === '1' && requestedGameType === 'MLB'
+				? 'mlb'
+				: 'division'
+
+	// The playoff and MLB views are both built from regular-season records.
+	const gameType = view === 'division' ? requestedGameType : 'R'
 
 	const [{ leagues: allLeagues }, seasonInfo] = await Promise.all([
 		fetchMLB<MLB.LeaguesResponse>('/api/v1/leagues', {
@@ -31,6 +47,7 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 		seasonInfo?.springStartDate && 'S',
 		seasonInfo?.regularSeasonStartDate && 'R',
 		seasonInfo?.postSeasonStartDate && 'P',
+		sportId === '1' && seasonInfo?.regularSeasonStartDate && 'MLB',
 	].filter(Boolean) as string[]
 
 	const matchesGameType = (l: MLB.League) =>
@@ -78,6 +95,7 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 			fields: [
 				'records,sport,division,nameShort,league,springLeague,id,name',
 				'teamRecords,wins,losses,winningPercentage,gamesBack,streak,streakCode,leagueRank,divisionRank',
+				'divisionLeader,leagueGamesBack,wildCardRank,wildCardGamesBack,sportRank,sportGamesBack',
 				'magicNumber,eliminationNumber,wildCardEliminationNumber,clinched',
 				'team,id,name,clubName,teamName,abbreviation',
 			],
@@ -90,14 +108,19 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 					season: params.season,
 					standingsType,
 					date: comparisonDate,
-					fields: 'records,teamRecords,divisionRank,team,id',
+					fields: 'records,teamRecords,divisionRank,leagueRank,sportRank,team,id',
 				}).catch(() => null)
 			: null,
 	])
 
+	// Movement is measured within whatever each view ranks teams against.
+	const rankKey = ({ division: 'divisionRank', playoff: 'leagueRank', mlb: 'sportRank' } as const)[
+		view
+	]
+
 	const previousRanks = new Map(
 		(previousStandings?.records ?? []).flatMap(({ teamRecords }) =>
-			teamRecords.map(({ team, divisionRank }) => [team.id, Number(divisionRank)] as const),
+			teamRecords.map((record) => [record.team.id, Number(record[rankKey])] as const),
 		),
 	)
 
@@ -105,9 +128,10 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 	const rankChanges: Record<number, number> = {}
 
 	for (const { teamRecords } of standings.records) {
-		for (const { team, divisionRank } of teamRecords) {
+		for (const record of teamRecords) {
+			const { team } = record
 			const previous = previousRanks.get(team.id)
-			const current = Number(divisionRank)
+			const current = Number(record[rankKey])
 			if (!previous || !current) continue
 			rankChanges[team.id] = previous - current
 		}
@@ -116,6 +140,8 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 	return {
 		standings,
 		standingsType,
+		view,
+		wildCardSpots: wildCardSpots(Number(params.season)),
 		rankChanges,
 		comparisonDate,
 		availableGameTypes,
