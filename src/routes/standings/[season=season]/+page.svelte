@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
-	import { byRecord, byWildCardRank, isDivisionLeader } from '$lib/postseason/bracket'
+	import { byRecord, byWildCardRank, isDivisionLeader, leagueSide } from '$lib/postseason/bracket'
 	import { formatDate } from '$lib/temporal'
 	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
@@ -30,7 +30,18 @@
 		firstSeed?: number
 		/** Rows above this index hold a postseason spot; a line is drawn beneath them. */
 		cutAfter?: number
+		/** Adds an AL/NL column, for tables that mix both leagues. */
+		showLeague?: boolean
 	}
+
+	/** Team ID to `'AL'`/`'NL'`; team records don't carry their league, only the record around them. */
+	const teamLeagues = $derived(
+		new Map(
+			data.standings.records.flatMap(({ league, teamRecords }) =>
+				teamRecords.map(({ team }) => [team.id, leagueSide(league?.id)] as const),
+			),
+		),
+	)
 
 	const leagueGroups = $derived(
 		Object.values(Object.groupBy(data.standings.records, (record) => record.league?.id ?? 0)).map(
@@ -52,7 +63,14 @@
 				)
 
 			return teamRecords.length
-				? [{ key: 0, tables: [{ title: 'MLB', teamRecords, gamesBack: 'sportGamesBack' }] }]
+				? [
+						{
+							key: 0,
+							tables: [
+								{ title: 'MLB', teamRecords, gamesBack: 'sportGamesBack', showLeague: true },
+							],
+						},
+					]
 				: []
 		}
 
@@ -237,7 +255,7 @@
 				<h2 class="px-ch text-sm text-current/50">{heading}</h2>
 			{/if}
 			<div class="grid items-start gap-[2lh]">
-				{#each tables as { title, teamRecords, gamesBack: gamesBackKey, firstSeed, cutAfter }, i (i)}
+				{#each tables as { title, teamRecords, gamesBack: gamesBackKey, firstSeed, cutAfter, showLeague }, i (i)}
 					<div class="overflow-x-auto overflow-y-hidden">
 						<table class="w-max min-w-full text-center">
 							<thead>
@@ -252,6 +270,9 @@
 									>
 										<span class="line-clamp-1 break-all">{title}</span>
 									</th>
+									{#if showLeague}
+										<th class="w-[5ch]">Lg</th>
+									{/if}
 									<th class="w-[8ch]">W-L</th>
 									<th class="w-[5ch]">%</th>
 									<th class="w-[5ch]">{gamesBackKey === 'wildCardGamesBack' ? 'WCGB' : 'GB'}</th>
@@ -300,9 +321,12 @@
 														{seed ?? ''}
 													</span>
 												{/if}
-												<StyledTeam class="text-left" {team} linked />
+												<StyledTeam class="min-w-0 flex-1 text-left" {team} linked />
 											</div>
 										</td>
+										{#if showLeague}
+											<td class="text-current/50">{teamLeagues.get(team.id) ?? '-'}</td>
+										{/if}
 										<td class="flex justify-center tabular-nums">
 											<span class="positive">{wins}</span>
 											-
