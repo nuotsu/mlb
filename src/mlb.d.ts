@@ -581,6 +581,15 @@ declare global {
 			recordSource?: string
 			ifNecessary?: string
 			ifNecessaryDescription?: string
+			broadcasts?: Broadcast[]
+		}
+
+		interface Broadcast {
+			id?: number
+			name?: string
+			callSign?: string
+			type?: string
+			isNational?: boolean
 		}
 
 		/**

@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { page } from '$app/state'
+	import { isAppleTV } from '$lib/broadcasts'
 	import { fetchLiveMLB } from '$lib/fetch/live.svelte'
 	import { fetchBoxscore, fetchLinescore } from '$lib/fetch/presets'
 	import { cn } from '$lib/utils'
 	import Linescore from '$ui/game/linescore.svelte'
 	import ProbablePitchers from '$ui/game/probable-pitchers.svelte'
 	import TeamScores from '$ui/game/team-scores.svelte'
-	import { ChevronRightIcon } from '$ui/icons'
+	import { AppleTVIcon, ChevronRightIcon } from '$ui/icons'
 	import Loading from '$ui/loading.svelte'
 	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 	import BaseRunners from './base-runners.svelte'
@@ -39,6 +40,8 @@
 	const isLive = $derived(game.status.abstractGameState === 'Live')
 
 	const isGamePage = $derived(page.url.pathname === `/game/${game.gamePk}`)
+
+	const onAppleTV = $derived(isAppleTV(game))
 
 	const isSpoilerPrevented = $derived(
 		spoilerPreventionStore.has(game.teams.away.team.id) ||
@@ -127,7 +130,9 @@
 	<span
 		class={cn(
 			'group/description grid items-end text-center text-xs font-light *:col-span-full *:row-span-full *:line-clamp-1',
-			(!isGamePage || (isGamePage && game.status.abstractGameState === 'Preview')) && 'min-h-rlh',
+			(!isGamePage || (isGamePage && game.status.abstractGameState === 'Preview') || onAppleTV) &&
+				'min-h-rlh',
+			onAppleTV && 'px-[4em]',
 		)}
 		style:grid-area="description"
 	>
@@ -156,6 +161,16 @@
 			</strong>
 		{/if}
 	</span>
+
+	{#if onAppleTV}
+		<span
+			class="flex h-rlh items-center self-end justify-self-end px-ch text-current/60"
+			style:grid-area="description"
+			title="Streaming on Apple TV"
+		>
+			<AppleTVIcon class="h-[1.1em] w-auto" />
+		</span>
+	{/if}
 
 	<div class="relative z-1 has-data-loading:h-full has-data-loading:bg-background" style:grid-area="boxscore">
 		{#if boxscore}
