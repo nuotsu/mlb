@@ -76,6 +76,7 @@
 
 		if (data.view === 'playoff') {
 			return leagueGroups.map(({ key, heading, records }) => {
+				const prefix = leagueSide(key) ? `${leagueSide(key)} ` : ''
 				const teamRecords = records.flatMap(({ teamRecords }) => teamRecords)
 				const leaders = teamRecords.filter(isDivisionLeader).sort(byRecord)
 				const others = teamRecords.filter((r) => !isDivisionLeader(r)).sort(byWildCardRank)
@@ -94,7 +95,7 @@
 					heading,
 					tables: [
 						{
-							title: 'Division Leaders',
+							title: `${prefix}Division Leaders`,
 							teamRecords: leaders,
 							gamesBack: 'leagueGamesBack',
 							firstSeed: 1,
@@ -102,7 +103,7 @@
 						...(data.wildCardSpots
 							? [
 									{
-										title: 'Wild Card',
+										title: `${prefix}Wild Card`,
 										teamRecords: wildCards,
 										gamesBack: 'wildCardGamesBack',
 										firstSeed: leaders.length + 1,
