@@ -488,6 +488,28 @@ export function leagueSide(leagueId?: number): LeagueSide | undefined {
 	return leagueId ? LEAGUE_IDS[leagueId] : undefined
 }
 
+/** Best record first: winning percentage, then wins. */
+export const byRecord = (a: MLB.TeamRecord, b: MLB.TeamRecord) =>
+	Number(b.winningPercentage) - Number(a.winningPercentage) || b.wins - a.wins
+
+export const isDivisionLeader = (r: MLB.TeamRecord) => r.divisionLeader ?? r.divisionRank === '1'
+
+/** MLB's wild card order, falling back to record for teams it hasn't ranked. */
+export const byWildCardRank = (a: MLB.TeamRecord, b: MLB.TeamRecord) =>
+	(Number(a.wildCardRank) || Infinity) - (Number(b.wildCardRank) || Infinity) || byRecord(a, b)
+
+/**
+ * Postseason spots per league beyond the division winners. 2020's expanded field also took
+ * every division's runner-up, which comes to 5 on top of the leaders.
+ */
+export function wildCardSpots(season: number) {
+	if (season === 2020) return 5
+	if (season >= 2022) return 3
+	if (season >= 2012) return 2
+	if (season >= 1995) return 1
+	return 0
+}
+
 /**
  * Seeds one league from the standings: division leaders by record take seeds 1-3, then the
  * wild card order. The template's first round is the 4v5 and 3v6 series, whose winners meet
@@ -506,19 +528,8 @@ function seedFromStandings(
 		),
 	)
 
-	const byRecord = (a: MLB.TeamRecord, b: MLB.TeamRecord) =>
-		Number(b.winningPercentage) - Number(a.winningPercentage) || b.wins - a.wins
-
-	const isLeader = (r: MLB.TeamRecord) => r.divisionLeader ?? r.divisionRank === '1'
-
-	const leaders = records.filter(isLeader).sort(byRecord)
-	const wildCards = records
-		.filter((r) => !isLeader(r))
-		.sort(
-			(a, b) =>
-				(Number(a.wildCardRank) || Infinity) - (Number(b.wildCardRank) || Infinity) ||
-				byRecord(a, b),
-		)
+	const leaders = records.filter(isDivisionLeader).sort(byRecord)
+	const wildCards = records.filter((r) => !isDivisionLeader(r)).sort(byWildCardRank)
 
 	const seeds = [...leaders, ...wildCards].slice(0, 6)
 	const seed = (n: number): BracketTeam | undefined => {

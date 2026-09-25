@@ -2,6 +2,7 @@
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
+	import { byRecord, byWildCardRank, isDivisionLeader, leagueSide } from '$lib/postseason/bracket'
 	import { formatDate } from '$lib/temporal'
 	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
@@ -18,9 +19,113 @@
 
 	const since = $derived(formatDate(data.comparisonDate, { month: 'short', day: 'numeric' }))
 
-	const leagueGroups = $derived(
-		Object.groupBy(data.standings.records, (record) => record.league?.id ?? 0),
+	type StandingsRecord = (typeof data.standings.records)[number]
+
+	type Table = {
+		title: string
+		teamRecords: MLB.TeamRecord[]
+		/** Which games-back figure the table measures against. */
+		gamesBack: 'gamesBack' | 'leagueGamesBack' | 'wildCardGamesBack' | 'sportGamesBack'
+		/** Postseason seed of the table's first team, for tables that show seeds. */
+		firstSeed?: number
+		/** Rows above this index hold a postseason spot; a line is drawn beneath them. */
+		cutAfter?: number
+		/** Labels each team AL/NL, for tables that mix both leagues. */
+		showLeague?: boolean
+	}
+
+	/** Team ID to `'AL'`/`'NL'`; team records don't carry their league, only the record around them. */
+	const teamLeagues = $derived(
+		new Map(
+			data.standings.records.flatMap(({ league, teamRecords }) =>
+				teamRecords.map(({ team }) => [team.id, leagueSide(league?.id)] as const),
+			),
+		),
 	)
+
+	const leagueGroups = $derived(
+		Object.values(Object.groupBy(data.standings.records, (record) => record.league?.id ?? 0)).map(
+			(records = []) => ({
+				key: records[0]?.league?.id ?? 0,
+				heading: records[0]?.league?.name,
+				records,
+			}),
+		),
+	)
+
+	const groups = $derived.by((): { key: number; heading?: string; tables: Table[] }[] => {
+		if (data.view === 'mlb') {
+			const teamRecords = data.standings.records
+				.flatMap(({ teamRecords }) => teamRecords)
+				.sort(
+					(a, b) =>
+						(Number(a.sportRank) || Infinity) - (Number(b.sportRank) || Infinity) || byRecord(a, b),
+				)
+
+			return teamRecords.length
+				? [
+						{
+							key: 0,
+							tables: [
+								{ title: 'MLB', teamRecords, gamesBack: 'sportGamesBack', showLeague: true },
+							],
+						},
+					]
+				: []
+		}
+
+		if (data.view === 'playoff') {
+			return leagueGroups.map(({ key, heading, records }) => {
+				const prefix = leagueSide(key) ? `${leagueSide(key)} ` : ''
+				const teamRecords = records.flatMap(({ teamRecords }) => teamRecords)
+				const leaders = teamRecords.filter(isDivisionLeader).sort(byRecord)
+				const others = teamRecords.filter((r) => !isDivisionLeader(r)).sort(byWildCardRank)
+
+				// 2020's expanded field took every division's runner-up ahead of the wild cards.
+				const wildCards =
+					page.params.season === '2020'
+						? [
+								...others.filter((r) => r.divisionRank === '2').sort(byRecord),
+								...others.filter((r) => r.divisionRank !== '2'),
+							]
+						: others
+
+				return {
+					key,
+					heading,
+					tables: [
+						{
+							title: `${prefix}Division Leaders`,
+							teamRecords: leaders,
+							gamesBack: 'leagueGamesBack',
+							firstSeed: 1,
+						},
+						...(data.wildCardSpots
+							? [
+									{
+										title: `${prefix}Wild Card`,
+										teamRecords: wildCards,
+										gamesBack: 'wildCardGamesBack',
+										firstSeed: leaders.length + 1,
+										cutAfter: data.wildCardSpots,
+									} satisfies Table,
+								]
+							: []),
+					],
+				}
+			})
+		}
+
+		return leagueGroups.map(({ key, heading, records }) => ({
+			key,
+			heading,
+			tables: removeDuplicates(records.sort(sortOrder)).map(({ division, teamRecords }) => ({
+				title: division?.nameShort ?? '',
+				teamRecords,
+				gamesBack: 'gamesBack',
+			})),
+		}))
+	})
 
 	// Magic and elimination numbers only exist for the regular season.
 	const showMagicNumber = $derived(data.standingsType === 'regularSeason')
@@ -76,14 +181,11 @@
 		return value !== undefined && value !== '' && !isNaN(Number(value))
 	}
 
-	function sortOrder(
-		a: (typeof data.standings.records)[number],
-		b: (typeof data.standings.records)[number],
-	) {
+	function sortOrder(a: StandingsRecord, b: StandingsRecord) {
 		return (a.division?.sortOrder ?? 0) - (b.division?.sortOrder ?? 0)
 	}
 
-	function removeDuplicates(records: (typeof data.standings.records)[number][]) {
+	function removeDuplicates(records: StandingsRecord[]) {
 		const seen = new Set<number>()
 		return records.filter((record) => {
 			const id = record.division?.id
@@ -102,9 +204,9 @@
 		name: `${page.params.season} MLB Standings`,
 		url: `https://mlb.theohtani.com/standings/${page.params.season}`,
 		itemListElement: data.standings.records.flatMap(({ division, teamRecords }) =>
-			teamRecords.map(({ team, wins, losses, winningPercentage, leagueRank }) => ({
+			teamRecords.map(({ team, wins, losses, winningPercentage, leagueRank, sportRank }) => ({
 				'@type': 'ListItem',
-				position: Number(leagueRank),
+				position: Number(data.view === 'mlb' ? sportRank : leagueRank),
 				name: `${team.name} (${wins}-${losses}, ${winningPercentage})`,
 				item: {
 					'@type': 'SportsTeam',
@@ -127,9 +229,13 @@
 		<div class="mx-auto flex flex-wrap items-center justify-center gap-ch text-center">
 			<div class="flex items-center gap-px">
 				<SelectSport available={data.availableSportIds} />
-				<SelectGameType class="button text-center" available={data.availableGameTypes} />
+				<SelectGameType
+					class="button text-center"
+					available={data.availableGameTypes}
+					options={[{ value: 'MLB', label: 'MLB' }]}
+				/>
 			</div>
-			{#if data.standingsType === 'postseason'}
+			{#if page.url.searchParams.get('gameType') === 'P'}
 				<a class="button flex items-center gap-[.5ch]" href="/postseason/{page.params.season}">
 					<TrophyIcon class="size-[1em]" />
 					Bracket
@@ -144,12 +250,13 @@
 </Header>
 
 <section class="grid gap-lh p-ch">
-	{#each Object.entries(leagueGroups) as [leagueId, records] (leagueId)}
-		{@const divisions = removeDuplicates((records ?? []).sort(sortOrder))}
+	{#each groups as { key, heading, tables } (key)}
 		<div class="flex flex-col gap-ch">
-			<h2 class="px-ch text-sm text-current/50">{divisions?.[0]?.league?.name}</h2>
-			<div class="grid items-start gap-[2lh]">
-				{#each divisions as { division, teamRecords }, i (i)}
+			{#if heading}
+				<h2 class="px-ch text-sm text-current/50">{heading}</h2>
+			{/if}
+			<div class={cn('grid items-start', data.view === 'playoff' ? 'gap-[.5lh]' : 'gap-[2lh]')}>
+				{#each tables as { title, teamRecords, gamesBack: gamesBackKey, firstSeed, cutAfter, showLeague }, i (i)}
 					<div class="overflow-x-auto overflow-y-hidden">
 						<table class="w-max min-w-full text-center">
 							<thead>
@@ -162,11 +269,11 @@
 									<th
 										class="sticky left-0 z-1 min-w-[10ch] bg-background text-left text-foreground md:w-[1%] md:min-w-[24ch]"
 									>
-										<span class="line-clamp-1 break-all">{division?.nameShort}</span>
+										<span class="line-clamp-1 break-all">{title}</span>
 									</th>
 									<th class="w-[8ch]">W-L</th>
 									<th class="w-[5ch]">%</th>
-									<th class="w-[5ch]">GB</th>
+									<th class="w-[5ch]">{gamesBackKey === 'wildCardGamesBack' ? 'WCGB' : 'GB'}</th>
 									<th class="w-[5ch]">Strk</th>
 									{#if showMagicNumber}
 										<th class="w-[6ch]">Magic</th>
@@ -176,12 +283,24 @@
 								</tr>
 							</thead>
 							<tbody>
-								{#each teamRecords as record (record.team.id)}
-									{@const { team, wins, losses, winningPercentage, gamesBack, streak, leagueRank } =
-										record}
+								{#each teamRecords as record, row (record.team.id)}
+									{@const { team, wins, losses, winningPercentage, streak } = record}
+									{@const gamesBack = record[gamesBackKey] ?? '-'}
+									{@const rank = data.view === 'mlb' ? record.sportRank : record.leagueRank}
 									{@const change = data.rankChanges[team.id]}
 									{@const magic = magicNumber(record)}
-									<tr class="hover:[&>td]:bg-foreground/10">
+									{@const seed =
+										firstSeed && (cutAfter === undefined || row < cutAfter)
+											? firstSeed + row
+											: undefined}
+									<tr
+										class={cn(
+											'hover:[&>td]:bg-foreground/10',
+											row === (cutAfter ?? 0) - 1 &&
+												row < teamRecords.length - 1 &&
+												'[&>td]:border-b-2 [&>td]:border-dashed [&>td]:border-current/50',
+										)}
+									>
 										<td
 											class={cn(
 												'sticky left-0 z-1 min-w-[10ch] bg-background md:w-[1%] md:min-w-[24ch]',
@@ -191,7 +310,23 @@
 												},
 											)}
 										>
-											<StyledTeam class="text-left" {team} linked />
+											<div class="flex items-center gap-ch">
+												{#if firstSeed}
+													<span
+														class="w-[2ch] shrink-0 text-right text-sm text-current/50 tabular-nums"
+														title={seed ? `No. ${seed} seed` : undefined}
+													>
+														{seed ?? ''}
+													</span>
+												{/if}
+												<StyledTeam class="min-w-0 flex-1 text-left" {team} linked>
+													{#if showLeague && teamLeagues.get(team.id)}
+														<small class="ml-auto pe-[.5ch] text-xs text-current/50">
+															{teamLeagues.get(team.id)}
+														</small>
+													{/if}
+												</StyledTeam>
+											</div>
 										</td>
 										<td class="flex justify-center tabular-nums">
 											<span class="positive">{wins}</span>
@@ -206,7 +341,13 @@
 										>
 											{winningPercentage}
 										</td>
-										<td class={cn('tabular-nums', gamesBack === '0' && 'text-current/50')}>
+										<td
+											class={cn(
+												'tabular-nums',
+												(gamesBack === '0' || gamesBack === '-') && 'text-current/50',
+												gamesBack.startsWith('+') && 'positive',
+											)}
+										>
 											{gamesBack === '0' ? '-' : gamesBack}
 										</td>
 										<td
@@ -225,7 +366,7 @@
 												{/if}
 											</td>
 										{/if}
-										<td class="tabular-nums">{leagueRank}</td>
+										<td class="tabular-nums">{rank}</td>
 										<td
 											class="tabular-nums"
 											class:positive={change > 0}
