@@ -164,11 +164,11 @@
 
 	{#if onAppleTV}
 		<span
-			class="flex h-rlh items-center self-end justify-self-end px-ch text-current/60"
+			class="flex h-rlh items-center self-end justify-self-end px-ch text-[#fff]"
 			style:grid-area="description"
 			title="Streaming on Apple TV"
 		>
-			<AppleTVIcon class="h-[1.1em] w-auto" />
+			<AppleTVIcon class="h-[0.8em] w-auto" />
 		</span>
 	{/if}
 
