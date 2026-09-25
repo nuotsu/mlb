@@ -255,7 +255,7 @@
 			{#if heading}
 				<h2 class="px-ch text-sm text-current/50">{heading}</h2>
 			{/if}
-			<div class={cn('grid items-start', data.view === 'playoff' ? 'gap-lh' : 'gap-[2lh]')}>
+			<div class={cn('grid items-start', data.view === 'playoff' ? 'gap-[.5lh]' : 'gap-[2lh]')}>
 				{#each tables as { title, teamRecords, gamesBack: gamesBackKey, firstSeed, cutAfter, showLeague }, i (i)}
 					<div class="overflow-x-auto overflow-y-hidden">
 						<table class="w-max min-w-full text-center">
