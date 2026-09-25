@@ -30,7 +30,7 @@
 		firstSeed?: number
 		/** Rows above this index hold a postseason spot; a line is drawn beneath them. */
 		cutAfter?: number
-		/** Adds an AL/NL column, for tables that mix both leagues. */
+		/** Labels each team AL/NL, for tables that mix both leagues. */
 		showLeague?: boolean
 	}
 
@@ -270,9 +270,6 @@
 									>
 										<span class="line-clamp-1 break-all">{title}</span>
 									</th>
-									{#if showLeague}
-										<th class="w-[5ch]">Lg</th>
-									{/if}
 									<th class="w-[8ch]">W-L</th>
 									<th class="w-[5ch]">%</th>
 									<th class="w-[5ch]">{gamesBackKey === 'wildCardGamesBack' ? 'WCGB' : 'GB'}</th>
@@ -321,12 +318,15 @@
 														{seed ?? ''}
 													</span>
 												{/if}
-												<StyledTeam class="min-w-0 flex-1 text-left" {team} linked />
+												<StyledTeam class="min-w-0 flex-1 text-left" {team} linked>
+													{#if showLeague && teamLeagues.get(team.id)}
+														<small class="ml-auto pe-[.5ch] text-xs text-current/50">
+															{teamLeagues.get(team.id)}
+														</small>
+													{/if}
+												</StyledTeam>
 											</div>
 										</td>
-										{#if showLeague}
-											<td class="text-current/50">{teamLeagues.get(team.id) ?? '-'}</td>
-										{/if}
 										<td class="flex justify-center tabular-nums">
 											<span class="positive">{wins}</span>
 											-
