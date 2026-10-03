@@ -1,4 +1,4 @@
-import { playgroundAction } from '$ui/playground/action'
+import { playgroundAction } from '#ui/playground/action.js'
 import type { Actions } from './$types'
 
 export const actions = {

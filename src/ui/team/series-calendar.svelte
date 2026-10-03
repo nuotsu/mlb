@@ -3,11 +3,11 @@
 	import { fetchSeason } from '#lib/fetch/presets.js'
 	import { formatDate } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
+	import Divider from '#ui/divider.svelte'
+	import Empty from '#ui/empty.svelte'
+	import Loading from '#ui/loading.svelte'
+	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import { browser } from '$app/env'
-	import Divider from '$ui/divider.svelte'
-	import Empty from '$ui/empty.svelte'
-	import Loading from '$ui/loading.svelte'
-	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 	import StyledTeam from './styled-team.svelte'
 
 	let {
@@ -69,13 +69,12 @@
 		for (const game of games) {
 			const isHome = game.teams.home.team.id === team.id
 			const opponent = isHome ? game.teams.away.team : game.teams.home.team
-			const startNew =
+			if (
 				!current ||
 				game.seriesGameNumber === 1 ||
 				current.opponent.id !== opponent.id ||
 				current.isHome !== isHome
-
-			if (startNew) {
+			) {
 				current = {
 					type: 'series',
 					opponent,

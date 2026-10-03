@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Baseball from '$ui/baseball.svelte'
-	import Breadcrumbs from '$ui/breadcrumbs.svelte'
-	import Metadata from '$ui/metadata.svelte'
-	import TableOfContents from '$ui/table-of-contents.svelte'
+	import Baseball from '#ui/baseball.svelte'
+	import Breadcrumbs from '#ui/breadcrumbs.svelte'
+	import Metadata from '#ui/metadata.svelte'
+	import TableOfContents from '#ui/table-of-contents.svelte'
 	import type { PageData } from './$types'
 
 	const { data }: { data: PageData } = $props()

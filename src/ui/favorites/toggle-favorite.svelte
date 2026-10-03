@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import { StarEmptyIcon, StarIcon } from '#ui/icons/index.js'
 	import { dev } from '$app/env'
-	import { favoritesStore } from '$ui/favorites/store.svelte'
-	import { StarEmptyIcon, StarIcon } from '$ui/icons'
 	import posthog from 'posthog-js'
 	import type { HTMLAttributes } from 'svelte/elements'
 

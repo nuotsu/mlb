@@ -1,4 +1,4 @@
-import { getAllBlogs } from '$ui/blog/get-blog'
+import { getAllBlogs } from '#ui/blog/get-blog.js'
 
 const BASE = 'https://mlb.theohtani.com'
 

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { pitchSpeedColor } from '#lib/colors.js'
 	import type { PitchArsenalPitch } from '#lib/fetch/savant.js'
+	import Empty from '#ui/empty.svelte'
+	import Loading from '#ui/loading.svelte'
 	import { browser } from '$app/env'
-	import Empty from '$ui/empty.svelte'
-	import Loading from '$ui/loading.svelte'
 
 	let { person }: { person: MLB.Person & { stats: MLB.PlayerStats[] } } = $props()
 

@@ -9,7 +9,7 @@
 	}
 
 	let timeDiff = $state(getTimeDiff())
-	let interval: NodeJS.Timeout | null = $state(null)
+	let interval: ReturnType<typeof setInterval> | null = $state(null)
 
 	$effect(() => {
 		interval = setInterval(() => {

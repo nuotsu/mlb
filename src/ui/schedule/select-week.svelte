@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { formatDate, formatWeekRange, getToday, slash } from '#lib/temporal.js'
 	import { maintainSearchParams } from '#lib/url.svelte.js'
-	import { CalendarTodayIcon, ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
+	import { CalendarTodayIcon, ChevronLeftIcon, ChevronRightIcon } from '#ui/icons/index.js'
 
 	let {
 		date,

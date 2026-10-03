@@ -1,4 +1,4 @@
-import { CUSTOM_ENDPOINT_KEY, ENDPOINTS } from '$ui/playground/constants'
+import { CUSTOM_ENDPOINT_KEY, ENDPOINTS } from '#ui/playground/constants.js'
 
 export function matchEndpoint(urlPath: string) {
 	let parameterizedMatch: { key: string; pathParams: Record<string, string> } | null = null

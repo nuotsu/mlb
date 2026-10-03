@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { pitchSpeedColor } from '#lib/colors.js'
 	import { cn } from '#lib/utils.js'
-	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
-	import Headshot from '$ui/player/headshot.svelte'
+	import { ChevronLeftIcon, ChevronRightIcon } from '#ui/icons/index.js'
+	import Headshot from '#ui/player/headshot.svelte'
 
 	let {
 		plays,
@@ -524,23 +524,23 @@
 							<span class="text-blue-500">{hitOutcomeLabel}</span>
 						{/if}
 						{#if hitHasOut || hitOutcomeLabel}
-							{#if hrDistance != null || hitData.launchSpeed != null || hitData.launchAngle != null}
+							{#if hrDistance != null || hitData?.launchSpeed != null || hitData?.launchAngle != null}
 								<span class="text-current/40">·</span>
 							{/if}
 						{/if}
 						{#if hrDistance != null}
 							<span>{hrDistance} ft</span>
 						{/if}
-						{#if hrDistance != null && (hitData.launchSpeed != null || hitData.launchAngle != null)}
+						{#if hrDistance != null && (hitData?.launchSpeed != null || hitData?.launchAngle != null)}
 							<span class="text-current/40">·</span>
 						{/if}
-						{#if hitData.launchSpeed != null}
+						{#if hitData?.launchSpeed != null}
 							<span>{hitData.launchSpeed.toFixed(1)} mph</span>
 						{/if}
-						{#if hitData.launchSpeed != null && hitData.launchAngle != null}
+						{#if hitData?.launchSpeed != null && hitData?.launchAngle != null}
 							<span class="text-current/40">·</span>
 						{/if}
-						{#if hitData.launchAngle != null}
+						{#if hitData?.launchAngle != null}
 							<span>{Math.round(hitData.launchAngle)}°</span>
 						{/if}
 					</p>

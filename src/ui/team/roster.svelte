@@ -1,6 +1,6 @@
 <script lang="ts">
-	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
-	import Headshot from '$ui/player/headshot.svelte'
+	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
 
 	let { roster, coaches }: { roster: MLB.Roster[]; coaches: MLB.Coach[] } = $props()
 

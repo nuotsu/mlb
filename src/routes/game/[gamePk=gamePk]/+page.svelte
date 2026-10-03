@@ -7,21 +7,21 @@
 	} from '#lib/fetch/presets.js'
 	import { formatDate } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
-	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
-	import AllPlays from '$ui/game/all-plays.svelte'
-	import AtBatSequence from '$ui/game/at-bat-sequence.svelte'
-	import Boxscore from '$ui/game/boxscore.svelte'
-	import Decision from '$ui/game/decision.svelte'
-	import GameData from '$ui/game/game-data.svelte'
-	import Game from '$ui/game/game.svelte'
-	import Highlights from '$ui/game/highlights.svelte'
-	import HomeRuns from '$ui/game/home-runs.svelte'
-	import Reviews from '$ui/game/reviews.svelte'
-	import TopPerformers from '$ui/game/top-performers.svelte'
-	import WinProbability from '$ui/game/win-probability.svelte'
-	import Header from '$ui/header.svelte'
-	import Metadata from '$ui/metadata.svelte'
-	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
+	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
+	import AllPlays from '#ui/game/all-plays.svelte'
+	import AtBatSequence from '#ui/game/at-bat-sequence.svelte'
+	import Boxscore from '#ui/game/boxscore.svelte'
+	import Decision from '#ui/game/decision.svelte'
+	import GameData from '#ui/game/game-data.svelte'
+	import Game from '#ui/game/game.svelte'
+	import Highlights from '#ui/game/highlights.svelte'
+	import HomeRuns from '#ui/game/home-runs.svelte'
+	import Reviews from '#ui/game/reviews.svelte'
+	import TopPerformers from '#ui/game/top-performers.svelte'
+	import WinProbability from '#ui/game/win-probability.svelte'
+	import Header from '#ui/header.svelte'
+	import Metadata from '#ui/metadata.svelte'
+	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import type { PageProps } from './$types'
 
 	let { data, params }: PageProps = $props()
@@ -149,7 +149,7 @@
 			{#if isLive || isFinal}
 				<AtBatSequence
 					plays={feedLive?.liveData?.plays}
-					players={feedLive?.gameData?.players}
+					players={feedLive?.gameData?.players as Record<string, MLB.Person> | undefined}
 					status={game?.status}
 					bind:pinnedIndex={pinnedAtBatIndex}
 				/>

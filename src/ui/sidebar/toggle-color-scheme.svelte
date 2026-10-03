@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '#lib/utils.js'
-	import { MoonIcon, SunIcon } from '$ui/icons'
-	import { colorSchemeStore } from '$ui/store.svelte'
+	import { MoonIcon, SunIcon } from '#ui/icons/index.js'
+	import { colorSchemeStore } from '#ui/store.svelte.js'
 
 	let mode = $derived(colorSchemeStore.mode)
 

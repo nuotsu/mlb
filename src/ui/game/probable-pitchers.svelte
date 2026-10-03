@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
-	import Headshot from '$ui/player/headshot.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
 
 	let { game }: { game: MLB.Game } = $props()
 

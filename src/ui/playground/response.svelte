@@ -1,7 +1,7 @@
 <script lang="ts">
+	import ClickToCopy from '#ui/click-to-copy.svelte'
+	import CodeBlock from '#ui/code-block/code-block.svelte'
 	import { page } from '$app/state'
-	import ClickToCopy from '$ui/click-to-copy.svelte'
-	import CodeBlock from '$ui/code-block/code-block.svelte'
 	import { HOST } from './constants'
 
 	let form = $derived(page.form)

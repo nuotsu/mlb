@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { page } from '$app/state'
-	import { version } from '$pkg'
+	import { version } from '#pkg'
 	import {
 		ArrowsDiffIcon,
 		BatIcon,
@@ -14,7 +13,8 @@
 		MegaphoneIcon,
 		RankIcon,
 		TrophyIcon,
-	} from '$ui/icons'
+	} from '#ui/icons/index.js'
+	import { page } from '$app/state'
 	import type { Component } from 'svelte'
 	import CompareList from './compare-list.svelte'
 	import Drawer from './drawer.svelte'

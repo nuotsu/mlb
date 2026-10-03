@@ -1,6 +1,6 @@
 import { getPostHogClient } from '#lib/server/posthog.js'
+import { HOST } from '#ui/playground/constants.js'
 import { dev } from '$app/env'
-import { HOST } from '$ui/playground/constants'
 
 export async function playgroundAction({ request }: { request: Request }) {
 	const formData = await request.formData()

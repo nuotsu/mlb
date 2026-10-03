@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { getToday } from '#lib/temporal.js'
+	import Empty from '#ui/empty.svelte'
+	import Loading from '#ui/loading.svelte'
+	import HotColdZones from '#ui/stats/hot-cold-zones.svelte'
+	import SelectSeason from '#ui/stats/select-season.svelte'
 	import { browser } from '$app/env'
-	import Empty from '$ui/empty.svelte'
-	import Loading from '$ui/loading.svelte'
-	import HotColdZones from '$ui/stats/hot-cold-zones.svelte'
-	import SelectSeason from '$ui/stats/select-season.svelte'
 
 	let {
 		group,

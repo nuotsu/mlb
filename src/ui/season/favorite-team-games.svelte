@@ -2,9 +2,9 @@
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { formatDate, getToday } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
+	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import { browser } from '$app/env'
-	import { favoritesStore } from '$ui/favorites/store.svelte'
-	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 
 	type FavoriteTeamGames = {
 		team: MLB.TeamDetailed

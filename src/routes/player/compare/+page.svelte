@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { LOWER_IS_BETTER } from '#lib/stats.js'
 	import { cn } from '#lib/utils.js'
+	import CompareForm from '#ui/compare/form.svelte'
+	import { compareStore } from '#ui/compare/store.svelte.js'
+	import Empty from '#ui/empty.svelte'
+	import Header from '#ui/header.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
 	import { browser } from '$app/env'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import CompareForm from '$ui/compare/form.svelte'
-	import { compareStore } from '$ui/compare/store.svelte'
-	import Empty from '$ui/empty.svelte'
-	import Header from '$ui/header.svelte'
-	import Headshot from '$ui/player/headshot.svelte'
 	import type { PageProps } from './$types'
 
 	let { form }: PageProps = $props()

@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { cn } from '#lib/utils.js'
-	import Empty from '$ui/empty.svelte'
-	import { favoritesStore } from '$ui/favorites/store.svelte'
-	import Loading from '$ui/loading.svelte'
-	import Headshot from '$ui/player/headshot.svelte'
+	import Empty from '#ui/empty.svelte'
+	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import Loading from '#ui/loading.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
 
 	let { feedLive }: { feedLive: MLB.LiveGameFeed } = $props()
 

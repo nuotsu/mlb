@@ -39,6 +39,8 @@
 	}}
 >
 	{#each GAME_TYPES as { value, label } (value)}
-		<option {value} selected={value === gameType} disabled={available && !available.includes(value)}>{label}</option>
+		<option {value} selected={value === gameType} disabled={available && !available.includes(value)}
+			>{label}</option
+		>
 	{/each}
 </select>

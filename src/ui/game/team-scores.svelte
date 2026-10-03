@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '#lib/utils.js'
-	import StyledTeam from '$ui/team/styled-team.svelte'
+	import StyledTeam from '#ui/team/styled-team.svelte'
 
 	let {
 		game,

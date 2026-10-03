@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Transaction from '$ui/transactions/transaction.svelte'
+	import Transaction from '#ui/transactions/transaction.svelte'
 
 	let {
 		transactions,

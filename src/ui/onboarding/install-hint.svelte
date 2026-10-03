@@ -1,7 +1,7 @@
 <script lang="ts">
+	import Hint from '#ui/onboarding/hint.svelte'
+	import { HINTS, onboardingStore } from '#ui/onboarding/store.svelte.js'
 	import { browser, dev } from '$app/env'
-	import Hint from '$ui/onboarding/hint.svelte'
-	import { HINTS, onboardingStore } from '$ui/onboarding/store.svelte'
 	import posthog from 'posthog-js'
 	import { onMount } from 'svelte'
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { monthName } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
-	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
+	import { ChevronLeftIcon, ChevronRightIcon } from '#ui/icons/index.js'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {

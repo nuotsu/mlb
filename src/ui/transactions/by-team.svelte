@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Empty from '$ui/empty.svelte'
-	import { favoritesStore } from '$ui/favorites/store.svelte'
-	import Transaction from '$ui/transactions/transaction.svelte'
-	import { processTransactions } from '$ui/transactions/utils'
+	import Empty from '#ui/empty.svelte'
+	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import Transaction from '#ui/transactions/transaction.svelte'
+	import { processTransactions } from '#ui/transactions/utils.js'
 
 	let {
 		transactions,

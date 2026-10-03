@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { CollapseHorizontalIcon, ExpandHorizontalIcon } from '$ui/icons'
-	import Video from '$ui/video.svelte'
+	import { CollapseHorizontalIcon, ExpandHorizontalIcon } from '#ui/icons/index.js'
+	import Video from '#ui/video.svelte'
 	import { untrack } from 'svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
 

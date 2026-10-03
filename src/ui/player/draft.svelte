@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Logo from '$ui/team/logo.svelte'
+	import Logo from '#ui/team/logo.svelte'
 
 	let {
 		person,

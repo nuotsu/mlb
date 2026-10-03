@@ -1,5 +1,5 @@
 import { formatDate } from '#lib/temporal.js'
-import { getWeekDates } from '$ui/schedule/store.svelte'
+import { getWeekDates } from '#ui/schedule/store.svelte.js'
 import { createPreset as createFetcher, fetchMLB } from '.'
 
 export async function fetchSeason(year: string, sportId = '1') {
@@ -121,7 +121,7 @@ export async function fetchPitchingGameLogs(
 	personIds: (string | number)[],
 	season: string | number,
 ) {
-	if (!personIds.length) return { people: [] } as MLB.PersonResponse
+	if (!personIds.length) return { copyright: '', people: [] } as MLB.PersonResponse
 
 	return fetchMLB<MLB.PersonResponse>('/api/v1/people', {
 		personIds: personIds.map(String),

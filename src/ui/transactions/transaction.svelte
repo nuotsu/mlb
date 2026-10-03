@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { ArrowsDiffIcon } from '$ui/icons'
-	import Headshot from '$ui/player/headshot.svelte'
-	import Logo from '$ui/team/logo.svelte'
+	import { ArrowsDiffIcon } from '#ui/icons/index.js'
+	import Headshot from '#ui/player/headshot.svelte'
+	import Logo from '#ui/team/logo.svelte'
 
 	let {
 		transaction,

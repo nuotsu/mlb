@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { cn } from '#lib/utils.js'
-	import { favoritesStore } from '$ui/favorites/store.svelte'
-	import Headshot from '$ui/player/headshot.svelte'
+	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import Headshot from '#ui/player/headshot.svelte'
 
 	let { feedLive }: { feedLive: MLB.LiveGameFeed } = $props()
 

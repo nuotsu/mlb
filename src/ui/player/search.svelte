@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { count, debounce } from '#lib/utils.js'
+	import ToggleCompare from '#ui/compare/toggle-compare.svelte'
+	import Empty from '#ui/empty.svelte'
+	import { SearchIcon } from '#ui/icons/index.js'
+	import Loading from '#ui/loading.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
 	import { dev } from '$app/env'
 	import { page } from '$app/state'
-	import ToggleCompare from '$ui/compare/toggle-compare.svelte'
-	import Empty from '$ui/empty.svelte'
-	import { SearchIcon } from '$ui/icons'
-	import Loading from '$ui/loading.svelte'
-	import Headshot from '$ui/player/headshot.svelte'
 	import posthog from 'posthog-js'
 	import { untrack } from 'svelte'
 

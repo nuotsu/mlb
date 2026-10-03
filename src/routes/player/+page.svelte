@@ -1,8 +1,8 @@
 <script lang="ts">
-	import Header from '$ui/header.svelte'
-	import Metadata from '$ui/metadata.svelte'
-	import Headshot from '$ui/player/headshot.svelte'
-	import Search from '$ui/player/search.svelte'
+	import Header from '#ui/header.svelte'
+	import Metadata from '#ui/metadata.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
+	import Search from '#ui/player/search.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { roundName, type BracketSeries } from '#lib/postseason/bracket.js'
 	import { cn } from '#lib/utils.js'
-	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
+	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import TeamAvatar from './team-avatar.svelte'
 
 	let { series, spoiler = false }: { series: BracketSeries; spoiler?: boolean } = $props()

@@ -2,9 +2,9 @@
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { ENABLED_BASEBALL_STATS } from '#lib/stats.js'
 	import { formatDate, getToday } from '#lib/temporal.js'
+	import { compareStore } from '#ui/compare/store.svelte.js'
+	import SelectSeason from '#ui/stats/select-season.svelte'
 	import { enhance } from '$app/forms'
-	import { compareStore } from '$ui/compare/store.svelte'
-	import SelectSeason from '$ui/stats/select-season.svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	// MLB API inconsistency: `name` from /baseballStats doesn't always match the actual JSON key

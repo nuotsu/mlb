@@ -1,8 +1,8 @@
 <script lang="ts">
+	import Offline from '#ui/offline.svelte'
+	import Sidebar from '#ui/sidebar/nav.svelte'
 	import { browser } from '$app/env'
 	import { afterNavigate, beforeNavigate } from '$app/navigation'
-	import Offline from '$ui/offline.svelte'
-	import Sidebar from '$ui/sidebar/nav.svelte'
 	import posthog from 'posthog-js'
 	import './app.css'
 

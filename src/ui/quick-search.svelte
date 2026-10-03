@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { resolveQuery } from '#lib/quick-search.js'
 	import { cn } from '#lib/utils.js'
+	import { SearchIcon } from '#ui/icons/index.js'
 	import { dev } from '$app/env'
 	import { goto } from '$app/navigation'
-	import { SearchIcon } from '$ui/icons'
 	import posthog from 'posthog-js'
 
 	let { class: className }: { class?: string } = $props()

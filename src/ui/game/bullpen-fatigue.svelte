@@ -2,10 +2,10 @@
 	import { fetchPitchingGameLogs } from '#lib/fetch/presets.js'
 	import { daysBetween, formatDate, slash } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
+	import Empty from '#ui/empty.svelte'
+	import Loading from '#ui/loading.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
 	import { browser } from '$app/env'
-	import Empty from '$ui/empty.svelte'
-	import Loading from '$ui/loading.svelte'
-	import Headshot from '$ui/player/headshot.svelte'
 
 	let {
 		team,

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getToday } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
-	import { CalendarTodayIcon, ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
+	import { CalendarTodayIcon, ChevronLeftIcon, ChevronRightIcon } from '#ui/icons/index.js'
 	import type { HTMLAttributes, HTMLInputAttributes } from 'svelte/elements'
 
 	let {

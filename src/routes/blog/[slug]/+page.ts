@@ -1,4 +1,4 @@
-import { getPostEntry } from '$ui/blog/get-blog'
+import { getPostEntry } from '#ui/blog/get-blog.js'
 import type { PageLoad } from './$types'
 
 export const load: PageLoad = async ({ params }) => {

@@ -10,7 +10,7 @@ tags:
 ---
 
 <script lang="ts">
-  import RecapImage from '$ui/blog/recap-image.svelte'
+  import RecapImage from '#ui/blog/recap-image.svelte'
 </script>
 
 Nobody saw it coming. Not like this.
