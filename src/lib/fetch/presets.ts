@@ -1,4 +1,4 @@
-import { formatDate } from '$lib/temporal'
+import { formatDate } from '#lib/temporal.js'
 import { getWeekDates } from '$ui/schedule/store.svelte'
 import { createPreset as createFetcher, fetchMLB } from '.'
 

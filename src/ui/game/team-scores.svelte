@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
+	import { cn } from '#lib/utils.js'
 	import StyledTeam from '$ui/team/styled-team.svelte'
 
 	let {
@@ -42,11 +42,7 @@
 						aria-label="{remaining} ABS challenge{remaining === 1 ? '' : 's'} remaining"
 					>
 						{#each [0, 1] as i (i)}
-							<span
-								class={cn(
-									'block size-[.15lh]',
-									i < remaining ? 'bg-tmobile' : 'bg-current/25',
-								)}
+							<span class={cn('block size-[.15lh]', i < remaining ? 'bg-tmobile' : 'bg-current/25')}
 							></span>
 						{/each}
 					</span>
@@ -54,7 +50,7 @@
 
 				<StyledTeam
 					class="min-w-0 grow bg-background"
-					team={team}
+					{team}
 					record={game.teams[teamKey].leagueRecord}
 					linked
 				>

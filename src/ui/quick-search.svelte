@@ -1,13 +1,12 @@
 <script lang="ts">
-	import { dev } from '$app/environment'
+	import { resolveQuery } from '#lib/quick-search.js'
+	import { cn } from '#lib/utils.js'
+	import { dev } from '$app/env'
 	import { goto } from '$app/navigation'
-	import { resolveQuery } from '$lib/quick-search'
-	import { cn } from '$lib/utils'
 	import { SearchIcon } from '$ui/icons'
 	import posthog from 'posthog-js'
 
 	let { class: className }: { class?: string } = $props()
-
 	let query = $state('')
 	let resolving = $state(false)
 
@@ -15,9 +14,11 @@
 		event.preventDefault()
 
 		const q = query.trim()
+
 		if (!q || resolving) return
 
 		resolving = true
+
 		try {
 			const href = await resolveQuery(q)
 			if (!dev) posthog.capture('quick_search_query', { query: q, href })

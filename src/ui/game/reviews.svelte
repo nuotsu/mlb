@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
+	import { cn } from '#lib/utils.js'
 	import Empty from '$ui/empty.svelte'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
@@ -59,7 +59,10 @@
 		return details.isOverturned ? 'retained' : 'lost'
 	}
 
-	function fateFromOutcome(outcome: ReviewOutcome, hasChallenger: boolean): ChallengeFate | undefined {
+	function fateFromOutcome(
+		outcome: ReviewOutcome,
+		hasChallenger: boolean,
+	): ChallengeFate | undefined {
 		if (!hasChallenger || outcome === 'Pending') return undefined
 		return outcome === 'Overturned' ? 'retained' : 'lost'
 	}
@@ -111,7 +114,9 @@
 	}
 
 	function lastPitchCount(play: MLB.Play): MLB.Count | undefined {
-		const pitches = (play.playEvents ?? []).filter((event) => event.isPitch || event.type === 'pitch')
+		const pitches = (play.playEvents ?? []).filter(
+			(event) => event.isPitch || event.type === 'pitch',
+		)
 		return pitches.at(-1)?.count ?? play.count
 	}
 
@@ -224,8 +229,7 @@
 				<dd class="flex flex-wrap items-center gap-x-[.5ch] leading-none tabular-nums">
 					<span class="text-xs text-current/40">{kind}</span>
 					<span class="text-current/40">·</span>
-					<span
-						class={cn(fate === 'retained' && 'positive', fate === 'lost' && 'negative')}
+					<span class={cn(fate === 'retained' && 'positive', fate === 'lost' && 'negative')}
 						>{outcome}</span
 					>
 					{#if count}

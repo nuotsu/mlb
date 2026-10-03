@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { monthName } from '$lib/temporal'
-	import { cn } from '$lib/utils'
+	import { monthName } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
 	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 	import type { HTMLAttributes } from 'svelte/elements'
 

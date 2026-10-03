@@ -1,7 +1,7 @@
-import { getPostHogClient } from '$lib/server/posthog.js'
-import { createMcpServer } from '$lib/mcp/server.js'
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js'
-import { env } from '$env/dynamic/private'
+import { createMcpServer } from '#lib/mcp/server.js'
+import { getPostHogClient } from '#lib/server/posthog.js'
+import { MCP_SECRET } from '$app/env/private'
 import type { RequestHandler } from './$types'
 
 export const config = {
@@ -31,7 +31,7 @@ function unauthorized(): Response {
 }
 
 function checkAuthorized(request: Request): Response | null {
-	const secret = env.MCP_SECRET
+	const secret = MCP_SECRET
 	if (!secret) return null
 	const auth = request.headers.get('authorization')
 	if (auth === `Bearer ${secret}`) return null
@@ -51,9 +51,13 @@ export const GET: RequestHandler = () =>
 
 async function handle(request: Request): Promise<Response> {
 	const denied = checkAuthorized(request)
+
 	if (denied) return denied
 
-	const body = await request.clone().json().catch(() => null)
+	const body = await request
+		.clone()
+		.json()
+		.catch(() => null)
 	const method = body?.method as string | undefined
 
 	if (method) {
@@ -72,7 +76,9 @@ async function handle(request: Request): Promise<Response> {
 		sessionIdGenerator: undefined, // stateless mode
 	})
 	const server = createMcpServer()
+
 	await server.connect(transport)
+
 	return withCors(await transport.handleRequest(request))
 }
 

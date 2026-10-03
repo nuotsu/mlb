@@ -1,6 +1,6 @@
 <script lang="ts">
-	import type { BracketSeries } from '$lib/postseason/bracket'
-	import { cn } from '$lib/utils'
+	import type { BracketSeries } from '#lib/postseason/bracket.js'
+	import { cn } from '#lib/utils.js'
 
 	let {
 		series,

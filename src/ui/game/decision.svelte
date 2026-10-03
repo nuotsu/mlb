@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { fetchMLB } from '$lib/fetch'
-	import { cn } from '$lib/utils'
+	import { fetchMLB } from '#lib/fetch/index.js'
+	import { cn } from '#lib/utils.js'
 	import Empty from '$ui/empty.svelte'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import Loading from '$ui/loading.svelte'

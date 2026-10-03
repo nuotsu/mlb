@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fetchMLB } from '$lib/fetch'
+	import { fetchMLB } from '#lib/fetch/index.js'
 	import Awards from '$ui/banner/awards.svelte'
 	import Baseball from '$ui/baseball.svelte'
 	import Rollup from '$ui/blog/rollup.svelte'

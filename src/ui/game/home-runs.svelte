@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
+	import { cn } from '#lib/utils.js'
 	import Empty from '$ui/empty.svelte'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import Headshot from '$ui/player/headshot.svelte'

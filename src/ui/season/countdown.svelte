@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { slash } from '$lib/temporal'
-	import { cn } from '$lib/utils'
+	import { slash } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
 
 	let { date = '', until, href }: { date?: string; until: string; href?: string } = $props()
 

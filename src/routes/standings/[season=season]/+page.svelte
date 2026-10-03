@@ -1,10 +1,15 @@
 <script lang="ts">
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import {
+		byRecord,
+		byWildCardRank,
+		isDivisionLeader,
+		leagueSide,
+	} from '#lib/postseason/bracket.js'
+	import { formatDate } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
-	import { byRecord, byWildCardRank, isDivisionLeader, leagueSide } from '$lib/postseason/bracket'
-	import { formatDate } from '$lib/temporal'
-	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
 	import { ArrowUpIcon, TrophyIcon } from '$ui/icons'

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
-	import { cn } from '$lib/utils'
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import { cn } from '#lib/utils.js'
 	import type { Snippet } from 'svelte'
 	import Logo from './logo.svelte'
 

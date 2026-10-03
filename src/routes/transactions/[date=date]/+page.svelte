@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { fetchWeekTransactions } from '#lib/fetch/presets.js'
+	import { formatDate, getToday, slash } from '#lib/temporal.js'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { fetchWeekTransactions } from '$lib/fetch/presets'
-	import { formatDate, getToday, slash } from '$lib/temporal'
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'

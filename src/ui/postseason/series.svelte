@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { roundName, type BracketSeries } from '$lib/postseason/bracket'
-	import { cn } from '$lib/utils'
+	import { roundName, type BracketSeries } from '#lib/postseason/bracket.js'
+	import { cn } from '#lib/utils.js'
 	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 	import TeamAvatar from './team-avatar.svelte'
 

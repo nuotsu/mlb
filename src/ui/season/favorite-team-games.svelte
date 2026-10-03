@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
-	import { fetchMLB } from '$lib/fetch'
-	import { formatDate, getToday } from '$lib/temporal'
-	import { cn } from '$lib/utils'
+	import { fetchMLB } from '#lib/fetch/index.js'
+	import { formatDate, getToday } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
+	import { browser } from '$app/env'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 
@@ -17,7 +17,6 @@
 			.map((f) => f.href.split('/').pop())
 			.filter((id): id is string => !!id),
 	)
-
 	const today = $derived(formatDate(getToday(), { locale: 'en-CA' }))
 
 	// Memoize per team + date so `{#await}` doesn't refetch on every re-render

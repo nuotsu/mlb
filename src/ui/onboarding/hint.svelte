@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { CloseIcon, InfoIcon } from '$ui/icons'
 	import { onboardingStore, type HintId } from '$ui/onboarding/store.svelte'
 	import type { Snippet } from 'svelte'

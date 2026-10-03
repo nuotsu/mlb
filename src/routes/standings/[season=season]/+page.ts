@@ -1,7 +1,7 @@
-import { cacheControlForSeasonPage } from '$lib/cache-control'
-import { fetchMLB } from '$lib/fetch'
-import { wildCardSpots } from '$lib/postseason/bracket'
-import { addDays, formatDate, getToday } from '$lib/temporal'
+import { cacheControlForSeasonPage } from '#lib/cache-control.js'
+import { fetchMLB } from '#lib/fetch/index.js'
+import { wildCardSpots } from '#lib/postseason/bracket.js'
+import { addDays, formatDate, getToday } from '#lib/temporal.js'
 import type { PageLoad } from './$types'
 
 /** How far back the "Change" column looks. */

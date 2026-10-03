@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { formatDate, getToday, slash } from '$lib/temporal'
-	import { cn } from '$lib/utils'
+	import { formatDate, getToday, slash } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
 	import { ChevronRightIcon } from '$ui/icons'
 	import FavoriteTeamGames from './favorite-team-games.svelte'
 

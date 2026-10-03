@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { labelDrag } from '$lib/attachments/label-drag'
+	import { labelDrag } from '#lib/attachments/label-drag.js'
 	import type { HTMLAttributes } from 'svelte/elements'
 	import HomePlate from './home-plate.svelte'
 	import Strikezone from './strikezone.svelte'

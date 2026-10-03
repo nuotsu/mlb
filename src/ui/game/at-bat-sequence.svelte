@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { pitchSpeedColor } from '$lib/colors'
-	import { cn } from '$lib/utils'
+	import { pitchSpeedColor } from '#lib/colors.js'
+	import { cn } from '#lib/utils.js'
 	import { ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 	import Headshot from '$ui/player/headshot.svelte'
 

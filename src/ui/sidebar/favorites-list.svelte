@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
-	import { cn } from '$lib/utils'
+	import { cn } from '#lib/utils.js'
+	import { browser } from '$app/env'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import { StarEmptyIcon } from '$ui/icons'
 	import Headshot from '$ui/player/headshot.svelte'

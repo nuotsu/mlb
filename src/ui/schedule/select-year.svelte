@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { getToday } from '#lib/temporal.js'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { getToday } from '$lib/temporal'
 	import { CalendarTodayIcon, ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
 
 	let {

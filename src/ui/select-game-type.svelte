@@ -26,7 +26,7 @@
 	class={className}
 	value={gameType}
 	onchange={(e) => {
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		const value = (e.target as HTMLSelectElement).value
 
 		if (value !== 'R') {

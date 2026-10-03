@@ -1,5 +1,5 @@
-import { shouldBlockCrawler } from '$lib/server/traffic'
-import type { Handle } from '@sveltejs/kit'
+import type { Handle } from '@sveltejs/kit/hooks'
+import { shouldBlockCrawler } from '#lib/server/traffic.js'
 
 export const handle: Handle = async ({ event, resolve }) => {
 	if (shouldBlockCrawler(event.url.pathname, event.request.headers.get('user-agent'))) {

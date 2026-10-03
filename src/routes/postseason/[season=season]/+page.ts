@@ -1,7 +1,7 @@
-import { cacheControlForSeasonPage } from '$lib/cache-control'
-import { fetchMLB } from '$lib/fetch'
-import { buildBracket, leagueSide, type TeamInfo } from '$lib/postseason/bracket'
-import { getToday } from '$lib/temporal'
+import { cacheControlForSeasonPage } from '#lib/cache-control.js'
+import { fetchMLB } from '#lib/fetch/index.js'
+import { buildBracket, leagueSide, type TeamInfo } from '#lib/postseason/bracket.js'
+import { getToday } from '#lib/temporal.js'
 import type { PageLoad } from './$types'
 
 export const load: PageLoad = async ({ params, setHeaders }) => {

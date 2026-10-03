@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatDate } from '$lib/temporal'
+	import { formatDate } from '#lib/temporal.js'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {

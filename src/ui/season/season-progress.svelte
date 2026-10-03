@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { slash } from '$lib/temporal'
+	import { slash } from '#lib/temporal.js'
 
 	let {
 		currentDate,

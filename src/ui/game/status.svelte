@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { formatDate } from '$lib/temporal'
-	import { cn } from '$lib/utils'
+	import { formatDate } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
 	import Inning from './inning.svelte'
 
 	let {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
+	import { cn } from '#lib/utils.js'
 	import Divider from '$ui/divider.svelte'
 	import Empty from '$ui/empty.svelte'
 	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'

@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { labelDrag } from '#lib/attachments/label-drag.js'
 	import { page } from '$app/state'
-	import { labelDrag } from '$lib/attachments/label-drag'
 	import Empty from '$ui/empty.svelte'
 	import YearByYear from '$ui/stats/year-by-year.svelte'
 	import type { HTMLAttributes } from 'svelte/elements'

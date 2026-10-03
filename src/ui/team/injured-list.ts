@@ -1,4 +1,4 @@
-import { addDays, daysBetween, getToday } from '$lib/temporal'
+import { addDays, daysBetween, getToday } from '#lib/temporal.js'
 
 type ILTerm = {
 	/** Badge text, e.g. `DTD` or `IL-10` */

@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
-	import { fetchPitchingGameLogs } from '$lib/fetch/presets'
-	import { daysBetween, formatDate, slash } from '$lib/temporal'
-	import { cn } from '$lib/utils'
+	import { fetchPitchingGameLogs } from '#lib/fetch/presets.js'
+	import { daysBetween, formatDate, slash } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
+	import { browser } from '$app/env'
 	import Empty from '$ui/empty.svelte'
 	import Loading from '$ui/loading.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
@@ -11,12 +11,7 @@
 		team,
 		gameDate,
 		class: className,
-	}: {
-		team: MLB.TeamBoxscore
-		gameDate: string
-		class?: string
-	} = $props()
-
+	}: { team: MLB.TeamBoxscore; gameDate: string; class?: string } = $props()
 	const WINDOW_DAYS = 14
 	const FATIGUE_CAP = 100
 	const BACK_TO_BACK_PENALTY = 10
@@ -70,6 +65,7 @@
 			const app = sorted[i]
 			const daysAgo = daysBetween(app.date, anchorDate)
 			const weight = Math.max(0, (WINDOW_DAYS - daysAgo) / WINDOW_DAYS)
+
 			fatigue += app.pitches * weight
 			outs += app.outs
 			pitches += app.pitches
@@ -95,7 +91,9 @@
 
 	function displayName(person: MLB.Person) {
 		if (person.lastInitName) return person.lastInitName
+
 		const initial = person.firstName?.[0] ?? person.useName?.[0] ?? ''
+
 		return person.lastName ? `${person.lastName}, ${initial}` : (person.fullName ?? '')
 	}
 
@@ -109,8 +107,8 @@
 	): Promise<BullpenRow[]> {
 		const season = String(new Date(slash(anchorDate)).getFullYear())
 		const cutoff = windowCutoff(anchorDate)
-
 		const people = await fetchPitchingGameLogs(pitcherIds, season)
+
 		const byId = new Map(
 			(people.people ?? []).map((person) => [
 				person.id,
@@ -123,13 +121,13 @@
 		for (const pitcherId of pitcherIds) {
 			const boxPlayer = team.players[`ID${pitcherId}`]
 			const person = byId.get(pitcherId) ?? boxPlayer?.person
+
 			if (!person) continue
 
 			const splits =
 				(person as MLB.Person & { stats?: MLB.PlayerStats[] }).stats?.flatMap(
 					(s) => s.splits ?? [],
 				) ?? []
-
 			const windowSplits: Appearance[] = []
 			const fatigueSplits: Appearance[] = []
 
@@ -146,9 +144,11 @@
 			}
 
 			const startedInWindow = windowSplits.some((a) => a.gamesStarted > 0)
+
 			if (startedInWindow || pitcherId === starterId) continue
 
 			const scored = scoreFatigue(fatigueSplits, anchorDate)
+
 			rows.push({
 				person: {
 					...person,

@@ -4,9 +4,9 @@
 		fetchfeedLive,
 		fetchLinescore,
 		fetchWinProbability,
-	} from '$lib/fetch/presets'
-	import { formatDate } from '$lib/temporal'
-	import { cn } from '$lib/utils'
+	} from '#lib/fetch/presets.js'
+	import { formatDate } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
 	import ToggleFavorite from '$ui/favorites/toggle-favorite.svelte'
 	import AllPlays from '$ui/game/all-plays.svelte'
 	import AtBatSequence from '$ui/game/at-bat-sequence.svelte'

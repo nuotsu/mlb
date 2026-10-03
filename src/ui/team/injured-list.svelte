@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatDate, formatRelativeDays } from '$lib/temporal'
+	import { formatDate, formatRelativeDays } from '#lib/temporal.js'
 	import Headshot from '$ui/player/headshot.svelte'
 	import type { InjuredPlayer } from './injured-list'
 

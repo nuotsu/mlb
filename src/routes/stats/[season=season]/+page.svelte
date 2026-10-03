@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import { cn } from '#lib/utils.js'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
-	import { cn } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
 	import Loading from '$ui/loading.svelte'
@@ -28,7 +28,7 @@
 	let pitchingSortStat = $derived(page.url.searchParams.get('pitchingSortStat') ?? 'era')
 
 	function withParam(key: string, value: string) {
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		if (value) {
 			url.searchParams.set(key, value)
 		} else {

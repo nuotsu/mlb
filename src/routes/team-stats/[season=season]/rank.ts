@@ -1,4 +1,4 @@
-import { LOWER_IS_BETTER } from '$lib/stats'
+import { LOWER_IS_BETTER } from '#lib/stats.js'
 
 export type StatGroup = 'hitting' | 'pitching'
 

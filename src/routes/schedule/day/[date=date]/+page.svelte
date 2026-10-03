@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { invalidate, pushState } from '$app/navigation'
+	import { fetchDaySchedule, fetchSeason } from '#lib/fetch/presets.js'
+	import { formatDate, getToday, slash } from '#lib/temporal.js'
+	import { maintainSearchParams } from '#lib/url.svelte.js'
+	import { goto, invalidate } from '$app/navigation'
 	import { page } from '$app/state'
-	import { fetchDaySchedule, fetchSeason } from '$lib/fetch/presets'
-	import { formatDate, getToday, slash } from '$lib/temporal'
-	import { maintainSearchParams } from '$lib/url.svelte'
 	import Divider from '$ui/divider.svelte'
 	import Empty from '$ui/empty.svelte'
 	import { sortFavorite } from '$ui/favorites/store.svelte'
@@ -18,7 +18,6 @@
 	import { fetchSeasonProgress } from './fetch-season-progress'
 
 	let { data }: PageProps = $props()
-
 	let currentDate = $state(page.params.date!)
 	let schedule = $derived(data.schedule)
 	let seasonProgress = $derived(data.seasonProgress)
@@ -27,7 +26,8 @@
 	const seriesRecords = $derived(
 		(() => {
 			const map = new Map<string, { homeWins: number; awayWins: number }>()
-			for (const date of (data.seriesContext?.dates ?? [])) {
+
+			for (const date of data.seriesContext?.dates ?? []) {
 				for (const g of date.games) {
 					if (!g.gamesInSeries || g.gamesInSeries <= 1) continue
 					if (g.status.abstractGameState !== 'Final') continue
@@ -55,7 +55,9 @@
 
 	$effect(() => {
 		if (!isToday) return
+
 		const interval = setInterval(() => invalidate('schedule:day'), 1000 * 60 * 3) // 3 min
+
 		return () => clearInterval(interval)
 	})
 
@@ -68,7 +70,7 @@
 			schedule,
 		)
 		season = await fetchSeason(new Date(slash(currentDate)).getFullYear().toString())
-		pushState(`/schedule/day/${date}`, {})
+		goto(`/schedule/day/${date}`, { shallow: true })
 	}
 
 	const formattedDate = $derived(
@@ -134,7 +136,14 @@
 		>
 			{#each processedGames as game (game.gamePk)}
 				{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
-				<Game {game} {linescore} showDescription showLiveDetails seriesRecord={seriesRecords.get(`${game.teams.home.team.id}-${game.teams.away.team.id}`)} />
+
+				<Game
+					{game}
+					{linescore}
+					showDescription
+					showLiveDetails
+					seriesRecord={seriesRecords.get(`${game.teams.home.team.id}-${game.teams.away.team.id}`)}
+				/>
 			{/each}
 		</div>
 	{/if}

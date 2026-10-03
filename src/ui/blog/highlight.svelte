@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fetchMLB } from '$lib/fetch'
+	import { fetchMLB } from '#lib/fetch/index.js'
 	import Loading from '$ui/loading.svelte'
 	import Video from '$ui/video.svelte'
 

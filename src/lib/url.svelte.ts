@@ -5,7 +5,7 @@ const DEFAULTS = {
 }
 
 export function maintainSearchParams(pathname: string) {
-	const url = new URL(page.url)
+	const url = new URL(page.url.href)
 	url.pathname = pathname
 
 	const searchParams = new URLSearchParams(page.url.search)

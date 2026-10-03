@@ -1,6 +1,6 @@
-import { fetchMLB } from '$lib/fetch'
-import { fetchDaySchedule } from '$lib/fetch/presets'
-import { formatDate, getToday } from '$lib/temporal'
+import { fetchMLB } from '#lib/fetch/index.js'
+import { fetchDaySchedule } from '#lib/fetch/presets.js'
+import { formatDate, getToday } from '#lib/temporal.js'
 
 type Team = {
 	id: number

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { fetchLiveMLB } from '$lib/fetch/live.svelte'
-	import { formatDate, getToday } from '$lib/temporal'
+	import { fetchLiveMLB } from '#lib/fetch/live.svelte.js'
+	import { formatDate, getToday } from '#lib/temporal.js'
 
 	let { sportId = '1' }: { sportId?: string } = $props()
 

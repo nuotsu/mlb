@@ -1,7 +1,7 @@
-import { fetchDaySchedule, fetchSeason } from '$lib/fetch/presets'
-import { fetchMLB, notFoundOnMlb404 } from '$lib/fetch'
-import { cacheControlForScheduleDay } from '$lib/cache-control'
-import { getToday, slash } from '$lib/temporal'
+import { cacheControlForScheduleDay } from '#lib/cache-control.js'
+import { fetchMLB, notFoundOnMlb404 } from '#lib/fetch/index.js'
+import { fetchDaySchedule, fetchSeason } from '#lib/fetch/presets.js'
+import { getToday, slash } from '#lib/temporal.js'
 import { fetchSeasonProgress } from './fetch-season-progress'
 
 // A 500 here invites crawler retries; dates MLB has no data for are a 404, not a server error.
@@ -22,10 +22,10 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 	const [schedule, season, { leagues }, seriesContext] = await Promise.all([
 		fetchDaySchedule(params.date, sportId),
 		fetchSeason(year),
-		fetchMLB<MLB.LeaguesResponse>(
-			'/api/v1/leagues',
-			{ season: year, fields: 'leagues,id,sport,id' },
-		),
+		fetchMLB<MLB.LeaguesResponse>('/api/v1/leagues', {
+			season: year,
+			fields: 'leagues,id,sport,id',
+		}),
 		fetchMLB<MLB.ScheduleResponse>(
 			'/api/v1/schedule',
 			{
@@ -42,7 +42,9 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 		),
 	]).catch(notFoundOnMissingData)
 
-	const availableSportIds = [...new Set(leagues.map((l) => l.sport?.id).filter(Boolean))] as number[]
+	const availableSportIds = [
+		...new Set(leagues.map((l) => l.sport?.id).filter(Boolean)),
+	] as number[]
 	const seasonProgress = await fetchSeasonProgress(sportId, year, schedule)
 
 	return {

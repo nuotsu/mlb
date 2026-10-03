@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
+	import { cn } from '#lib/utils.js'
 	import Empty from '$ui/empty.svelte'
 	import Logo from '$ui/team/logo.svelte'
 	import BaseRunners from './base-runners.svelte'

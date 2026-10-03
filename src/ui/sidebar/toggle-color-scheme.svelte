@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
+	import { cn } from '#lib/utils.js'
 	import { MoonIcon, SunIcon } from '$ui/icons'
 	import { colorSchemeStore } from '$ui/store.svelte'
 

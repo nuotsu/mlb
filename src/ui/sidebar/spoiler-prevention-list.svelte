@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
+	import { browser } from '$app/env'
 	import { EyeOffIcon } from '$ui/icons'
 	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 	import Logo from '$ui/team/logo.svelte'

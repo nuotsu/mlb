@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { monthName } from '#lib/temporal.js'
+	import { cn, ordinal } from '#lib/utils.js'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { monthName } from '$lib/temporal'
-	import { cn, ordinal } from '$lib/utils'
 	import Empty from '$ui/empty.svelte'
 	import Header from '$ui/header.svelte'
 	import Metadata from '$ui/metadata.svelte'
@@ -43,7 +43,7 @@
 	}
 
 	function withParam(key: string, value: string) {
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		if (value) {
 			url.searchParams.set(key, value)
 		} else {

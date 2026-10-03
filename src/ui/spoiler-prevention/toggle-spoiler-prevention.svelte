@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { dev } from '$app/environment'
+	import { dev } from '$app/env'
 	import { EyeIcon, EyeOffIcon } from '$ui/icons'
 	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 	import posthog from 'posthog-js'
@@ -27,13 +27,7 @@
 	class="group/spoiler text-current/50 transition-colors *:size-lh has-checked:text-accent {className}"
 	title="Toggle spoiler prevention"
 >
-	<input
-		class="sr-only"
-		type="checkbox"
-		value={team.id}
-		{checked}
-		onchange={toggle}
-	/>
+	<input class="sr-only" type="checkbox" value={team.id} {checked} onchange={toggle} />
 
 	<EyeIcon class=" group-has-checked/spoiler:hidden" />
 	<EyeOffIcon class=" group-not-has-checked/spoiler:hidden" />

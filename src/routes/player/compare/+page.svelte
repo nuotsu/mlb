@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
+	import { LOWER_IS_BETTER } from '#lib/stats.js'
+	import { cn } from '#lib/utils.js'
+	import { browser } from '$app/env'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { LOWER_IS_BETTER } from '$lib/stats'
-	import { cn } from '$lib/utils'
 	import CompareForm from '$ui/compare/form.svelte'
 	import { compareStore } from '$ui/compare/store.svelte'
 	import Empty from '$ui/empty.svelte'
@@ -12,13 +12,9 @@
 	import type { PageProps } from './$types'
 
 	let { form }: PageProps = $props()
-
 	let people = $derived(
-		form?.results?.people as unknown as (MLB.Person & {
-			stats: MLB.PlayerStats[]
-		})[],
+		form?.results?.people as unknown as (MLB.Person & { stats: MLB.PlayerStats[] })[],
 	)
-
 	let selectedStats = $derived(form?.entries.stats.split(','))
 	let selectedGroup = $derived(form?.entries.group as string)
 
@@ -36,7 +32,7 @@
 		if (!browser) return
 
 		const ids = compareStore.ids
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 
 		if (ids.length) {
 			url.searchParams.set('ids', ids.join(','))
@@ -45,7 +41,7 @@
 		}
 
 		if (url.toString() !== page.url.toString()) {
-			goto(url.toString(), { replaceState: true, keepFocus: true, noScroll: true })
+			goto(url.toString(), { replaceState: true, reset: false })
 		}
 	})
 </script>
@@ -56,7 +52,7 @@
 		{ href: '/player', name: 'Players' },
 		{ href: '/player/compare', name: 'Player Comparison' },
 	]}
-></Header>
+/>
 
 <CompareForm />
 

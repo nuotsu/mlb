@@ -1,4 +1,4 @@
-import { formatDate, slash } from '$lib/temporal'
+import { formatDate, slash } from '#lib/temporal.js'
 
 export function getWeekDates(date: string) {
 	const t = new Date(slash(date))

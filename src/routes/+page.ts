@@ -1,6 +1,6 @@
-import { fetchMLB } from '$lib/fetch'
-import { fetchSeason } from '$lib/fetch/presets'
-import { formatDate, getToday } from '$lib/temporal'
+import { fetchMLB } from '#lib/fetch/index.js'
+import { fetchSeason } from '#lib/fetch/presets.js'
+import { formatDate, getToday } from '#lib/temporal.js'
 import { getAllBlogs } from '$ui/blog/get-blog'
 import type { PageLoad } from './$types'
 

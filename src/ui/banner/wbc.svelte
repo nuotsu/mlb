@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatDate, getToday } from '$lib/temporal'
+	import { formatDate, getToday } from '#lib/temporal.js'
 	import { ChevronRightIcon } from '$ui/icons'
 
 	const links: { label: string; href: string }[] = [

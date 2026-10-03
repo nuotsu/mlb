@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
+	import { cn } from '#lib/utils.js'
 	import { favoritesStore } from '$ui/favorites/store.svelte'
 	import Headshot from '$ui/player/headshot.svelte'
 
@@ -20,9 +20,7 @@
 					: 'fielding'}
 			{@const { summary } =
 				(player.stats?.[key] as unknown as
-					| MLB.BattingStats
-					| MLB.PitchingStats
-					| MLB.FieldingStats) ?? {}}
+					MLB.BattingStats | MLB.PitchingStats | MLB.FieldingStats) ?? {}}
 
 			<div
 				class={cn(

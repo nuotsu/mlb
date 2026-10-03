@@ -1,5 +1,5 @@
-import { cacheControlForScheduleDay } from '$lib/cache-control'
-import { fetchWeekTransactions } from '$lib/fetch/presets'
+import { cacheControlForScheduleDay } from '#lib/cache-control.js'
+import { fetchWeekTransactions } from '#lib/fetch/presets.js'
 import type { PageLoad } from './$types'
 
 export const load: PageLoad = async ({ params, url, setHeaders }) => {

@@ -1,4 +1,4 @@
-import { getToday } from '$lib/temporal'
+import { getToday } from '#lib/temporal.js'
 
 export const HOST = 'https://statsapi.mlb.com'
 

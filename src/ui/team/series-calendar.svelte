@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
-	import { fetchMLB } from '$lib/fetch'
-	import { fetchSeason } from '$lib/fetch/presets'
-	import { formatDate } from '$lib/temporal'
-	import { cn } from '$lib/utils'
+	import { fetchMLB } from '#lib/fetch/index.js'
+	import { fetchSeason } from '#lib/fetch/presets.js'
+	import { formatDate } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
+	import { browser } from '$app/env'
 	import Divider from '$ui/divider.svelte'
 	import Empty from '$ui/empty.svelte'
 	import Loading from '$ui/loading.svelte'
@@ -44,6 +44,7 @@
 
 	function isNonCountable(status: MLB.GameStatus) {
 		const state = status.detailedState
+
 		return (
 			state === 'Postponed' ||
 			state === 'Cancelled' ||

@@ -1,6 +1,6 @@
-import { cacheControlForSeasonPage } from '$lib/cache-control'
-import { fetchMLB } from '$lib/fetch'
-import { getToday } from '$lib/temporal'
+import { cacheControlForSeasonPage } from '#lib/cache-control.js'
+import { fetchMLB } from '#lib/fetch/index.js'
+import { getToday } from '#lib/temporal.js'
 import type { PageLoad } from './$types'
 import { HITTING_STATS, PITCHING_STATS, rankTeams, type StatGroup } from './rank'
 
