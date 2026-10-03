@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
-	import Headshot from '$ui/player/headshot.svelte'
+	import { cn } from '#lib/utils.js'
+	import Headshot from '#ui/player/headshot.svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {

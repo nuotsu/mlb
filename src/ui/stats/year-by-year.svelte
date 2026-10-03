@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LOWER_IS_BETTER } from '$lib/stats'
+	import { LOWER_IS_BETTER } from '#lib/stats.js'
 
 	let {
 		group,
@@ -211,7 +211,7 @@
 				onpointercancel={clearActiveIfMouse}
 			>
 				<!-- Invisible hit area for nearest-x interaction -->
-				<rect width={width} height={height} fill="transparent" />
+				<rect {width} {height} fill="transparent" />
 
 				<!-- Min/max value guidelines -->
 				<line

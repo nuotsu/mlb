@@ -1,7 +1,7 @@
 <script lang="ts">
-	import type { BracketTeam } from '$lib/postseason/bracket'
-	import { teamColor } from '$lib/team-colors'
-	import { cn } from '$lib/utils'
+	import type { BracketTeam } from '#lib/postseason/bracket.js'
+	import { teamColor } from '#lib/team-colors.js'
+	import { cn } from '#lib/utils.js'
 
 	let {
 		team,

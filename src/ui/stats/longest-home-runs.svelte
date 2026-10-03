@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
-	import type { LongestHomeRun } from '$lib/fetch/savant'
-	import { formatDate } from '$lib/temporal'
-	import { cn } from '$lib/utils'
-	import Empty from '$ui/empty.svelte'
-	import Headshot from '$ui/player/headshot.svelte'
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import type { LongestHomeRun } from '#lib/fetch/savant.js'
+	import { formatDate } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
+	import Empty from '#ui/empty.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
 
 	let { homeRuns }: { homeRuns: LongestHomeRun[] | null } = $props()
 

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import Rollup from '$ui/blog/rollup.svelte'
-	import Header from '$ui/header.svelte'
-	import Metadata from '$ui/metadata.svelte'
+	import Rollup from '#ui/blog/rollup.svelte'
+	import Header from '#ui/header.svelte'
+	import Metadata from '#ui/metadata.svelte'
 	import type { PageData } from './$types'
 
 	const { data }: { data: PageData } = $props()

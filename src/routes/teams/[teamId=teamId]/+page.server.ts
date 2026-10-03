@@ -1,7 +1,7 @@
-import { fetchMLB } from '$lib/fetch'
-import { fetchRosterByType, fetchTeamTransactions } from '$lib/fetch/presets'
-import { formatDate, getToday } from '$lib/temporal'
-import { buildInjuredList } from '$ui/team/injured-list'
+import { fetchMLB } from '#lib/fetch/index.js'
+import { fetchRosterByType, fetchTeamTransactions } from '#lib/fetch/presets.js'
+import { formatDate, getToday } from '#lib/temporal.js'
+import { buildInjuredList } from '#ui/team/injured-list.js'
 import type { PageServerLoad } from './$types'
 
 /** How far back to scan transactions for the placement that explains an injury */

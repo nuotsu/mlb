@@ -1,6 +1,6 @@
 <script lang="ts">
+	import { cn } from '#lib/utils.js'
 	import { page } from '$app/state'
-	import { cn } from '$lib/utils'
 	import { CUSTOM_ENDPOINT_PATH } from './constants'
 
 	let {

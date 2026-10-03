@@ -1,11 +1,11 @@
 <script lang="ts">
+	import Empty from '#ui/empty.svelte'
+	import Header from '#ui/header.svelte'
+	import Metadata from '#ui/metadata.svelte'
+	import Bracket from '#ui/postseason/bracket.svelte'
+	import SelectSeason from '#ui/stats/select-season.svelte'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import Empty from '$ui/empty.svelte'
-	import Header from '$ui/header.svelte'
-	import Metadata from '$ui/metadata.svelte'
-	import Bracket from '$ui/postseason/bracket.svelte'
-	import SelectSeason from '$ui/stats/select-season.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()

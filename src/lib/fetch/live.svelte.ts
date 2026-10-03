@@ -1,4 +1,4 @@
-import { HOST } from '$ui/playground/constants'
+import { HOST } from '#ui/playground/constants.js'
 
 export function fetchLiveMLB<T>(
 	endpoint: string,

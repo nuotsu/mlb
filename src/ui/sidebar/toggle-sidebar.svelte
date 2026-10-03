@@ -1,9 +1,10 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
+	import { SidebarIcon } from '#ui/icons/index.js'
+	import { browser } from '$app/env'
 	import { afterNavigate } from '$app/navigation'
-	import { SidebarIcon } from '$ui/icons'
 
 	let checked = $derived(browser ? localStorage.getItem('sidebar-open') === 'true' : true)
+
 	let isMobile = $state(false)
 
 	function handleIconClick(e: MouseEvent) {
@@ -32,7 +33,8 @@
 		}
 	})
 
-	afterNavigate(() => {
+	afterNavigate(({ shallow }) => {
+		if (shallow) return
 		if (isMobile) checked = false
 	})
 </script>

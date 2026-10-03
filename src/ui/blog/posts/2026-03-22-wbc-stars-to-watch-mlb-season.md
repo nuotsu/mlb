@@ -10,7 +10,7 @@ tags:
 ---
 
 <script lang="ts">
-  import Highlight from '$ui/blog/highlight.svelte'
+  import Highlight from '#ui/blog/highlight.svelte'
 </script>
 
 The confetti has barely settled in Miami and we're already two days from Opening Night.

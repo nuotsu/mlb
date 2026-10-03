@@ -1,15 +1,15 @@
 <script lang="ts">
+	import { isAppleTV } from '#lib/broadcasts.js'
+	import { fetchLiveMLB } from '#lib/fetch/live.svelte.js'
+	import { fetchBoxscore, fetchLinescore } from '#lib/fetch/presets.js'
+	import { cn } from '#lib/utils.js'
+	import Linescore from '#ui/game/linescore.svelte'
+	import ProbablePitchers from '#ui/game/probable-pitchers.svelte'
+	import TeamScores from '#ui/game/team-scores.svelte'
+	import { AppleTVIcon, ChevronRightIcon } from '#ui/icons/index.js'
+	import Loading from '#ui/loading.svelte'
+	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import { page } from '$app/state'
-	import { isAppleTV } from '$lib/broadcasts'
-	import { fetchLiveMLB } from '$lib/fetch/live.svelte'
-	import { fetchBoxscore, fetchLinescore } from '$lib/fetch/presets'
-	import { cn } from '$lib/utils'
-	import Linescore from '$ui/game/linescore.svelte'
-	import ProbablePitchers from '$ui/game/probable-pitchers.svelte'
-	import TeamScores from '$ui/game/team-scores.svelte'
-	import { AppleTVIcon, ChevronRightIcon } from '$ui/icons'
-	import Loading from '$ui/loading.svelte'
-	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
 	import BaseRunners from './base-runners.svelte'
 	import BSO from './bso.svelte'
 	import Matchup from './matchup.svelte'
@@ -173,7 +173,10 @@
 		</span>
 	{/if}
 
-	<div class="relative z-1 has-data-loading:h-full has-data-loading:bg-background" style:grid-area="boxscore">
+	<div
+		class="relative z-1 has-data-loading:h-full has-data-loading:bg-background"
+		style:grid-area="boxscore"
+	>
 		{#if boxscore}
 			<TeamScores
 				{game}

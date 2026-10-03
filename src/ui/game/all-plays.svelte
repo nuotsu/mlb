@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
-	import Empty from '$ui/empty.svelte'
-	import Logo from '$ui/team/logo.svelte'
+	import { cn } from '#lib/utils.js'
+	import Empty from '#ui/empty.svelte'
+	import Logo from '#ui/team/logo.svelte'
 	import BaseRunners from './base-runners.svelte'
 	import BSO from './bso.svelte'
 	import Outs from './outs.svelte'

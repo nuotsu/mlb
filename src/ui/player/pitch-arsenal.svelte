@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
-	import { pitchSpeedColor } from '$lib/colors'
-	import type { PitchArsenalPitch } from '$lib/fetch/savant'
-	import Empty from '$ui/empty.svelte'
-	import Loading from '$ui/loading.svelte'
+	import { pitchSpeedColor } from '#lib/colors.js'
+	import type { PitchArsenalPitch } from '#lib/fetch/savant.js'
+	import Empty from '#ui/empty.svelte'
+	import Loading from '#ui/loading.svelte'
+	import { browser } from '$app/env'
 
 	let { person }: { person: MLB.Person & { stats: MLB.PlayerStats[] } } = $props()
 
@@ -31,7 +31,9 @@
 
 	async function fetchArsenal(season: string) {
 		const response = await fetch(`/player/${person.id}/arsenal?season=${season}`)
+
 		if (!response.ok) throw new Error(`Pitch arsenal ${response.status}`)
+
 		return (await response.json()) as PitchArsenalPitch[]
 	}
 
@@ -39,7 +41,6 @@
 		style: 'percent',
 		maximumFractionDigits: 1,
 	})
-
 	const mph = (n: number) => n.toFixed(1)
 	const inches = (n: number) => Math.round(n).toString().replace('-', '−')
 
@@ -78,12 +79,13 @@
 							<thead class="text-sm">
 								<tr class="text-current/40">
 									<th class="px-[.5ch] text-left font-normal">Pitch</th>
-									<th class="px-[.5ch] font-normal">
-										<abbr title="Share of tracked pitches">Usage</abbr>
-									</th>
-									<th class="px-[.5ch] font-normal">
-										<abbr title="Release speed (mph): average, then min–max">Velo</abbr>
-									</th>
+									<th class="px-[.5ch] font-normal"
+										><abbr title="Share of tracked pitches">Usage</abbr></th
+									>
+									<th class="px-[.5ch] font-normal"
+										><abbr title="Release speed (mph): average, then min–max">Velo</abbr></th
+									>
+
 									<th class="px-[.5ch] font-normal">
 										<abbr
 											title="Induced vertical break (in): average, then 10th–90th percentile. Positive is rise."

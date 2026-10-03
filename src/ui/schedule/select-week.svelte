@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { formatDate, formatWeekRange, getToday, slash } from '$lib/temporal'
-	import { maintainSearchParams } from '$lib/url.svelte'
-	import { CalendarTodayIcon, ChevronLeftIcon, ChevronRightIcon } from '$ui/icons'
+	import { formatDate, formatWeekRange, getToday, slash } from '#lib/temporal.js'
+	import { maintainSearchParams } from '#lib/url.svelte.js'
+	import { CalendarTodayIcon, ChevronLeftIcon, ChevronRightIcon } from '#ui/icons/index.js'
 
 	let {
 		date,
@@ -27,10 +27,7 @@
 </script>
 
 <fieldset class="flex justify-center gap-px {className}">
-	<a
-		class="button"
-		href={maintainSearchParams(`${href}/${todayStr}`)}
-	>
+	<a class="button" href={maintainSearchParams(`${href}/${todayStr}`)}>
 		<CalendarTodayIcon value={today.getDate()} />
 	</a>
 

@@ -1,5 +1,5 @@
-import { fetchMLB } from '$lib/fetch'
-import { shuffle } from '$lib/utils'
+import { fetchMLB } from '#lib/fetch/index.js'
+import { shuffle } from '#lib/utils.js'
 
 const PLAYER_ID_MIN = 400000
 const PLAYER_ID_MAX = 800000

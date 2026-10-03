@@ -1,7 +1,7 @@
 <script lang="ts">
 	// @reference https://alexharri.com/blog/ascii-rendering
 
-	import { colorSchemeStore } from '$ui/store.svelte'
+	import { colorSchemeStore } from '#ui/store.svelte.js'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	type Vec3 = [number, number, number]

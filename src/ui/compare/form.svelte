@@ -1,10 +1,10 @@
 <script lang="ts">
+	import { fetchMLB } from '#lib/fetch/index.js'
+	import { ENABLED_BASEBALL_STATS } from '#lib/stats.js'
+	import { formatDate, getToday } from '#lib/temporal.js'
+	import { compareStore } from '#ui/compare/store.svelte.js'
+	import SelectSeason from '#ui/stats/select-season.svelte'
 	import { enhance } from '$app/forms'
-	import { fetchMLB } from '$lib/fetch'
-	import { ENABLED_BASEBALL_STATS } from '$lib/stats'
-	import { formatDate, getToday } from '$lib/temporal'
-	import { compareStore } from '$ui/compare/store.svelte'
-	import SelectSeason from '$ui/stats/select-season.svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	// MLB API inconsistency: `name` from /baseballStats doesn't always match the actual JSON key
@@ -179,7 +179,7 @@
 							{/each}
 						</select>
 					{:else if displayName === 'opposingTeamId'}
-						{#await fetchMLB<MLB.TeamsResponse>( '/api/v1/teams', { sportId: '1', fields: ['teams,id,name,abbreviation'] }, ) then { teams }}
+						{#await fetchMLB<MLB.TeamsResponse>( '/api/v1/teams', { sportId: '1', fields: ['teams,id,name,abbreviation'] } ) then { teams }}
 							<select class="button" name={displayName}>
 								<option value="">All teams</option>
 								{#each teams.sort((a, b) => a.name.localeCompare(b.name)) as t (t.id)}

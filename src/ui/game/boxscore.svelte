@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { cn } from '$lib/utils'
-	import Empty from '$ui/empty.svelte'
-	import { favoritesStore } from '$ui/favorites/store.svelte'
-	import BullpenFatigue from '$ui/game/bullpen-fatigue.svelte'
-	import { ArrowDownRightIcon } from '$ui/icons'
-	import Headshot from '$ui/player/headshot.svelte'
-	import ToggleSpoilerPrevention from '$ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
-	import StyledTeam from '$ui/team/styled-team.svelte'
+	import { cn } from '#lib/utils.js'
+	import Empty from '#ui/empty.svelte'
+	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import BullpenFatigue from '#ui/game/bullpen-fatigue.svelte'
+	import { ArrowDownRightIcon } from '#ui/icons/index.js'
+	import Headshot from '#ui/player/headshot.svelte'
+	import ToggleSpoilerPrevention from '#ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
+	import StyledTeam from '#ui/team/styled-team.svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {

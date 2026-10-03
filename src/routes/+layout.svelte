@@ -1,18 +1,28 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
+	import Offline from '#ui/offline.svelte'
+	import Sidebar from '#ui/sidebar/nav.svelte'
+	import { browser } from '$app/env'
 	import { afterNavigate, beforeNavigate } from '$app/navigation'
-	import Offline from '$ui/offline.svelte'
-	import Sidebar from '$ui/sidebar/nav.svelte'
 	import posthog from 'posthog-js'
 	import './app.css'
 
 	let { children } = $props()
 
 	if (browser) {
-		beforeNavigate(() => posthog.capture('$pageleave'))
-		afterNavigate(() => posthog.capture('$pageview'))
+		beforeNavigate(({ shallow }) => {
+			if (shallow) return
+
+			return posthog.capture('$pageleave')
+		})
+
+		afterNavigate(({ shallow }) => {
+			if (shallow) return
+
+			return posthog.capture('$pageview')
+		})
 
 		const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+
 		document.cookie = `tz=${tz};path=/;max-age=31536000;SameSite=Lax`
 	}
 </script>
@@ -46,9 +56,7 @@
 		sm:sidebar-open:m-[.5ch] sm:sidebar-open:ml-0 sm:sidebar-open:max-h-[calc(100dvh-1ch)] sm:sidebar-open:rounded-md
 	"
 >
-	<Offline />
-
-	{@render children()}
+	<Offline />{@render children()}
 </main>
 
 <style>

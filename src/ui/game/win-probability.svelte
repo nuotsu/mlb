@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { colorSchemeStore } from '$ui/store.svelte'
+	import { colorSchemeStore } from '#ui/store.svelte.js'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {

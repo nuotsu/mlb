@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit'
-import { HOST } from '$ui/playground/constants'
+import { HOST } from '#ui/playground/constants.js'
 import { fetchLiveMLB } from './live.svelte'
 
 const TIMEOUT_MS = 10_000

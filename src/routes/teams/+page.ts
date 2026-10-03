@@ -1,4 +1,4 @@
-import { fetchMLB, notFoundOnMlb404 } from '$lib/fetch'
+import { fetchMLB, notFoundOnMlb404 } from '#lib/fetch/index.js'
 import type { PageLoad } from './$types'
 
 export const load: PageLoad = async ({ url, fetch, setHeaders }) => {

@@ -1,7 +1,7 @@
-import { fetchMLB } from '$lib/fetch'
-import { fetchBoxscore, fetchfeedLive, fetchWinProbability } from '$lib/fetch/presets'
-import { cacheControlForGame } from '$lib/cache-control'
 import { error } from '@sveltejs/kit'
+import { cacheControlForGame } from '#lib/cache-control.js'
+import { fetchMLB } from '#lib/fetch/index.js'
+import { fetchBoxscore, fetchfeedLive, fetchWinProbability } from '#lib/fetch/presets.js'
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
@@ -44,7 +44,8 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 	const boxscore = boxscoreResult.status === 'fulfilled' ? boxscoreResult.value : null
 	const content = contentResult.status === 'fulfilled' ? contentResult.value : null
 
-	const winProbability = isLive || isFinal ? await fetchWinProbability(params.gamePk).catch(() => null) : null
+	const winProbability =
+		isLive || isFinal ? await fetchWinProbability(params.gamePk).catch(() => null) : null
 
 	let seriesRecord: { homeWins: number; awayWins: number } | null = null
 	if (game.gamesInSeries && game.gamesInSeries > 1) {
@@ -83,12 +84,10 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 			)
 
 			seriesRecord = {
-				homeWins: seriesGames.filter(
-					(g) => (g.teams.home.score ?? 0) > (g.teams.away.score ?? 0),
-				).length,
-				awayWins: seriesGames.filter(
-					(g) => (g.teams.away.score ?? 0) > (g.teams.home.score ?? 0),
-				).length,
+				homeWins: seriesGames.filter((g) => (g.teams.home.score ?? 0) > (g.teams.away.score ?? 0))
+					.length,
+				awayWins: seriesGames.filter((g) => (g.teams.away.score ?? 0) > (g.teams.home.score ?? 0))
+					.length,
 			}
 		} catch {
 			seriesRecord = null

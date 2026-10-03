@@ -1,6 +1,6 @@
-import { error, json } from '@sveltejs/kit'
-import { cacheControlForSeasonPage } from '$lib/cache-control'
-import { fetchPitchArsenal } from '$lib/fetch/savant'
+import { error } from '@sveltejs/kit'
+import { cacheControlForSeasonPage } from '#lib/cache-control.js'
+import { fetchPitchArsenal } from '#lib/fetch/savant.js'
 import type { RequestHandler } from './$types'
 
 /**
@@ -14,7 +14,7 @@ export const GET: RequestHandler = async ({ params, url, fetch }) => {
 	try {
 		const arsenal = await fetchPitchArsenal({ personId: params.personId, season }, { fetch })
 
-		return json(arsenal, {
+		return Response.json(arsenal, {
 			headers: { 'cache-control': cacheControlForSeasonPage(season) },
 		})
 	} catch (e) {

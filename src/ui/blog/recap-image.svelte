@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { fetchMLB } from '$lib/fetch'
-	import Loading from '$ui/loading.svelte'
+	import { fetchMLB } from '#lib/fetch/index.js'
+	import Loading from '#ui/loading.svelte'
 
 	let {
 		gamePk,

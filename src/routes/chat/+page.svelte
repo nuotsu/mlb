@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Metadata from '$ui/metadata.svelte'
+	import Metadata from '#ui/metadata.svelte'
 </script>
 
 <Metadata title="Ask Mitch | MLB.TheOhtani.com" description="Ask Mitch about anything MLB" />

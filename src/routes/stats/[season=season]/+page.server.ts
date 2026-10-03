@@ -1,4 +1,4 @@
-import { fetchLongestHomeRuns } from '$lib/fetch/savant'
+import { fetchLongestHomeRuns } from '#lib/fetch/savant.js'
 import type { PageServerLoad } from './$types'
 
 /**

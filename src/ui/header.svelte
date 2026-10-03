@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Breadcrumbs from '$ui/breadcrumbs.svelte'
+	import Breadcrumbs from '#ui/breadcrumbs.svelte'
 	import type { Snippet } from 'svelte'
 
 	let {

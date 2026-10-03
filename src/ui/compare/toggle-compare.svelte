@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { compareStore } from '$ui/compare/store.svelte'
-	import { SplitFilledIcon, SplitIcon } from '$ui/icons'
+	import { compareStore } from '#ui/compare/store.svelte.js'
+	import { SplitFilledIcon, SplitIcon } from '#ui/icons/index.js'
 
 	let { personId, class: className }: { personId: number; class?: string } = $props()
 
@@ -15,12 +15,7 @@
 	class="group/compare flex items-center gap-[.5ch] transition-colors has-checked:text-accent {className}"
 	title="Toggle compare"
 >
-	<input
-		class="sr-only"
-		type="checkbox"
-		{checked}
-		onchange={toggle}
-	/>
+	<input class="sr-only" type="checkbox" {checked} onchange={toggle} />
 
 	<SplitIcon class="size-lh group-has-checked/compare:hidden" />
 	<SplitFilledIcon class="size-lh group-not-has-checked/compare:hidden" />

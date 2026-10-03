@@ -1,4 +1,4 @@
-import { fetchMLB } from '$lib/fetch'
+import { fetchMLB } from '#lib/fetch/index.js'
 import type { Actions } from './$types'
 
 export const actions = {
@@ -22,11 +22,15 @@ export const actions = {
 			.filter(Boolean)
 			.join(',')
 
-		const results = await fetchMLB<MLB.PersonResponse>('/api/v1/people', {
-			personIds,
-			fields: ['people,id,fullName', 'stats,group,displayName,splits,season,stat', allStats],
-			hydrate: `stats(${statsHydration})`,
-		}, { fetch })
+		const results = await fetchMLB<MLB.PersonResponse>(
+			'/api/v1/people',
+			{
+				personIds,
+				fields: ['people,id,fullName', 'stats,group,displayName,splits,season,stat', allStats],
+				hydrate: `stats(${statsHydration})`,
+			},
+			{ fetch },
+		)
 
 		return {
 			entries: {

@@ -1,12 +1,11 @@
-import { dev } from '$app/environment'
-import { getPostHogClient } from '$lib/server/posthog'
-import { HOST } from '$ui/playground/constants'
+import { getPostHogClient } from '#lib/server/posthog.js'
+import { HOST } from '#ui/playground/constants.js'
+import { dev } from '$app/env'
 
 export async function playgroundAction({ request }: { request: Request }) {
 	const formData = await request.formData()
 	const endpointPath = formData.get('endpoint-path') as string
 	const endpoint = decodeURIComponent(formData.get('endpoint') as string) || ''
-
 	let processedUrl = HOST + endpoint
 
 	for (const [key, value] of formData.entries()) {

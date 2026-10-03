@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { compareStore } from '$ui/compare/store.svelte'
-	import { SplitFilledIcon } from '$ui/icons'
-	import Headshot from '$ui/player/headshot.svelte'
+	import { compareStore } from '#ui/compare/store.svelte.js'
+	import { SplitFilledIcon } from '#ui/icons/index.js'
+	import Headshot from '#ui/player/headshot.svelte'
 
 	let ids = $derived(compareStore.ids)
 </script>

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
-	import { fetchMLB } from '$lib/fetch'
-	import { cn } from '$lib/utils'
-	import Headshot from '$ui/player/headshot.svelte'
-	import Calendar from '$ui/schedule/calendar.svelte'
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import { fetchMLB } from '#lib/fetch/index.js'
+	import { cn } from '#lib/utils.js'
+	import Headshot from '#ui/player/headshot.svelte'
+	import Calendar from '#ui/schedule/calendar.svelte'
 	import StyledTeam from './styled-team.svelte'
 
 	let {

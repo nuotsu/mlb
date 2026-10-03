@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { browser, dev } from '$app/environment'
-	import Hint from '$ui/onboarding/hint.svelte'
-	import { HINTS, onboardingStore } from '$ui/onboarding/store.svelte'
+	import Hint from '#ui/onboarding/hint.svelte'
+	import { HINTS, onboardingStore } from '#ui/onboarding/store.svelte.js'
+	import { browser, dev } from '$app/env'
 	import posthog from 'posthog-js'
 	import { onMount } from 'svelte'
 
@@ -10,12 +10,7 @@
 		userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>
 	}
 
-	let {
-		class: className = '',
-	}: {
-		class?: string
-	} = $props()
-
+	let { class: className = '' }: { class?: string } = $props()
 	let deferredPrompt = $state<BeforeInstallPromptEvent | null>(null)
 	let isStandalone = $state(false)
 	let installed = $state(false)
@@ -70,8 +65,8 @@
 {#if !hidden}
 	<Hint id={HINTS.INSTALL_PWA} title="Add to your Home Screen" class={className}>
 		<p>
-			On iPhone or iPad, open this site in <strong>Safari</strong> and pin it like a regular app —
-			no App Store needed. It opens full-screen and stays one tap away.
+			On iPhone or iPad, open this site in <strong>Safari</strong> and pin it like a regular app — no
+			App Store needed. It opens full-screen and stays one tap away.
 		</p>
 
 		<ol>

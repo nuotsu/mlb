@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { pitchSpeedColor } from '$lib/colors'
-	import { cn } from '$lib/utils'
+	import { pitchSpeedColor } from '#lib/colors.js'
+	import { cn } from '#lib/utils.js'
 
 	let { liveGame }: { liveGame?: MLB.LiveGameFeed } = $props()
 

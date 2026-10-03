@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
-	import { cn } from '$lib/utils'
-	import { favoritesStore } from '$ui/favorites/store.svelte'
-	import { StarEmptyIcon } from '$ui/icons'
-	import Headshot from '$ui/player/headshot.svelte'
-	import Logo from '$ui/team/logo.svelte'
+	import { cn } from '#lib/utils.js'
+	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import { StarEmptyIcon } from '#ui/icons/index.js'
+	import Headshot from '#ui/player/headshot.svelte'
+	import Logo from '#ui/team/logo.svelte'
+	import { browser } from '$app/env'
 
 	let favorites = $derived(favoritesStore.favorites?.toSorted(sortByType))
 

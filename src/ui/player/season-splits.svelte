@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '$lib/colors'
-	import { cn } from '$lib/utils'
-	import Logo from '$ui/team/logo.svelte'
+	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import { cn } from '#lib/utils.js'
+	import Logo from '#ui/team/logo.svelte'
 
 	let {
 		group,

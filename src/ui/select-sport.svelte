@@ -1,18 +1,11 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
+	import { fetchMLB } from '#lib/fetch/index.js'
+	import { browser } from '$app/env'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { fetchMLB } from '$lib/fetch'
 	import { BallIcon } from './icons'
 
-	let {
-		class: className,
-		available,
-	}: {
-		class?: string
-		available?: number[]
-	} = $props()
-
+	let { class: className, available }: { class?: string; available?: number[] } = $props()
 	let sport = $derived(page.url.searchParams.get('sportId') ?? '1')
 	let sports = $state<MLB.Sport[] | undefined>()
 
@@ -20,9 +13,8 @@
 		if (!browser) return
 
 		let cancelled = false
-		fetchMLB<MLB.SportsResponse>('/api/v1/sports', {
-			fields: ['sports,id,name,abbreviation'],
-		})
+
+		fetchMLB<MLB.SportsResponse>('/api/v1/sports', { fields: ['sports,id,name,abbreviation'] })
 			.then((data) => {
 				if (!cancelled) sports = data.sports
 			})
@@ -47,7 +39,7 @@
 		id="sport"
 		class="absolute inset-0 opacity-0"
 		onchange={(e) => {
-			const url = new URL(page.url)
+			const url = new URL(page.url.href)
 
 			if ((e.target as HTMLSelectElement).value !== '1') {
 				url.searchParams.set('sportId', (e.target as HTMLSelectElement).value)

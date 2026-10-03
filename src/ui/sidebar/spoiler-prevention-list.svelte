@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
-	import { EyeOffIcon } from '$ui/icons'
-	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
-	import Logo from '$ui/team/logo.svelte'
+	import { EyeOffIcon } from '#ui/icons/index.js'
+	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
+	import Logo from '#ui/team/logo.svelte'
+	import { browser } from '$app/env'
 
 	let open = $derived(
 		!!spoilerPreventionStore.teams?.length &&

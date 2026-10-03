@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { formatDate, slash } from '$lib/temporal'
-	import ChevronRight from '$ui/icons/chevron-right.svelte'
-	import Logo from '$ui/team/logo.svelte'
+	import { formatDate, slash } from '#lib/temporal.js'
+	import ChevronRight from '#ui/icons/chevron-right.svelte'
+	import Logo from '#ui/team/logo.svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {

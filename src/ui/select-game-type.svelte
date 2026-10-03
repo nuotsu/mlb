@@ -26,7 +26,7 @@
 	class={className}
 	value={gameType}
 	onchange={(e) => {
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		const value = (e.target as HTMLSelectElement).value
 
 		if (value !== 'R') {
@@ -39,6 +39,8 @@
 	}}
 >
 	{#each GAME_TYPES as { value, label } (value)}
-		<option {value} selected={value === gameType} disabled={available && !available.includes(value)}>{label}</option>
+		<option {value} selected={value === gameType} disabled={available && !available.includes(value)}
+			>{label}</option
+		>
 	{/each}
 </select>

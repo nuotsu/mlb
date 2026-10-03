@@ -1,4 +1,4 @@
-import { fetchMLB } from '$lib/fetch'
+import { fetchMLB } from '#lib/fetch/index.js'
 
 export async function fetchSeasonProgress(
 	sportId: string = '1',

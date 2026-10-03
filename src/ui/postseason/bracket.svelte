@@ -4,9 +4,9 @@
 		type Bracket,
 		type BracketSeries,
 		type LeagueSide,
-	} from '$lib/postseason/bracket'
-	import { cn } from '$lib/utils'
-	import { spoilerPreventionStore } from '$ui/spoiler-prevention/store.svelte'
+	} from '#lib/postseason/bracket.js'
+	import { cn } from '#lib/utils.js'
+	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import Connector from './connector.svelte'
 	import Series from './series.svelte'
 	import TeamAvatar from './team-avatar.svelte'

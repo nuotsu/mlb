@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { CollapseVerticalIcon, ExpandVerticalIcon } from '$ui/icons'
+	import { CollapseVerticalIcon, ExpandVerticalIcon } from '#ui/icons/index.js'
 </script>
 
 <button

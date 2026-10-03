@@ -1,13 +1,13 @@
 <script lang="ts">
+	import Header from '#ui/header.svelte'
+	import { InfoIcon, LoadingIcon, SendIcon } from '#ui/icons/index.js'
+	import Metadata from '#ui/metadata.svelte'
+	import { ENDPOINTS } from '#ui/playground/constants.js'
+	import ParametersTable from '#ui/playground/parameters-table.svelte'
+	import Response from '#ui/playground/response.svelte'
+	import SelectEndpoint from '#ui/playground/select-endpoint.svelte'
 	import { enhance } from '$app/forms'
 	import { page } from '$app/state'
-	import Header from '$ui/header.svelte'
-	import { InfoIcon, LoadingIcon, SendIcon } from '$ui/icons'
-	import Metadata from '$ui/metadata.svelte'
-	import { ENDPOINTS } from '$ui/playground/constants'
-	import ParametersTable from '$ui/playground/parameters-table.svelte'
-	import Response from '$ui/playground/response.svelte'
-	import SelectEndpoint from '$ui/playground/select-endpoint.svelte'
 	import posthog from 'posthog-js'
 
 	let { children } = $props()

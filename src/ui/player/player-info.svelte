@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatDate, slash } from '$lib/temporal'
+	import { formatDate, slash } from '#lib/temporal.js'
 
 	let {
 		person,

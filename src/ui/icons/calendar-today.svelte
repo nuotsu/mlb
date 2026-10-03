@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getToday } from '$lib/temporal'
+	import { getToday } from '#lib/temporal.js'
 
 	let { value = getToday().getDate(), ...props } = $props()
 </script>

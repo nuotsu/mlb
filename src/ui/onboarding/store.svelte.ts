@@ -1,4 +1,4 @@
-import { browser } from '$app/environment'
+import { browser } from '$app/env'
 
 export const HINTS = {
 	INSTALL_PWA: 'install-pwa',

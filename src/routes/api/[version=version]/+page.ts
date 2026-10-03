@@ -1,4 +1,4 @@
-import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
+import { CUSTOM_ENDPOINT_KEY } from '#ui/playground/constants.js'
 
 export const load = async ({ params }) => {
 	return {

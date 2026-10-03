@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { fetchLiveMLB } from '$lib/fetch/live.svelte'
-	import { cn } from '$lib/utils'
+	import { fetchLiveMLB } from '#lib/fetch/live.svelte.js'
+	import { cn } from '#lib/utils.js'
 
 	let { linescore, game }: { linescore?: MLB.Linescore; game: MLB.Game } = $props()
 

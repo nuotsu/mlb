@@ -1,5 +1,5 @@
-import { dev } from '$app/environment'
-import { formatDate, slash } from '$lib/temporal'
+import { formatDate, slash } from '#lib/temporal.js'
+import { dev } from '$app/env'
 
 function isPublished(metadata: { draft?: boolean } | undefined) {
 	return dev || !metadata?.draft

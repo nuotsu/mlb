@@ -1,5 +1,5 @@
-import { CUSTOM_ENDPOINT_KEY } from '$ui/playground/constants'
-import { matchEndpoint } from '$ui/playground/utils'
+import { CUSTOM_ENDPOINT_KEY } from '#ui/playground/constants.js'
+import { matchEndpoint } from '#ui/playground/utils.js'
 
 export const load = async ({ params, url }) => {
 	const { version, path } = params

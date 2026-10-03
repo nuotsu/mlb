@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { formatDate, getToday } from '$lib/temporal'
-	import { cn } from '$lib/utils'
+	import { formatDate, getToday } from '#lib/temporal.js'
+	import { cn } from '#lib/utils.js'
 	import type { Snippet } from 'svelte'
 	import type { HTMLAttributes, HTMLInputAttributes } from 'svelte/elements'
 	import SelectMonthWithYear from './select-month-with-year.svelte'

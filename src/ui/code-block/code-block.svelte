@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { count } from '#lib/utils.js'
+	import Loading from '#ui/loading.svelte'
 	import { page } from '$app/state'
-	import { count } from '$lib/utils'
-	import Loading from '$ui/loading.svelte'
 	import type { BundledLanguage } from 'shiki'
 	import shiki from './shiki'
 

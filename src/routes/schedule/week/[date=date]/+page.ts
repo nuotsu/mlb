@@ -1,7 +1,7 @@
-import { fetchSeason, fetchWeekSchedule } from '$lib/fetch/presets'
-import { fetchMLB, notFoundOnMlb404 } from '$lib/fetch'
-import { cacheControlForScheduleWeek } from '$lib/cache-control'
-import { slash } from '$lib/temporal.js'
+import { cacheControlForScheduleWeek } from '#lib/cache-control.js'
+import { fetchMLB, notFoundOnMlb404 } from '#lib/fetch/index.js'
+import { fetchSeason, fetchWeekSchedule } from '#lib/fetch/presets.js'
+import { slash } from '#lib/temporal.js'
 
 // A 500 here invites crawler retries; dates MLB has no data for are a 404, not a server error.
 const notFoundOnMissingData = (e: unknown): never =>
@@ -24,7 +24,9 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 		),
 	]).catch(notFoundOnMissingData)
 
-	const availableSportIds = [...new Set(leagues.map((l) => l.sport?.id).filter(Boolean))] as number[]
+	const availableSportIds = [
+		...new Set(leagues.map((l) => l.sport?.id).filter(Boolean)),
+	] as number[]
 
 	return {
 		schedule,

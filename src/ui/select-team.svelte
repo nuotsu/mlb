@@ -1,17 +1,10 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
+	import { fetchMLB } from '#lib/fetch/index.js'
+	import { browser } from '$app/env'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
-	import { fetchMLB } from '$lib/fetch'
 
-	let {
-		class: className,
-		sportId,
-	}: {
-		class?: string
-		sportId?: string
-	} = $props()
-
+	let { class: className, sportId }: { class?: string; sportId?: string } = $props()
 	let team = $derived(page.url.searchParams.get('teamId') ?? '')
 	let teams = $state<MLB.Team[] | undefined>()
 
@@ -41,7 +34,7 @@
 <select
 	class={className}
 	onchange={(e) => {
-		const url = new URL(page.url)
+		const url = new URL(page.url.href)
 		const value = (e.target as HTMLSelectElement).value
 
 		if (value) {
@@ -56,8 +49,6 @@
 	<option value="" selected={!team}>All teams</option>
 
 	{#each [...(teams ?? [])].sort((a, b) => a.name.localeCompare(b.name)) as t (t.id)}
-		<option value={t.id} selected={t.id === Number(team)}>
-			{t.name}
-		</option>
+		<option value={t.id} selected={t.id === Number(team)}>{t.name}</option>
 	{/each}
 </select>
