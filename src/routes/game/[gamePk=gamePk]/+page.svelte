@@ -18,6 +18,7 @@
 	import HomeRuns from '#ui/game/home-runs.svelte'
 	import Reviews from '#ui/game/reviews.svelte'
 	import TopPerformers from '#ui/game/top-performers.svelte'
+	import Umpires from '#ui/game/umpires/umpires.svelte'
 	import WinProbability from '#ui/game/win-probability.svelte'
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
@@ -252,6 +253,17 @@
 			gameDate={game?.gameDate}
 			players={feedLive?.gameData?.players as Record<string, MLB.Person> | undefined}
 			{isSpoilerPrevented}
+		/>
+	{/if}
+
+	{#if game}
+		<Umpires
+			class="col-span-full"
+			gamePk={game.gamePk}
+			date={data.schedule?.dates?.[0]?.date}
+			officials={boxscore?.officials ?? feedLive?.liveData.boxscore.officials}
+			{feedLive}
+			{isFinal}
 		/>
 	{/if}
 </section>
