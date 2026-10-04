@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { labelDrag } from '#lib/attachments/label-drag.js'
 	import type { HTMLAttributes } from 'svelte/elements'
-	import HomePlate from './home-plate.svelte'
 	import Strikezone from './strikezone.svelte'
 
 	let {
@@ -42,8 +41,6 @@
 			zones={stat.zones as unknown as MLB.HotColdZone[]}
 		/>
 	{/each}
-
-	<HomePlate class="relative col-start-1 row-start-(--count) -mt-lh" />
 </div>
 
 <style>

@@ -266,6 +266,20 @@
 		return { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y }
 	})
 
+	/** Home plate below the zone, catcher's view — point faces the catcher. */
+	const plate = $derived.by(() => {
+		const top = zone.bottom - 0.45
+		return [
+			toSvg(-PLATE_HALF, top),
+			toSvg(PLATE_HALF, top),
+			toSvg(PLATE_HALF, top - 0.1),
+			toSvg(0, top - 0.25),
+			toSvg(-PLATE_HALF, top - 0.1),
+		]
+			.map(({ x, y }) => `${x.toFixed(1)},${y.toFixed(1)}`)
+			.join(' ')
+	})
+
 	function trajectoryPath(pitch: MLB.PlayEvent): string | null {
 		const path = curvePoints(pitch)
 		if (!path?.length) return null
@@ -387,6 +401,9 @@
 						stroke="currentColor"
 						stroke-width="1.5"
 					/>
+
+					<!-- Home plate, catcher's view -->
+					<polygon points={plate} fill="currentColor" fill-opacity="0.25" />
 
 					{#each paintOrder as i (pitches[i].index ?? i)}
 						{@const pitch = pitches[i]}
