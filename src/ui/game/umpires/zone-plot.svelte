@@ -65,7 +65,9 @@
 				cy={clamp(miss.zone * ZONE_HEIGHT, -0.6, Y + H - BALL_RADIUS)}
 				r={BALL_RADIUS}
 				class={cn(
-					miss.call === 'strike' ? 'fill-red-500 stroke-red-500' : 'fill-sky-500/15 stroke-sky-500',
+					miss.call === 'strike'
+						? 'fill-yellow-500 stroke-yellow-500'
+						: 'fill-green-500/15 stroke-green-500',
 				)}
 				stroke-width="0.035"
 			>

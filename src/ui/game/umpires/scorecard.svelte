@@ -18,10 +18,10 @@
 			<ZonePlot class="h-[7lh]" misses={calls.misses} />
 			<figcaption class="flex gap-ch text-xs text-current/40">
 				<span class="flex items-center gap-[.5ch]">
-					<i class="size-[1ch] rounded-full bg-red-500"></i> Strike
+					<i class="size-[1ch] rounded-full bg-yellow-500"></i> Strike
 				</span>
 				<span class="flex items-center gap-[.5ch]">
-					<i class="size-[1ch] rounded-full border border-sky-500 bg-sky-500/15"></i> Ball
+					<i class="size-[1ch] rounded-full border border-green-500 bg-green-500/15"></i> Ball
 				</span>
 			</figcaption>
 		</figure>
