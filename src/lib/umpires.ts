@@ -201,6 +201,3 @@ export function mergeCalls(
 		season: scorecard.season,
 	}
 }
-
-/** League-median accuracy UmpScorecards reports for recent seasons. */
-export const MEDIAN_ACCURACY = 0.941

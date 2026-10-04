@@ -2,10 +2,10 @@
 	import { percent, signed } from '#lib/umpires.js'
 	import CrewMember from './crew-member.svelte'
 	import Source from './source.svelte'
-	import { favorOf, type UmpireLayoutProps } from './types'
+	import { favorOf, type ScorecardProps } from './types'
 	import ZonePlot from './zone-plot.svelte'
 
-	let { crew, calls, teams, href }: UmpireLayoutProps = $props()
+	let { crew, calls, teams, href }: ScorecardProps = $props()
 
 	const homePlate = $derived(crew.find((o) => o.officialType === 'Home Plate'))
 	const rest = $derived(crew.filter((o) => o !== homePlate))

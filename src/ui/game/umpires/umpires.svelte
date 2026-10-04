@@ -4,11 +4,7 @@
 	import { cn } from '#lib/utils.js'
 	import { browser } from '$app/env'
 	import type { HTMLAttributes } from 'svelte/elements'
-	import LayoutList from './layout-list.svelte'
-	import LayoutMeter from './layout-meter.svelte'
-	import LayoutScorecard from './layout-scorecard.svelte'
-	import LayoutStrip from './layout-strip.svelte'
-	import type { UmpireLayoutProps } from './types'
+	import Scorecard from './scorecard.svelte'
 
 	let {
 		gamePk,
@@ -41,29 +37,13 @@
 				).then((r) => (r.ok ? (r.json() as Promise<UmpScorecardResponse>) : null))
 			: Promise.resolve(null),
 	)
-
-	const layouts = [
-		{ name: 'A · List', component: LayoutList },
-		{ name: 'B · Scorecard', component: LayoutScorecard },
-		{ name: 'C · Strip', component: LayoutStrip },
-		{ name: 'D · Meter', component: LayoutMeter },
-	]
 </script>
 
 {#snippet render(response: UmpScorecardResponse | null)}
 	{@const calls =
 		tracked && (tracked.called || response?.game) ? mergeCalls(tracked, response) : null}
-	{@const props: UmpireLayoutProps = { crew, calls, teams: teams!, href: umpScorecardGameUrl(gamePk) }}
 
-	<!-- TODO: keep one layout once picked -->
-	<div class="grid gap-[2lh]">
-		{#each layouts as { name, component: Layout } (name)}
-			<div class="space-y-ch">
-				<p class="text-center text-xs text-accent">Layout {name}</p>
-				<Layout {...props} />
-			</div>
-		{/each}
-	</div>
+	<Scorecard {crew} {calls} teams={teams!} href={umpScorecardGameUrl(gamePk)} />
 {/snippet}
 
 {#if crew.length && teams}

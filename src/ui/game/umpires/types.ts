@@ -1,6 +1,6 @@
 import type { UmpireCalls } from '#lib/umpires.js'
 
-export interface UmpireLayoutProps {
+export interface ScorecardProps {
 	/** Full crew, home plate first. */
 	crew: MLB.Official[]
 	/** Home plate umpire's call grades, if any pitches have been called. */
@@ -11,7 +11,7 @@ export interface UmpireLayoutProps {
 }
 
 /** Which team the missed calls helped, and by how much: runs from UmpScorecards, else net calls. */
-export function favorOf(calls: UmpireCalls, teams: UmpireLayoutProps['teams']) {
+export function favorOf(calls: UmpireCalls, teams: ScorecardProps['teams']) {
 	const [value, unit] =
 		calls.favorHome != null
 			? [calls.favorHome, 'runs']
@@ -26,8 +26,3 @@ export function favorOf(calls: UmpireCalls, teams: UmpireLayoutProps['teams']) {
 		label: unit === 'runs' ? Math.abs(value).toFixed(2) : String(Math.abs(value)),
 	}
 }
-
-export const SOURCE_LABEL = {
-	umpscorecards: 'via UmpScorecards',
-	tracking: 'from pitch tracking',
-} as const
