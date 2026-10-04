@@ -13,13 +13,18 @@
 	const ZONE_HEIGHT = 2
 	const HALF_PLATE = 8.5 / 12
 	const BALL_RADIUS = 1.45 / 12
-	const [X, Y, W, H] = [-1.5, -0.7, 3, 3.4]
+	/**
+	 * The box hugs the zone so the plot never pushes the lists below the title.
+	 * Misses off the edge and the plate draw into the overflow.
+	 */
+	const [X, Y, W, H] = [-1.2, -0.2, 2.4, 2.4]
+	const OVERFLOW = 0.1
 
 	const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
 </script>
 
 <svg
-	class={cn('aspect-[3/3.4] overflow-visible', className)}
+	class={cn('aspect-square overflow-visible', className)}
 	viewBox="{X} {Y} {W} {H}"
 	role="img"
 	aria-label="{misses.length} missed calls, catcher's view"
@@ -61,8 +66,8 @@
 
 		{#each misses as miss, i (i)}
 			<circle
-				cx={clamp(miss.pX, X + BALL_RADIUS, X + W - BALL_RADIUS)}
-				cy={clamp(miss.zone * ZONE_HEIGHT, -0.3, Y + H - BALL_RADIUS)}
+				cx={clamp(miss.pX, X, X + W)}
+				cy={clamp(miss.zone * ZONE_HEIGHT, Y - OVERFLOW, Y + H + OVERFLOW)}
 				r={BALL_RADIUS}
 				class={miss.call === 'strike' ? 'fill-yellow-300' : 'fill-accent'}
 				fill-opacity="0.9"
