@@ -4,16 +4,18 @@
 	import { favorOf, type ScorecardProps } from './types'
 	import ZonePlot from './zone-plot.svelte'
 
-	let { crew, calls, teams, href }: ScorecardProps = $props()
+	let { crew, calls, teams }: ScorecardProps = $props()
 
 	const favor = $derived(calls && favorOf(calls, teams))
 </script>
 
-<article class="mx-auto flex max-w-max flex-wrap items-start justify-center gap-x-[3ch] gap-y-lh">
+<article class="mx-auto flex max-w-max flex-wrap items-center justify-center gap-x-[3ch] gap-y-lh">
 	{#if calls}
 		<ZonePlot class="h-[7lh] shrink-0" misses={calls.misses} />
+	{/if}
 
-		<div class="space-y-ch">
+	<div class="flex flex-wrap items-start justify-center gap-x-[3ch] gap-y-lh">
+		{#if calls}
 			<dl class="description-list gap-x-[2ch] text-sm tabular-nums">
 				<dt>Accuracy</dt>
 				<dd>{percent(calls.accuracy)}</dd>
@@ -66,18 +68,12 @@
 					</dd>
 				{/if}
 			</dl>
+		{/if}
 
-			{#if calls.source === 'umpscorecards'}
-				<a class="text-xs text-current/40 hover:underline" {href} target="_blank">
-					via UmpScorecards
-				</a>
-			{/if}
-		</div>
-	{/if}
-
-	<ul class="grid text-sm">
-		{#each crew as official (official.official.id)}
-			<li><CrewMember {official} /></li>
-		{/each}
-	</ul>
+		<ul class="grid text-sm">
+			{#each crew as official (official.official.id)}
+				<li><CrewMember {official} /></li>
+			{/each}
+		</ul>
+	</div>
 </article>

@@ -6,8 +6,6 @@ export interface ScorecardProps {
 	/** Home plate umpire's call grades, if any pitches have been called. */
 	calls: UmpireCalls | null
 	teams: { home: MLB.Team; away: MLB.Team }
-	/** UmpScorecards page for the game. */
-	href: string
 }
 
 /** Which team the missed calls helped, and by how much: runs from UmpScorecards, else net calls. */

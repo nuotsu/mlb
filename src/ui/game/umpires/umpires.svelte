@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { umpScorecardGameUrl } from '#lib/fetch/umpscorecards.js'
 	import { mergeCalls, sortOfficials, trackCalls, type UmpScorecardResponse } from '#lib/umpires.js'
 	import { cn } from '#lib/utils.js'
 	import { browser } from '$app/env'
@@ -43,7 +42,7 @@
 	{@const calls =
 		tracked && (tracked.called || response?.game) ? mergeCalls(tracked, response) : null}
 
-	<Scorecard {crew} {calls} teams={teams!} href={umpScorecardGameUrl(gamePk)} />
+	<Scorecard {crew} {calls} teams={teams!} />
 {/snippet}
 
 {#if crew.length && teams}

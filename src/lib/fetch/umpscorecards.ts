@@ -1,6 +1,6 @@
 import type { UmpScorecard, UmpScorecardResponse, UmpSeason } from '#lib/umpires.js'
 
-export const UMPSCORECARDS_HOST = 'https://umpscorecards.com'
+const UMPSCORECARDS_HOST = 'https://umpscorecards.com'
 const TIMEOUT_MS = 8_000
 
 type Row = Record<string, unknown>
@@ -143,8 +143,4 @@ export async function fetchUmpScorecard(
 		game: gameRow ? toScorecard(gameRow) : null,
 		season: seasonRow ? toSeason(seasonRow) : null,
 	}
-}
-
-export function umpScorecardGameUrl(gamePk: number) {
-	return `${UMPSCORECARDS_HOST}/single_game/?game_id=${gamePk}`
 }
