@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { accuracyColors } from '#lib/colors.js'
 	import { percent, signed } from '#lib/umpires.js'
 	import CrewMember from './crew-member.svelte'
 	import { favorOf, type ScorecardProps } from './types'
@@ -7,6 +8,7 @@
 	let { crew, calls, teams }: ScorecardProps = $props()
 
 	const favor = $derived(calls && favorOf(calls, teams))
+	const accuracyColor = $derived(accuracyColors(calls?.accuracy ?? 0))
 </script>
 
 <article class="mx-auto flex max-w-max flex-wrap items-center justify-center gap-x-[3ch] gap-y-lh">
@@ -18,7 +20,13 @@
 		{#if calls}
 			<dl class="description-list gap-x-[2ch] text-sm tabular-nums">
 				<dt>Accuracy</dt>
-				<dd>{percent(calls.accuracy)}</dd>
+				<dd
+					class="font-bold text-(--accuracy-light) dark:text-(--accuracy-dark)"
+					style:--accuracy-light={accuracyColor.light}
+					style:--accuracy-dark={accuracyColor.dark}
+				>
+					{percent(calls.accuracy)}
+				</dd>
 
 				{#if calls.aboveExpected != null}
 					<dt>vs. Expected</dt>
