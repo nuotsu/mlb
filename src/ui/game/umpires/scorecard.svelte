@@ -75,7 +75,7 @@
 		</div>
 	{/if}
 
-	<ul class="grid gap-[.5ch] self-center text-sm">
+	<ul class="grid text-sm">
 		{#each crew as official (official.official.id)}
 			<li><CrewMember {official} /></li>
 		{/each}
