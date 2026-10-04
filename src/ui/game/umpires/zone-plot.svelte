@@ -64,12 +64,8 @@
 				cx={clamp(miss.pX, X + BALL_RADIUS, X + W - BALL_RADIUS)}
 				cy={clamp(miss.zone * ZONE_HEIGHT, -0.6, Y + H - BALL_RADIUS)}
 				r={BALL_RADIUS}
-				class={cn(
-					miss.call === 'strike'
-						? 'fill-yellow-500 stroke-yellow-500'
-						: 'fill-green-500/15 stroke-green-500',
-				)}
-				stroke-width="0.035"
+				class={miss.call === 'strike' ? 'fill-yellow-300' : 'fill-accent'}
+				fill-opacity="0.9"
 			>
 				<title>
 					{miss.call === 'strike' ? 'Called strike' : 'Called ball'}, {miss.inches.toFixed(1)}in {miss.call ===
