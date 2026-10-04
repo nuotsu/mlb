@@ -14,16 +14,17 @@
 		<ZonePlot class="h-[7lh] shrink-0" misses={calls.misses} />
 
 		<div class="space-y-ch">
-			<div class="flex items-baseline gap-ch tabular-nums">
-				<span class="text-3xl leading-none font-bold">{percent(calls.accuracy)}</span>
-				{#if calls.aboveExpected != null}
-					<span class={calls.aboveExpected >= 0 ? 'positive' : 'negative'}>
-						{signed(calls.aboveExpected * 100, 1)}% vs exp.
-					</span>
-				{/if}
-			</div>
-
 			<dl class="description-list gap-x-[2ch] text-sm tabular-nums">
+				<dt>Accuracy</dt>
+				<dd>{percent(calls.accuracy)}</dd>
+
+				{#if calls.aboveExpected != null}
+					<dt>vs. Expected</dt>
+					<dd class={calls.aboveExpected >= 0 ? 'positive' : 'negative'}>
+						{signed(calls.aboveExpected * 100, 1)}%
+					</dd>
+				{/if}
+
 				<dt>Correct</dt>
 				<dd>{calls.correct} / {calls.called}</dd>
 
