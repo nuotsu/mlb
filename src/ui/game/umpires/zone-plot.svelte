@@ -13,13 +13,13 @@
 	const ZONE_HEIGHT = 2
 	const HALF_PLATE = 8.5 / 12
 	const BALL_RADIUS = 1.45 / 12
-	const [X, Y, W, H] = [-1.5, -1.1, 3, 4.2]
+	const [X, Y, W, H] = [-1.5, -0.7, 3, 3.4]
 
 	const clamp = (n: number, min: number, max: number) => Math.min(max, Math.max(min, n))
 </script>
 
 <svg
-	class={cn('aspect-[3/4.2] overflow-visible', className)}
+	class={cn('aspect-[3/3.4] overflow-visible', className)}
 	viewBox="{X} {Y} {W} {H}"
 	role="img"
 	aria-label="{misses.length} missed calls, catcher's view"
@@ -55,14 +55,14 @@
 
 		<!-- Home plate, catcher's view -->
 		<path
-			d="M{-HALF_PLATE} -0.75 h{HALF_PLATE * 2} v-0.12 l{-HALF_PLATE} -0.15 l{-HALF_PLATE} 0.15 z"
+			d="M{-HALF_PLATE} -0.45 h{HALF_PLATE * 2} v-0.1 l{-HALF_PLATE} -0.15 l{-HALF_PLATE} 0.15 z"
 			class="fill-current/10"
 		/>
 
 		{#each misses as miss, i (i)}
 			<circle
 				cx={clamp(miss.pX, X + BALL_RADIUS, X + W - BALL_RADIUS)}
-				cy={clamp(miss.zone * ZONE_HEIGHT, -0.6, Y + H - BALL_RADIUS)}
+				cy={clamp(miss.zone * ZONE_HEIGHT, -0.3, Y + H - BALL_RADIUS)}
 				r={BALL_RADIUS}
 				class={miss.call === 'strike' ? 'fill-yellow-300' : 'fill-accent'}
 				fill-opacity="0.9"

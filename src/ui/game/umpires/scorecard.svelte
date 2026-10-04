@@ -11,7 +11,7 @@
 
 <article class="mx-auto flex max-w-max flex-wrap items-center justify-center gap-x-[3ch] gap-y-lh">
 	{#if calls}
-		<ZonePlot class="h-[7lh] shrink-0" misses={calls.misses} />
+		<ZonePlot class="h-[6lh] shrink-0" misses={calls.misses} />
 	{/if}
 
 	<div class="flex flex-wrap items-start justify-center gap-x-[3ch] gap-y-lh">
