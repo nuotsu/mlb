@@ -6,22 +6,14 @@
 
 	let { crew, calls, teams, href }: ScorecardProps = $props()
 
-	const homePlate = $derived(crew.find((o) => o.officialType === 'Home Plate'))
-	const rest = $derived(crew.filter((o) => o !== homePlate))
 	const favor = $derived(calls && favorOf(calls, teams))
 </script>
 
 <article class="mx-auto flex max-w-max flex-wrap items-start justify-center gap-x-[3ch] gap-y-lh">
 	{#if calls}
 		<ZonePlot class="h-[7lh] shrink-0" misses={calls.misses} />
-	{/if}
 
-	<div class="space-y-ch">
-		{#if homePlate}
-			<CrewMember official={homePlate} />
-		{/if}
-
-		{#if calls}
+		<div class="space-y-ch">
 			<div class="flex items-baseline gap-ch tabular-nums">
 				<span class="text-3xl leading-none font-bold">{percent(calls.accuracy)}</span>
 				{#if calls.aboveExpected != null}
@@ -79,14 +71,12 @@
 					via UmpScorecards
 				</a>
 			{/if}
-		{/if}
-	</div>
-
-	{#if rest.length}
-		<ul class="grid gap-[.5ch] self-center text-sm">
-			{#each rest as official (official.official.id)}
-				<li><CrewMember {official} headshot={false} /></li>
-			{/each}
-		</ul>
+		</div>
 	{/if}
+
+	<ul class="grid gap-[.5ch] self-center text-sm">
+		{#each crew as official (official.official.id)}
+			<li><CrewMember {official} /></li>
+		{/each}
+	</ul>
 </article>
