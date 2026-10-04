@@ -45,6 +45,13 @@
 	const midX = W / 2
 	const midY = $derived(r(H / 2))
 
+	/** Home plate below the zone, catcher's view — point faces the catcher. */
+	const PLATE_GAP = 12
+	const PLATE_SIDE = 10
+	const PLATE_POINT = 15
+	const plateY = $derived(H + PLATE_GAP)
+	const viewH = $derived(plateY + PLATE_SIDE + PLATE_POINT + 1)
+
 	const innerZones = $derived(
 		Array.from({ length: 9 }, (_, i) => ({
 			zone: String(i + 1).padStart(2, '0'),
@@ -55,7 +62,7 @@
 </script>
 
 <figure class="grid w-full place-content-center tabular-nums {className}" {...props}>
-	<svg viewBox="0 0 {W} {H}" class="w-full p-px">
+	<svg viewBox="0 0 {W} {viewH}" class="w-full p-px">
 		<path
 			data-zone="11"
 			d="M0 0 L{midX} 0 L{midX} {szY} L{szX} {szY} L{szX} {midY} L0 {midY} Z"
@@ -201,6 +208,13 @@
 			fill="none"
 			stroke="currentColor"
 			stroke-width="2"
+		/>
+
+		<!-- Home plate, catcher's view -->
+		<path
+			d="M{szX} {plateY} h{szW} v{PLATE_SIDE} l{-szW / 2} {PLATE_POINT} l{-szW /
+				2} {-PLATE_POINT} z"
+			class="fill-current/10"
 		/>
 	</svg>
 </figure>

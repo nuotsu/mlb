@@ -34,7 +34,6 @@
 		"vite": "^8.2.1"
 	},
 	"dependencies": {
-		"@google/model-viewer": "^4.3.1",
 		"@modelcontextprotocol/sdk": "^1.30.0",
 		"hls.js": "^1.6.17",
 		"posthog-js": "1.414.0",
