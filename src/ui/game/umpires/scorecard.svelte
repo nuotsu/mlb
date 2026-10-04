@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { percent, signed } from '#lib/umpires.js'
 	import CrewMember from './crew-member.svelte'
-	import Source from './source.svelte'
 	import { favorOf, type ScorecardProps } from './types'
 	import ZonePlot from './zone-plot.svelte'
 
@@ -14,17 +13,7 @@
 
 <article class="mx-auto flex max-w-max flex-wrap items-start justify-center gap-x-[3ch] gap-y-lh">
 	{#if calls}
-		<figure class="flex shrink-0 flex-col items-center gap-[.5ch]">
-			<ZonePlot class="h-[7lh]" misses={calls.misses} />
-			<figcaption class="flex gap-ch text-xs text-current/40">
-				<span class="flex items-center gap-[.5ch]">
-					<i class="size-[1ch] rounded-full bg-yellow-300/90"></i> Strike
-				</span>
-				<span class="flex items-center gap-[.5ch]">
-					<i class="size-[1ch] rounded-full bg-accent/90"></i> Ball
-				</span>
-			</figcaption>
-		</figure>
+		<ZonePlot class="h-[7lh] shrink-0" misses={calls.misses} />
 	{/if}
 
 	<div class="space-y-ch">
@@ -85,7 +74,11 @@
 				{/if}
 			</dl>
 
-			<Source {calls} {href} />
+			{#if calls.source === 'umpscorecards'}
+				<a class="text-xs text-current/40 hover:underline" {href} target="_blank">
+					via UmpScorecards
+				</a>
+			{/if}
 		{/if}
 	</div>
 
