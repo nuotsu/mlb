@@ -33,6 +33,8 @@
 		toned?: boolean
 		/** Savant doesn't always send it; hidden when no row has a value. */
 		optional?: boolean
+		/** Shown without a header button, e.g. the team logos the team filter already covers. */
+		unsortable?: boolean
 	}
 
 	const COLUMNS: Column[] = [
@@ -48,7 +50,7 @@
 			short: 'Team',
 			full: 'Team',
 			value: (row) => row.team?.abbreviation,
-			first: 'asc',
+			unsortable: true,
 		},
 		{
 			key: 'challenges',
@@ -139,6 +141,7 @@
 	let sortKey = $state(page.url.searchParams.get('sort') ?? 'overturnRate')
 	let sortDir = $state<'asc' | 'desc'>(page.url.searchParams.get('dir') === 'asc' ? 'asc' : 'desc')
 	let min = $state(Number(page.url.searchParams.get('min')) || 0)
+	let teamId = $state(page.url.searchParams.get('team') ?? '')
 
 	const minChallenges = $derived(min || defaultMin)
 
@@ -153,9 +156,25 @@
 		columns.find((c) => c.key === sortKey) ?? columns.find((c) => c.key === 'overturnRate')!,
 	)
 
-	const league = $derived.by(() => {
-		const challenges = data.challengers.reduce((sum, row) => sum + row.challenges, 0)
-		const overturns = data.challengers.reduce((sum, row) => sum + row.overturns, 0)
+	/** Only the clubs with a challenger in this table. */
+	const teams = $derived(
+		[
+			...new Map(
+				data.challengers.flatMap((row) => (row.team ? [[row.team.id, row.team]] : [])),
+			).values(),
+		].toSorted((a, b) => a.name.localeCompare(b.name)),
+	)
+
+	const team = $derived(teams.find((t) => String(t.id) === teamId))
+
+	const onTeam = $derived(
+		team ? data.challengers.filter((row) => row.team?.id === team.id) : data.challengers,
+	)
+
+	/** Totals for the whole league, or the filtered team, regardless of the minimum. */
+	const totals = $derived.by(() => {
+		const challenges = onTeam.reduce((sum, row) => sum + row.challenges, 0)
+		const overturns = onTeam.reduce((sum, row) => sum + row.overturns, 0)
 		return { challenges, overturns, rate: challenges ? overturns / challenges : 0 }
 	})
 
@@ -163,7 +182,7 @@
 		const direction = sortDir === 'asc' ? 1 : -1
 		const { value } = sortColumn
 
-		return data.challengers
+		return onTeam
 			.filter((row) => row.challenges >= minChallenges)
 			.toSorted((a, b) => {
 				const [x, y] = [value(a), value(b)]
@@ -202,6 +221,7 @@
 			sort: sortKey,
 			dir: sortDir,
 			min: min ? String(min) : '',
+			team: teamId,
 			...overrides,
 		}
 
@@ -299,17 +319,32 @@
 					{/each}
 				</select>
 			</label>
+
+			<select
+				class="button text-center"
+				aria-label="Team"
+				value={team ? teamId : ''}
+				onchange={(e) => {
+					teamId = (e.currentTarget as HTMLSelectElement).value
+					replaceState(href(), page.state)
+				}}
+			>
+				<option value="">All teams</option>
+				{#each teams as { id, name } (id)}
+					<option value={String(id)}>{name}</option>
+				{/each}
+			</select>
 		</div>
 	{/snippet}
 </Header>
 
 <section class="space-y-ch py-lh md:px-ch">
 	<h2 class="px-ch text-sm text-current/50">
-		{typeLabel} — {period}
-		{#if league.challenges}
+		{team ? `${team.name} ` : ''}{typeLabel} — {period}
+		{#if totals.challenges}
 			<span class="tabular-nums">
-				· {league.overturns.toLocaleString()} of {league.challenges.toLocaleString()} overturned ({format(
-					league.rate,
+				· {totals.overturns.toLocaleString()} of {totals.challenges.toLocaleString()} overturned ({format(
+					totals.rate,
 					'rate',
 				)}%)
 			</span>
@@ -325,32 +360,37 @@
 					{#each columns as column (column.key)}
 						{@const active = sortColumn.key === column.key}
 
+						{#if column.key === 'player'}
+							<!-- the headshot column stays put while the stats scroll under it -->
+							<th class="sticky left-0 z-1 w-lh min-w-lh bg-background" scope="col"></th>
+						{/if}
+
 						<th
-							class={cn(
-								'px-[.5ch]',
-								column.key === 'player' &&
-									'sticky left-0 z-1 min-w-[18ch] bg-background text-left md:min-w-[26ch]',
-							)}
+							class={cn('px-[.5ch]', column.key === 'player' && 'min-w-[16ch] text-left')}
 							scope="col"
 							aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
 						>
-							<button
-								type="button"
-								class={cn(
-									'flex w-full items-center gap-[.5ch] whitespace-nowrap',
-									column.key === 'player' ? 'justify-start' : 'justify-center',
-									active ? 'bg-foreground font-bold text-background' : 'text-current/40',
-								)}
-								title="{column.full} — sort {active && sortDir === 'desc'
-									? 'lowest'
-									: 'highest'} first"
-								onclick={() => sortBy(column)}
-							>
-								{column.short}
-								<span class={cn('text-[x-small]', !active && 'invisible')} aria-hidden="true">
-									{sortDir === 'asc' ? '▲' : '▼'}
-								</span>
-							</button>
+							{#if column.unsortable}
+								<span class="sr-only">{column.full}</span>
+							{:else}
+								<button
+									type="button"
+									class={cn(
+										'flex w-full items-center gap-[.5ch] whitespace-nowrap',
+										column.key === 'player' ? 'justify-start' : 'justify-center',
+										active ? 'bg-foreground font-bold text-background' : 'text-current/40',
+									)}
+									title="{column.full} — sort {active && sortDir === 'desc'
+										? 'lowest'
+										: 'highest'} first"
+									onclick={() => sortBy(column)}
+								>
+									{column.short}
+									<span class={cn('text-[x-small]', !active && 'invisible')} aria-hidden="true">
+										{sortDir === 'asc' ? '▲' : '▼'}
+									</span>
+								</button>
+							{/if}
 						</th>
 					{/each}
 				</tr>
@@ -374,27 +414,32 @@
 							{#if column.key === 'player'}
 								<th
 									class={cn(
-										'sticky left-0 z-1 min-w-[18ch] bg-background text-left font-normal md:min-w-[26ch]',
+										'sticky left-0 z-1 w-lh min-w-lh bg-background',
+										favorite && 'bg-accent',
+									)}
+									style:--team-bg={teamBg}
+								>
+									<Headshot person={row.player} class="size-lh" type="silo" />
+								</th>
+
+								<th
+									class={cn(
+										'relative isolate min-w-[16ch] px-ch text-left',
 										favorite && 'bg-accent',
 									)}
 									scope="row"
 									style:--team-bg={teamBg}
 								>
-									<div class="group/player relative flex items-center gap-ch">
-										<Headshot person={row.player} class="size-lh shrink-0" />
-
-										{#if row.player.id}
-											<a
-												class="line-clamp-1 break-all decoration-dashed group-hover/player:underline"
-												href="/player/{row.player.id}"
-											>
-												{row.player.fullName}
-												<span class="absolute inset-0"></span>
-											</a>
-										{:else}
-											<span class="line-clamp-1 break-all">{row.player.fullName}</span>
-										{/if}
-									</div>
+									{#if row.player.id}
+										<a
+											class="line-clamp-1 break-all decoration-dashed hover:underline"
+											href="/player/{row.player.id}"
+										>
+											{row.player.fullName}
+										</a>
+									{:else}
+										<span class="line-clamp-1 break-all">{row.player.fullName}</span>
+									{/if}
 								</th>
 							{:else if column.key === 'team'}
 								<td class="relative isolate" style:--team-bg={teamBg}>
@@ -425,14 +470,15 @@
 					</tr>
 				{:else}
 					<tr>
-						<td colspan={columns.length + 1}>
+						<td colspan={columns.length + 2}>
 							<Empty>
 								{#if Number(page.params.season) < ABS_FIRST_SEASON}
 									ABS challenges came to MLB in {ABS_FIRST_SEASON}
 								{:else if data.unavailable}
 									Couldn't load ABS challenges from Baseball Savant
 								{:else if data.challengers.length}
-									No {typeLabel.toLowerCase()} with {minChallenges}+ challenges
+									No {team ? `${team.name} ` : ''}{typeLabel.toLowerCase()} with {minChallenges}+
+									challenges
 								{:else}
 									No ABS challenges yet
 								{/if}
