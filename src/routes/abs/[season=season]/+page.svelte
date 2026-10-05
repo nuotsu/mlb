@@ -263,7 +263,11 @@
 			<nav class="flex items-center gap-px" aria-label="Challenger">
 				{#each TYPES as { value, label } (value)}
 					<a
-						class={cn('button', data.challengerType === value && 'bg-foreground text-background')}
+						class={cn(
+							'button',
+							data.challengerType === value &&
+								'border-accent font-bold text-green-700 dark:text-accent',
+						)}
 						href={href({ type: value })}
 						aria-current={data.challengerType === value ? 'page' : undefined}
 					>
@@ -326,7 +330,6 @@
 								'px-[.5ch]',
 								column.key === 'player' &&
 									'sticky left-0 z-1 min-w-[18ch] bg-background text-left md:min-w-[26ch]',
-								column.key === 'team' && 'text-left',
 							)}
 							scope="col"
 							aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
@@ -335,7 +338,7 @@
 								type="button"
 								class={cn(
 									'flex w-full items-center gap-[.5ch] whitespace-nowrap',
-									column.format ? 'justify-center' : 'justify-start',
+									column.key === 'player' ? 'justify-start' : 'justify-center',
 									active ? 'bg-foreground font-bold text-background' : 'text-current/40',
 								)}
 								title="{column.full} — sort {active && sortDir === 'desc'
@@ -356,6 +359,11 @@
 			<tbody>
 				{#each rows as row, i (row.player.id ?? row.player.fullName)}
 					{@const favorite = row.player.id && favoritesStore.has(`/player/${row.player.id}`)}
+					{@const teamBg =
+						// the favorite highlight wins over team colors
+						row.team && !favorite
+							? `url(https://midfield.mlbstatic.com/v1/team/${row.team.id}/spots/32)`
+							: undefined}
 
 					<tr class={cn('hover:[&>td]:bg-foreground/10', favorite && 'text-dark [&>td]:bg-accent')}>
 						<td class="text-right text-xs text-current/50 tabular-nums">{i + 1}</td>
@@ -370,6 +378,7 @@
 										favorite && 'bg-accent',
 									)}
 									scope="row"
+									style:--team-bg={teamBg}
 								>
 									<div class="group/player relative flex items-center gap-ch">
 										<Headshot person={row.player} class="size-lh shrink-0" />
@@ -388,15 +397,14 @@
 									</div>
 								</th>
 							{:else if column.key === 'team'}
-								<td class="text-left">
+								<td class="relative isolate" style:--team-bg={teamBg}>
 									{#if row.team}
 										<a
-											class="flex items-center gap-[.5ch] decoration-dashed hover:underline"
+											class="flex justify-center"
 											href="/teams/{row.team.id}"
 											title={row.team.name}
 										>
 											<Logo class="size-lh shrink-0" team={row.team} />
-											{row.team.abbreviation}
 										</a>
 									{:else}
 										-

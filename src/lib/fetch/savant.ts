@@ -430,6 +430,43 @@ function displayName(name?: string) {
 	return first ? `${first} ${last}` : last
 }
 
+/** Keys Savant has used for the challenger's MLBAM id across its leaderboard payloads and CSVs. */
+const ABS_ID_KEYS = ['player_id', 'entity_id', 'id', 'mlbam_id', 'challenging_player_id']
+
+/** MLBAM person ids are six digits; anything smaller is a row index or a count. */
+const MIN_PERSON_ID = 100_000
+
+function absPlayerId(row: Record<string, unknown>, challengerType: AbsChallengerType) {
+	for (const key of [...ABS_ID_KEYS, challengerType, `${challengerType}_id`]) {
+		const id = num(row[key])
+		if (id && id >= MIN_PERSON_ID) return id
+	}
+}
+
+/** Fold accents and punctuation so `Julio Rodríguez` and `Julio Rodriguez` meet. */
+const nameKey = (name?: string) =>
+	(name ?? '')
+		.normalize('NFD')
+		.replace(/[^a-z ]/gi, '')
+		.toLowerCase()
+		.trim()
+
+/**
+ * The season's MLB players keyed by name, for rows that arrive without an id —
+ * the headshot and player link both need one.
+ */
+async function fetchPlayersByName(season: string | number, _fetch: typeof fetch) {
+	const people = await fetchMLB<{ people: MLB.Person[] }>(
+		'/api/v1/sports/1/players',
+		{ season: String(season), fields: 'people,id,fullName' },
+		{ fetch: _fetch },
+	)
+		.then((r) => r.people ?? [])
+		.catch(() => [] as MLB.Person[])
+
+	return new Map(people.map((person) => [nameKey(person.fullName), person.id]))
+}
+
 /**
  * The leaderboard page embeds its rows as a `const absData = [...]` literal.
  * Walk to the matching bracket rather than regex for `];`, which can appear
@@ -519,30 +556,39 @@ export async function fetchAbsChallengers(
 		fetchTeamLookup(season, _fetch),
 	])
 
-	return rows.flatMap((row) => {
-		const challenges = num(row.n_challenges) ?? 0
-		if (!challenges) return []
+	const challenged = rows.filter((row) => num(row.n_challenges))
 
+	const missingId = challenged.find((row) => !absPlayerId(row, challengerType))
+
+	if (missingId) {
+		console.warn(
+			'[abs] no player id on Savant row; matching by name. Keys:',
+			Object.keys(missingId),
+		)
+	}
+
+	const idsByName = missingId ? await fetchPlayersByName(season, _fetch) : undefined
+
+	return challenged.map((row) => {
+		const challenges = num(row.n_challenges)!
 		const overturns = num(row.n_overturns) ?? 0
 		const opportunities = num(row.n_total_sample)
-		const id = num(row.player_id)
 		const name = displayName(String(row.player_name ?? row.entity_name ?? ''))
+		const id = absPlayerId(row, challengerType) ?? idsByName?.get(nameKey(name))
 
-		return [
-			{
-				player: { id, fullName: name },
-				team: lookupTeam(String(row.team_abbr ?? row.parent_org ?? '')),
-				challenges,
-				overturns,
-				fails: num(row.n_fails) ?? challenges - overturns,
-				overturnRate: overturns / challenges,
-				expectedOverturnRate: toFraction(row.exp_rate_overturns),
-				overturnsVsExpected: num(row.overturns_vs_exp),
-				runs: num(row.n_chal_runs),
-				runsVsExpected: num(row.runs_vs_exp),
-				// A rate under 1% reads the same as a fraction, so derive it from the counts when possible.
-				challengeRate: opportunities ? challenges / opportunities : toFraction(row.rate_challenges),
-			} satisfies AbsChallenger,
-		]
+		return {
+			player: { id, fullName: name },
+			team: lookupTeam(String(row.team_abbr ?? row.parent_org ?? '')),
+			challenges,
+			overturns,
+			fails: num(row.n_fails) ?? challenges - overturns,
+			overturnRate: overturns / challenges,
+			expectedOverturnRate: toFraction(row.exp_rate_overturns),
+			overturnsVsExpected: num(row.overturns_vs_exp),
+			runs: num(row.n_chal_runs),
+			runsVsExpected: num(row.runs_vs_exp),
+			// A rate under 1% reads the same as a fraction, so derive it from the counts when possible.
+			challengeRate: opportunities ? challenges / opportunities : toFraction(row.rate_challenges),
+		} satisfies AbsChallenger
 	})
 }
