@@ -338,7 +338,7 @@
 	{/snippet}
 </Header>
 
-<section class="space-y-ch py-lh md:px-ch">
+<section class="space-y-ch pt-lh md:px-ch">
 	<h2 class="px-ch text-sm text-current/50">
 		{team ? `${team.name} ` : ''}{typeLabel} — {period}
 		{#if totals.challenges}
@@ -351,10 +351,18 @@
 		{/if}
 	</h2>
 
-	<div class="overflow-x-auto overflow-y-hidden">
+	<!--
+		a horizontal-only scroller would trap the sticky header row, so this scrolls both ways,
+		ending flush with the bottom of the page so its top never slides under the page header
+	-->
+	<div
+		class="max-h-[calc(100dvh-var(--header-height))] overflow-auto sm:sidebar-open:max-h-[calc(100dvh-1ch-var(--header-height))]"
+	>
 		<table class="w-max min-w-full text-center">
 			<thead class="text-sm">
-				<tr>
+				<tr
+					class="[&>th]:sticky [&>th]:top-0 [&>th]:z-2 [&>th]:bg-background [&>th]:shadow-[inset_0_-1px_var(--color-stroke)]"
+				>
 					<th class="w-[4ch] text-right text-xs text-current/40" scope="col">#</th>
 
 					{#each columns as column (column.key)}
@@ -362,7 +370,7 @@
 
 						{#if column.key === 'player'}
 							<!-- the headshot column stays put while the stats scroll under it -->
-							<th class="sticky left-0 z-1 w-lh min-w-lh bg-background" scope="col"></th>
+							<th class="left-0 z-3! w-lh min-w-lh" scope="col"></th>
 						{/if}
 
 						<th
@@ -488,17 +496,17 @@
 				{/each}
 			</tbody>
 		</table>
-	</div>
 
-	<p class="px-ch text-xs text-current/40">
-		Data from
-		<a
-			class="underline decoration-dashed"
-			href="https://baseballsavant.mlb.com/leaderboard/abs-challenges"
-		>
-			Baseball Savant
-		</a>. Click a column to sort; click again to flip highest/lowest.
-	</p>
+		<p class="sticky left-0 px-ch pt-ch pb-lh text-xs text-current/40">
+			Data from
+			<a
+				class="underline decoration-dashed"
+				href="https://baseballsavant.mlb.com/leaderboard/abs-challenges"
+			>
+				Baseball Savant
+			</a>. Click a column to sort; click again to flip highest/lowest.
+		</p>
+	</div>
 </section>
 
 <style>
