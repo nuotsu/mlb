@@ -8,6 +8,7 @@
 	import Empty from '#ui/empty.svelte'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import Header from '#ui/header.svelte'
+	import { SearchIcon } from '#ui/icons/index.js'
 	import Metadata from '#ui/metadata.svelte'
 	import Headshot from '#ui/player/headshot.svelte'
 	import SelectGameType from '#ui/select-game-type.svelte'
@@ -142,6 +143,7 @@
 	let sortDir = $state<'asc' | 'desc'>(page.url.searchParams.get('dir') === 'asc' ? 'asc' : 'desc')
 	let min = $state(Number(page.url.searchParams.get('min')) || 0)
 	let teamId = $state(page.url.searchParams.get('team') ?? '')
+	let search = $state(page.url.searchParams.get('q') ?? '')
 
 	const minChallenges = $derived(min || defaultMin)
 
@@ -203,6 +205,26 @@
 			})
 	})
 
+	/** Fold accents so `Jose Ramirez` finds `José Ramírez`. */
+	const fold = (text = '') =>
+		text
+			.normalize('NFD')
+			.replace(/\p{Diacritic}/gu, '')
+			.toLowerCase()
+
+	/** Each word of the search, in any order, so `ramirez jose` works too. */
+	const terms = $derived(fold(search).split(/\s+/).filter(Boolean))
+
+	/** Searching filters the rankings without renumbering them. */
+	const matches = $derived(
+		rows
+			.map((row, i) => ({ row, rank: i + 1 }))
+			.filter(({ row }) => {
+				const name = fold(row.player.fullName)
+				return terms.every((term) => name.includes(term))
+			}),
+	)
+
 	const period = $derived(
 		gameType === 'P'
 			? `${page.params.season} Postseason`
@@ -222,6 +244,7 @@
 			dir: sortDir,
 			min: min ? String(min) : '',
 			team: teamId,
+			q: search.trim(),
 			...overrides,
 		}
 
@@ -378,7 +401,41 @@
 							scope="col"
 							aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
 						>
-							{#if column.unsortable}
+							{#if column.key === 'player'}
+								<div class="flex items-stretch gap-[.5ch]">
+									<label class="grid grow *:col-span-full *:row-span-full">
+										<SearchIcon
+											class="pointer-events-none z-1 mx-[.5ch] my-auto size-[1em] text-current/40"
+										/>
+
+										<input
+											class="input w-full min-w-0 pr-[.5ch] pl-[calc(1em+1ch)] font-normal"
+											type="search"
+											placeholder="Player"
+											aria-label="Search players"
+											bind:value={
+												() => search,
+												(value) => {
+													search = value
+													replaceState(href(), page.state)
+												}
+											}
+										/>
+									</label>
+
+									<button
+										type="button"
+										class={cn(
+											'px-[.5ch] text-[x-small]',
+											active ? 'bg-foreground text-background' : 'text-current/40',
+										)}
+										title="Sort players {active && sortDir === 'asc' ? 'Z–A' : 'A–Z'}"
+										onclick={() => sortBy(column)}
+									>
+										{active && sortDir === 'desc' ? '▼' : '▲'}
+									</button>
+								</div>
+							{:else if column.unsortable}
 								<span class="sr-only">{column.full}</span>
 							{:else}
 								<button
@@ -405,7 +462,7 @@
 			</thead>
 
 			<tbody>
-				{#each rows as row, i (row.player.id ?? row.player.fullName)}
+				{#each matches as { row, rank } (row.player.id ?? row.player.fullName)}
 					{@const favorite = row.player.id && favoritesStore.has(`/player/${row.player.id}`)}
 					{@const teamBg =
 						// the favorite highlight wins over team colors
@@ -414,7 +471,7 @@
 							: undefined}
 
 					<tr class={cn('hover:[&>td]:bg-foreground/10', favorite && 'text-dark [&>td]:bg-accent')}>
-						<td class="text-right text-xs text-current/50 tabular-nums">{i + 1}</td>
+						<td class="text-right text-xs text-current/50 tabular-nums">{rank}</td>
 
 						{#each columns as column (column.key)}
 							{@const value = column.value(row)}
@@ -484,6 +541,8 @@
 									ABS challenges came to MLB in {ABS_FIRST_SEASON}
 								{:else if data.unavailable}
 									Couldn't load ABS challenges from Baseball Savant
+								{:else if rows.length}
+									No {typeLabel.toLowerCase()} matching “{search.trim()}”
 								{:else if data.challengers.length}
 									No {team ? `${team.name} ` : ''}{typeLabel.toLowerCase()} with {minChallenges}+
 									challenges
@@ -504,7 +563,7 @@
 				href="https://baseballsavant.mlb.com/leaderboard/abs-challenges"
 			>
 				Baseball Savant
-			</a>. Click a column to sort; click again to flip highest/lowest.
+			</a>. Type in Player to search; click a column to sort, and again to flip highest/lowest.
 		</p>
 	</div>
 </section>
