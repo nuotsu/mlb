@@ -8,6 +8,7 @@
 	import Empty from '#ui/empty.svelte'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import Header from '#ui/header.svelte'
+	import { SearchIcon } from '#ui/icons/index.js'
 	import Metadata from '#ui/metadata.svelte'
 	import Headshot from '#ui/player/headshot.svelte'
 	import SelectGameType from '#ui/select-game-type.svelte'
@@ -142,6 +143,7 @@
 	let sortDir = $state<'asc' | 'desc'>(page.url.searchParams.get('dir') === 'asc' ? 'asc' : 'desc')
 	let min = $state(Number(page.url.searchParams.get('min')) || 0)
 	let teamId = $state(page.url.searchParams.get('team') ?? '')
+	let search = $state(page.url.searchParams.get('q') ?? '')
 
 	const minChallenges = $derived(min || defaultMin)
 
@@ -203,6 +205,26 @@
 			})
 	})
 
+	/** Fold accents so `Jose Ramirez` finds `José Ramírez`. */
+	const fold = (text = '') =>
+		text
+			.normalize('NFD')
+			.replace(/\p{Diacritic}/gu, '')
+			.toLowerCase()
+
+	/** Each word of the search, in any order, so `ramirez jose` works too. */
+	const terms = $derived(fold(search).split(/\s+/).filter(Boolean))
+
+	/** Searching filters the rankings without renumbering them. */
+	const matches = $derived(
+		rows
+			.map((row, i) => ({ row, rank: i + 1 }))
+			.filter(({ row }) => {
+				const name = fold(row.player.fullName)
+				return terms.every((term) => name.includes(term))
+			}),
+	)
+
 	const period = $derived(
 		gameType === 'P'
 			? `${page.params.season} Postseason`
@@ -222,6 +244,7 @@
 			dir: sortDir,
 			min: min ? String(min) : '',
 			team: teamId,
+			q: search.trim(),
 			...overrides,
 		}
 
@@ -338,7 +361,7 @@
 	{/snippet}
 </Header>
 
-<section class="space-y-ch py-lh md:px-ch">
+<section class="space-y-ch pt-lh md:px-ch">
 	<h2 class="px-ch text-sm text-current/50">
 		{team ? `${team.name} ` : ''}{typeLabel} — {period}
 		{#if totals.challenges}
@@ -351,18 +374,27 @@
 		{/if}
 	</h2>
 
-	<div class="overflow-x-auto overflow-y-hidden">
+	<!--
+		a horizontal-only scroller would trap the sticky header row, so this scrolls both ways,
+		ending flush with the bottom of the page so its top never slides under the page header
+		(1px taller, tucked under it, since --header-height is rounded and could leave a sliver)
+	-->
+	<div
+		class="max-h-[calc(100dvh+1px-var(--header-height))] overflow-auto sm:sidebar-open:max-h-[calc(100dvh+1px-1ch-var(--header-height))]"
+	>
 		<table class="w-max min-w-full text-center">
 			<thead class="text-sm">
-				<tr>
+				<tr
+					class="[&>th]:sticky [&>th]:top-0 [&>th]:z-2 [&>th]:bg-background [&>th]:shadow-[inset_0_-1px_var(--color-stroke)]"
+				>
 					<th class="w-[4ch] text-right text-xs text-current/40" scope="col">#</th>
 
 					{#each columns as column (column.key)}
 						{@const active = sortColumn.key === column.key}
 
 						{#if column.key === 'player'}
-							<!-- the headshot column stays put while the stats scroll under it -->
-							<th class="sticky left-0 z-1 w-lh min-w-lh bg-background" scope="col"></th>
+							<!-- empty, so unlike the headshots below it, it scrolls away rather than cover the search -->
+							<th class="w-lh min-w-lh" scope="col"></th>
 						{/if}
 
 						<th
@@ -370,7 +402,41 @@
 							scope="col"
 							aria-sort={active ? (sortDir === 'asc' ? 'ascending' : 'descending') : undefined}
 						>
-							{#if column.unsortable}
+							{#if column.key === 'player'}
+								<div class="flex items-stretch gap-[.5ch]">
+									<label class="grid grow *:col-span-full *:row-span-full">
+										<SearchIcon
+											class="pointer-events-none z-1 mx-[.5ch] my-auto size-[1em] text-current/40"
+										/>
+
+										<input
+											class="input w-full min-w-0 pr-[.5ch] pl-[calc(1em+1ch)] font-normal"
+											type="search"
+											placeholder="Player"
+											aria-label="Search players"
+											bind:value={
+												() => search,
+												(value) => {
+													search = value
+													replaceState(href(), page.state)
+												}
+											}
+										/>
+									</label>
+
+									<button
+										type="button"
+										class={cn(
+											'px-[.5ch] text-[x-small]',
+											active ? 'bg-foreground text-background' : 'text-current/40',
+										)}
+										title="Sort players {active && sortDir === 'asc' ? 'Z–A' : 'A–Z'}"
+										onclick={() => sortBy(column)}
+									>
+										{active && sortDir === 'desc' ? '▼' : '▲'}
+									</button>
+								</div>
+							{:else if column.unsortable}
 								<span class="sr-only">{column.full}</span>
 							{:else}
 								<button
@@ -397,7 +463,7 @@
 			</thead>
 
 			<tbody>
-				{#each rows as row, i (row.player.id ?? row.player.fullName)}
+				{#each matches as { row, rank } (row.player.id ?? row.player.fullName)}
 					{@const favorite = row.player.id && favoritesStore.has(`/player/${row.player.id}`)}
 					{@const teamBg =
 						// the favorite highlight wins over team colors
@@ -406,7 +472,7 @@
 							: undefined}
 
 					<tr class={cn('hover:[&>td]:bg-foreground/10', favorite && 'text-dark [&>td]:bg-accent')}>
-						<td class="text-right text-xs text-current/50 tabular-nums">{i + 1}</td>
+						<td class="text-right text-xs text-current/50 tabular-nums">{rank}</td>
 
 						{#each columns as column (column.key)}
 							{@const value = column.value(row)}
@@ -476,6 +542,8 @@
 									ABS challenges came to MLB in {ABS_FIRST_SEASON}
 								{:else if data.unavailable}
 									Couldn't load ABS challenges from Baseball Savant
+								{:else if rows.length}
+									No {typeLabel.toLowerCase()} matching “{search.trim()}”
 								{:else if data.challengers.length}
 									No {team ? `${team.name} ` : ''}{typeLabel.toLowerCase()} with {minChallenges}+
 									challenges
@@ -488,17 +556,17 @@
 				{/each}
 			</tbody>
 		</table>
-	</div>
 
-	<p class="px-ch text-xs text-current/40">
-		Data from
-		<a
-			class="underline decoration-dashed"
-			href="https://baseballsavant.mlb.com/leaderboard/abs-challenges"
-		>
-			Baseball Savant
-		</a>. Click a column to sort; click again to flip highest/lowest.
-	</p>
+		<p class="sticky left-0 px-ch pt-ch pb-lh text-xs text-current/40">
+			Data from
+			<a
+				class="underline decoration-dashed"
+				href="https://baseballsavant.mlb.com/leaderboard/abs-challenges"
+			>
+				Baseball Savant
+			</a>. Type in Player to search; click a column to sort, and again to flip highest/lowest.
+		</p>
+	</div>
 </section>
 
 <style>
