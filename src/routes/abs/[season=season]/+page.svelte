@@ -131,21 +131,13 @@
 		{ value: 'pitcher', label: 'Pitchers' },
 	]
 
-	const MIN_OPTIONS = [1, 5, 10, 20, 30, 50]
-
 	const gameType = $derived(page.url.searchParams.get('gameType') ?? 'R')
-
-	/** Small samples flood the rate columns with 1-for-1s, so full seasons start with a floor. */
-	const defaultMin = $derived(gameType === 'R' ? 10 : 1)
 
 	// Sorting happens in the browser, so these mirror the URL rather than derive from it.
 	let sortKey = $state(page.url.searchParams.get('sort') ?? 'overturnRate')
 	let sortDir = $state<'asc' | 'desc'>(page.url.searchParams.get('dir') === 'asc' ? 'asc' : 'desc')
-	let min = $state(Number(page.url.searchParams.get('min')) || 0)
 	let teamId = $state(page.url.searchParams.get('team') ?? '')
 	let search = $state(page.url.searchParams.get('q') ?? '')
-
-	const minChallenges = $derived(min || defaultMin)
 
 	/** Hide columns Savant didn't send, rather than fill them with dashes. */
 	const columns = $derived(
@@ -173,7 +165,7 @@
 		team ? data.challengers.filter((row) => row.team?.id === team.id) : data.challengers,
 	)
 
-	/** Totals for the whole league, or the filtered team, regardless of the minimum. */
+	/** Totals for the whole league, or the filtered team. */
 	const totals = $derived.by(() => {
 		const challenges = onTeam.reduce((sum, row) => sum + row.challenges, 0)
 		const overturns = onTeam.reduce((sum, row) => sum + row.overturns, 0)
@@ -184,25 +176,21 @@
 		const direction = sortDir === 'asc' ? 1 : -1
 		const { value } = sortColumn
 
-		return onTeam
-			.filter((row) => row.challenges >= minChallenges)
-			.toSorted((a, b) => {
-				const [x, y] = [value(a), value(b)]
+		return onTeam.toSorted((a, b) => {
+			const [x, y] = [value(a), value(b)]
 
-				// Missing values sink regardless of direction.
-				if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1
+			// Missing values sink regardless of direction.
+			if (x == null || y == null) return x == null ? (y == null ? 0 : 1) : -1
 
-				const order =
-					typeof x === 'string' || typeof y === 'string'
-						? String(x).localeCompare(String(y))
-						: x - y
+			const order =
+				typeof x === 'string' || typeof y === 'string' ? String(x).localeCompare(String(y)) : x - y
 
-				return (
-					order * direction ||
-					b.challenges - a.challenges ||
-					(a.player.fullName ?? '').localeCompare(b.player.fullName ?? '')
-				)
-			})
+			return (
+				order * direction ||
+				b.challenges - a.challenges ||
+				(a.player.fullName ?? '').localeCompare(b.player.fullName ?? '')
+			)
+		})
 	})
 
 	/** Fold accents so `Jose Ramirez` finds `José Ramírez`. */
@@ -238,11 +226,13 @@
 	/** The current URL plus this page's client-side state, with defaults left out. */
 	function href(overrides: Record<string, string> = {}) {
 		const url = new URL(page.url.href)
+		// old links may still carry the retired minimum-challenges filter
+		url.searchParams.delete('min')
+
 		const params = {
 			type: data.challengerType,
 			sort: sortKey,
 			dir: sortDir,
-			min: min ? String(min) : '',
 			team: teamId,
 			q: search.trim(),
 			...overrides,
@@ -325,23 +315,6 @@
 				onchange={(e) =>
 					goto(`/abs/${(e.currentTarget as HTMLSelectElement).value}${page.url.search}`)}
 			/>
-
-			<label class="flex items-center gap-[.5ch] text-sm">
-				<span class="text-current/50">Min</span>
-				<select
-					class="button text-center"
-					value={minChallenges}
-					onchange={(e) => {
-						const value = Number((e.currentTarget as HTMLSelectElement).value)
-						min = value === defaultMin ? 0 : value
-						replaceState(href(), page.state)
-					}}
-				>
-					{#each MIN_OPTIONS as option (option)}
-						<option value={option}>{option} chal</option>
-					{/each}
-				</select>
-			</label>
 
 			<select
 				class="button text-center"
@@ -544,9 +517,6 @@
 									Couldn't load ABS challenges from Baseball Savant
 								{:else if rows.length}
 									No {typeLabel.toLowerCase()} matching “{search.trim()}”
-								{:else if data.challengers.length}
-									No {team ? `${team.name} ` : ''}{typeLabel.toLowerCase()} with {minChallenges}+
-									challenges
 								{:else}
 									No ABS challenges yet
 								{/if}
