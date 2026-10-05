@@ -377,9 +377,10 @@
 	<!--
 		a horizontal-only scroller would trap the sticky header row, so this scrolls both ways,
 		ending flush with the bottom of the page so its top never slides under the page header
+		(1px taller, tucked under it, since --header-height is rounded and could leave a sliver)
 	-->
 	<div
-		class="max-h-[calc(100dvh-var(--header-height))] overflow-auto sm:sidebar-open:max-h-[calc(100dvh-1ch-var(--header-height))]"
+		class="max-h-[calc(100dvh+1px-var(--header-height))] overflow-auto sm:sidebar-open:max-h-[calc(100dvh+1px-1ch-var(--header-height))]"
 	>
 		<table class="w-max min-w-full text-center">
 			<thead class="text-sm">
@@ -392,8 +393,8 @@
 						{@const active = sortColumn.key === column.key}
 
 						{#if column.key === 'player'}
-							<!-- the headshot column stays put while the stats scroll under it -->
-							<th class="left-0 z-3! w-lh min-w-lh" scope="col"></th>
+							<!-- empty, so unlike the headshots below it, it scrolls away rather than cover the search -->
+							<th class="w-lh min-w-lh" scope="col"></th>
 						{/if}
 
 						<th
