@@ -14,6 +14,7 @@ const staticRoutes: {
 	{ route: '/postseason', priority: '0.8' },
 	{ route: '/stats', priority: '0.8' },
 	{ route: '/team-stats', priority: '0.8' },
+	{ route: '/abs', priority: '0.8' },
 	{ route: '/teams', priority: '0.8' },
 	{ route: '/player', priority: '0.8' },
 	{ route: '/transactions', priority: '0.8' },
