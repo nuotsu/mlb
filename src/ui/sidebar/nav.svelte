@@ -12,6 +12,7 @@
 		JsonIcon,
 		MegaphoneIcon,
 		RankIcon,
+		StrikezoneIcon,
 		TrophyIcon,
 	} from '#ui/icons/index.js'
 	import { page } from '$app/state'
@@ -62,6 +63,11 @@
 				href: '/team-stats',
 				label: 'Team Stats',
 				icon: BatIcon,
+			},
+			{
+				href: '/abs',
+				label: 'ABS Challenges',
+				icon: StrikezoneIcon,
 			},
 		],
 		Browse: [
