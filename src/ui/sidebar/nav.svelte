@@ -12,7 +12,7 @@
 		JsonIcon,
 		MegaphoneIcon,
 		RankIcon,
-		RobotIcon,
+		StrikezoneIcon,
 		TrophyIcon,
 	} from '#ui/icons/index.js'
 	import { page } from '$app/state'
@@ -67,7 +67,7 @@
 			{
 				href: '/abs',
 				label: 'ABS Challenges',
-				icon: RobotIcon,
+				icon: StrikezoneIcon,
 			},
 		],
 		Browse: [
