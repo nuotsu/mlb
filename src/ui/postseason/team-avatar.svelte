@@ -6,11 +6,17 @@
 	let {
 		team,
 		champion = false,
+		leading = false,
+		won = false,
 		class: className,
 	}: {
 		team?: BracketTeam
 		/** Won the World Series. */
 		champion?: boolean
+		/** Ahead in a series that is still being played. */
+		leading?: boolean
+		/** Won a completed series. */
+		won?: boolean
 		class?: string
 	} = $props()
 
@@ -42,7 +48,9 @@
 		class={cn(
 			'block size-(--avatar) shrink-0 rounded-full ring-2 ring-background transition-opacity hover:opacity-100',
 			pending && 'opacity-40',
-			champion && 'ring-accent outline-2 outline-offset-2 outline-accent',
+			leading && 'ring-green-400/50',
+			won && 'ring-green-400',
+			champion && 'ring-accent',
 			className,
 		)}
 		style:background-color={teamColor(team.id)}

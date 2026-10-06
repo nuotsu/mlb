@@ -5,12 +5,12 @@
 		BatIcon,
 		CalendarIcon,
 		CalendarTodayIcon,
-		FlagIcon,
 		GithubIcon,
 		HelmetIcon,
 		JerseyIcon,
 		JsonIcon,
 		MegaphoneIcon,
+		MvpIcon,
 		RankIcon,
 		StrikezoneIcon,
 		TrophyIcon,
@@ -47,7 +47,7 @@
 			{
 				href: '/standings',
 				label: 'Standings',
-				icon: FlagIcon,
+				icon: RankIcon,
 			},
 			{
 				href: '/postseason',
@@ -57,7 +57,7 @@
 			{
 				href: '/stats',
 				label: 'Stat Leaders',
-				icon: RankIcon,
+				icon: MvpIcon,
 			},
 			{
 				href: '/team-stats',

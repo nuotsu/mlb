@@ -475,6 +475,13 @@ export function buildBracket({
 	}
 }
 
+/** The slot ahead in a series still being played; none once it's decided or while it's tied. */
+export function seriesLeader(series: BracketSeries): BracketSlot | undefined {
+	const { top, bottom, winner } = series
+	if (winner || top.wins === bottom.wins) return
+	return top.wins > bottom.wins ? top : bottom
+}
+
 export function flatten(root?: BracketSeries): BracketSeries[] {
 	if (!root) return []
 	return [root, ...flatten(root.top.feeder), ...flatten(root.bottom.feeder)]

@@ -1,11 +1,14 @@
 <script lang="ts">
 	import {
 		roundName,
+		seriesLeader,
 		type Bracket,
 		type BracketSeries,
+		type BracketSlot,
 		type LeagueSide,
 	} from '#lib/postseason/bracket.js'
 	import { cn } from '#lib/utils.js'
+	import { TrophyIcon } from '#ui/icons/index.js'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import Connector from './connector.svelte'
 	import Series from './series.svelte'
@@ -72,6 +75,7 @@
 	const worldSeries = $derived(bracket.worldSeries)
 	const worldSeriesSpoiler = $derived(isSpoiler(worldSeries))
 	const champion = $derived(worldSeriesSpoiler ? undefined : worldSeries.winner)
+	const worldSeriesLeader = $derived(worldSeriesSpoiler ? undefined : seriesLeader(worldSeries))
 	const showWorldSeriesScore = $derived(
 		!worldSeriesSpoiler && (worldSeries.gamesPlayed > 0 || worldSeries.live),
 	)
@@ -127,10 +131,7 @@
 			{/if}
 
 			<div class="flex items-center gap-[.75ch] px-[.5ch]">
-				<TeamAvatar
-					team={worldSeries.top.team}
-					champion={!!champion && champion.id === worldSeries.top.team?.id}
-				/>
+				{@render worldSeriesTeam(worldSeries.top)}
 
 				<div
 					class={cn(
@@ -149,10 +150,7 @@
 					{/if}
 				</div>
 
-				<TeamAvatar
-					team={worldSeries.bottom.team}
-					champion={!!champion && champion.id === worldSeries.bottom.team?.id}
-				/>
+				{@render worldSeriesTeam(worldSeries.bottom)}
 			</div>
 
 			{#if roundCount > 0}
@@ -161,6 +159,19 @@
 		</div>
 	</div>
 </div>
+
+{#snippet worldSeriesTeam(slot: BracketSlot)}
+	{@const won = !!champion && champion.id === slot.team?.id}
+	<div class="relative">
+		{#if won}
+			<TrophyIcon
+				class="absolute bottom-full left-1/2 mb-1 size-6 -translate-x-1/2 text-accent"
+				aria-hidden="true"
+			/>
+		{/if}
+		<TeamAvatar team={slot.team} leading={worldSeriesLeader === slot} champion={won} />
+	</div>
+{/snippet}
 
 <!-- The stretch of line between a league's final series and its World Series logo. -->
 {#snippet edge(won: boolean)}

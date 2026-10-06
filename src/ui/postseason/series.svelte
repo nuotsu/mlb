@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { roundName, type BracketSeries } from '#lib/postseason/bracket.js'
+	import { roundName, seriesLeader, type BracketSeries } from '#lib/postseason/bracket.js'
 	import { cn } from '#lib/utils.js'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import TeamAvatar from './team-avatar.svelte'
@@ -9,6 +9,8 @@
 	const { top, bottom } = $derived(series)
 
 	const showScore = $derived(!spoiler && (series.gamesPlayed > 0 || series.live))
+	const leader = $derived(spoiler ? undefined : seriesLeader(series))
+	const winner = $derived(spoiler ? undefined : series.winner)
 	const scoreCenter = $derived((top.center + bottom.center) / 2)
 
 	const title = $derived(
@@ -24,11 +26,19 @@
 
 <div class="relative" style:height="calc({series.height} * var(--unit))" {title}>
 	<div class="absolute left-1/2 -translate-1/2" style:top="calc({top.center} * var(--unit))">
-		<TeamAvatar team={top.team} />
+		<TeamAvatar
+			team={top.team}
+			leading={leader === top}
+			won={!!winner && winner.id === top.team?.id}
+		/>
 	</div>
 
 	<div class="absolute left-1/2 -translate-1/2" style:top="calc({bottom.center} * var(--unit))">
-		<TeamAvatar team={bottom.team} />
+		<TeamAvatar
+			team={bottom.team}
+			leading={leader === bottom}
+			won={!!winner && winner.id === bottom.team?.id}
+		/>
 	</div>
 
 	{#if showScore}
