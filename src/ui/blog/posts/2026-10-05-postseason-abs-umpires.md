@@ -3,7 +3,7 @@ slug: postseason-abs-umpires
 date: 2026-10-05
 title: 'Changelog: Postseason Bracket, ABS Rankings & Umpires'
 description: A live postseason bracket and playoff picture, ABS challenge rankings, umpire scorecards on game pages, pitch arsenals, team stats by month, longest homers, and injured lists.
-image: /screenshots/postseason-bracket.png
+image: /screenshots/postseason-champion.png
 tags:
   - App
 ---
