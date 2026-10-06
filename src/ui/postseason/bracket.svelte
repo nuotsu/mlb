@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		roundName,
+		seriesLeader,
 		type Bracket,
 		type BracketSeries,
 		type LeagueSide,
@@ -72,6 +73,7 @@
 	const worldSeries = $derived(bracket.worldSeries)
 	const worldSeriesSpoiler = $derived(isSpoiler(worldSeries))
 	const champion = $derived(worldSeriesSpoiler ? undefined : worldSeries.winner)
+	const worldSeriesLeader = $derived(worldSeriesSpoiler ? undefined : seriesLeader(worldSeries))
 	const showWorldSeriesScore = $derived(
 		!worldSeriesSpoiler && (worldSeries.gamesPlayed > 0 || worldSeries.live),
 	)
@@ -129,6 +131,7 @@
 			<div class="flex items-center gap-[.75ch] px-[.5ch]">
 				<TeamAvatar
 					team={worldSeries.top.team}
+					leading={worldSeriesLeader === worldSeries.top}
 					champion={!!champion && champion.id === worldSeries.top.team?.id}
 				/>
 
@@ -151,6 +154,7 @@
 
 				<TeamAvatar
 					team={worldSeries.bottom.team}
+					leading={worldSeriesLeader === worldSeries.bottom}
 					champion={!!champion && champion.id === worldSeries.bottom.team?.id}
 				/>
 			</div>

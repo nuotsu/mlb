@@ -6,11 +6,14 @@
 	let {
 		team,
 		champion = false,
+		leading = false,
 		class: className,
 	}: {
 		team?: BracketTeam
 		/** Won the World Series. */
 		champion?: boolean
+		/** Ahead in a series that is still being played. */
+		leading?: boolean
 		class?: string
 	} = $props()
 
@@ -42,6 +45,7 @@
 		class={cn(
 			'block size-(--avatar) shrink-0 rounded-full ring-2 ring-background transition-opacity hover:opacity-100',
 			pending && 'opacity-40',
+			leading && 'ring-green-400',
 			champion && 'ring-accent outline-2 outline-offset-2 outline-accent',
 			className,
 		)}
