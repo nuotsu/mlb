@@ -5,7 +5,6 @@
 		BatIcon,
 		CalendarIcon,
 		CalendarTodayIcon,
-		FlagIcon,
 		GithubIcon,
 		HelmetIcon,
 		JerseyIcon,
@@ -47,7 +46,7 @@
 			{
 				href: '/standings',
 				label: 'Standings',
-				icon: FlagIcon,
+				icon: RankIcon,
 			},
 			{
 				href: '/postseason',
