@@ -10,6 +10,7 @@
 		JerseyIcon,
 		JsonIcon,
 		MegaphoneIcon,
+		MvpIcon,
 		RankIcon,
 		StrikezoneIcon,
 		TrophyIcon,
@@ -56,7 +57,7 @@
 			{
 				href: '/stats',
 				label: 'Stat Leaders',
-				icon: RankIcon,
+				icon: MvpIcon,
 			},
 			{
 				href: '/team-stats',
