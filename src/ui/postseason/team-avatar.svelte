@@ -50,7 +50,7 @@
 			pending && 'opacity-40',
 			leading && 'ring-green-400/50',
 			won && 'ring-green-400',
-			champion && 'ring-accent outline-2 outline-offset-2 outline-accent',
+			champion && 'ring-accent',
 			className,
 		)}
 		style:background-color={teamColor(team.id)}
