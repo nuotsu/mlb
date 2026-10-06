@@ -45,7 +45,7 @@
 		class={cn(
 			'block size-(--avatar) shrink-0 rounded-full ring-2 ring-background transition-opacity hover:opacity-100',
 			pending && 'opacity-40',
-			leading && 'ring-green-400',
+			leading && 'ring-green-400/50',
 			champion && 'ring-accent outline-2 outline-offset-2 outline-accent',
 			className,
 		)}
