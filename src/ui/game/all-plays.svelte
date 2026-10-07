@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '#lib/utils.js'
 	import Empty from '#ui/empty.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import BaseRunners from './base-runners.svelte'
 	import BSO from './bso.svelte'
@@ -128,7 +129,7 @@
 					</div>
 
 					<ol class="px-ch">
-						{#each group.plays as { about, result, runnerIndex, count } (about.atBatIndex)}
+						{#each group.plays as { about, result, runnerIndex, count, matchup } (about.atBatIndex)}
 							<li
 								class="anim-fade border-dashed border-stroke leading-tight group-has-[[value='scoring']:checked]/plays:not-data-scoring:hidden group-not-has-[[value='scoring']:checked]/plays:data-hit:text-blue-500 group-not-has-[[value='scoring']:checked]/plays:data-scoring:positive group-not-has-[[value='scoring']:checked]/plays:data-hit:dark:text-blue-400 group-not-has-[[value='scoring']:checked]/plays:data-scoring:dark:text-accent [&+&]:border-t"
 								data-scoring={about.isScoringPlay ? '' : undefined}
@@ -146,6 +147,14 @@
 										<BaseRunners {runnerIndex} />
 										<BSO {count} hideLabels />
 									</div>
+
+									{#if matchup?.batter}
+										<Headshot
+											person={matchup.batter}
+											class="size-[2lh] shrink-0"
+											title={matchup.batter.fullName}
+										/>
+									{/if}
 
 									<p class="grow">{result.description}</p>
 
