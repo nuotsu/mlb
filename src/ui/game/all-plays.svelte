@@ -151,7 +151,7 @@
 									{#if matchup?.batter}
 										<Headshot
 											person={matchup.batter}
-											class="size-[2lh] shrink-0"
+											class="size-lh shrink-0"
 											title={matchup.batter.fullName}
 										/>
 									{/if}
