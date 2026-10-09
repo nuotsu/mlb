@@ -2066,6 +2066,48 @@ declare global {
 			gamesPlayed: number
 			averageAttendance: number
 		}
+
+		// Uniform Types
+
+		/**
+		 * Uniforms response (`/api/v1/uniforms/game`)
+		 */
+		interface UniformsResponse extends ApiResponse<GameUniforms[]> {
+			uniforms?: GameUniforms[]
+		}
+
+		/**
+		 * Uniforms both teams wore in a game
+		 */
+		interface GameUniforms {
+			gamePk: number
+			home?: TeamUniform
+			away?: TeamUniform
+		}
+
+		/**
+		 * One team's uniform for a game
+		 */
+		interface TeamUniform {
+			teamId?: number
+			uniformAssets?: UniformAsset[]
+		}
+
+		/**
+		 * A single uniform piece, e.g. `145_jersey_1_2026`
+		 */
+		interface UniformAsset {
+			uniformAssetId?: number
+			uniformAssetCode: string
+			uniformAssetText?: string
+			uniformAssetType?: {
+				uniformAssetTypeId?: number
+				/** `J` jersey, `P` pants, `C` cap */
+				uniformAssetTypeCode: string
+				uniformAssetTypeText?: string
+				uniformAssetTypeDesc?: string
+			}
+		}
 	}
 }
 

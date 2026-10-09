@@ -2,6 +2,7 @@ import { error } from '@sveltejs/kit'
 import { cacheControlForGame } from '#lib/cache-control.js'
 import { fetchMLB } from '#lib/fetch/index.js'
 import { fetchBoxscore, fetchfeedLive, fetchWinProbability } from '#lib/fetch/presets.js'
+import { batterUniforms } from '#lib/uniforms.js'
 import type { PageServerLoad } from './$types'
 
 export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
@@ -34,15 +35,27 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 	const isFinal = state === 'Final'
 	const isLive = state === 'Live'
 
-	const [feedLiveResult, boxscoreResult, contentResult] = await Promise.allSettled([
+	const [feedLiveResult, boxscoreResult, contentResult, uniformsResult] = await Promise.allSettled([
 		isLive || isFinal ? fetchfeedLive(params.gamePk) : Promise.resolve(null),
 		fetchBoxscore(params.gamePk),
 		fetchMLB<MLB.GameContent>(`/api/v1/game/${params.gamePk}/content`, undefined, { fetch }),
+		// Uniforms are set before first pitch, so live games don't need to poll them
+		isLive || isFinal
+			? fetchMLB<MLB.UniformsResponse>(
+					'/api/v1/uniforms/game',
+					{ gamePks: params.gamePk },
+					{ fetch },
+				)
+			: Promise.resolve(null),
 	])
 
 	const feedLive = feedLiveResult.status === 'fulfilled' ? feedLiveResult.value : null
 	const boxscore = boxscoreResult.status === 'fulfilled' ? boxscoreResult.value : null
 	const content = contentResult.status === 'fulfilled' ? contentResult.value : null
+	const uniforms = batterUniforms(
+		uniformsResult.status === 'fulfilled' ? uniformsResult.value : null,
+		game.gamePk,
+	)
 
 	const winProbability =
 		isLive || isFinal ? await fetchWinProbability(params.gamePk).catch(() => null) : null
@@ -101,6 +114,7 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 		boxscore,
 		winProbability,
 		content,
+		uniforms,
 		seriesRecord,
 	}
 }
