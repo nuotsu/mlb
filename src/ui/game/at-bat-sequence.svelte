@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { pitchSpeedColor } from '#lib/colors.js'
+	import { batterUniformSrc, type BatterUniforms } from '#lib/uniforms.js'
 	import { cn } from '#lib/utils.js'
+	import BatterFigure from '#ui/game/batter-figure.svelte'
 	import { ChevronLeftIcon, ChevronRightIcon } from '#ui/icons/index.js'
 	import Headshot from '#ui/player/headshot.svelte'
 
@@ -8,11 +10,13 @@
 		plays,
 		players,
 		status,
+		uniforms,
 		pinnedIndex = $bindable(null),
 	}: {
 		plays?: MLB.Plays
 		players?: Record<string, MLB.Person>
 		status?: MLB.GameStatus
+		uniforms?: BatterUniforms | null
 		/** `null` means follow `defaultIndex` as new at-bats arrive. */
 		pinnedIndex?: number | null
 	} = $props()
@@ -84,6 +88,14 @@
 
 	const pitcher = $derived(play?.matchup?.pitcher)
 	const batter = $derived(play?.matchup?.batter)
+
+	/** The batting team's uniform, drawn for the side batted from in this at-bat. */
+	const batterSrcs = $derived.by(() => {
+		const codes = play?.about?.isTopInning ? uniforms?.away : uniforms?.home
+		if (!codes || (batSide !== 'L' && batSide !== 'R')) return null
+		const srcs = codes.map((code) => batterUniformSrc(code, batSide))
+		return srcs.every(Boolean) ? (srcs as string[]) : null
+	})
 
 	function lastName(person?: MLB.Person) {
 		if (!person) return ''
@@ -267,7 +279,7 @@
 	})
 
 	/** Home plate below the zone, catcher's view — point faces the catcher. */
-	const plate = $derived.by(() => {
+	const platePoints = $derived.by(() => {
 		const top = zone.bottom - 0.45
 		return [
 			toSvg(-PLATE_HALF, top),
@@ -276,8 +288,25 @@
 			toSvg(0, top - 0.25),
 			toSvg(-PLATE_HALF, top - 0.1),
 		]
-			.map(({ x, y }) => `${x.toFixed(1)},${y.toFixed(1)}`)
-			.join(' ')
+	})
+	const plate = $derived(platePoints.map(({ x, y }) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' '))
+
+	let boxWidth = $state(0)
+	let boxHeight = $state(0)
+
+	/** Zone and plate in px, matching the SVG's `xMidYMid meet` scaling. */
+	const figureFrame = $derived.by(() => {
+		if (!boxWidth || !boxHeight) return null
+		const scale = Math.min(boxWidth / W, boxHeight / H)
+		const ox = (boxWidth - W * scale) / 2
+		const oy = (boxHeight - H * scale) / 2
+		const plateBack = Math.max(...platePoints.map((p) => p.y))
+		return {
+			width: boxWidth,
+			zoneLeft: ox + sz.x * scale,
+			zoneRight: ox + (sz.x + sz.w) * scale,
+			floor: Math.min(boxHeight, oy + plateBack * scale),
+		}
 	})
 
 	function trajectoryPath(pitch: MLB.PlayEvent): string | null {
@@ -371,7 +400,18 @@
 			role="presentation"
 			onmouseleave={() => (hoveredPitch = null)}
 		>
-			<div class="relative h-full min-w-0 grow basis-0">
+			<div
+				class="relative h-full min-w-0 grow basis-0"
+				bind:clientWidth={boxWidth}
+				bind:clientHeight={boxHeight}
+			>
+				<!-- Painted first so the zone and pitches sit on top -->
+				{#if batterSrcs && figureFrame && (batSide === 'L' || batSide === 'R')}
+					{#key batterSrcs.join(' ')}
+						<BatterFigure srcs={batterSrcs} {batSide} {...figureFrame} />
+					{/key}
+				{/if}
+
 				<svg
 					viewBox="0 0 {W} {H}"
 					class="absolute inset-0 h-full w-full text-current/40"

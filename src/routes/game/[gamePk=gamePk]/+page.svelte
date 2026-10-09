@@ -152,6 +152,7 @@
 					plays={feedLive?.liveData?.plays}
 					players={feedLive?.gameData?.players as Record<string, MLB.Person> | undefined}
 					status={game?.status}
+					uniforms={data.uniforms}
 					bind:pinnedIndex={pinnedAtBatIndex}
 				/>
 
