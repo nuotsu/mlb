@@ -123,7 +123,7 @@
 	 * A real flight is a blink (≈0.4 s). Stretching it evenly keeps each
 	 * pitch's pace, so a fastball still beats a curveball to the plate.
 	 */
-	const SLOW_MOTION = 1.5
+	const SLOW_MOTION = 1.2
 
 	const seam = $derived(alignSeam(axis, twoSeam ? TWO_SEAM_AXIS : FOUR_SEAM_AXIS))
 

@@ -690,15 +690,11 @@
 				{#if selectedSpin && svgFrame}
 					{@const { x, y, spinRate } = selectedSpin}
 					{@const { scale, ox, oy } = svgFrame}
-					{@const right = x < W / 2}
-					{@const gap = (DOT_R + 1.5) * scale + 4}
+					<!-- Centered under the ball, kept inside the box -->
 					<p
-						class={cn(
-							'pointer-events-none absolute -translate-y-1/2 rounded-sm bg-background/75 px-[.5ch] text-[10px] leading-tight whitespace-nowrap tabular-nums',
-							!right && '-translate-x-full text-right',
-						)}
-						style:left="{ox + x * scale + (right ? gap : -gap)}px"
-						style:top="{Math.min(boxHeight - 14, Math.max(14, oy + y * scale))}px"
+						class="pointer-events-none absolute -translate-x-1/2 rounded-sm bg-background/75 px-[.5ch] text-[10px] leading-tight whitespace-nowrap tabular-nums"
+						style:left="{ox + x * scale}px"
+						style:top="{Math.min(boxHeight - 14, oy + (y + DOT_R + 1.5) * scale + 2)}px"
 					>
 						{Math.round(spinRate).toLocaleString('en-US')} rpm
 					</p>
