@@ -416,8 +416,7 @@
 			spinRate,
 			axis: spinAxis(spinDirection),
 			tilt: spinTilt(spinDirection),
-			type: pitch.details?.type?.code,
-			speed: pitch.pitchData?.startSpeed,
+			twoSeam: ['SI', 'FT'].includes(pitch.details?.type?.code ?? ''),
 		}
 	})
 </script>
@@ -615,7 +614,7 @@
 										r={DOT_R + 1.5}
 										axis={selectedSpin.axis}
 										spinRate={selectedSpin.spinRate}
-										twoSeam={selectedSpin.type === 'SI' || selectedSpin.type === 'FT'}
+										twoSeam={selectedSpin.twoSeam}
 										{color}
 										path={tracks[i]}
 										animate={!prefersReducedMotion.current}
@@ -639,7 +638,7 @@
 
 				<!-- In HTML rather than the SVG so it stays readable when the SVG is scaled down -->
 				{#if selectedSpin && svgFrame}
-					{@const { x, y, spinRate, tilt, type, speed } = selectedSpin}
+					{@const { x, y, spinRate, tilt } = selectedSpin}
 					{@const { scale, ox, oy } = svgFrame}
 					{@const right = x < W / 2}
 					{@const gap = (DOT_R + 1.5) * scale + 4}
@@ -651,14 +650,7 @@
 						style:left="{ox + x * scale + (right ? gap : -gap)}px"
 						style:top="{Math.min(boxHeight - 14, Math.max(14, oy + y * scale))}px"
 					>
-						{#if type || speed != null}
-							<span class="block font-bold">
-								{[type, speed?.toFixed(1)].filter(Boolean).join(' ')}
-							</span>
-						{/if}
-						<span class="block">
-							{Math.round(spinRate).toLocaleString('en-US')} rpm · {tilt}
-						</span>
+						{Math.round(spinRate).toLocaleString('en-US')} rpm · {tilt}
 					</p>
 				{/if}
 			</div>
