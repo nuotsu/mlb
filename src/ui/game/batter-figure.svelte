@@ -2,10 +2,19 @@
 	/** Visible part of the canvas, as fractions of its size. */
 	type Crop = { x: number; y: number; w: number; h: number }
 
+	/**
+	 * The rulebook's strike zone landmarks, as fractions of the canvas height
+	 * from the top: the top of the shoulders, the top of the uniform pants, and
+	 * the bottom of the figure where the feet meet the ground.
+	 */
+	type Landmarks = { shoulders: number; pantsTop: number; feet: number }
+
+	type Measure = { crop: Crop; landmarks: Landmarks | null }
+
 	const FULL: Crop = { x: 0, y: 0, w: 1, h: 1 }
 
 	/** Measured once per uniform + side, so stepping through at-bats doesn't redo it. */
-	const crops = new Map<string, Promise<Crop | null>>()
+	const measures = new Map<string, Promise<Measure | null>>()
 
 	function loadImage(src: string) {
 		return new Promise<HTMLImageElement>((resolve, reject) => {
@@ -17,17 +26,71 @@
 		})
 	}
 
+	/** Opaque pixels of one layer. */
+	type Mask = { w: number; h: number; at: (x: number, y: number) => boolean }
+
+	function bounds({ w, h, at }: Mask) {
+		let [x0, y0, x1, y1] = [w, h, -1, -1]
+		for (let y = 0; y < h; y++) {
+			for (let x = 0; x < w; x++) {
+				if (!at(x, y)) continue
+				x0 = Math.min(x0, x)
+				x1 = Math.max(x1, x)
+				y0 = Math.min(y0, y)
+				y1 = Math.max(y1, y)
+			}
+		}
+		return x1 < 0 ? null : { x0, y0, x1, y1 }
+	}
+
+	/**
+	 * The top of the pants is the top of the pants layer. The shoulders are the
+	 * jersey's top edge over the middle of the waist, which skips arms raised
+	 * into the stance; the median shrugs off a stray collar or sleeve pixel.
+	 */
+	function findLandmarks(pants: Mask, jersey: Mask, h: number): Landmarks | null {
+		const p = bounds(pants)
+		if (!p) return null
+
+		const row = p.y0 + Math.round((p.y1 - p.y0) * 0.03)
+		let [a, b] = [pants.w, -1]
+		for (let x = 0; x < pants.w; x++) {
+			if (!pants.at(x, row)) continue
+			a = Math.min(a, x)
+			b = Math.max(b, x)
+		}
+		if (b < a) return null
+
+		const tops: number[] = []
+		const inset = (b - a) / 4
+		for (let x = Math.round(a + inset); x <= b - inset; x++) {
+			for (let y = 0; y < p.y0; y++) {
+				if (jersey.at(x, y)) {
+					tops.push(y)
+					break
+				}
+			}
+		}
+		if (!tops.length) return null
+		tops.sort((m, n) => m - n)
+		const shoulders = tops[Math.floor(tops.length / 2)]
+
+		return { shoulders: shoulders / h, pantsTop: p.y0 / h, feet: (p.y1 + 1) / h }
+	}
+
 	/**
 	 * The renders share one canvas with lots of transparent padding, so find the
-	 * bounding box of the opaque pixels across every layer. `null` when the pixels
-	 * can't be read (e.g. no CORS), in which case the whole canvas is shown.
+	 * bounding box of the opaque pixels across every layer, and the strike zone
+	 * landmarks from the pants (bottom layer) and jersey (top layer). `null` when
+	 * the pixels can't be read (e.g. no CORS), in which case the whole canvas is
+	 * shown.
 	 */
-	async function measureCrop(srcs: string[]): Promise<Crop | null> {
+	async function measure(srcs: string[]): Promise<Measure | null> {
 		try {
 			const imgs = await Promise.all(srcs.map(loadImage))
 			const { naturalWidth, naturalHeight } = imgs[0]
 			// A downscaled copy is plenty to find the edges
-			const scale = Math.min(1, 256 / Math.max(naturalWidth, naturalHeight))
+			const scale = Math.min(1, 512 / Math.max(naturalWidth, naturalHeight))
 			const w = Math.max(1, Math.round(naturalWidth * scale))
 			const h = Math.max(1, Math.round(naturalHeight * scale))
 
@@ -36,35 +99,39 @@
 			canvas.height = h
 			const ctx = canvas.getContext('2d', { willReadFrequently: true })
 			if (!ctx) return null
-			for (const img of imgs) ctx.drawImage(img, 0, 0, w, h)
-			const { data } = ctx.getImageData(0, 0, w, h)
 
-			let [x0, y0, x1, y1] = [w, h, -1, -1]
-			for (let y = 0; y < h; y++) {
-				for (let x = 0; x < w; x++) {
-					if (data[(y * w + x) * 4 + 3] < 16) continue
-					x0 = Math.min(x0, x)
-					x1 = Math.max(x1, x)
-					y0 = Math.min(y0, y)
-					y1 = Math.max(y1, y)
-				}
+			const masks: Mask[] = imgs.map((img) => {
+				ctx.clearRect(0, 0, w, h)
+				ctx.drawImage(img, 0, 0, w, h)
+				const { data } = ctx.getImageData(0, 0, w, h)
+				return { w, h, at: (x, y) => data[(y * w + x) * 4 + 3] >= 16 }
+			})
+
+			const all = bounds({ w, h, at: (x, y) => masks.some((m) => m.at(x, y)) })
+			if (!all) return null
+
+			return {
+				crop: {
+					x: all.x0 / w,
+					y: all.y0 / h,
+					w: (all.x1 + 1 - all.x0) / w,
+					h: (all.y1 + 1 - all.y0) / h,
+				},
+				landmarks: masks.length > 1 ? findLandmarks(masks[0], masks.at(-1)!, h) : null,
 			}
-			if (x1 < 0) return null
-
-			return { x: x0 / w, y: y0 / h, w: (x1 + 1 - x0) / w, h: (y1 + 1 - y0) / h }
 		} catch {
 			return null
 		}
 	}
 
-	function cropFor(srcs: string[]) {
+	function measureFor(srcs: string[]) {
 		const key = srcs.join(' ')
-		let crop = crops.get(key)
-		if (!crop) {
-			crop = measureCrop(srcs)
-			crops.set(key, crop)
+		let m = measures.get(key)
+		if (!m) {
+			m = measure(srcs)
+			measures.set(key, m)
 		}
-		return crop
+		return m
 	}
 </script>
 
@@ -78,6 +145,8 @@
 		zoneLeft,
 		zoneRight,
 		floor,
+		zoneTop,
+		ground,
 	}: {
 		/** Uniform layers on the same canvas, bottom first. */
 		srcs: string[]
@@ -87,20 +156,23 @@
 		/** Strike zone edges, px from the container's left. */
 		zoneLeft: number
 		zoneRight: number
-		/** Where the feet go, px from the container's top. */
+		/** Where the feet go when the figure can't be measured, px from the container's top. */
 		floor: number
+		/** Statcast's top of the zone and the ground, at the batter's depth, px from the top. */
+		zoneTop?: number
+		ground?: number
 	} = $props()
 
 	let loaded = $state(0)
 	let failed = $state(false)
 	let natural = $state<{ w: number; h: number } | null>(null)
 	/** `undefined` while measuring. */
-	let crop = $state<Crop | null>()
+	let measured = $state<Measure | null>()
 
 	$effect(() => {
 		let cancelled = false
-		cropFor(srcs).then((c) => {
-			if (!cancelled) crop = c
+		measureFor(srcs).then((m) => {
+			if (!cancelled) measured = m
 		})
 		return () => {
 			cancelled = true
@@ -108,20 +180,50 @@
 	})
 
 	/**
-	 * Fill the height down to the plate, standing just off the zone on the
-	 * batter's side (catcher's view: righties on the left). If there isn't room,
-	 * tuck in behind the zone a little, then shrink.
+	 * True to scale when the landmarks can be measured: the rulebook's top of
+	 * the zone (midway between the shoulders and the top of the pants) sits on
+	 * Statcast's `strikeZoneTop` and the feet on the ground, so the bottom of
+	 * the zone lands at the knees on its own. The figure may run past the top
+	 * of the box.
+	 *
+	 * Otherwise, fill the height down to the plate and shrink to fit.
+	 *
+	 * Either way it stands just off the zone on the batter's side (catcher's
+	 * view: righties on the left), tucking in behind the zone a little if
+	 * there isn't room.
 	 */
 	const figure = $derived.by(() => {
-		if (!natural || crop === undefined) return null
-		const c = crop ?? FULL
-		const aspect = (c.w * natural.w) / (c.h * natural.h)
+		if (!natural || measured === undefined) return null
+		const c = measured?.crop ?? FULL
+		const landmarks = measured?.landmarks
 		const overlap = (zoneRight - zoneLeft) / 3
-		const room = batSide === 'R' ? zoneLeft + overlap : width - zoneRight + overlap
-		const h = Math.max(0, Math.min(floor, room / aspect))
-		const w = h * aspect
-		const left = batSide === 'R' ? Math.max(0, zoneLeft - w) : Math.min(width - w, zoneRight)
-		return { c, left, top: floor - h, w, h }
+
+		let canvasH: number
+		let canvasTop: number
+		const mid = landmarks && (landmarks.shoulders + landmarks.pantsTop) / 2
+		if (landmarks && mid != null && zoneTop != null && ground != null && ground > zoneTop) {
+			canvasH = (ground - zoneTop) / (landmarks.feet - mid)
+			canvasTop = ground - landmarks.feet * canvasH
+		} else {
+			const aspect = (c.w * natural.w) / (c.h * natural.h)
+			const room = batSide === 'R' ? zoneLeft + overlap : width - zoneRight + overlap
+			const h = Math.max(0, Math.min(floor, room / aspect))
+			canvasH = h / c.h
+			canvasTop = floor - h - c.y * canvasH
+		}
+
+		const canvasW = (canvasH * natural.w) / natural.h
+		const w = c.w * canvasW
+		const h = c.h * canvasH
+		const left =
+			batSide === 'R'
+				? zoneLeft - w >= 0
+					? zoneLeft - w
+					: Math.min(0, zoneLeft + overlap - w)
+				: zoneRight + w <= width
+					? zoneRight
+					: Math.max(width - w, zoneRight - overlap)
+		return { c, left, top: canvasTop + c.y * canvasH, w, h }
 	})
 
 	const visible = $derived(loaded === srcs.length && figure != null)

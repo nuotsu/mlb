@@ -355,16 +355,25 @@
 		return { scale, ox: (boxWidth - W * scale) / 2, oy: (boxHeight - H * scale) / 2 }
 	})
 
-	/** Zone and plate in px, for the batter standing beside them. */
+	/** The batter stands about even with the middle of the plate. */
+	const BATTER_Y = PLATE_HALF
+
+	/** Zone, plate, and ground in px, for the batter standing beside them. */
 	const figureFrame = $derived.by(() => {
 		if (!svgFrame) return null
 		const { scale, ox, oy } = svgFrame
+		const atBatter = (z: number) => {
+			const p = project(UMPIRE_CAMERA, 0, BATTER_Y, z)
+			return oy + toSvg(p.x, p.z).y * scale
+		}
 		const plateBack = Math.max(...platePoints.map((p) => p.y))
 		return {
 			width: boxWidth,
 			zoneLeft: ox + sz.x * scale,
 			zoneRight: ox + (sz.x + sz.w) * scale,
 			floor: Math.min(boxHeight, oy + plateBack * scale),
+			zoneTop: atBatter(zone.top),
+			ground: atBatter(0),
 		}
 	})
 
