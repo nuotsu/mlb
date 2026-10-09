@@ -118,6 +118,8 @@
 		</section>
 	{/if}
 
+	<HeadshotHistory {person} />
+
 	{#each ['hitting', 'pitching'] as const as group}
 		<section class="group/stats space-y-lh px-ch has-data-empty:hidden">
 			<Divider class="capitalize">{group} stats</Divider>
@@ -139,6 +141,4 @@
 			</div>
 		</section>
 	{/each}
-
-	<HeadshotHistory {person} />
 </div>

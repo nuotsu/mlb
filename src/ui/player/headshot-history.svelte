@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Divider from '#ui/divider.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import { SvelteSet } from 'svelte/reactivity'
 
@@ -40,8 +39,6 @@
 
 {#if visible.length}
 	<section class="px-ch">
-		<Divider>Headshots</Divider>
-
 		<ol class="flex items-end gap-ch overflow-x-auto overflow-y-clip before:m-auto after:m-auto">
 			{#each visible as { season, teams } (season)}
 				{@const src = `https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/${person.id}/headshot/silo/${usesCurrent.has(season) ? 'current' : season}`}
