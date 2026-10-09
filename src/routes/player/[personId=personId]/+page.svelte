@@ -5,6 +5,7 @@
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import Draft from '#ui/player/draft.svelte'
+	import HeadshotHistory from '#ui/player/headshot-history.svelte'
 	import Headshot from '#ui/player/headshot.svelte'
 	import HotColdZonesList from '#ui/player/hot-cold-zones-list.svelte'
 	import PitchArsenal from '#ui/player/pitch-arsenal.svelte'
@@ -116,6 +117,8 @@
 			<Draft {person} />
 		</section>
 	{/if}
+
+	<HeadshotHistory {person} />
 
 	{#each ['hitting', 'pitching'] as const as group}
 		<section class="group/stats space-y-lh px-ch has-data-empty:hidden">
