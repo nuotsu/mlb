@@ -726,7 +726,7 @@
 
 				<ol
 					bind:this={pitchListEl}
-					class="flex min-h-0 grow flex-col gap-y-[.25ch] overflow-y-auto text-xs tabular-nums"
+					class="flex min-h-0 grow flex-col overflow-y-auto text-xs tabular-nums"
 				>
 					{#each pitches as pitch, i (pitch.index ?? i)}
 						{@const { type, isBall, isStrike, isInPlay } = pitch.details ?? {}}
@@ -736,7 +736,7 @@
 						<li data-pitch={i} class={cn('transition-opacity', dimmed && 'opacity-25')}>
 							<button
 								type="button"
-								class="flex w-full items-center gap-x-ch text-left leading-tight"
+								class="flex w-full items-center gap-x-ch py-[.5px] text-left leading-tight"
 								aria-pressed={pinnedPitchIndex === i}
 								onpointerenter={(e) => hoverPitch(e, i)}
 								onpointerleave={(e) => unhoverPitch(e, i)}
