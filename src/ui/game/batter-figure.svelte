@@ -144,6 +144,7 @@
 		width,
 		zoneLeft,
 		zoneRight,
+		gap = 0,
 		floor,
 		zoneTop,
 		ground,
@@ -157,6 +158,8 @@
 		/** Strike zone edges, px from the container's left. */
 		zoneLeft: number
 		zoneRight: number
+		/** Room between the zone and the batter when there's space for it, px. */
+		gap?: number
 		/** Where the feet go when the figure can't be measured, px from the container's top. */
 		floor: number
 		/** Statcast's top of the zone and the ground, at the batter's depth, px from the top. */
@@ -191,9 +194,9 @@
 	 *
 	 * Otherwise, fill the height down to the plate and shrink to fit.
 	 *
-	 * Either way it stands just off the zone on the batter's side (catcher's
-	 * view: righties on the left), tucking in behind the zone a little if
-	 * there isn't room.
+	 * Either way it stands `gap` off the zone on the batter's side (catcher's
+	 * view: righties on the left), giving up the gap and then tucking in behind
+	 * the zone a little if there isn't room.
 	 */
 	const figure = $derived.by(() => {
 		if (!natural || measured === undefined) return null
@@ -226,10 +229,10 @@
 		const left =
 			batSide === 'R'
 				? zoneLeft - w >= 0
-					? zoneLeft - w
+					? Math.max(0, zoneLeft - gap - w)
 					: Math.min(0, zoneLeft + overlap - w)
 				: zoneRight + w <= width
-					? zoneRight
+					? Math.min(width - w, zoneRight + gap)
 					: Math.max(width - w, zoneRight - overlap)
 		return { c, left, top: canvasTop + c.y * canvasH, w, h, wanted }
 	})
