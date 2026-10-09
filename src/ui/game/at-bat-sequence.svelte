@@ -7,6 +7,7 @@
 		spinAxis,
 		UMPIRE_CAMERA,
 	} from '#lib/pitch-flight.js'
+	import { pitchOutcome } from '#lib/pitch-outcome.js'
 	import { batterUniformSrc, type BatterUniforms } from '#lib/uniforms.js'
 	import { cn } from '#lib/utils.js'
 	import BatterFigure from '#ui/game/batter-figure.svelte'
@@ -228,6 +229,8 @@
 	// Strike zone geometry (feet → SVG). Plate is 17" wide.
 	const PLATE_HALF = 17 / 24
 	const PAD = 0.9
+	/** Padding beyond the plate on the side away from the batter, where nothing else stands. */
+	const OUTER_PAD = 0.25
 	const W = 200
 	const H = 240
 	/** Stretch height vs width so the zone reads taller. */
@@ -237,6 +240,8 @@
 	/** Trajectory width at the plate; it tapers with distance. */
 	const TRAIL_W = 2.5
 	const SELECTED_TRAIL_W = 4
+	/** Room between the zone and the batter, as a share of the zone's width. */
+	const BATTER_GAP = 0.25
 
 	const zone = $derived.by(() => {
 		const tops = pitches
@@ -274,39 +279,51 @@
 		].map(([x, y]) => project(UMPIRE_CAMERA, x, y, 0)),
 	)
 
+	/**
+	 * The scale comes from the plate padded evenly on both sides, so the zone
+	 * keeps its size, but the drawing is cropped to what's in it: the padding
+	 * on the side away from the batter shrinks to `OUTER_PAD`. `width` is the
+	 * cropped width in SVG units, at most `W`.
+	 */
 	const view = $derived.by(() => {
-		let xMin = -PLATE_HALF - PAD
-		let xMax = PLATE_HALF + PAD
+		let fitMin = -PLATE_HALF - PAD
+		let fitMax = PLATE_HALF + PAD
+		let xMin = isLefty ? -PLATE_HALF - OUTER_PAD : fitMin
+		let xMax = isLefty ? fitMax : PLATE_HALF + OUTER_PAD
 		// Flights reach above the zone on their own, so it needs less headroom
 		let zMin = zone.bottom - PAD
 		let zMax = zone.top + PAD / 2
 
+		function reachX(lo: number, hi: number) {
+			fitMin = Math.min(fitMin, lo)
+			fitMax = Math.max(fitMax, hi)
+			xMin = Math.min(xMin, lo)
+			xMax = Math.max(xMax, hi)
+		}
+
 		for (const p of plateFeet) {
+			xMin = Math.min(xMin, p.x)
+			xMax = Math.max(xMax, p.x)
 			zMin = Math.min(zMin, p.z - 0.1)
 		}
 
 		pitches.forEach((pitch, i) => {
 			const c = pitch.pitchData?.coordinates
-			if (c?.pX != null) {
-				xMin = Math.min(xMin, c.pX - 0.2)
-				xMax = Math.max(xMax, c.pX + 0.2)
-			}
+			if (c?.pX != null) reachX(c.pX - 0.2, c.pX + 0.2)
 			if (c?.pZ != null) {
 				zMin = Math.min(zMin, c.pZ - 0.2)
 				zMax = Math.max(zMax, c.pZ + 0.2)
 			}
 			for (const pt of flights[i] ?? []) {
-				xMin = Math.min(xMin, pt.x - 0.1)
-				xMax = Math.max(xMax, pt.x + 0.1)
+				reachX(pt.x - 0.1, pt.x + 0.1)
 				zMin = Math.min(zMin, pt.z - 0.1)
 				zMax = Math.max(zMax, pt.z + 0.1)
 			}
 		})
 
-		const xRange = xMax - xMin
 		const zRange = zMax - zMin
 		const topPad = 4
-		let scaleX = W / xRange
+		let scaleX = W / (fitMax - fitMin)
 		let scaleZ = scaleX * Z_STRETCH
 		const usedH = zRange * scaleZ
 		if (usedH > H - topPad) {
@@ -314,23 +331,22 @@
 			scaleX *= fit
 			scaleZ *= fit
 		}
-		const usedW = xRange * scaleX
 
 		return {
 			xMin,
 			zMax,
 			scaleX,
 			scaleZ,
-			ox: (W - usedW) / 2,
+			width: (xMax - xMin) * scaleX,
 			// Top-align so paths reach the top of the SVG instead of floating mid-frame
 			oy: topPad + Math.max(0, (H - zRange * scaleZ - topPad) * 0.15),
 		}
 	})
 
 	function toSvg(pX: number, pZ: number) {
-		const { xMin, zMax, scaleX, scaleZ, ox, oy } = view
+		const { xMin, zMax, scaleX, scaleZ, oy } = view
 		return {
-			x: ox + (pX - xMin) * scaleX,
+			x: (pX - xMin) * scaleX,
 			y: oy + (zMax - pZ) * scaleZ,
 		}
 	}
@@ -347,11 +363,35 @@
 	let boxWidth = $state(0)
 	let boxHeight = $state(0)
 
-	/** SVG units → px, matching the SVG's `xMidYMid meet` scaling. */
+	/** The SVG sits on the box's outer edge, away from the pitch list and the batter. */
+	const svgAlign = $derived(isLefty ? 'xMinYMid' : 'xMaxYMid')
+
+	/** SVG units → px, matching the SVG's `meet` scaling and `svgAlign`. */
 	const svgFrame = $derived.by(() => {
 		if (!boxWidth || !boxHeight) return null
-		const scale = Math.min(boxWidth / W, boxHeight / H)
-		return { scale, ox: (boxWidth - W * scale) / 2, oy: (boxHeight - H * scale) / 2 }
+		const scale = Math.min(boxWidth / view.width, boxHeight / H)
+		return {
+			scale,
+			ox: isLefty ? 0 : boxWidth - view.width * scale,
+			oy: (boxHeight - H * scale) / 2,
+		}
+	})
+
+	/** How wide the batter stands, px, as last measured. Kept across at-bats so the layout holds still. */
+	let figureWidth = $state(0)
+
+	/**
+	 * Just wide enough for the zone at full height and the batter beside it, so
+	 * the pitch list gets the rest, up to half. `null` until the box is measured.
+	 */
+	const zoneBox = $derived.by(() => {
+		if (!boxHeight) return null
+		const scale = boxHeight / H
+		const min = view.width * scale
+		if (!batterSrcs || !figureWidth) return { min, width: min }
+		const beside = (isLefty ? view.width - sz.x - sz.w : sz.x) * scale
+		const gap = sz.w * scale * BATTER_GAP
+		return { min, width: min + Math.max(0, gap + figureWidth - beside) }
 	})
 
 	/** The batter stands about even with the middle of the plate. */
@@ -370,6 +410,7 @@
 			width: boxWidth,
 			zoneLeft: ox + sz.x * scale,
 			zoneRight: ox + (sz.x + sz.w) * scale,
+			gap: sz.w * scale * BATTER_GAP,
 			floor: Math.min(boxHeight, oy + plateBack * scale),
 			zoneTop: atBatter(zone.top),
 			ground: atBatter(0),
@@ -553,22 +594,31 @@
 				if (e.pointerType === 'mouse') hoveredPitch = null
 			}}
 		>
+			<!-- Gives way before the pitch list does, but never below the zone's full size,
+			     and is centered in whatever the list leaves past half -->
 			<div
-				class="relative h-full min-w-0 grow basis-0"
+				class="relative mx-auto aspect-5/6 h-full min-w-0 shrink-[100]"
+				style:width={zoneBox && `${zoneBox.width}px`}
+				style:min-width={zoneBox && `${zoneBox.min}px`}
 				bind:clientWidth={boxWidth}
 				bind:clientHeight={boxHeight}
 			>
 				<!-- Painted first so the zone and pitches sit on top -->
 				{#if batterSrcs && figureFrame && (batSide === 'L' || batSide === 'R')}
 					{#key batterSrcs.join(' ')}
-						<BatterFigure srcs={batterSrcs} {batSide} {...figureFrame} />
+						<BatterFigure
+							srcs={batterSrcs}
+							{batSide}
+							{...figureFrame}
+							onmeasure={(w) => (figureWidth = w)}
+						/>
 					{/key}
 				{/if}
 
 				<svg
-					viewBox="0 0 {W} {H}"
+					viewBox="0 0 {view.width} {H}"
 					class="absolute inset-0 h-full w-full text-current/40"
-					preserveAspectRatio="xMidYMid meet"
+					preserveAspectRatio="{svgAlign} meet"
 					aria-hidden="true"
 				>
 					<!-- 3×3 strike zone -->
@@ -701,7 +751,7 @@
 				{/if}
 			</div>
 
-			<div class="flex max-h-full w-[14ch] shrink-0 flex-col gap-y-[.25ch]">
+			<div class="flex max-h-full max-w-1/2 min-w-0 grow basis-[18ch] flex-col gap-y-[.25ch]">
 				<div
 					class="flex shrink-0 items-center justify-center gap-ch text-xs leading-none tabular-nums"
 					aria-label={`${balls} ball${balls === 1 ? '' : 's'}, ${strikes} strike${strikes === 1 ? '' : 's'}, ${outs} out${outs === 1 ? '' : 's'}`}
@@ -731,6 +781,7 @@
 					{#each pitches as pitch, i (pitch.index ?? i)}
 						{@const { type, isBall, isStrike, isInPlay } = pitch.details ?? {}}
 						{@const speed = pitch.pitchData?.startSpeed}
+						{@const outcome = pitchOutcome(play, pitch)}
 						{@const active = selectedPitch === i}
 						{@const dimmed = selectedPitch != null && !active}
 						<li data-pitch={i} class={cn('transition-opacity', dimmed && 'opacity-25')}>
@@ -762,6 +813,25 @@
 										>{speed.toFixed(1)}</span
 									>
 								{/if}
+
+								<span
+									class="w-[3.5ch] shrink-0 text-right"
+									style:color={pitchColor(pitch.details)}
+									title={outcome?.title}
+								>
+									{#if outcome}
+										<span aria-hidden="true">
+											{#if outcome.mirrored}
+												<span class="inline-block -scale-x-100">{outcome.label}</span>
+											{:else if outcome.struck}
+												<s>{outcome.label}</s>
+											{:else}
+												{outcome.label}
+											{/if}
+										</span>
+										<span class="sr-only">{outcome.title}</span>
+									{/if}
+								</span>
 							</button>
 						</li>
 					{/each}

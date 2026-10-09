@@ -144,9 +144,11 @@
 		width,
 		zoneLeft,
 		zoneRight,
+		gap = 0,
 		floor,
 		zoneTop,
 		ground,
+		onmeasure,
 	}: {
 		/** Uniform layers on the same canvas, bottom first. */
 		srcs: string[]
@@ -156,11 +158,15 @@
 		/** Strike zone edges, px from the container's left. */
 		zoneLeft: number
 		zoneRight: number
+		/** Room between the zone and the batter when there's space for it, px. */
+		gap?: number
 		/** Where the feet go when the figure can't be measured, px from the container's top. */
 		floor: number
 		/** Statcast's top of the zone and the ground, at the batter's depth, px from the top. */
 		zoneTop?: number
 		ground?: number
+		/** The width the figure takes when it has room, px; `0` when it can't be shown. */
+		onmeasure?: (width: number) => void
 	} = $props()
 
 	let loaded = $state(0)
@@ -188,9 +194,9 @@
 	 *
 	 * Otherwise, fill the height down to the plate and shrink to fit.
 	 *
-	 * Either way it stands just off the zone on the batter's side (catcher's
-	 * view: righties on the left), tucking in behind the zone a little if
-	 * there isn't room.
+	 * Either way it stands `gap` off the zone on the batter's side (catcher's
+	 * view: righties on the left), giving up the gap and then tucking in behind
+	 * the zone a little if there isn't room.
 	 */
 	const figure = $derived.by(() => {
 		if (!natural || measured === undefined) return null
@@ -198,18 +204,23 @@
 		const landmarks = measured?.landmarks
 		const overlap = (zoneRight - zoneLeft) / 3
 
+		const aspect = (c.w * natural.w) / (c.h * natural.h)
+
 		let canvasH: number
 		let canvasTop: number
+		/** Width with room to spare, for the parent to make room. */
+		let wanted: number
 		const mid = landmarks && (landmarks.shoulders + landmarks.pantsTop) / 2
 		if (landmarks && mid != null && zoneTop != null && ground != null && ground > zoneTop) {
 			canvasH = (ground - zoneTop) / (landmarks.feet - mid)
 			canvasTop = ground - landmarks.feet * canvasH
+			wanted = c.h * canvasH * aspect
 		} else {
-			const aspect = (c.w * natural.w) / (c.h * natural.h)
 			const room = batSide === 'R' ? zoneLeft + overlap : width - zoneRight + overlap
 			const h = Math.max(0, Math.min(floor, room / aspect))
 			canvasH = h / c.h
 			canvasTop = floor - h - c.y * canvasH
+			wanted = Math.max(0, floor) * aspect
 		}
 
 		const canvasW = (canvasH * natural.w) / natural.h
@@ -218,12 +229,17 @@
 		const left =
 			batSide === 'R'
 				? zoneLeft - w >= 0
-					? zoneLeft - w
+					? Math.max(0, zoneLeft - gap - w)
 					: Math.min(0, zoneLeft + overlap - w)
 				: zoneRight + w <= width
-					? zoneRight
+					? Math.min(width - w, zoneRight + gap)
 					: Math.max(width - w, zoneRight - overlap)
-		return { c, left, top: canvasTop + c.y * canvasH, w, h }
+		return { c, left, top: canvasTop + c.y * canvasH, w, h, wanted }
+	})
+
+	$effect(() => {
+		if (failed) onmeasure?.(0)
+		else if (figure) onmeasure?.(figure.wanted)
 	})
 
 	const visible = $derived(loaded === srcs.length && figure != null)
