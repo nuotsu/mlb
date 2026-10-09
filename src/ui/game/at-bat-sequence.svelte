@@ -733,7 +733,7 @@
 				{/if}
 			</div>
 
-			<div class="flex max-h-full min-w-0 grow basis-[19ch] flex-col gap-y-[.25ch]">
+			<div class="flex max-h-full min-w-0 grow basis-[18ch] flex-col gap-y-[.25ch]">
 				<div
 					class="flex shrink-0 items-center justify-center gap-ch text-xs leading-none tabular-nums"
 					aria-label={`${balls} ball${balls === 1 ? '' : 's'}, ${strikes} strike${strikes === 1 ? '' : 's'}, ${outs} out${outs === 1 ? '' : 's'}`}
@@ -797,7 +797,7 @@
 								{/if}
 
 								<span
-									class="w-[4ch] shrink-0 text-right"
+									class="w-[3.5ch] shrink-0 text-right"
 									style:color={pitchColor(pitch.details)}
 									title={outcome?.title}
 								>

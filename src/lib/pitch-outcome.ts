@@ -1,5 +1,6 @@
 /** A pitch's result as a short label for the pitch list, and in full for screen readers. */
 export type PitchOutcome = {
+	/** Empty when the pitch needs no label, like a plain ball. */
 	label: string
 	/** Spelled out, for `title` and screen readers. */
 	title: string
@@ -11,8 +12,9 @@ export type PitchOutcome = {
 
 /**
  * Stats API pitch codes (`/api/v1/pitchCodes`) that a pitch list can show.
- * In-play codes (`X`, `D`, `E`) are handled on their own since they depend
- * on how the play turned out.
+ * In-play codes are handled on their own since they depend on how the play
+ * turned out. Codes left out (automatic strikes, pitch timer balls, pitchout
+ * swings and fouls, no pitch, pickoffs) show nothing.
  */
 const OUTCOMES: Record<string, PitchOutcome> = {
 	C: { label: 'K', title: 'Called strike', mirrored: true },
@@ -22,24 +24,32 @@ const OUTCOMES: Record<string, PitchOutcome> = {
 	T: { label: 'Tip', title: 'Foul tip' },
 	L: { label: 'Bunt', title: 'Foul bunt' },
 	M: { label: 'Bunt', title: 'Missed bunt', struck: true },
-	B: { label: 'Ball', title: 'Ball' },
+	// Most pitches are balls, so they go unlabeled and the rest stand out
+	B: { label: '', title: 'Ball' },
 	'*B': { label: 'Dirt', title: 'Ball in dirt' },
 	H: { label: 'HBP', title: 'Hit by pitch' },
 	I: { label: 'IBB', title: 'Intentional ball' },
 	V: { label: 'IBB', title: 'Automatic ball' },
+	VB: { label: 'IBB', title: 'Automatic ball, intentional walk' },
 	P: { label: 'Out', title: 'Pitchout' },
 }
 
-const IN_PLAY = new Set(['X', 'D', 'E'])
+/** Hit into play: out(s), no out, run(s), and the same off a pitchout. */
+const IN_PLAY = new Set(['X', 'D', 'E', 'Y', 'J', 'Z'])
+const IN_PLAY_RUNS = new Set(['E', 'Z'])
+const IN_PLAY_NO_OUT = new Set(['D', 'J'])
 
-/** For feeds that leave out `code`: the call or description, lowercased. */
+/**
+ * For feeds that leave out the code: the call or description, lowercased, as
+ * the live feed words it and as `/api/v1/pitchCodes` does.
+ */
 const BY_DESCRIPTION: Record<string, string> = {
 	'called strike': 'C',
 	'strike - called': 'C',
 	'swinging strike': 'S',
 	'strike - swinging': 'S',
 	'swinging strike (blocked)': 'W',
-	'strike - swinging (blocked)': 'W',
+	'strike - swinging blocked': 'W',
 	foul: 'F',
 	'strike - foul': 'F',
 	'foul tip': 'T',
@@ -49,16 +59,24 @@ const BY_DESCRIPTION: Record<string, string> = {
 	'missed bunt': 'M',
 	'strike - missed bunt': 'M',
 	ball: 'B',
+	'ball - called': 'B',
 	'ball in dirt': '*B',
-	'ball - in dirt': '*B',
+	'ball - ball in dirt': '*B',
 	'hit by pitch': 'H',
+	'ball - hit by pitch': 'H',
 	'intent ball': 'I',
-	'intentional ball': 'I',
+	'ball - intentional': 'I',
 	'automatic ball': 'V',
+	'ball - automatic': 'V',
+	'ball - automatic (ibb)': 'VB',
 	pitchout: 'P',
+	'ball - pitchout': 'P',
 	'in play, out(s)': 'X',
+	'hit into play - out(s)': 'X',
 	'in play, no out': 'D',
+	'hit into play - no out(s)': 'D',
 	'in play, run(s)': 'E',
+	'hit into play - run(s)': 'E',
 }
 
 function pitchCode(details?: MLB.PitchDetails) {
@@ -87,7 +105,7 @@ export function pitchOutcome(
 		if (play?.result?.eventType === 'home_run') return { label: 'HR', title: 'Home run' }
 
 		const scored =
-			code === 'E' ||
+			IN_PLAY_RUNS.has(code) ||
 			(play?.result?.rbi ?? 0) > 0 ||
 			Boolean(
 				play?.runners?.some(
@@ -96,7 +114,10 @@ export function pitchOutcome(
 			)
 		if (scored) return { label: 'Run', title: 'In play, run(s)' }
 
-		return { label: 'Play', title: code === 'D' ? 'In play, no out' : 'In play, out(s)' }
+		return {
+			label: 'Play',
+			title: IN_PLAY_NO_OUT.has(code) ? 'In play, no out' : 'In play, out(s)',
+		}
 	}
 
 	return OUTCOMES[code] ?? null
