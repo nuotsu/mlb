@@ -85,6 +85,7 @@
 
 <script lang="ts">
 	import { visibleSpinRevsPerSecond } from '#lib/pitch-flight.js'
+	import { untrack } from 'svelte'
 
 	let {
 		x,
@@ -96,6 +97,7 @@
 		color,
 		path,
 		animate = true,
+		onflight,
 	}: {
 		/** Where the ball rests: the plate location, SVG units. */
 		x: number
@@ -111,12 +113,17 @@
 		path?: { x: number; y: number; scale: number; t: number }[] | null
 		/** `false` for a still ball (e.g. reduced motion). */
 		animate?: boolean
+		/** How far into the flight the ball is, seconds; `Infinity` once it's at the plate. */
+		onflight?: (t: number) => void
 	} = $props()
 
 	const id = $props.id()
 
-	/** Stretch the flight so it can be followed (≈0.4 s → ≈1.4 s). */
-	const SLOW_MOTION = 3.5
+	/**
+	 * A real flight is a blink (≈0.4 s). Stretching it evenly keeps each
+	 * pitch's pace, so a fastball still beats a curveball to the plate.
+	 */
+	const SLOW_MOTION = 1.5
 
 	const seam = $derived(alignSeam(axis, twoSeam ? TWO_SEAM_AXIS : FOUR_SEAM_AXIS))
 
@@ -124,15 +131,19 @@
 	let pos = $state<{ x: number; y: number; r: number } | null>(null)
 
 	$effect(() => {
+		const flight = animate && path && path.length > 1 ? path : null
+		untrack(() => onflight?.(flight ? 0 : Infinity))
 		if (!animate) {
 			pos = null
 			return
 		}
+		// Start at release, not at the plate, before the first frame lands
+		if (flight) pos = { x: flight[0].x, y: flight[0].y, r: Math.max(1.5, r * flight[0].scale) }
 
 		const revsPerMs = visibleSpinRevsPerSecond(spinRate) / 1000
-		const flight = path && path.length > 1 ? path : null
 		const duration = flight ? flight[flight.length - 1].t * SLOW_MOTION * 1000 : 0
 		let start: number | null = null
+		let landed = !flight
 		let frame = requestAnimationFrame(function tick(now) {
 			start ??= now
 			const elapsed = now - start
@@ -150,8 +161,11 @@
 					y: a.y + (b.y - a.y) * f,
 					r: Math.max(1.5, r * (a.scale + (b.scale - a.scale) * f)),
 				}
-			} else {
+				onflight?.(t)
+			} else if (!landed) {
+				landed = true
 				pos = null
+				onflight?.(Infinity)
 			}
 
 			frame = requestAnimationFrame(tick)

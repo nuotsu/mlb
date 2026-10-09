@@ -123,7 +123,7 @@ export function project(camera: Camera, x: number, y: number, z: number) {
  * spin-induced movement, with 180° pure backspin (the ball rides up), 0° pure
  * topspin, 90° breaking toward the first-base side (catcher's right) and 270°
  * toward the third-base side. A right-hander's four-seamer sits around 210°
- * (1:00 tilt) and a right-hander's curveball near 30–60° (7:00–8:00).
+ * and a right-hander's curveball near 30–60°.
  */
 export type SpinAxis = { x: number; y: number; z: number }
 
@@ -136,18 +136,6 @@ export type SpinAxis = { x: number; y: number; z: number }
 export function spinAxis(spinDirection: number): SpinAxis {
 	const theta = (spinDirection * Math.PI) / 180
 	return { x: Math.cos(theta), y: 0, z: Math.sin(theta) }
-}
-
-/**
- * Spin tilt as a clock time, as Statcast and Rapsodo show it: the direction
- * of spin-induced movement seen from the pitcher's side, rounded to 15 minutes
- * (180° → 12:00, 210° → 1:00).
- */
-export function spinTilt(spinDirection: number) {
-	const quarters = Math.round((((spinDirection / 30 + 6) % 12) + 12) * 4) % 48
-	const hours = Math.floor(quarters / 4) || 12
-	const minutes = (quarters % 4) * 15
-	return `${hours}:${String(minutes).padStart(2, '0')}`
 }
 
 /**

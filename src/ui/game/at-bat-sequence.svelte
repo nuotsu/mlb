@@ -5,7 +5,6 @@
 		PLATE_FRONT_Y,
 		project,
 		spinAxis,
-		spinTilt,
 		UMPIRE_CAMERA,
 	} from '#lib/pitch-flight.js'
 	import { batterUniformSrc, type BatterUniforms } from '#lib/uniforms.js'
@@ -424,10 +423,48 @@
 			y,
 			spinRate,
 			axis: spinAxis(spinDirection),
-			tilt: spinTilt(spinDirection),
 			twoSeam: ['SI', 'FT'].includes(pitch.details?.type?.code ?? ''),
 		}
 	})
+
+	/** How far the selected pitch's ball has flown, seconds. */
+	let flight = $state<{ pitch: number; t: number } | null>(null)
+
+	/** The selected ball flies in when it spins and motion is allowed. */
+	const throwing = $derived(selectedSpin != null && !prefersReducedMotion.current)
+
+	/** A pitch's trail follows its ball in, like a trail, while it's being thrown. */
+	function trailUntil(i: number) {
+		if (!throwing || selectedPitch !== i) return Infinity
+		return flight?.pitch === i ? flight.t : 0
+	}
+
+	function trackUntil<P extends { x: number; y: number; scale: number; t: number }>(
+		track: P[],
+		t: number,
+	) {
+		if (t >= track[track.length - 1].t) return track
+		const shown: P[] = []
+		for (const [k, p] of track.entries()) {
+			if (p.t <= t) {
+				shown.push(p)
+				continue
+			}
+			const a = track[k - 1]
+			if (a) {
+				const f = (t - a.t) / (p.t - a.t)
+				shown.push({
+					...p,
+					x: a.x + (p.x - a.x) * f,
+					y: a.y + (p.y - a.y) * f,
+					scale: a.scale + (p.scale - a.scale) * f,
+					t,
+				})
+			}
+			break
+		}
+		return shown
+	}
 </script>
 
 <svelte:window onpointerdown={clearPinOutside} />
@@ -569,6 +606,7 @@
 							{@const active = selectedPitch === i}
 							{@const first = track[0]}
 							{@const last = track[track.length - 1]}
+							{@const shown = trackUntil(track, trailUntil(i))}
 							<g
 								class="cursor-pointer transition-opacity"
 								opacity={selectedPitch != null && !active ? 0.2 : 1}
@@ -596,10 +634,12 @@
 									stroke-linecap="round"
 									stroke-linejoin="round"
 								/>
-								<path
-									d={trackRibbon(track, active ? SELECTED_TRAIL_W : TRAIL_W)}
-									fill="url(#{uid}-trail-{i})"
-								/>
+								{#if shown.length > 1}
+									<path
+										d={trackRibbon(shown, active ? SELECTED_TRAIL_W : TRAIL_W)}
+										fill="url(#{uid}-trail-{i})"
+									/>
+								{/if}
 							</g>
 						{/if}
 					{/each}
@@ -627,6 +667,7 @@
 										{color}
 										path={tracks[i]}
 										animate={!prefersReducedMotion.current}
+										onflight={(t) => (flight = { pitch: i, t })}
 									/>
 								{:else}
 									<circle cx={x} cy={y} r={active ? DOT_R + 1 : DOT_R} fill={color} />
@@ -647,7 +688,7 @@
 
 				<!-- In HTML rather than the SVG so it stays readable when the SVG is scaled down -->
 				{#if selectedSpin && svgFrame}
-					{@const { x, y, spinRate, tilt } = selectedSpin}
+					{@const { x, y, spinRate } = selectedSpin}
 					{@const { scale, ox, oy } = svgFrame}
 					{@const right = x < W / 2}
 					{@const gap = (DOT_R + 1.5) * scale + 4}
@@ -659,7 +700,7 @@
 						style:left="{ox + x * scale + (right ? gap : -gap)}px"
 						style:top="{Math.min(boxHeight - 14, Math.max(14, oy + y * scale))}px"
 					>
-						{Math.round(spinRate).toLocaleString('en-US')} rpm · {tilt}
+						{Math.round(spinRate).toLocaleString('en-US')} rpm
 					</p>
 				{/if}
 			</div>
