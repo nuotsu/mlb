@@ -7,6 +7,7 @@
 		spinAxis,
 		UMPIRE_CAMERA,
 	} from '#lib/pitch-flight.js'
+	import { pitchOutcome } from '#lib/pitch-outcome.js'
 	import { batterUniformSrc, type BatterUniforms } from '#lib/uniforms.js'
 	import { cn } from '#lib/utils.js'
 	import BatterFigure from '#ui/game/batter-figure.svelte'
@@ -347,11 +348,34 @@
 	let boxWidth = $state(0)
 	let boxHeight = $state(0)
 
-	/** SVG units → px, matching the SVG's `xMidYMid meet` scaling. */
+	/** The SVG sits on the box's outer edge, away from the pitch list and the batter. */
+	const svgAlign = $derived(isLefty ? 'xMinYMid' : 'xMaxYMid')
+
+	/** SVG units → px, matching the SVG's `meet` scaling and `svgAlign`. */
 	const svgFrame = $derived.by(() => {
 		if (!boxWidth || !boxHeight) return null
 		const scale = Math.min(boxWidth / W, boxHeight / H)
-		return { scale, ox: (boxWidth - W * scale) / 2, oy: (boxHeight - H * scale) / 2 }
+		return {
+			scale,
+			ox: isLefty ? 0 : boxWidth - W * scale,
+			oy: (boxHeight - H * scale) / 2,
+		}
+	})
+
+	/** How wide the batter stands, px, as last measured. Kept across at-bats so the layout holds still. */
+	let figureWidth = $state(0)
+
+	/**
+	 * Just wide enough for the zone at full height and the batter beside it, so
+	 * the pitch list gets the rest. `null` until the box is measured.
+	 */
+	const zoneBox = $derived.by(() => {
+		if (!boxHeight) return null
+		const scale = boxHeight / H
+		const min = W * scale
+		if (!batterSrcs || !figureWidth) return { min, width: min }
+		const beside = (isLefty ? W - sz.x - sz.w : sz.x) * scale
+		return { min, width: min + Math.max(0, figureWidth - beside) }
 	})
 
 	/** The batter stands about even with the middle of the plate. */
@@ -553,22 +577,30 @@
 				if (e.pointerType === 'mouse') hoveredPitch = null
 			}}
 		>
+			<!-- Gives way before the pitch list does, but never below the zone's full size -->
 			<div
-				class="relative h-full min-w-0 grow basis-0"
+				class="relative aspect-5/6 h-full min-w-0 shrink-[100]"
+				style:width={zoneBox && `${zoneBox.width}px`}
+				style:min-width={zoneBox && `${zoneBox.min}px`}
 				bind:clientWidth={boxWidth}
 				bind:clientHeight={boxHeight}
 			>
 				<!-- Painted first so the zone and pitches sit on top -->
 				{#if batterSrcs && figureFrame && (batSide === 'L' || batSide === 'R')}
 					{#key batterSrcs.join(' ')}
-						<BatterFigure srcs={batterSrcs} {batSide} {...figureFrame} />
+						<BatterFigure
+							srcs={batterSrcs}
+							{batSide}
+							{...figureFrame}
+							onmeasure={(w) => (figureWidth = w)}
+						/>
 					{/key}
 				{/if}
 
 				<svg
 					viewBox="0 0 {W} {H}"
 					class="absolute inset-0 h-full w-full text-current/40"
-					preserveAspectRatio="xMidYMid meet"
+					preserveAspectRatio="{svgAlign} meet"
 					aria-hidden="true"
 				>
 					<!-- 3×3 strike zone -->
@@ -701,7 +733,7 @@
 				{/if}
 			</div>
 
-			<div class="flex max-h-full w-[14ch] shrink-0 flex-col gap-y-[.25ch]">
+			<div class="flex max-h-full min-w-0 grow basis-[19ch] flex-col gap-y-[.25ch]">
 				<div
 					class="flex shrink-0 items-center justify-center gap-ch text-xs leading-none tabular-nums"
 					aria-label={`${balls} ball${balls === 1 ? '' : 's'}, ${strikes} strike${strikes === 1 ? '' : 's'}, ${outs} out${outs === 1 ? '' : 's'}`}
@@ -731,6 +763,7 @@
 					{#each pitches as pitch, i (pitch.index ?? i)}
 						{@const { type, isBall, isStrike, isInPlay } = pitch.details ?? {}}
 						{@const speed = pitch.pitchData?.startSpeed}
+						{@const outcome = pitchOutcome(play, pitch)}
 						{@const active = selectedPitch === i}
 						{@const dimmed = selectedPitch != null && !active}
 						<li data-pitch={i} class={cn('transition-opacity', dimmed && 'opacity-25')}>
@@ -762,6 +795,25 @@
 										>{speed.toFixed(1)}</span
 									>
 								{/if}
+
+								<span
+									class="w-[4ch] shrink-0 text-right"
+									style:color={pitchColor(pitch.details)}
+									title={outcome?.title}
+								>
+									{#if outcome}
+										<span aria-hidden="true">
+											{#if outcome.mirrored}
+												<span class="inline-block -scale-x-100">{outcome.label}</span>
+											{:else if outcome.struck}
+												<s>{outcome.label}</s>
+											{:else}
+												{outcome.label}
+											{/if}
+										</span>
+										<span class="sr-only">{outcome.title}</span>
+									{/if}
+								</span>
 							</button>
 						</li>
 					{/each}
