@@ -62,25 +62,40 @@
 	)
 
 	/** Same hues as the pitch list (blue in play, green ball, yellow strike), darkened in light mode to stay legible. */
+	/*
+	 * Blue is a run: a label is blue when a run scored on the play, and a diamond is filled blue
+	 * when its batter came around to score. Red is an out. Strikeouts and walks keep their own
+	 * colors from the pitch list (yellow strike, green ball).
+	 */
+	const BLUE = 'text-blue-600 dark:text-blue-400'
 	const RED = 'text-red-600 dark:text-red-400'
 	const GRAY = 'text-current/60'
 
-	/** The label's color. Outs, errors and fielder's choices are red only when the batter made an out. */
-	const COLORS: Record<ScorecardKind, string | ((cell: ScorecardCell) => string)> = {
-		hit: (cell) => (cell.isScoringPlay ? 'text-blue-600 dark:text-blue-400' : 'text-foreground'),
+	const COLORS: Record<ScorecardKind, string> = {
+		hit: 'text-foreground',
 		homeRun: 'font-bold text-blue-700 dark:text-blue-300',
 		walk: 'text-green-700 dark:text-accent',
 		strikeout: 'text-yellow-700 dark:text-yellow-300',
-		error: (cell) => (cell.madeOut ? RED : GRAY),
-		fieldersChoice: (cell) => (cell.madeOut ? RED : GRAY),
-		out: (cell) => (cell.madeOut ? RED : GRAY),
+		error: GRAY,
+		fieldersChoice: GRAY,
+		out: GRAY,
 		runner: GRAY,
-		other: (cell) => (cell.madeOut ? RED : GRAY),
+		other: GRAY,
 	}
 
 	function cellColor(cell: ScorecardCell) {
-		const color = COLORS[cell.kind]
-		return typeof color === 'function' ? color(cell) : color
+		if (cell.kind === 'walk' || cell.kind === 'strikeout' || cell.kind === 'homeRun') {
+			return COLORS[cell.kind]
+		}
+		if (cell.isScoringPlay) return BLUE
+		if (cell.madeOut) return RED
+		return COLORS[cell.kind]
+	}
+
+	/** The bold base paths: green for a walk, white for an error, the label's color for a hit. */
+	const BASE_PATH_COLORS: Partial<Record<ScorecardKind, string>> = {
+		walk: 'stroke-green-700 dark:stroke-accent',
+		error: 'stroke-foreground',
 	}
 
 	// Tooltip: hover with a mouse, tap on a touchscreen, or focus with a keyboard
@@ -225,7 +240,7 @@
 									if (cell.kind !== 'runner') onAtBatSelect?.(cell.atBatIndex)
 								}}
 							>
-								{@render diamond(cell.scored, cell.kind === 'homeRun', cell.bases, cell.madeOut)}
+								{@render diamond(cell)}
 
 								<span class="relative text-[0.6875rem] leading-none" aria-hidden="true">
 									{#if cell.mirrored}
@@ -272,7 +287,7 @@
 								)}
 								aria-hidden="true"
 							>
-								{@render diamond(false)}
+								{@render diamond()}
 							</div>
 						{/if}
 					</td>
@@ -301,27 +316,27 @@
 	An empty diamond takes its cell's color. A plate appearance's outline only says whether it
 	made an out: red if so, gray otherwise, whatever color its label is.
 -->
-{#snippet diamond(scored: boolean, strong?: boolean, bases?: number, madeOut?: boolean)}
+{#snippet diamond(cell?: ScorecardCell)}
 	<svg viewBox="0 0 40 40" class="absolute inset-0.5 size-[calc(100%-0.25rem)]" aria-hidden="true">
 		<path
-			class={madeOut == null
-				? undefined
-				: madeOut
-					? 'stroke-red-600 dark:stroke-red-400'
-					: 'stroke-foreground/45'}
+			class={cn(
+				cell && (cell.madeOut ? 'stroke-red-600 dark:stroke-red-400' : 'stroke-foreground/45'),
+				cell?.scored && 'fill-blue-500 dark:fill-blue-400',
+			)}
 			d="M20 3 37 20 20 37 3 20Z"
-			fill="currentColor"
-			fill-opacity={scored ? (strong ? 0.35 : 0.2) : 0}
+			fill="none"
+			fill-opacity={cell?.kind === 'homeRun' ? 0.5 : 0.35}
 			stroke="currentColor"
 			stroke-width="1"
 			stroke-linejoin="round"
 			vector-effect="non-scaling-stroke"
 		/>
 
-		<!-- A hit's base paths, counterclockwise from home: one side for a single, all four for a homer -->
-		{#if bases}
+		<!-- Base paths, counterclockwise from home: one side for a single, walk or error, all four for a homer -->
+		{#if cell?.bases}
 			<polyline
-				points={BASE_PATH.slice(0, bases + 1).join(' ')}
+				class={BASE_PATH_COLORS[cell.kind]}
+				points={BASE_PATH.slice(0, cell.bases + 1).join(' ')}
 				fill="none"
 				stroke="currentColor"
 				stroke-width="2.5"

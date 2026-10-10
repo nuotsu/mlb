@@ -18,7 +18,7 @@ export type Notation = {
 	/** Backwards, for a called third strike. */
 	mirrored?: boolean
 	badge?: 'DP' | 'TP'
-	/** Bases a hit was worth, 1 to 4, for the base paths to draw. */
+	/** Bases the batter took on a hit, walk or error, 1 to 4, for the base paths to draw. */
 	bases?: number
 }
 
@@ -167,6 +167,17 @@ function batterRunner(play: MLB.Play) {
 	return play.runners?.find((r) => r.details?.runner?.id === batterId && !r.movement?.start)
 }
 
+const BASE_NUMBERS: Record<string, number> = { '1B': 1, '2B': 2, '3B': 3, score: 4 }
+
+/** How far the batter got on the play itself, like 2 on a throwing error that let them take second. */
+function batterBases(play: MLB.Play) {
+	const batterId = play.matchup?.batter?.id
+	const reached = (play.runners ?? [])
+		.filter((r) => r.details?.runner?.id === batterId && !r.movement?.isOut)
+		.map((r) => BASE_NUMBERS[r.movement?.end ?? ''] ?? 0)
+	return Math.max(0, ...reached) || undefined
+}
+
 /**
  * The plate appearance itself made an out: the batter was out, or a runner was
  * put out on the same pitch (a force, a double play). A runner caught stealing
@@ -214,7 +225,7 @@ export function notation(play: MLB.Play): Notation {
 		return { label, bases, kind: eventType === 'home_run' ? 'homeRun' : 'hit' }
 	}
 
-	if (eventType in WALKS) return { label: WALKS[eventType], kind: 'walk' }
+	if (eventType in WALKS) return { label: WALKS[eventType], kind: 'walk', bases: 1 }
 
 	if (STRIKEOUTS.has(eventType)) {
 		return { label: 'K', kind: 'strikeout', mirrored: isCalledStrikeout(play), badge }
@@ -226,7 +237,7 @@ export function notation(play: MLB.Play): Notation {
 		// The batter's own entry names the fielder; other runners can carry later errors
 		const credits = [batterRunner(play), ...(play.runners ?? [])].flatMap((r) => r?.credits ?? [])
 		const position = credits.find((c) => isError(c.credit))?.position?.code
-		return { label: `E${position ?? ''}`, kind: 'error' }
+		return { label: `E${position ?? ''}`, kind: 'error', bases: batterBases(play) }
 	}
 
 	if (FIELDERS_CHOICES.has(eventType)) return { label: 'FC', kind: 'fieldersChoice' }

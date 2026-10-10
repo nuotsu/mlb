@@ -92,7 +92,7 @@ describe('notation', () => {
 	})
 
 	test('walks and hit by pitch', () => {
-		expect(notation(play({ eventType: 'walk' }))).toEqual({ label: 'BB', kind: 'walk' })
+		expect(notation(play({ eventType: 'walk' }))).toEqual({ label: 'BB', kind: 'walk', bases: 1 })
 		expect(notation(play({ eventType: 'intent_walk' })).label).toBe('IBB')
 		expect(notation(play({ eventType: 'hit_by_pitch' })).label).toBe('HBP')
 	})
@@ -120,7 +120,18 @@ describe('notation', () => {
 			eventType: 'field_error',
 			runners: [runner({ id: 1, end: '1B', credits: [['f_fielding_error', '6']] })],
 		})
-		expect(notation(p)).toEqual({ label: 'E6', kind: 'error' })
+		expect(notation(p)).toEqual({ label: 'E6', kind: 'error', bases: 1 })
+	})
+
+	test('a throwing error that lets the batter take second', () => {
+		const p = play({
+			eventType: 'field_error',
+			runners: [
+				runner({ id: 1, end: '1B', credits: [['f_fielding_error', '6']] }),
+				runner({ id: 1, start: '1B', end: '2B', credits: [['f_throwing_error', '6']] }),
+			],
+		})
+		expect(notation(p)).toMatchObject({ label: 'E6', bases: 2 })
 	})
 
 	test("fielder's choice and force outs", () => {
