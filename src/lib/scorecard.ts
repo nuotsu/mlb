@@ -47,6 +47,8 @@ export type BattingTotals = {
 	k: number
 }
 
+export type HalfInning = { inning: number; half: 'top' | 'bottom' }
+
 export type ScorecardRow = {
 	playerId: number
 	/** Lineup slot, 1 to 9. */
@@ -55,6 +57,10 @@ export type ScorecardRow = {
 	order: number
 	isSubstitute: boolean
 	enteredInning?: number
+	/** When a substitute came in. Unset for starters. */
+	entered?: HalfInning
+	/** When the next player in this lineup spot replaced them. Unset while they're still in the game. */
+	exited?: HalfInning
 	cells: ScorecardCell[]
 	totals: BattingTotals
 }
@@ -256,16 +262,38 @@ export function lineupFromBoxscore(team?: MLB.TeamBoxscore | null): LineupEntry[
 const SUBSTITUTIONS = new Set(['offensive_substitution', 'defensive_substitution'])
 
 /** The inning each substitute came into the game. */
+/** The half-inning each substitute came into the game. */
 function entryInnings(plays: MLB.Play[]) {
-	const innings = new Map<number, number>()
+	const innings = new Map<number, HalfInning>()
 	for (const play of plays) {
 		for (const event of play.playEvents ?? []) {
 			const id = event.player?.id
 			if (id == null || innings.has(id)) continue
-			if (SUBSTITUTIONS.has(event.details?.eventType ?? '')) innings.set(id, play.about.inning)
+			if (SUBSTITUTIONS.has(event.details?.eventType ?? '')) {
+				innings.set(id, { inning: play.about.inning, half: play.about.halfInning })
+			}
 		}
 	}
 	return innings
+}
+
+/** Half-innings in game order: top of the 1st is 2, bottom of the 1st is 3. */
+function halfKey({ inning, half }: HalfInning) {
+	return inning * 2 + (half === 'bottom' ? 1 : 0)
+}
+
+/**
+ * Whether this row's player was in the game when their team batted in this
+ * inning. A pinch hitter counts from the half-inning they batted in; a
+ * defensive replacement who came in while their team was in the field counts
+ * from the next time it bats.
+ */
+export function isInGame(row: ScorecardRow, inning: number, side: 'away' | 'home') {
+	const batting = halfKey({ inning, half: side === 'away' ? 'top' : 'bottom' })
+	return (
+		(!row.entered || halfKey(row.entered) <= batting) &&
+		(!row.exited || batting < halfKey(row.exited))
+	)
 }
 
 const BASES = ['1B', '2B', '3B']
@@ -301,7 +329,8 @@ export function buildScorecard({
 			slot: Math.floor(order / 100),
 			order,
 			isSubstitute: order % 100 !== 0,
-			enteredInning: order % 100 !== 0 ? entered.get(playerId) : undefined,
+			enteredInning: order % 100 !== 0 ? entered.get(playerId)?.inning : undefined,
+			entered: order % 100 !== 0 ? entered.get(playerId) : undefined,
 			cells: [],
 			totals: emptyTotals(),
 		})
@@ -316,7 +345,8 @@ export function buildScorecard({
 				slot: 10 + rows.size,
 				order: (10 + rows.size) * 100,
 				isSubstitute: true,
-				enteredInning: entered.get(playerId),
+				enteredInning: entered.get(playerId)?.inning,
+				entered: entered.get(playerId),
 				cells: [],
 				totals: emptyTotals(),
 			}
@@ -454,6 +484,15 @@ export function buildScorecard({
 			const entry = innings.get(i + 1)
 			return { inning: i + 1, columns: entry?.columns ?? 1, totals: entry?.totals }
 		}),
-		rows: [...rows.values()].sort((a, b) => a.order - b.order),
+		rows: withExits([...rows.values()].sort((a, b) => a.order - b.order)),
 	}
+}
+
+/** Each player leaves when the next player in their lineup spot comes in. */
+function withExits(rows: ScorecardRow[]) {
+	rows.forEach((row, i) => {
+		const next = rows[i + 1]
+		if (next?.slot === row.slot) row.exited = next.entered
+	})
+	return rows
 }

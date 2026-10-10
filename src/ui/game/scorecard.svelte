@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		buildScorecard,
+		isInGame,
 		lineupFromBoxscore,
 		type ScorecardCell,
 		type ScorecardKind,
@@ -260,8 +261,12 @@
 								{/if}
 							</button>
 						{:else}
+							<!-- Fainter before a substitute came in, and after a player was replaced -->
 							<div
-								class="relative grid size-full place-items-center text-current/40"
+								class={cn(
+									'relative grid size-full place-items-center',
+									isInGame(row, column.inning, side) ? 'text-current/40' : 'text-current/15',
+								)}
 								aria-hidden="true"
 							>
 								{@render diamond(false)}

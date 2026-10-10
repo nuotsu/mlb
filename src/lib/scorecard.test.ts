@@ -3,7 +3,13 @@
 import { describe, expect, test } from 'bun:test'
 import extras from './fixtures/scorecard-824624.json'
 import alds from './fixtures/scorecard-849832.json'
-import { buildScorecard, isPlateAppearance, notation, type LineupEntry } from './scorecard'
+import {
+	buildScorecard,
+	isInGame,
+	isPlateAppearance,
+	notation,
+	type LineupEntry,
+} from './scorecard'
 
 type RunnerInit = {
 	id: number
@@ -525,4 +531,48 @@ test('849832: the order bats around in the top of the 6th', () => {
 		isFinal: true,
 	})
 	expect(card.innings.map((i) => i.columns)).toEqual([1, 1, 1, 1, 1, 2, 1, 1, 1])
+})
+
+describe('isInGame', () => {
+	function card(side: 'away' | 'home') {
+		const fixture = alds as unknown as {
+			plays: MLB.Play[]
+			boxscore: { teams: Record<'away' | 'home', { players: Record<string, MLB.BoxscorePlayer> }> }
+		}
+		const players = Object.values(fixture.boxscore.teams[side].players)
+		return buildScorecard({
+			plays: fixture.plays,
+			side,
+			lineup: players.map((p) => ({ playerId: p.person.id, battingOrder: p.battingOrder! })),
+			isFinal: true,
+		})
+	}
+	const row = (c: ReturnType<typeof card>, id: number) => c.rows.find((r) => r.playerId === id)!
+
+	test('a defensive replacement made in the field starts with the next time up', () => {
+		// CLE bats in the top; Halpin replaced Martínez in the bottom of the 7th
+		const cle = card('away')
+		const martinez = row(cle, 682657)
+		const halpin = row(cle, 690984)
+		expect(halpin.entered).toEqual({ inning: 7, half: 'bottom' })
+		expect(martinez.exited).toEqual({ inning: 7, half: 'bottom' })
+		expect([6, 7, 8].map((i) => isInGame(martinez, i, 'away'))).toEqual([true, true, false])
+		expect([6, 7, 8].map((i) => isInGame(halpin, i, 'away'))).toEqual([false, false, true])
+	})
+
+	test('a pinch hitter counts from the inning they batted in', () => {
+		// CWS bats in the bottom; Peters pinch-hit for Grichuk in the bottom of the 5th
+		const cws = card('home')
+		const grichuk = row(cws, 545341)
+		const peters = row(cws, 671976)
+		expect([4, 5].map((i) => isInGame(grichuk, i, 'home'))).toEqual([true, false])
+		expect([4, 5].map((i) => isInGame(peters, i, 'home'))).toEqual([false, true])
+	})
+
+	test('starters who stay in play the whole game', () => {
+		const kwan = row(card('away'), 680757)
+		expect(kwan.entered).toBeUndefined()
+		expect(kwan.exited).toBeUndefined()
+		expect([1, 9, 12].every((i) => isInGame(kwan, i, 'away'))).toBe(true)
+	})
 })
