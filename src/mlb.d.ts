@@ -736,6 +736,7 @@ declare global {
 			rbi?: number
 			awayScore?: number
 			homeScore?: number
+			isOut?: boolean
 		}
 
 		/**
@@ -849,6 +850,12 @@ declare global {
 			isPitch?: boolean
 			type?: string
 			reviewDetails?: ReviewDetails
+			/** Who an action is about, like a substitute or a runner placed on base */
+			player?: Person
+			/** A substitute's new position */
+			position?: Position
+			/** Where a runner was placed, as a number (2 for second base) */
+			base?: number
 		}
 
 		/**
@@ -888,6 +895,9 @@ declare global {
 			isBall?: boolean
 			type: PitchType
 			hasReview?: boolean
+			/** Set on actions, like `offensive_substitution` or `runner_placed` */
+			event?: string
+			eventType?: string
 		}
 
 		/**
@@ -1264,6 +1274,8 @@ declare global {
 			}
 			gameStatus?: PlayerGameStatus
 			allPositions?: Position[]
+			/** Lineup slot and substitution order, e.g. `"100"` for the leadoff starter and `"101"` for whoever replaced them */
+			battingOrder?: string
 		}
 
 		/**

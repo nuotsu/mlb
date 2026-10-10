@@ -253,7 +253,11 @@
 			{boxscore}
 			gameDate={game?.gameDate}
 			players={feedLive?.gameData?.players as Record<string, MLB.Person> | undefined}
+			plays={feedLive?.liveData?.plays?.allPlays}
+			scheduledInnings={linescore?.scheduledInnings}
+			{isFinal}
 			{isSpoilerPrevented}
+			onAtBatSelect={selectAtBatFromPlay}
 		/>
 	{/if}
 
