@@ -225,7 +225,7 @@
 		</div>
 	{/if}
 
-	{#if !isSpoilerPrevented && feedLive && (hasTopPerformers || hasDecisions || hasHomeRuns || hasReviews)}
+	{#if !isSpoilerPrevented && feedLive && (hasTopPerformers || hasDecisions || hasReviews)}
 		<div
 			class="col-span-full flex flex-wrap items-start justify-evenly gap-lh px-[2ch] *:grow *:only:mx-auto *:only:max-w-max"
 		>
@@ -237,14 +237,14 @@
 				<Decision {feedLive} />
 			{/if}
 
-			{#if hasHomeRuns}
-				<HomeRuns {feedLive} />
-			{/if}
-
 			{#if hasReviews}
 				<Reviews {feedLive} />
 			{/if}
 		</div>
+	{/if}
+
+	{#if !isSpoilerPrevented && feedLive && hasHomeRuns}
+		<HomeRuns class="col-span-full px-[2ch]" {feedLive} />
 	{/if}
 
 	{#if hasBattingOrder || hasBench}

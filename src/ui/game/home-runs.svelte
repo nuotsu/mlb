@@ -23,7 +23,7 @@
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import Headshot from '#ui/player/headshot.svelte'
 
-	let { feedLive }: { feedLive: MLB.LiveGameFeed } = $props()
+	let { feedLive, class: className }: { feedLive: MLB.LiveGameFeed; class?: string } = $props()
 
 	const RBI_LABELS = {
 		1: 'Solo',
@@ -198,10 +198,16 @@
 </script>
 
 {#if homeRuns.length}
-	<article class="w-full max-w-md space-y-ch">
-		<h2 class="text-xs text-current/40">Home Runs</h2>
+	<!-- Chart beside the details and list when there's room, stacked otherwise -->
+	<article
+		class={cn(
+			'grid items-start gap-x-lh gap-y-ch md:grid-cols-[minmax(0,32rem)_minmax(0,26rem)] md:justify-center',
+			className,
+		)}
+	>
+		<h2 class="text-xs text-current/40 md:col-span-full">Home Runs</h2>
 
-		<figure>
+		<figure class="mx-auto w-full max-w-lg">
 			<div class="relative">
 				<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 				<svg
@@ -384,124 +390,126 @@
 			</figcaption>
 		</figure>
 
-		<!-- Every card shares one grid cell, so the slot keeps the tallest card's height and
+		<div class="space-y-ch">
+			<!-- Every card shares one grid cell, so the slot keeps the tallest card's height and
 		     hovering between home runs never shifts the list below. Touch screens can't hover,
 		     so there the slot only takes up room once something is selected. -->
-		<div class="grid *:col-span-full *:row-span-full">
-			<p
-				class={cn(
-					'grid place-content-center rounded border border-dashed border-stroke p-ch text-center text-xs text-current/40',
-					activeHomeRun && 'invisible pointer-coarse:hidden',
-				)}
-			>
-				Select a home run for details
-			</p>
-
-			{#each homeRuns as hr (hr.atBatIndex)}
-				<div
+			<div class="grid *:col-span-full *:row-span-full">
+				<p
 					class={cn(
-						'hr-color flex gap-ch rounded border border-stroke p-ch',
-						active !== hr.atBatIndex && 'invisible pointer-coarse:hidden',
+						'grid place-content-center rounded border border-dashed border-stroke p-ch text-center text-xs text-current/40',
+						activeHomeRun && 'invisible pointer-coarse:hidden',
 					)}
-					style:--light={hr.color.light}
-					style:--dark={hr.color.dark}
 				>
-					<Headshot person={hr.batter} class="hr-ring size-[3lh] shrink-0 border-2" />
+					Select a home run for details
+				</p>
 
-					<div class="min-w-0 grow space-y-[.25lh]">
-						<p class="flex flex-wrap items-baseline gap-x-ch">
-							<a class="font-bold hover:underline" href="/player/{hr.batter.id}">
-								{hr.batter.fullName}
-							</a>
-							<span class="text-xs text-current/40">{hr.team.abbreviation}</span>
-						</p>
-
-						<p class="text-xs">
-							{#if hr.ordinal != null}
-								<span class="hr-text font-bold">#{hr.ordinal}</span> ·
-							{/if}
-							{hr.type} · {hr.inning}
-						</p>
-
-						<dl
-							class="grid grid-cols-[repeat(auto-fill,minmax(9ch,1fr))] gap-x-ch text-xs tabular-nums *:grid"
-						>
-							{#if hr.hitData?.totalDistance != null}
-								<div>
-									<dt class="text-current/40">Distance</dt>
-									<dd>{Math.round(hr.hitData.totalDistance)} ft</dd>
-								</div>
-							{/if}
-							{#if hr.hitData?.launchSpeed != null}
-								<div>
-									<dt class="text-current/40">Exit velo</dt>
-									<dd>{hr.hitData.launchSpeed} mph</dd>
-								</div>
-							{/if}
-							{#if hr.hitData?.launchAngle != null}
-								<div>
-									<dt class="text-current/40">Launch</dt>
-									<dd>{Math.round(hr.hitData.launchAngle)}°</dd>
-								</div>
-							{/if}
-							<div>
-								<dt class="text-current/40">Direction</dt>
-								<dd>{hr.direction}</dd>
-							</div>
-						</dl>
-
-						{#if hr.pitcher?.fullName}
-							<p class="text-xs text-current/60">
-								off <a class="hover:underline" href="/player/{hr.pitcher.id}"
-									>{hr.pitcher.fullName}</a
-								>
-								{#if hr.pitch}· {hr.pitch}{/if}
-							</p>
-						{/if}
-					</div>
-				</div>
-			{/each}
-		</div>
-
-		<ol class="grid gap-[.25ch]">
-			{#each homeRuns as hr (hr.atBatIndex)}
-				<li class="hr-color" style:--light={hr.color.light} style:--dark={hr.color.dark}>
-					<button
+				{#each homeRuns as hr (hr.atBatIndex)}
+					<div
 						class={cn(
-							'flex w-full items-center gap-ch rounded-sm px-[.5ch] text-left transition-opacity',
-							active !== null && active !== hr.atBatIndex && 'opacity-40',
-							selected === hr.atBatIndex && 'bg-current/10',
-							favoritesStore.has(`/player/${hr.batter.id}`) && 'bg-accent text-dark',
+							'hr-color flex gap-ch rounded border border-stroke p-ch',
+							active !== hr.atBatIndex && 'invisible pointer-coarse:hidden',
 						)}
-						type="button"
-						aria-pressed={selected === hr.atBatIndex}
-						aria-label={label(hr)}
-						onclick={() => toggle(hr.atBatIndex)}
-						onkeydown={(e) => e.key === 'Escape' && (selected = null)}
-						onfocus={(e) => {
-							if (e.currentTarget.matches(':focus-visible')) focused = hr.atBatIndex
-						}}
-						onblur={() => (focused = null)}
-						onpointerenter={(e) => hover(e, hr.atBatIndex)}
-						onpointerleave={(e) => hover(e, null)}
+						style:--light={hr.color.light}
+						style:--dark={hr.color.dark}
 					>
-						<span class="hr-bg inline-block size-[1ch] shrink-0 rounded-full"></span>
-						<Headshot person={hr.batter} class="size-lh shrink-0" />
-						<span class="line-clamp-1 grow break-all">
-							{hr.batter.boxscoreName ?? hr.batter.lastName ?? hr.batter.fullName}
-						</span>
-						{#if hr.hitData?.totalDistance != null}
-							<span class="text-xs text-current/40 tabular-nums"
-								>{Math.round(hr.hitData.totalDistance)} ft</span
+						<Headshot person={hr.batter} class="hr-ring size-[3lh] shrink-0 border-2" />
+
+						<div class="min-w-0 grow space-y-[.25lh]">
+							<p class="flex flex-wrap items-baseline gap-x-ch">
+								<a class="font-bold hover:underline" href="/player/{hr.batter.id}">
+									{hr.batter.fullName}
+								</a>
+								<span class="text-xs text-current/40">{hr.team.abbreviation}</span>
+							</p>
+
+							<p class="text-xs">
+								{#if hr.ordinal != null}
+									<span class="hr-text font-bold">#{hr.ordinal}</span> ·
+								{/if}
+								{hr.type} · {hr.inning}
+							</p>
+
+							<dl
+								class="grid grid-cols-[repeat(auto-fill,minmax(8ch,1fr))] gap-x-ch text-xs tabular-nums *:grid"
 							>
-						{/if}
-						<span class="w-[5ch] shrink-0 text-right text-xs text-current/60 tabular-nums"
-							>{hr.inning}</span
+								{#if hr.hitData?.totalDistance != null}
+									<div>
+										<dt class="text-current/40">Distance</dt>
+										<dd>{Math.round(hr.hitData.totalDistance)} ft</dd>
+									</div>
+								{/if}
+								{#if hr.hitData?.launchSpeed != null}
+									<div>
+										<dt class="text-current/40">Exit velo</dt>
+										<dd>{hr.hitData.launchSpeed} mph</dd>
+									</div>
+								{/if}
+								{#if hr.hitData?.launchAngle != null}
+									<div>
+										<dt class="text-current/40">Launch</dt>
+										<dd>{Math.round(hr.hitData.launchAngle)}°</dd>
+									</div>
+								{/if}
+								<div>
+									<dt class="text-current/40">Direction</dt>
+									<dd>{hr.direction}</dd>
+								</div>
+							</dl>
+
+							{#if hr.pitcher?.fullName}
+								<p class="text-xs text-current/60">
+									off <a class="hover:underline" href="/player/{hr.pitcher.id}"
+										>{hr.pitcher.fullName}</a
+									>
+									{#if hr.pitch}· {hr.pitch}{/if}
+								</p>
+							{/if}
+						</div>
+					</div>
+				{/each}
+			</div>
+
+			<ol class="grid gap-[.25ch]">
+				{#each homeRuns as hr (hr.atBatIndex)}
+					<li class="hr-color" style:--light={hr.color.light} style:--dark={hr.color.dark}>
+						<button
+							class={cn(
+								'flex w-full items-center gap-ch rounded-sm px-[.5ch] text-left transition-opacity',
+								active !== null && active !== hr.atBatIndex && 'opacity-40',
+								selected === hr.atBatIndex && 'bg-current/10',
+								favoritesStore.has(`/player/${hr.batter.id}`) && 'bg-accent text-dark',
+							)}
+							type="button"
+							aria-pressed={selected === hr.atBatIndex}
+							aria-label={label(hr)}
+							onclick={() => toggle(hr.atBatIndex)}
+							onkeydown={(e) => e.key === 'Escape' && (selected = null)}
+							onfocus={(e) => {
+								if (e.currentTarget.matches(':focus-visible')) focused = hr.atBatIndex
+							}}
+							onblur={() => (focused = null)}
+							onpointerenter={(e) => hover(e, hr.atBatIndex)}
+							onpointerleave={(e) => hover(e, null)}
 						>
-					</button>
-				</li>
-			{/each}
-		</ol>
+							<span class="hr-bg inline-block size-[1ch] shrink-0 rounded-full"></span>
+							<Headshot person={hr.batter} class="size-lh shrink-0" />
+							<span class="line-clamp-1 grow break-all">
+								{hr.batter.boxscoreName ?? hr.batter.lastName ?? hr.batter.fullName}
+							</span>
+							{#if hr.hitData?.totalDistance != null}
+								<span class="text-xs text-current/40 tabular-nums"
+									>{Math.round(hr.hitData.totalDistance)} ft</span
+								>
+							{/if}
+							<span class="w-[5ch] shrink-0 text-right text-xs text-current/60 tabular-nums"
+								>{hr.inning}</span
+							>
+						</button>
+					</li>
+				{/each}
+			</ol>
+		</div>
 	</article>
 {/if}
 
