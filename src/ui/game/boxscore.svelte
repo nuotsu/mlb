@@ -135,7 +135,7 @@
 					id="boxscore-lineup-{side}"
 					role="tabpanel"
 					aria-labelledby="boxscore-tab-{view}"
-					class="overflow-x-auto mask-r-from-[calc(100%-1.5ch)]"
+					class="relative overflow-x-auto mask-r-from-[calc(100%-1.5ch)]"
 				>
 					{#if view === 'scorecard'}
 						<Scorecard

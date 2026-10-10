@@ -120,14 +120,10 @@
 
 	$effect(() => {
 		const el = tooltipEl
-		if (!el || typeof el.showPopover !== 'function') return
+		if (!el || !tooltip) return
 
-		if (!tooltip) {
-			if (el.matches(':popover-open')) el.hidePopover()
-			return
-		}
-
-		if (!el.matches(':popover-open')) el.showPopover()
+		// In the top layer where supported, so no scroll container clips it; plain `fixed` otherwise
+		if (typeof el.showPopover === 'function' && !el.matches(':popover-open')) el.showPopover()
 		place(el, tooltip.anchor)
 	})
 
@@ -169,10 +165,10 @@
 	}
 </script>
 
-<!-- relative: keeps the sr-only caption and header inside the scroll container -->
-<table class="scorecard relative table-fixed border-collapse text-center">
-	<caption class="sr-only">{team.team.name} scorecard</caption>
-
+<table
+	class="scorecard table-fixed border-collapse text-center"
+	aria-label="{team.team.name} scorecard"
+>
 	<thead class="text-xs text-current/40">
 		<tr class="*:pt-[.5ch] *:font-normal">
 			<th class="w-full" colspan="2" scope="col">
@@ -328,15 +324,17 @@
 	{/if}
 </table>
 
-<div
-	bind:this={tooltipEl}
-	popover="manual"
-	role="tooltip"
-	class="pointer-events-none fixed m-0 max-w-[min(40ch,calc(100vw-2ch))] border border-current/25 bg-background px-ch py-[.5ch] text-left text-xs text-foreground shadow-lg"
-	style:inset="auto"
->
-	{tooltip?.text}
-</div>
+<!-- Only in the page while open, so a closed tooltip can never take up room -->
+{#if tooltip}
+	<div
+		bind:this={tooltipEl}
+		popover="manual"
+		role="tooltip"
+		class="pointer-events-none fixed top-0 right-auto bottom-auto left-0 z-10 m-0 max-w-[min(40ch,calc(100vw-2ch))] border border-current/25 bg-background px-ch py-[.5ch] text-left text-xs text-foreground shadow-lg"
+	>
+		{tooltip.text}
+	</div>
+{/if}
 
 {#snippet diamond(scored: boolean, strong?: boolean)}
 	<svg viewBox="0 0 40 40" class="absolute inset-0.5 size-[calc(100%-0.25rem)]" aria-hidden="true">
