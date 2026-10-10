@@ -257,6 +257,7 @@
 			scheduledInnings={linescore?.scheduledInnings}
 			{isFinal}
 			{isSpoilerPrevented}
+			onAtBatSelect={selectAtBatFromPlay}
 		/>
 	{/if}
 

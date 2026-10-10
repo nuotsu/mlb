@@ -362,6 +362,9 @@ describe('buildScorecard', () => {
 		const leadoff = card.rows.find((r) => r.playerId === 1)!
 		const pinchRunner = card.rows.find((r) => r.playerId === 30)!
 		expect(leadoff.cells[0].scored).toBe(true)
+		// The double didn't score anyone; the single did
+		expect(leadoff.cells[0].isScoringPlay).toBe(false)
+		expect(card.rows.find((r) => r.playerId === 2)!.cells[0].isScoringPlay).toBe(true)
 		expect(leadoff.totals.r).toBe(0)
 		expect(pinchRunner.totals.r).toBe(1)
 		expect(card.rows.find((r) => r.playerId === 2)!.totals).toEqual({

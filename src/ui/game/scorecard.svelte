@@ -17,6 +17,7 @@
 		isFinal,
 		isSpoilerPrevented,
 		player,
+		onAtBatSelect,
 	}: {
 		team: MLB.TeamBoxscore
 		side: 'away' | 'home'
@@ -26,6 +27,8 @@
 		isSpoilerPrevented?: boolean
 		/** The box score's own headshot and name cells, so both views line up the same way */
 		player: Snippet<[player: MLB.BoxscorePlayer, substituted?: boolean, label?: string]>
+		/** Show this plate appearance in the pitch sequence */
+		onAtBatSelect?: (atBatIndex: number) => void
 	} = $props()
 
 	/** Home, first, second, third and home again, on the diamond's 40 × 40 box. */
@@ -59,7 +62,8 @@
 
 	/** Same hues as the pitch list (blue in play, green ball, yellow strike), darkened in light mode to stay legible. */
 	const COLORS: Record<ScorecardKind, string> = {
-		hit: 'text-blue-600 dark:text-blue-400',
+		// Blue only when a run scored on it; see cellColor
+		hit: 'text-foreground',
 		homeRun: 'font-bold text-blue-700 dark:text-blue-300',
 		walk: 'text-green-700 dark:text-accent',
 		strikeout: 'text-yellow-700 dark:text-yellow-300',
@@ -70,9 +74,20 @@
 		other: 'text-current/60',
 	}
 
+	function cellColor(cell: ScorecardCell) {
+		if (cell.kind === 'hit' && cell.isScoringPlay) return 'text-blue-600 dark:text-blue-400'
+		return COLORS[cell.kind]
+	}
+
 	// Tooltip: hover with a mouse, tap on a touchscreen, or focus with a keyboard
 	let tooltip = $state.raw<{ key: string; text: string; anchor: HTMLElement } | null>(null)
 	let tooltipEl = $state<HTMLElement>()
+
+	/** The open cell takes this name, and the tooltip anchors to it with CSS. */
+	const anchorName = $derived(`--scorecard-cell-${side}`)
+
+	/** Without CSS anchor positioning, the tooltip is placed (and follows scrolling) by hand. */
+	const isAnchorPositioned = () => typeof CSS !== 'undefined' && CSS.supports('anchor-name: --a')
 
 	function cellKey(playerId: number, { inning, column }: { inning: number; column: number }) {
 		return `${playerId}-${inning}-${column}`
@@ -107,7 +122,7 @@
 
 		// In the top layer where supported, so no scroll container clips it; plain `fixed` otherwise
 		if (typeof el.showPopover === 'function' && !el.matches(':popover-open')) el.showPopover()
-		place(el, tooltip.anchor)
+		if (!isAnchorPositioned()) place(el, tooltip.anchor)
 	})
 
 	$effect(() => {
@@ -117,7 +132,9 @@
 
 		const close = () => (tooltip = null)
 		// Focusing a cell can scroll it into view, so follow it rather than close
-		const onScroll = () => requestAnimationFrame(() => place(el, anchor))
+		const onScroll = () => {
+			if (!isAnchorPositioned()) requestAnimationFrame(() => place(el, anchor))
+		}
 		const onKeydown = (e: KeyboardEvent) => e.key === 'Escape' && close()
 		const onPointerdown = (e: PointerEvent) => {
 			if (!(e.target as Element | null)?.closest?.('[data-scorecard-cell]')) close()
@@ -184,8 +201,9 @@
 								type="button"
 								class={cn(
 									'relative grid size-full place-items-center outline-none focus-visible:bg-foreground/10',
-									COLORS[cell.kind],
+									cellColor(cell),
 								)}
+								style:anchor-name={tooltip?.key === key ? anchorName : undefined}
 								aria-label={cellLabel(cell)}
 								data-scorecard-cell
 								onpointerenter={(e) =>
@@ -200,6 +218,7 @@
 									if (tapToClose) hideTooltip()
 									else showTooltip(e.currentTarget, key, cell.description)
 									tapToClose = false
+									if (cell.kind !== 'runner') onAtBatSelect?.(cell.atBatIndex)
 								}}
 							>
 								{@render diamond(cell.scored, cell.kind === 'homeRun', cell.bases)}
@@ -214,7 +233,7 @@
 
 								{#if cell.out}
 									<span
-										class="absolute top-0.5 left-0.5 grid size-[1.4em] place-items-center rounded-full border border-current/40 text-[0.5625rem] leading-none text-foreground/70"
+										class="absolute top-0.5 left-1 text-[0.625rem] leading-none font-semibold text-red-600 dark:text-red-400"
 										aria-hidden="true"
 									>
 										{cell.out}
@@ -263,7 +282,8 @@
 		bind:this={tooltipEl}
 		popover="manual"
 		role="tooltip"
-		class="pointer-events-none fixed top-0 right-auto bottom-auto left-0 z-10 m-0 max-w-[min(40ch,calc(100vw-2ch))] border border-current/25 bg-background px-ch py-[.5ch] text-left text-xs text-foreground shadow-lg"
+		class="tooltip pointer-events-none fixed z-10 max-w-[min(40ch,calc(100vw-2ch))] border border-current/25 bg-background/70 px-ch py-[.5ch] text-left text-xs text-foreground shadow-lg backdrop-blur-md"
+		style:position-anchor={anchorName}
 	>
 		{tooltip.text}
 	</div>
@@ -298,6 +318,25 @@
 {/snippet}
 
 <style>
+	.tooltip {
+		/* Placed by hand (see place) where anchor positioning isn't supported */
+		inset: auto;
+		margin: 0;
+
+		/* Centered above the open cell. Near a side of the screen it lines up with the cell's
+		   edge instead, and near the top it goes below. */
+		@supports (anchor-name: --a) {
+			position-area: top;
+			margin-block: 4px;
+			position-try-fallbacks:
+				top span-left,
+				top span-right,
+				bottom,
+				bottom span-left,
+				bottom span-right;
+		}
+	}
+
 	.scorecard {
 		td,
 		th {

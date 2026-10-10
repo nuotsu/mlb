@@ -20,6 +20,7 @@
 		scheduledInnings,
 		isFinal,
 		isSpoilerPrevented,
+		onAtBatSelect,
 		class: className,
 	}: {
 		boxscore?: MLB.Boxscore | null
@@ -30,6 +31,8 @@
 		scheduledInnings?: number
 		isFinal?: boolean
 		isSpoilerPrevented?: boolean
+		/** A scorecard cell was clicked: show that plate appearance in the pitch sequence */
+		onAtBatSelect?: (atBatIndex: number) => void
 	} & HTMLAttributes<HTMLDivElement> = $props()
 
 	let { away, home } = $derived(
@@ -40,7 +43,7 @@
 	)
 
 	const VIEWS = [
-		{ id: 'boxscore', label: 'Box score' },
+		{ id: 'boxscore', label: 'Boxscore' },
 		{ id: 'scorecard', label: 'Scorecard' },
 	] as const
 
@@ -155,6 +158,7 @@
 							{scheduledInnings}
 							{isFinal}
 							{isSpoilerPrevented}
+							{onAtBatSelect}
 							player={p}
 						/>
 					{:else}

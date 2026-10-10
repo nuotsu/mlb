@@ -33,6 +33,8 @@ export type ScorecardCell = Notation & {
 	rbi: number
 	/** The batter (or whoever ran for them) came around to score. */
 	scored: boolean
+	/** A run crossed the plate on this play. */
+	isScoringPlay: boolean
 	description: string
 }
 
@@ -366,6 +368,7 @@ export function buildScorecard({
 				playerId: event.player.id,
 				rbi: 0,
 				scored: false,
+				isScoringPlay: false,
 				description: event.details.description ?? 'Automatic runner',
 			})
 			onBase.set(event.player.id, { base: `${event.base ?? 2}B`, cell })
@@ -383,6 +386,7 @@ export function buildScorecard({
 				playerId: batterId,
 				rbi,
 				scored: false,
+				isScoringPlay: !!play.runners?.some((r) => r.movement?.end === 'score'),
 				description: play.result.description,
 			})
 
