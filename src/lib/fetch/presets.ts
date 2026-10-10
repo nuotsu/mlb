@@ -75,6 +75,8 @@ export const fetchfeedLive = createFetcher<[gamePk: string | number], MLB.LiveGa
 				'decisions,winner,loser,save,id',
 				'officials,official,officialType',
 				'plays,allPlays,result,description,event,eventType,rbi,about,inning,isTopInning,atBatIndex,isScoringPlay,hasOut,hasReview,runnerIndex,count,balls,strikes,outs,awayScore,homeScore,matchup,batter,pitcher,batSide,pitchHand,code,id,fullName,lastName,boxscoreName,playEvents,isPitch,details,isBall,isStrike,isInPlay,call,reviewDetails,isOverturned,inProgress,challengeTeamId,reviewType,player,hitData,launchSpeed,launchAngle,totalDistance,trajectory,coordinates,coordX,coordY,pitchData,startSpeed,strikeZoneTop,strikeZoneBottom,pX,pZ,pfxX,pfxZ,x0,y0,z0,vX0,vY0,vZ0,aX,aY,aZ,extension,breaks,spinRate,spinDirection,type',
+				// Scorecard: who ran where, who fielded the outs, and who came in when
+				'halfInning,isComplete,runners,movement,start,end,isOut,outNumber,runner,playIndex,credits,credit,position,base',
 			],
 		},
 	}),

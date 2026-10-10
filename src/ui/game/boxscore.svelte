@@ -3,22 +3,32 @@
 	import Empty from '#ui/empty.svelte'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import BullpenFatigue from '#ui/game/bullpen-fatigue.svelte'
+	import Scorecard from '#ui/game/scorecard.svelte'
 	import { ArrowDownRightIcon } from '#ui/icons/index.js'
 	import Headshot from '#ui/player/headshot.svelte'
 	import ToggleSpoilerPrevention from '#ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
 	import StyledTeam from '#ui/team/styled-team.svelte'
+	import { goto } from '$app/navigation'
+	import { page } from '$app/state'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {
 		boxscore,
 		gameDate,
 		players,
+		plays,
+		scheduledInnings,
+		isFinal,
 		isSpoilerPrevented,
 		class: className,
 	}: {
 		boxscore?: MLB.Boxscore | null
 		gameDate?: string
 		players?: Record<string, MLB.Person> | null
+		/** `liveData.plays.allPlays`, for the scorecard */
+		plays?: MLB.Play[]
+		scheduledInnings?: number
+		isFinal?: boolean
 		isSpoilerPrevented?: boolean
 	} & HTMLAttributes<HTMLDivElement> = $props()
 
@@ -28,17 +38,89 @@
 			home: undefined,
 		},
 	)
+
+	const VIEWS = [
+		{ id: 'boxscore', label: 'Box score' },
+		{ id: 'scorecard', label: 'Scorecard' },
+	] as const
+
+	type View = (typeof VIEWS)[number]['id']
+
+	/** Kept in `?view=` so a shared link opens the same tab. */
+	let view = $derived<View>(
+		page.url.searchParams.get('view') === 'scorecard' ? 'scorecard' : 'boxscore',
+	)
+
+	const tabs: HTMLButtonElement[] = $state([])
+
+	function select(next: View) {
+		if (next === view) return
+		view = next
+
+		const url = new URL(page.url.href)
+		if (next === 'boxscore') url.searchParams.delete('view')
+		else url.searchParams.set('view', next)
+		goto(url, { shallow: true, replace: true, state: page.state })
+	}
+
+	function onkeydown(e: KeyboardEvent) {
+		const i = VIEWS.findIndex((v) => v.id === view)
+		const next = {
+			ArrowRight: (i + 1) % VIEWS.length,
+			ArrowLeft: (i - 1 + VIEWS.length) % VIEWS.length,
+			Home: 0,
+			End: VIEWS.length - 1,
+		}[e.key]
+		if (next == null) return
+
+		e.preventDefault()
+		select(VIEWS[next].id)
+		tabs[next]?.focus()
+	}
 </script>
 
-<article
-	id="boxscore"
-	class="grid snap-x snap-mandatory auto-cols-[min(var(--container-sm),calc(100vw-2ch))] grid-flow-col overflow-x-auto sm:grid-cols-2 sm:px-ch {className}"
->
-	{@render team(away)}
-	{@render team(home)}
-</article>
+<div class={className}>
+	{#if away?.batters.length || home?.batters.length}
+		<div
+			role="tablist"
+			aria-label="Lineup view"
+			class="mb-[.5ch] flex w-max gap-px rounded-full border border-current/25 p-px text-xs max-sm:ml-ch sm:mx-ch"
+		>
+			{#each VIEWS as { id, label }, i (id)}
+				{@const selected = view === id}
+				<button
+					bind:this={tabs[i]}
+					type="button"
+					role="tab"
+					id="boxscore-tab-{id}"
+					aria-selected={selected}
+					aria-controls="boxscore-lineup-away boxscore-lineup-home"
+					tabindex={selected ? 0 : -1}
+					class={cn(
+						'rounded-full px-[1.25ch] py-[.25ch] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent',
+						selected
+							? 'bg-accent text-dark'
+							: 'text-current/60 hover:bg-accent/25 hover:text-current',
+					)}
+					onclick={() => select(id)}
+					{onkeydown}
+				>
+					{label}
+				</button>
+			{/each}
+		</div>
+	{/if}
 
-{#snippet team(team?: MLB.TeamBoxscore)}
+	<article
+		id="boxscore"
+		class="grid snap-x snap-mandatory auto-cols-[min(var(--container-sm),calc(100vw-2ch))] grid-flow-col overflow-x-auto sm:grid-cols-2 sm:px-ch"
+	>
+		{@render team(away, 'away')}
+		{@render team(home, 'home')}
+	</article>
+</div>
+
+{#snippet team(team: MLB.TeamBoxscore | undefined, side: 'away' | 'home')}
 	{#if team}
 		<article class="snap-center bg-background">
 			<StyledTeam team={team.team} class="z-1 pr-ch">
@@ -49,68 +131,80 @@
 			</StyledTeam>
 
 			{#if team.batters.length}
-				<div class="overflow-x-auto mask-r-from-[calc(100%-1.5ch)]">
-					<table class="table-fixed text-center">
-						<thead class="text-xs text-current/40">
-							<tr class="*:pt-[.5ch]">
-								<th class="w-full" colspan="2"></th>
-								<th>AB</th>
-								<th>H</th>
-								<th>R</th>
-								<th>RBI</th>
-								<th>HR</th>
-								<th>BB</th>
-								<th>K</th>
-								<th>SB</th>
-								<th>AVG</th>
-								<th>OPS</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each team.batters as playerId}
-								{@const { stats, seasonStats, ...player } = team.players[`ID${playerId}`]}
-								{@const substituted = !isSpoilerPrevented && !team.battingOrder.includes(playerId)}
+				<div
+					id="boxscore-lineup-{side}"
+					role="tabpanel"
+					aria-labelledby="boxscore-tab-{view}"
+					class="overflow-x-auto mask-r-from-[calc(100%-1.5ch)]"
+				>
+					{#if view === 'scorecard'}
+						<Scorecard {team} {side} {plays} {scheduledInnings} {isFinal} {isSpoilerPrevented} />
+					{:else}
+						<table class="table-fixed text-center">
+							<thead class="text-xs text-current/40">
+								<tr class="*:pt-[.5ch]">
+									<th class="w-full" colspan="2"></th>
+									<th>AB</th>
+									<th>H</th>
+									<th>R</th>
+									<th>RBI</th>
+									<th>HR</th>
+									<th>BB</th>
+									<th>K</th>
+									<th>SB</th>
+									<th>AVG</th>
+									<th>OPS</th>
+								</tr>
+							</thead>
+							<tbody>
+								{#each team.batters as playerId}
+									{@const { stats, seasonStats, ...player } = team.players[`ID${playerId}`]}
+									{@const substituted =
+										!isSpoilerPrevented && !team.battingOrder.includes(playerId)}
 
-								{#if player?.position?.abbreviation !== 'P'}
-									<tr
-										class="hover:*:not-first:bg-foreground/10"
-										data-substituted={substituted ? '' : undefined}
-									>
-										{@render p(player, substituted)}
+									{#if player?.position?.abbreviation !== 'P'}
+										<tr
+											class="hover:*:not-first:bg-foreground/10"
+											data-substituted={substituted ? '' : undefined}
+										>
+											{@render p(player, substituted)}
 
-										<!-- game stats -->
-										{#each ['atBats', 'hits', 'runs', 'rbi', 'homeRuns', 'baseOnBalls', 'strikeOuts', 'stolenBases'] as stat}
-											{@const value = stats?.batting?.[stat as keyof MLB.BattingStats]}
-											<td
-												class={cn(!isSpoilerPrevented && Number(value) === 0 && 'text-current/40')}
-											>
-												{#if !isSpoilerPrevented}
-													{value}
-												{/if}
-											</td>
-										{/each}
+											<!-- game stats -->
+											{#each ['atBats', 'hits', 'runs', 'rbi', 'homeRuns', 'baseOnBalls', 'strikeOuts', 'stolenBases'] as stat}
+												{@const value = stats?.batting?.[stat as keyof MLB.BattingStats]}
+												<td
+													class={cn(
+														!isSpoilerPrevented && Number(value) === 0 && 'text-current/40',
+													)}
+												>
+													{#if !isSpoilerPrevented}
+														{value}
+													{/if}
+												</td>
+											{/each}
 
-										<!-- season stats -->
-										{#each ['avg', 'ops'] as stat}
-											{@const value = seasonStats?.batting?.[stat as keyof MLB.BattingStats]}
-											<td
-												class={cn(
-													'min-w-[5ch]! text-sm',
-													!isSpoilerPrevented && Number(value) === 0 && 'text-current/40',
-													stat === 'avg' && Number(value) >= 0.3 && 'positive',
-													stat === 'ops' && Number(value) >= 0.75 && 'positive',
-												)}
-											>
-												{#if !isSpoilerPrevented}
-													{value}
-												{/if}
-											</td>
-										{/each}
-									</tr>
-								{/if}
-							{/each}
-						</tbody>
-					</table>
+											<!-- season stats -->
+											{#each ['avg', 'ops'] as stat}
+												{@const value = seasonStats?.batting?.[stat as keyof MLB.BattingStats]}
+												<td
+													class={cn(
+														'min-w-[5ch]! text-sm',
+														!isSpoilerPrevented && Number(value) === 0 && 'text-current/40',
+														stat === 'avg' && Number(value) >= 0.3 && 'positive',
+														stat === 'ops' && Number(value) >= 0.75 && 'positive',
+													)}
+												>
+													{#if !isSpoilerPrevented}
+														{value}
+													{/if}
+												</td>
+											{/each}
+										</tr>
+									{/if}
+								{/each}
+							</tbody>
+						</table>
+					{/if}
 				</div>
 
 				<hr class="my-[.5ch] border-dashed border-current/25" />
