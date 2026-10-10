@@ -69,6 +69,8 @@ export const fetchfeedLive = createFetcher<[gamePk: string | number], MLB.LiveGa
 				'gameInfo,firstPitch,attendance,gameDurationMinutes',
 				'weather,condition,temp,wind',
 				'teams,home,away,id,name,abbreviation,teamName',
+				// Home run chart: the park's fence distances
+				'venue,fieldInfo,leftLine,leftCenter,center,rightCenter,rightLine',
 				'absChallenges,hasChallenges,usedSuccessful,usedFailed,remaining',
 				'linescore,currentInning,scheduledInnings,innings,num,runs,hits,errors,leftOnBase',
 				'boxscore,position,abbreviation,topPerformers,type,player,boxscoreName,stats,batting,pitching,summary',
