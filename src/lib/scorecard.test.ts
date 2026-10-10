@@ -74,10 +74,14 @@ function pitch(code: string): MLB.PlayEvent {
 
 describe('notation', () => {
 	test('hits', () => {
-		expect(notation(play({ eventType: 'single' }))).toEqual({ label: '1B', kind: 'hit' })
-		expect(notation(play({ eventType: 'double' })).label).toBe('2B')
-		expect(notation(play({ eventType: 'triple' })).label).toBe('3B')
-		expect(notation(play({ eventType: 'home_run' }))).toEqual({ label: 'HR', kind: 'homeRun' })
+		expect(notation(play({ eventType: 'single' }))).toEqual({ label: '1B', kind: 'hit', bases: 1 })
+		expect(notation(play({ eventType: 'double' }))).toEqual({ label: '2B', kind: 'hit', bases: 2 })
+		expect(notation(play({ eventType: 'triple' }))).toEqual({ label: '3B', kind: 'hit', bases: 3 })
+		expect(notation(play({ eventType: 'home_run' }))).toEqual({
+			label: 'HR',
+			kind: 'homeRun',
+			bases: 4,
+		})
 	})
 
 	test('walks and hit by pitch', () => {

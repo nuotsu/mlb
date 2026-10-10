@@ -28,8 +28,8 @@
 		player: Snippet<[player: MLB.BoxscorePlayer, substituted?: boolean, label?: string]>
 	} = $props()
 
-	const STATS = ['ab', 'r', 'h', 'rbi', 'bb', 'k'] as const
-	const STAT_LABELS = { ab: 'AB', r: 'R', h: 'H', rbi: 'RBI', bb: 'BB', k: 'K' }
+	/** Home, first, second, third and home again, on the diamond's 40 × 40 box. */
+	const BASE_PATH = ['20,37', '37,20', '20,3', '3,20', '20,37']
 
 	const INNING_STATS = [
 		{ key: 'runs', label: 'R', title: 'Runs' },
@@ -61,16 +61,6 @@
 				row.playerId,
 				new Map(row.cells.map((cell) => [`${cell.inning}-${cell.column}`, cell])),
 			]),
-		),
-	)
-
-	const teamTotals = $derived(
-		scorecard.rows.reduce(
-			(sum, { totals }) => {
-				for (const key of STATS) sum[key] += totals[key]
-				return sum
-			},
-			{ ab: 0, r: 0, h: 0, rbi: 0, bb: 0, k: 0 },
 		),
 	)
 
@@ -165,21 +155,16 @@
 	}
 </script>
 
-<table
-	class="scorecard table-fixed border-collapse text-center"
-	aria-label="{team.team.name} scorecard"
->
+<table class="scorecard w-max border-collapse text-center" aria-label="{team.team.name} scorecard">
 	<thead class="text-xs text-current/40">
 		<tr class="*:pt-[.5ch] *:font-normal">
-			<th class="w-full" colspan="2" scope="col">
+			<th colspan="2" scope="col">
 				<span class="sr-only">Batter</span>
 			</th>
 			{#each scorecard.innings as { inning, columns } (inning)}
 				<th scope="col" colspan={columns}>{inning}</th>
 			{/each}
-			{#each STATS as stat (stat)}
-				<th scope="col" class="stat">{STAT_LABELS[stat]}</th>
-			{/each}
+			<th class="end" aria-hidden="true"></th>
 		</tr>
 	</thead>
 
@@ -194,7 +179,7 @@
 					{@render player(boxscorePlayer, replaced, positionLabel(boxscorePlayer, row))}
 				{:else}
 					<th class="sticky left-0 z-1 min-w-lh"></th>
-					<th class="w-full min-w-[14ch] pl-ch text-left">{row.playerId}</th>
+					<th class="pl-ch text-left">{row.playerId}</th>
 				{/if}
 
 				{#each columns as column (`${column.inning}-${column.column}`)}
@@ -224,7 +209,7 @@
 									tapToClose = false
 								}}
 							>
-								{@render diamond(cell.scored, cell.kind === 'homeRun')}
+								{@render diamond(cell.scored, cell.kind === 'homeRun', cell.bases)}
 
 								<span class="relative text-[0.6875rem] leading-none" aria-hidden="true">
 									{#if cell.mirrored}
@@ -273,14 +258,7 @@
 					</td>
 				{/each}
 
-				{#each STATS as stat (stat)}
-					{@const value = row.totals[stat]}
-					<td class={cn('stat', !isSpoilerPrevented && value === 0 && 'text-current/40')}>
-						{#if !isSpoilerPrevented}
-							{value}
-						{/if}
-					</td>
-				{/each}
+				<td class="end" aria-hidden="true"></td>
 			</tr>
 		{/each}
 	</tbody>
@@ -310,14 +288,7 @@
 							{value ?? ''}
 						</td>
 					{/each}
-					{#if i === 0}
-						<!-- The whole lineup's totals, under each batter's -->
-						{#each STATS as stat (stat)}
-							<td class="stat pt-[.5ch] align-top text-sm" rowspan={INNING_STATS.length}>
-								{teamTotals[stat]}
-							</td>
-						{/each}
-					{/if}
+					<td class="end" aria-hidden="true"></td>
 				</tr>
 			{/each}
 		</tfoot>
@@ -336,17 +307,31 @@
 	</div>
 {/if}
 
-{#snippet diamond(scored: boolean, strong?: boolean)}
+{#snippet diamond(scored: boolean, strong?: boolean, bases?: number)}
 	<svg viewBox="0 0 40 40" class="absolute inset-0.5 size-[calc(100%-0.25rem)]" aria-hidden="true">
 		<path
 			d="M20 3 37 20 20 37 3 20Z"
 			fill="currentColor"
 			fill-opacity={scored ? (strong ? 0.35 : 0.2) : 0}
 			stroke="currentColor"
-			stroke-width={strong ? 1.75 : 1}
+			stroke-opacity={bases ? 0.4 : 1}
+			stroke-width="1"
 			stroke-linejoin="round"
 			vector-effect="non-scaling-stroke"
 		/>
+
+		<!-- A hit's base paths, counterclockwise from home: one side for a single, all four for a homer -->
+		{#if bases}
+			<polyline
+				points={BASE_PATH.slice(0, bases + 1).join(' ')}
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				vector-effect="non-scaling-stroke"
+			/>
+		{/if}
 	</svg>
 {/snippet}
 
@@ -357,30 +342,36 @@
 			font-variant-numeric: tabular-nums;
 		}
 
-		tbody td:not(.stat) {
+		tbody td:not(.end) {
 			width: 2.75rem;
 			min-width: 2.75rem;
 			height: 2.5rem;
 		}
 
-		/* The box score's name cell, with room for a substitute's `PH-LF · 5th` */
+		/* The box score's name cell: the table is as wide as its content, so names never truncate,
+		   and the position sits right after the name */
 		tbody tr > :global(th:nth-child(2)) {
-			min-width: 21ch;
+			width: auto;
+			padding-right: 1ch;
+
+			:global(a > span) {
+				flex-grow: 0;
+			}
+		}
+
+		/* The sticky headshot covers the names and diamonds that scroll under it */
+		tbody tr > :global(th:first-child:not(.bg-accent)) {
+			background: var(--color-background);
+		}
+
+		/* Room past the last inning, under the scroll container's fade */
+		.end {
+			min-width: 1.5ch;
 		}
 
 		/* A hairline between innings, but not between an inning's own columns */
 		.inning-start {
 			border-left: 1px solid color-mix(in srgb, currentColor 10%, transparent);
-		}
-
-		.stat {
-			min-width: 3.5ch;
-			padding-inline: 0.25ch;
-			font-family: var(--font-sans);
-
-			&:last-child {
-				padding-right: 1ch;
-			}
 		}
 	}
 </style>

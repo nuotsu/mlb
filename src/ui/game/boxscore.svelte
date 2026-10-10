@@ -135,7 +135,11 @@
 					id="boxscore-lineup-{side}"
 					role="tabpanel"
 					aria-labelledby="boxscore-tab-{view}"
-					class="relative overflow-x-auto mask-r-from-[calc(100%-1.5ch)]"
+					class={cn(
+						'relative overflow-x-auto mask-r-from-[calc(100%-1.5ch)]',
+						// Scroll sideways only; rounding can leave a scorecard a hair taller than its box
+						view === 'scorecard' && 'overflow-y-hidden',
+					)}
 				>
 					{#if view === 'scorecard'}
 						<Scorecard
@@ -390,8 +394,9 @@
 		:global(th:has(img)) {
 			left: -1lh;
 
+			/* translate rather than margin, so the indent doesn't widen the column */
 			:global(img) {
-				margin-left: 1lh;
+				translate: 1lh;
 			}
 		}
 

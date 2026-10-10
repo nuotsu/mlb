@@ -18,6 +18,8 @@ export type Notation = {
 	/** Backwards, for a called third strike. */
 	mirrored?: boolean
 	badge?: 'DP' | 'TP'
+	/** Bases a hit was worth, 1 to 4, for the base paths to draw. */
+	bases?: number
 }
 
 export type ScorecardCell = Notation & {
@@ -81,11 +83,11 @@ export type LineupEntry = {
 	battingOrder: string
 }
 
-const HITS: Record<string, string> = {
-	single: '1B',
-	double: '2B',
-	triple: '3B',
-	home_run: 'HR',
+const HITS: Record<string, { label: string; bases: number }> = {
+	single: { label: '1B', bases: 1 },
+	double: { label: '2B', bases: 2 },
+	triple: { label: '3B', bases: 3 },
+	home_run: { label: 'HR', bases: 4 },
 }
 
 const WALKS: Record<string, string> = {
@@ -183,7 +185,8 @@ export function notation(play: MLB.Play): Notation {
 	const badge = DOUBLE_PLAYS.has(eventType) ? 'DP' : TRIPLE_PLAYS.has(eventType) ? 'TP' : undefined
 
 	if (eventType in HITS) {
-		return { label: HITS[eventType], kind: eventType === 'home_run' ? 'homeRun' : 'hit' }
+		const { label, bases } = HITS[eventType]
+		return { label, bases, kind: eventType === 'home_run' ? 'homeRun' : 'hit' }
 	}
 
 	if (eventType in WALKS) return { label: WALKS[eventType], kind: 'walk' }
