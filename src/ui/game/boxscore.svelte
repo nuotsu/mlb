@@ -84,8 +84,15 @@
 		<div
 			role="tablist"
 			aria-label="Lineup view"
-			class="mx-auto mb-[.5lh] flex w-max gap-px rounded-full border border-current/25 p-px text-xs"
+			class="relative isolate mx-auto mb-[.5lh] flex w-max gap-px rounded-full border border-current/25 p-px text-xs"
 		>
+			<!-- One highlight, anchored to the selected tab, so it slides between them -->
+			<span
+				class="tab-highlight pointer-events-none absolute -z-1 rounded-full bg-accent"
+				style:position-anchor="--boxscore-tab-{view}"
+				aria-hidden="true"
+			></span>
+
 			{#each VIEWS as { id, label }, i (id)}
 				{@const selected = view === id}
 				<button
@@ -96,11 +103,10 @@
 					aria-selected={selected}
 					aria-controls="boxscore-lineup-away boxscore-lineup-home"
 					tabindex={selected ? 0 : -1}
+					style:anchor-name="--boxscore-tab-{id}"
 					class={cn(
 						'rounded-full px-[1.25ch] py-[.25ch] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent',
-						selected
-							? 'bg-accent text-dark'
-							: 'text-current/60 hover:bg-accent/25 hover:text-current',
+						selected ? 'text-dark' : 'text-current/60 hover:bg-accent/25 hover:text-current',
 					)}
 					onclick={() => select(id)}
 					{onkeydown}
@@ -371,6 +377,29 @@
 {/snippet}
 
 <style>
+	.tab-highlight {
+		top: anchor(top);
+		right: anchor(right);
+		bottom: anchor(bottom);
+		left: anchor(left);
+		transition: inset 250ms var(--ease-out);
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+	}
+
+	/* Without anchor positioning, the selected tab carries the highlight itself */
+	@supports not (anchor-name: --a) {
+		.tab-highlight {
+			display: none;
+		}
+
+		[role='tab'][aria-selected='true'] {
+			background-color: var(--color-accent);
+		}
+	}
+
 	table tr {
 		> :first-child:not(:has(img)) {
 			padding-left: 1rch;

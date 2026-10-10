@@ -31,13 +31,6 @@
 	/** Home, first, second, third and home again, on the diamond's 40 × 40 box. */
 	const BASE_PATH = ['20,37', '37,20', '20,3', '3,20', '20,37']
 
-	const INNING_STATS = [
-		{ key: 'runs', label: 'R', title: 'Runs' },
-		{ key: 'hits', label: 'H', title: 'Hits' },
-		{ key: 'errors', label: 'E', title: 'Errors' },
-		{ key: 'lob', label: 'LOB', title: 'Left on base' },
-	] as const
-
 	const scorecard = $derived(
 		buildScorecard({
 			plays: isSpoilerPrevented ? [] : plays,
@@ -262,37 +255,6 @@
 			</tr>
 		{/each}
 	</tbody>
-
-	{#if !isSpoilerPrevented}
-		<tfoot class="text-xs">
-			{#each INNING_STATS as { key, label, title }, i (key)}
-				<tr class={cn(i === 0 && 'border-t border-dashed border-current/25')}>
-					<th
-						scope="row"
-						colspan="2"
-						class={cn('pl-ch text-left text-current/40', i === 0 && 'pt-[.5ch]')}
-					>
-						<abbr {title}>{label}</abbr>
-					</th>
-					{#each scorecard.innings as { inning, columns, totals } (inning)}
-						{@const value = totals?.[key]}
-						<td
-							colspan={columns}
-							class={cn(
-								'inning-start',
-								i === 0 && 'pt-[.5ch]',
-								value === 0 && 'text-current/40',
-								key === 'runs' && value && 'font-bold',
-							)}
-						>
-							{value ?? ''}
-						</td>
-					{/each}
-					<td class="end" aria-hidden="true"></td>
-				</tr>
-			{/each}
-		</tfoot>
-	{/if}
 </table>
 
 <!-- Only in the page while open, so a closed tooltip can never take up room -->
@@ -362,6 +324,11 @@
 		/* The sticky headshot covers the names and diamonds that scroll under it */
 		tbody tr > :global(th:first-child:not(.bg-accent)) {
 			background: var(--color-background);
+		}
+
+		/* …but not the substitute arrow that hangs from the replaced player's cell into it */
+		tbody tr[data-substituted] > :global(th:first-child) {
+			z-index: 2;
 		}
 
 		/* Room past the last inning, under the scroll container's fade */
