@@ -4,11 +4,10 @@
 		lineupFromBoxscore,
 		type ScorecardCell,
 		type ScorecardKind,
+		type ScorecardRow,
 	} from '#lib/scorecard.js'
 	import { cn, ordinal } from '#lib/utils.js'
-	import { favoritesStore } from '#ui/favorites/store.svelte.js'
-	import { ArrowDownRightIcon } from '#ui/icons/index.js'
-	import Headshot from '#ui/player/headshot.svelte'
+	import type { Snippet } from 'svelte'
 
 	let {
 		team,
@@ -17,6 +16,7 @@
 		scheduledInnings,
 		isFinal,
 		isSpoilerPrevented,
+		player,
 	}: {
 		team: MLB.TeamBoxscore
 		side: 'away' | 'home'
@@ -24,6 +24,8 @@
 		scheduledInnings?: number
 		isFinal?: boolean
 		isSpoilerPrevented?: boolean
+		/** The box score's own headshot and name cells, so both views line up the same way */
+		player: Snippet<[player: MLB.BoxscorePlayer, substituted?: boolean, label?: string]>
 	} = $props()
 
 	const STATS = ['ab', 'r', 'h', 'rbi', 'bb', 'k'] as const
@@ -153,17 +155,27 @@
 		}
 	})
 
+	/** Every position played, and the inning a substitute came in: `PH-C · 5th`. */
+	function positionLabel(p: MLB.BoxscorePlayer, row: ScorecardRow) {
+		const positions = (p.allPositions?.length ? p.allPositions : [p.position])
+			.map((position) => position?.abbreviation)
+			.filter(Boolean)
+			.join('-')
+		return row.enteredInning ? `${positions} · ${ordinal(row.enteredInning)}` : positions
+	}
+
 	function cellLabel(cell: ScorecardCell) {
 		return `${ordinal(cell.inning)} inning: ${cell.description}`
 	}
 </script>
 
-<table class="scorecard table-fixed border-collapse text-center">
+<!-- relative: keeps the sr-only caption and header inside the scroll container -->
+<table class="scorecard relative table-fixed border-collapse text-center">
 	<caption class="sr-only">{team.team.name} scorecard</caption>
 
 	<thead class="text-xs text-current/40">
 		<tr class="*:pt-[.5ch] *:font-normal">
-			<th class="sticky left-0 z-2 bg-background" scope="col">
+			<th class="w-full" colspan="2" scope="col">
 				<span class="sr-only">Batter</span>
 			</th>
 			{#each scorecard.innings as { inning, columns } (inning)}
@@ -177,58 +189,17 @@
 
 	<tbody>
 		{#each scorecard.rows as row (row.playerId)}
-			{@const player = team.players[`ID${row.playerId}`]}
-			{@const isFavorite = favoritesStore.has(`/player/${row.playerId}`)}
+			{@const boxscorePlayer = team.players[`ID${row.playerId}`]}
+			{@const replaced = !isSpoilerPrevented && !team.battingOrder.includes(row.playerId)}
 			{@const cells = cellsByRow.get(row.playerId)}
 
-			<tr class="hover:*:not-first:bg-foreground/5" class:sub={row.isSubstitute}>
-				<th
-					scope="row"
-					class={cn(
-						'sticky left-0 z-1 bg-background p-0 text-left',
-						isFavorite && 'bg-accent! text-dark',
-					)}
-				>
-					<a
-						href="/player/{row.playerId}"
-						class="group/player flex h-full items-center gap-[.5ch] pr-ch"
-						class:pl-ch={row.isSubstitute}
-					>
-						{#if row.isSubstitute}
-							<ArrowDownRightIcon class="size-ch shrink-0 text-current/40" />
-						{/if}
-
-						{#if player}
-							<Headshot person={player.person} size={72} class="size-lh shrink-0" />
-						{/if}
-
-						<span class="grid min-w-0 leading-tight">
-							<span class="line-clamp-1 break-all decoration-dashed group-hover/player:underline">
-								{player?.person.boxscoreName ?? player?.person.fullName ?? row.playerId}
-							</span>
-							<small class="line-clamp-1 text-xs whitespace-nowrap text-current/40">
-								{#if player?.jerseyNumber}
-									<span>#{player.jerseyNumber}</span>
-								{/if}
-								<span>
-									{(player?.allPositions?.length
-										? player.allPositions
-										: player?.position
-											? [player.position]
-											: []
-									)
-										.map((p) => p.abbreviation)
-										.join('-')}
-								</span>
-								{#if row.enteredInning}
-									<span title="Entered in the {ordinal(row.enteredInning)}">
-										· {ordinal(row.enteredInning)}
-									</span>
-								{/if}
-							</small>
-						</span>
-					</a>
-				</th>
+			<tr class="hover:*:not-first:bg-foreground/5" data-substituted={replaced ? '' : undefined}>
+				{#if boxscorePlayer}
+					{@render player(boxscorePlayer, replaced, positionLabel(boxscorePlayer, row))}
+				{:else}
+					<th class="sticky left-0 z-1 min-w-lh"></th>
+					<th class="w-full min-w-[14ch] pl-ch text-left">{row.playerId}</th>
+				{/if}
 
 				{#each columns as column (`${column.inning}-${column.column}`)}
 					{@const cell = cells?.get(`${column.inning}-${column.column}`)}
@@ -324,10 +295,8 @@
 				<tr class={cn(i === 0 && 'border-t border-dashed border-current/25')}>
 					<th
 						scope="row"
-						class={cn(
-							'sticky left-0 z-1 bg-background pl-ch text-left text-current/40',
-							i === 0 && 'pt-[.5ch]',
-						)}
+						colspan="2"
+						class={cn('pl-ch text-left text-current/40', i === 0 && 'pt-[.5ch]')}
 					>
 						<abbr {title}>{label}</abbr>
 					</th>
@@ -396,6 +365,11 @@
 			height: 2.5rem;
 		}
 
+		/* The box score's name cell, with room for a substitute's `PH-LF · 5th` */
+		tbody tr > :global(th:nth-child(2)) {
+			min-width: 21ch;
+		}
+
 		/* A hairline between innings, but not between an inning's own columns */
 		.inning-start {
 			border-left: 1px solid color-mix(in srgb, currentColor 10%, transparent);
@@ -409,16 +383,6 @@
 			&:last-child {
 				padding-right: 1ch;
 			}
-		}
-
-		tbody th[scope='row'] {
-			min-width: 15ch;
-			max-width: 18ch;
-			height: 2.5rem;
-		}
-
-		tbody tr.sub {
-			border-top: 1px dashed color-mix(in srgb, currentColor 15%, transparent);
 		}
 	}
 </style>

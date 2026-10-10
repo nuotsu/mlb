@@ -79,12 +79,12 @@
 	}
 </script>
 
-<div class={className}>
+<div class={cn('min-w-0', className)}>
 	{#if away?.batters.length || home?.batters.length}
 		<div
 			role="tablist"
 			aria-label="Lineup view"
-			class="mb-[.5ch] flex w-max gap-px rounded-full border border-current/25 p-px text-xs max-sm:ml-ch sm:mx-ch"
+			class="mx-auto mb-[.5lh] flex w-max gap-px rounded-full border border-current/25 p-px text-xs"
 		>
 			{#each VIEWS as { id, label }, i (id)}
 				{@const selected = view === id}
@@ -138,7 +138,15 @@
 					class="overflow-x-auto mask-r-from-[calc(100%-1.5ch)]"
 				>
 					{#if view === 'scorecard'}
-						<Scorecard {team} {side} {plays} {scheduledInnings} {isFinal} {isSpoilerPrevented} />
+						<Scorecard
+							{team}
+							{side}
+							{plays}
+							{scheduledInnings}
+							{isFinal}
+							{isSpoilerPrevented}
+							player={p}
+						/>
 					{:else}
 						<table class="table-fixed text-center">
 							<thead class="text-xs text-current/40">
@@ -320,7 +328,7 @@
 	{/if}
 {/snippet}
 
-{#snippet p({ position, person }: MLB.BoxscorePlayer, substituted?: boolean)}
+{#snippet p({ position, person }: MLB.BoxscorePlayer, substituted?: boolean, label?: string)}
 	{@const isFavorite = favoritesStore.has(`/player/${person.id}`)}
 	{@const throwSide = players?.[`ID${person.id}`]?.pitchHand?.code}
 	{@const sideLabel =
@@ -349,8 +357,10 @@
 				{person.boxscoreName}
 			</span>
 
-			<small class="w-[3ch] shrink-0 text-center text-xs text-current/40 no-underline">
-				{sideLabel}
+			<small
+				class="min-w-[3ch] shrink-0 text-center text-xs whitespace-nowrap text-current/40 no-underline"
+			>
+				{label ?? sideLabel}
 			</small>
 		</a>
 	</th>
@@ -375,8 +385,9 @@
 		}
 	}
 
-	[data-substituted] + tr {
-		th:global(:has(img)) {
+	/* Global so the scorecard's rows, which render this file's player cells, indent the same way */
+	article :global([data-substituted] + tr) {
+		:global(th:has(img)) {
 			left: -1lh;
 
 			:global(img) {
@@ -384,7 +395,7 @@
 			}
 		}
 
-		th:not(:has(img)) {
+		:global(th:not(:has(img))) {
 			padding-left: calc(1lh + 1ch);
 		}
 	}
