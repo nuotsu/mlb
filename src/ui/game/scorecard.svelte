@@ -62,22 +62,25 @@
 	)
 
 	/** Same hues as the pitch list (blue in play, green ball, yellow strike), darkened in light mode to stay legible. */
-	const COLORS: Record<ScorecardKind, string> = {
-		// Blue only when a run scored on it; see cellColor
-		hit: 'text-foreground',
+	const RED = 'text-red-600 dark:text-red-400'
+	const GRAY = 'text-current/60'
+
+	/** The label's color. Outs, errors and fielder's choices are red only when the batter made an out. */
+	const COLORS: Record<ScorecardKind, string | ((cell: ScorecardCell) => string)> = {
+		hit: (cell) => (cell.isScoringPlay ? 'text-blue-600 dark:text-blue-400' : 'text-foreground'),
 		homeRun: 'font-bold text-blue-700 dark:text-blue-300',
 		walk: 'text-green-700 dark:text-accent',
 		strikeout: 'text-yellow-700 dark:text-yellow-300',
-		error: 'text-rose-700/85 dark:text-rose-300/85',
-		fieldersChoice: 'text-rose-700/85 dark:text-rose-300/85',
-		out: 'text-current/60',
-		runner: 'text-current/60',
-		other: 'text-current/60',
+		error: (cell) => (cell.madeOut ? RED : GRAY),
+		fieldersChoice: (cell) => (cell.madeOut ? RED : GRAY),
+		out: (cell) => (cell.madeOut ? RED : GRAY),
+		runner: GRAY,
+		other: (cell) => (cell.madeOut ? RED : GRAY),
 	}
 
 	function cellColor(cell: ScorecardCell) {
-		if (cell.kind === 'hit' && cell.isScoringPlay) return 'text-blue-600 dark:text-blue-400'
-		return COLORS[cell.kind]
+		const color = COLORS[cell.kind]
+		return typeof color === 'function' ? color(cell) : color
 	}
 
 	// Tooltip: hover with a mouse, tap on a touchscreen, or focus with a keyboard
@@ -222,7 +225,7 @@
 									if (cell.kind !== 'runner') onAtBatSelect?.(cell.atBatIndex)
 								}}
 							>
-								{@render diamond(cell.scored, cell.kind === 'homeRun', cell.bases)}
+								{@render diamond(cell.scored, cell.kind === 'homeRun', cell.bases, cell.madeOut)}
 
 								<span class="relative text-[0.6875rem] leading-none" aria-hidden="true">
 									{#if cell.mirrored}
@@ -294,14 +297,22 @@
 	</div>
 {/if}
 
-{#snippet diamond(scored: boolean, strong?: boolean, bases?: number)}
+<!--
+	An empty diamond takes its cell's color. A plate appearance's outline only says whether it
+	made an out: red if so, gray otherwise, whatever color its label is.
+-->
+{#snippet diamond(scored: boolean, strong?: boolean, bases?: number, madeOut?: boolean)}
 	<svg viewBox="0 0 40 40" class="absolute inset-0.5 size-[calc(100%-0.25rem)]" aria-hidden="true">
 		<path
+			class={madeOut == null
+				? undefined
+				: madeOut
+					? 'stroke-red-600 dark:stroke-red-400'
+					: 'stroke-foreground/45'}
 			d="M20 3 37 20 20 37 3 20Z"
 			fill="currentColor"
 			fill-opacity={scored ? (strong ? 0.35 : 0.2) : 0}
 			stroke="currentColor"
-			stroke-opacity={bases ? 0.4 : 1}
 			stroke-width="1"
 			stroke-linejoin="round"
 			vector-effect="non-scaling-stroke"

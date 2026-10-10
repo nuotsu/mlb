@@ -35,6 +35,8 @@ export type ScorecardCell = Notation & {
 	scored: boolean
 	/** A run crossed the plate on this play. */
 	isScoringPlay: boolean
+	/** The batter made an out, or put a runner out, with this plate appearance. */
+	madeOut: boolean
 	description: string
 }
 
@@ -163,6 +165,21 @@ function mergedChain(play: MLB.Play) {
 function batterRunner(play: MLB.Play) {
 	const batterId = play.matchup?.batter?.id
 	return play.runners?.find((r) => r.details?.runner?.id === batterId && !r.movement?.start)
+}
+
+/**
+ * The plate appearance itself made an out: the batter was out, or a runner was
+ * put out on the same pitch (a force, a double play). A runner caught stealing
+ * earlier in the at-bat doesn't count.
+ */
+export function madeOut(play: MLB.Play) {
+	const batter = batterRunner(play)
+	if (!batter) return false
+	if (batter.movement?.isOut) return true
+	const index = batter.details?.playIndex
+	return !!play.runners?.some(
+		(r) => r.movement?.isOut && (index == null || r.details?.playIndex === index),
+	)
 }
 
 /** `F`, `L` or `P` for a ball caught in the air, judged by how the feed words it. */
@@ -399,6 +416,7 @@ export function buildScorecard({
 				rbi: 0,
 				scored: false,
 				isScoringPlay: false,
+				madeOut: false,
 				description: event.details.description ?? 'Automatic runner',
 			})
 			onBase.set(event.player.id, { base: `${event.base ?? 2}B`, cell })
@@ -417,6 +435,7 @@ export function buildScorecard({
 				rbi,
 				scored: false,
 				isScoringPlay: !!play.runners?.some((r) => r.movement?.end === 'score'),
+				madeOut: madeOut(play),
 				description: play.result.description,
 			})
 

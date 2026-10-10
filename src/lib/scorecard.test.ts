@@ -7,6 +7,7 @@ import {
 	buildScorecard,
 	isInGame,
 	isPlateAppearance,
+	madeOut,
 	notation,
 	type LineupEntry,
 } from './scorecard'
@@ -574,5 +575,52 @@ describe('isInGame', () => {
 		expect(kwan.entered).toBeUndefined()
 		expect(kwan.exited).toBeUndefined()
 		expect([1, 9, 12].every((i) => isInGame(kwan, i, 'away'))).toBe(true)
+	})
+})
+
+describe('madeOut', () => {
+	test('the batter is out', () => {
+		expect(madeOut(play({ eventType: 'strikeout', runners: [runner({ id: 1, out: 1 })] }))).toBe(
+			true,
+		)
+	})
+
+	test("a fielder's choice that forces a runner", () => {
+		const p = play({
+			eventType: 'force_out',
+			runners: [runner({ id: 2, start: '1B', out: 1 }), runner({ id: 1, end: '1B' })],
+		})
+		expect(madeOut(p)).toBe(true)
+	})
+
+	test('an error with nobody out', () => {
+		const p = play({
+			eventType: 'field_error',
+			runners: [runner({ id: 1, end: '1B', credits: [['f_fielding_error', '6']] })],
+		})
+		expect(madeOut(p)).toBe(false)
+	})
+
+	test('a strikeout the batter reached on', () => {
+		expect(madeOut(play({ eventType: 'strikeout', runners: [runner({ id: 1, end: '1B' })] }))).toBe(
+			false,
+		)
+	})
+
+	test('a runner caught stealing earlier in the at-bat is not the batter’s out', () => {
+		const p = play({
+			eventType: 'walk',
+			runners: [
+				{
+					...runner({ id: 2, start: '1B', out: 1 }),
+					details: { ...runner({ id: 2 }).details, playIndex: 2 },
+				},
+				{
+					...runner({ id: 1, end: '1B' }),
+					details: { ...runner({ id: 1 }).details, playIndex: 5 },
+				},
+			],
+		})
+		expect(madeOut(p)).toBe(false)
 	})
 })
