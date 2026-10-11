@@ -3,17 +3,16 @@
 	import {
 		BallIcon,
 		BatteryIcon,
-		DiamondIcon,
 		GraphLineIcon,
+		HomePlateIcon,
 		InfoIcon,
-		LawIcon,
 		ListUnorderedIcon,
 		PlayCircleIcon,
-		RankIcon,
+		ReplayCameraIcon,
 		StrikezoneIcon,
 		TableIcon,
 		TrajectoryIcon,
-		VideoCameraIcon,
+		TrophyCupIcon,
 	} from '#ui/icons/index.js'
 	import { replaceState } from '$app/navigation'
 	import { page } from '$app/state'
@@ -27,7 +26,7 @@
 	 * The scoreboard lives in the sticky header, so its button scrolls back to the top.
 	 */
 	const SECTIONS: { id: string; label: string; icon: Component<Record<string, unknown>> }[] = [
-		{ id: TOP, label: 'Scoreboard', icon: DiamondIcon },
+		{ id: TOP, label: 'Scoreboard', icon: HomePlateIcon },
 		{ id: 'pitch-sequence', label: 'Pitch sequence', icon: BallIcon },
 		{ id: 'plays', label: 'Plays', icon: ListUnorderedIcon },
 		{ id: 'win-probability', label: 'Win probability', icon: GraphLineIcon },
@@ -35,9 +34,8 @@
 		{ id: 'game-info', label: 'Game info', icon: InfoIcon },
 		{ id: 'boxscore', label: 'Box score', icon: TableIcon },
 		{ id: 'bullpen-fatigue', label: 'Bullpen fatigue', icon: BatteryIcon },
-		{ id: 'top-performers', label: 'Top performers', icon: RankIcon },
-		{ id: 'decisions', label: 'Decisions', icon: LawIcon },
-		{ id: 'reviews', label: 'Reviews', icon: VideoCameraIcon },
+		{ id: 'top-performers', label: 'Top performers', icon: TrophyCupIcon },
+		{ id: 'reviews', label: 'Reviews', icon: ReplayCameraIcon },
 		{ id: 'home-runs', label: 'Home runs', icon: TrajectoryIcon },
 		{ id: 'umpires', label: 'Umpires', icon: StrikezoneIcon },
 	]

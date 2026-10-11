@@ -25,7 +25,7 @@
 	}
 </script>
 
-<article id="decisions" class="max-w-max space-y-ch has-data-empty:hidden">
+<article class="max-w-max space-y-ch has-data-empty:hidden">
 	<h2 class="text-xs text-current/40">Decisions</h2>
 
 	<dl class="grid gap-[.5ch]">
