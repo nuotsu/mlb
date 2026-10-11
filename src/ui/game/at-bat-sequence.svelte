@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ABS_ZONE, batterPlacement, parseHeight } from '#lib/batter-figure.js'
 	import { pitchSpeedColor } from '#lib/colors.js'
 	import {
 		pitchFlight,
@@ -8,7 +9,7 @@
 		UMPIRE_CAMERA,
 	} from '#lib/pitch-flight.js'
 	import { pitchOutcome } from '#lib/pitch-outcome.js'
-	import { batterUniformSrc, type BatterUniforms } from '#lib/uniforms.js'
+	import { batterUniformSrc, uniformSeason, type BatterUniforms } from '#lib/uniforms.js'
 	import { cn } from '#lib/utils.js'
 	import BatterFigure from '#ui/game/batter-figure.svelte'
 	import SpinningBaseball from '#ui/game/spinning-baseball.svelte'
@@ -226,22 +227,24 @@
 		return 'var(--color-foreground)'
 	}
 
-	// Strike zone geometry (feet → SVG). Plate is 17" wide.
+	// One scene in feet from the catcher's view: `x` toward the catcher's right
+	// from the middle of the plate, `z` up from the ground. The zone, the
+	// plate, the batter, and every pitch share it, at one scale.
 	const PLATE_HALF = 17 / 24
-	const PAD = 0.9
-	/** Padding beyond the plate on the side away from the batter, where nothing else stands. */
+	/** Padding past the plate on the side away from the batter, where nothing else stands, ft. */
 	const OUTER_PAD = 0.25
-	const W = 200
+	/** Padding on the batter's side when there's no batter to draw, ft. */
+	const BATTER_PAD = 0.9
+	/** Room above the batter, and below the plate, ft. */
+	const HEAD_PAD = 0.15
+	const FOOT_PAD = 0.1
+	/** SVG height in its own units; the width follows the scene. */
 	const H = 240
-	/** Stretch height vs width so the zone reads taller. */
-	const Z_STRETCH = 1.2
 	/** Numbered marker and spinning ball radius at the plate, SVG units. */
 	const DOT_R = 7
 	/** Trajectory width at the plate; it tapers with distance. */
 	const TRAIL_W = 2.5
 	const SELECTED_TRAIL_W = 4
-	/** Room between the zone and the batter, as a share of the zone's width. */
-	const BATTER_GAP = 0.25
 
 	const zone = $derived.by(() => {
 		const tops = pitches
@@ -253,6 +256,29 @@
 		const top = tops.length ? tops.reduce((a, b) => a + b, 0) / tops.length : 3.5
 		const bottom = bottoms.length ? bottoms.reduce((a, b) => a + b, 0) / bottoms.length : 1.5
 		return { top, bottom }
+	})
+
+	/**
+	 * Standing height, ft. Without one on the roster, it's read back from the
+	 * top of the zone, which ABS sets at a share of it.
+	 */
+	const batterHeight = $derived.by(() => {
+		const person = batter?.id != null ? players?.[`ID${batter.id}`] : undefined
+		const height = parseHeight(person?.height ?? batter?.height)
+		if (height) return height
+		return Math.min(7.5, Math.max(5, zone.top / ABS_ZONE.top))
+	})
+
+	/** A batter whose render failed to load isn't drawn, so the zone gets his room. */
+	let failedFigure = $state<string | null>(null)
+
+	/** The batter standing in the box, in feet. */
+	const figure = $derived.by(() => {
+		if (!batterSrcs || (batSide !== 'L' && batSide !== 'R')) return null
+		const key = batterSrcs.join(' ')
+		if (failedFigure === key) return null
+		const codes = play?.about?.isTopInning ? uniforms?.away : uniforms?.home
+		return { key, ...batterPlacement(batterHeight, batSide, uniformSeason(codes?.[0])) }
 	})
 
 	/**
@@ -268,7 +294,11 @@
 		}),
 	)
 
-	/** Home plate lying on the ground, point toward the catcher. */
+	/**
+	 * Home plate lying on the ground, point toward the catcher. Its front edge
+	 * is on the plane of the zone, so it sits at `z = 0` with the batter's
+	 * feet, and the rest of it dips toward the camera.
+	 */
 	const plateFeet = $derived(
 		[
 			[-PLATE_HALF, PLATE_FRONT_Y],
@@ -280,75 +310,41 @@
 	)
 
 	/**
-	 * The scale comes from the plate padded evenly on both sides, so the zone
-	 * keeps its size, but the drawing is cropped to what's in it: the padding
-	 * on the side away from the batter shrinks to `OUTER_PAD`. `width` is the
-	 * cropped width in SVG units, at most `W`.
+	 * What the scene spans, ft: the plate, the batter from his feet to the end
+	 * of his bat, and every pitch. `unit` is SVG units per foot, the same both
+	 * ways.
 	 */
 	const view = $derived.by(() => {
-		let fitMin = -PLATE_HALF - PAD
-		let fitMax = PLATE_HALF + PAD
-		let xMin = isLefty ? -PLATE_HALF - OUTER_PAD : fitMin
-		let xMax = isLefty ? fitMax : PLATE_HALF + OUTER_PAD
-		// Flights reach above the zone on their own, so it needs less headroom
-		let zMin = zone.bottom - PAD
-		let zMax = zone.top + PAD / 2
+		let xMin = -PLATE_HALF - (isLefty ? OUTER_PAD : BATTER_PAD)
+		let xMax = PLATE_HALF + (isLefty ? BATTER_PAD : OUTER_PAD)
+		let zMin = -FOOT_PAD
+		let zMax = zone.top + 0.5
 
-		function reachX(lo: number, hi: number) {
-			fitMin = Math.min(fitMin, lo)
-			fitMax = Math.max(fitMax, hi)
-			xMin = Math.min(xMin, lo)
-			xMax = Math.max(xMax, hi)
+		const reach = (x0: number, x1: number, z0: number, z1: number) => {
+			xMin = Math.min(xMin, x0)
+			xMax = Math.max(xMax, x1)
+			zMin = Math.min(zMin, z0)
+			zMax = Math.max(zMax, z1)
 		}
 
-		for (const p of plateFeet) {
-			xMin = Math.min(xMin, p.x)
-			xMax = Math.max(xMax, p.x)
-			zMin = Math.min(zMin, p.z - 0.1)
+		if (figure) {
+			reach(figure.bounds.left, figure.bounds.right, 0, figure.bounds.top + HEAD_PAD)
 		}
+		for (const p of plateFeet) reach(p.x, p.x, p.z - FOOT_PAD, p.z)
 
 		pitches.forEach((pitch, i) => {
 			const c = pitch.pitchData?.coordinates
-			if (c?.pX != null) reachX(c.pX - 0.2, c.pX + 0.2)
-			if (c?.pZ != null) {
-				zMin = Math.min(zMin, c.pZ - 0.2)
-				zMax = Math.max(zMax, c.pZ + 0.2)
-			}
-			for (const pt of flights[i] ?? []) {
-				reachX(pt.x - 0.1, pt.x + 0.1)
-				zMin = Math.min(zMin, pt.z - 0.1)
-				zMax = Math.max(zMax, pt.z + 0.1)
-			}
+			if (c?.pX != null && c?.pZ != null) reach(c.pX - 0.2, c.pX + 0.2, c.pZ - 0.2, c.pZ + 0.2)
+			for (const pt of flights[i] ?? []) reach(pt.x - 0.1, pt.x + 0.1, pt.z - 0.1, pt.z + 0.1)
 		})
 
-		const zRange = zMax - zMin
-		const topPad = 4
-		let scaleX = W / (fitMax - fitMin)
-		let scaleZ = scaleX * Z_STRETCH
-		const usedH = zRange * scaleZ
-		if (usedH > H - topPad) {
-			const fit = (H - topPad) / usedH
-			scaleX *= fit
-			scaleZ *= fit
-		}
-
-		return {
-			xMin,
-			zMax,
-			scaleX,
-			scaleZ,
-			width: (xMax - xMin) * scaleX,
-			// Top-align so paths reach the top of the SVG instead of floating mid-frame
-			oy: topPad + Math.max(0, (H - zRange * scaleZ - topPad) * 0.15),
-		}
+		const unit = H / (zMax - zMin)
+		return { xMin, zMax, unit, width: (xMax - xMin) * unit }
 	})
 
-	function toSvg(pX: number, pZ: number) {
-		const { xMin, zMax, scaleX, scaleZ, oy } = view
-		return {
-			x: (pX - xMin) * scaleX,
-			y: oy + (zMax - pZ) * scaleZ,
-		}
+	function toSvg(x: number, z: number) {
+		const { xMin, zMax, unit } = view
+		return { x: (x - xMin) * unit, y: (zMax - z) * unit }
 	}
 
 	const sz = $derived.by(() => {
@@ -357,14 +353,28 @@
 		return { x: tl.x, y: tl.y, w: br.x - tl.x, h: br.y - tl.y }
 	})
 
-	const platePoints = $derived(plateFeet.map((p) => toSvg(p.x, p.z)))
-	const plate = $derived(platePoints.map(({ x, y }) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' '))
+	const plate = $derived(
+		plateFeet
+			.map((p) => toSvg(p.x, p.z))
+			.map(({ x, y }) => `${x.toFixed(1)},${y.toFixed(1)}`)
+			.join(' '),
+	)
+
+	/** The batter's render, in SVG units. */
+	const figureBox = $derived.by(() => {
+		if (!figure) return null
+		const { x, y } = toSvg(figure.canvas.x, figure.canvas.z)
+		return { x, y, width: figure.canvas.w * view.unit, height: figure.canvas.h * view.unit }
+	})
 
 	let boxWidth = $state(0)
 	let boxHeight = $state(0)
 
-	/** The SVG sits on the box's outer edge, away from the pitch list and the batter. */
-	const svgAlign = $derived(isLefty ? 'xMinYMid' : 'xMaxYMid')
+	/**
+	 * The SVG sits on the box's outer edge, away from the pitch list and the
+	 * batter, with his feet at the bottom.
+	 */
+	const svgAlign = $derived(isLefty ? 'xMinYMax' : 'xMaxYMax')
 
 	/** SVG units → px, matching the SVG's `meet` scaling and `svgAlign`. */
 	const svgFrame = $derived.by(() => {
@@ -373,48 +383,19 @@
 		return {
 			scale,
 			ox: isLefty ? 0 : boxWidth - view.width * scale,
-			oy: (boxHeight - H * scale) / 2,
+			oy: boxHeight - H * scale,
 		}
 	})
 
-	/** How wide the batter stands, px, as last measured. Kept across at-bats so the layout holds still. */
-	let figureWidth = $state(0)
-
 	/**
-	 * Just wide enough for the zone at full height and the batter beside it, so
-	 * the pitch list gets the rest, up to half. `null` until the box is measured.
+	 * Just wide enough for the scene at full height, so the pitch list gets the
+	 * rest, up to half. On narrow screens it gives a little first, shrinking
+	 * the scene with it. `null` until the box is measured.
 	 */
 	const zoneBox = $derived.by(() => {
 		if (!boxHeight) return null
-		const scale = boxHeight / H
-		const min = view.width * scale
-		if (!batterSrcs || !figureWidth) return { min, width: min }
-		const beside = (isLefty ? view.width - sz.x - sz.w : sz.x) * scale
-		const gap = sz.w * scale * BATTER_GAP
-		return { min, width: min + Math.max(0, gap + figureWidth - beside) }
-	})
-
-	/** The batter stands about even with the middle of the plate. */
-	const BATTER_Y = PLATE_HALF
-
-	/** Zone, plate, and ground in px, for the batter standing beside them. */
-	const figureFrame = $derived.by(() => {
-		if (!svgFrame) return null
-		const { scale, ox, oy } = svgFrame
-		const atBatter = (z: number) => {
-			const p = project(UMPIRE_CAMERA, 0, BATTER_Y, z)
-			return oy + toSvg(p.x, p.z).y * scale
-		}
-		const plateBack = Math.max(...platePoints.map((p) => p.y))
-		return {
-			width: boxWidth,
-			zoneLeft: ox + sz.x * scale,
-			zoneRight: ox + (sz.x + sz.w) * scale,
-			gap: sz.w * scale * BATTER_GAP,
-			floor: Math.min(boxHeight, oy + plateBack * scale),
-			zoneTop: atBatter(zone.top),
-			ground: atBatter(0),
-		}
+		const width = (boxHeight / H) * view.width
+		return { min: width * 0.8, width }
 	})
 
 	/** Each flight in SVG units, with the ball's apparent size at every point. */
@@ -594,7 +575,7 @@
 				if (e.pointerType === 'mouse') hoveredPitch = null
 			}}
 		>
-			<!-- Gives way before the pitch list does, but never below the zone's full size,
+			<!-- Gives way before the pitch list does, but only a little,
 			     and is centered in whatever the list leaves past half -->
 			<div
 				class="relative mx-auto aspect-5/6 h-full min-w-0 shrink-[100]"
@@ -603,24 +584,20 @@
 				bind:clientWidth={boxWidth}
 				bind:clientHeight={boxHeight}
 			>
-				<!-- Painted first so the zone and pitches sit on top -->
-				{#if batterSrcs && figureFrame && (batSide === 'L' || batSide === 'R')}
-					{#key batterSrcs.join(' ')}
-						<BatterFigure
-							srcs={batterSrcs}
-							{batSide}
-							{...figureFrame}
-							onmeasure={(w) => (figureWidth = w)}
-						/>
-					{/key}
-				{/if}
-
 				<svg
 					viewBox="0 0 {view.width} {H}"
 					class="absolute inset-0 h-full w-full text-current/40"
 					preserveAspectRatio="{svgAlign} meet"
 					aria-hidden="true"
 				>
+					<!-- Painted first so the zone and pitches sit on top -->
+					{#if figure && figureBox && batterSrcs}
+						{@const key = figure.key}
+						{#key key}
+							<BatterFigure srcs={batterSrcs} {...figureBox} onerror={() => (failedFigure = key)} />
+						{/key}
+					{/if}
+
 					<!-- 3×3 strike zone -->
 					{#each Array.from({ length: 9 }, (_, i) => i) as i (i)}
 						{@const col = i % 3}

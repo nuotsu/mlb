@@ -65,7 +65,7 @@ export const fetchfeedLive = createFetcher<[gamePk: string | number], MLB.LiveGa
 		params: {
 			fields: [
 				'gamePk,gameData,liveData',
-				'players,id,fullName,lastName,boxscoreName,pitchHand,code',
+				'players,id,fullName,lastName,boxscoreName,pitchHand,code,height',
 				'gameInfo,firstPitch,attendance,gameDurationMinutes',
 				'weather,condition,temp,wind',
 				'teams,home,away,id,name,abbreviation,teamName',
