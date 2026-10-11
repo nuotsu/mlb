@@ -5,7 +5,6 @@
 		BatteryIcon,
 		DiamondIcon,
 		GraphLineIcon,
-		HistoryIcon,
 		InfoIcon,
 		LawIcon,
 		ListUnorderedIcon,
@@ -14,6 +13,7 @@
 		StrikezoneIcon,
 		TableIcon,
 		TrajectoryIcon,
+		VideoCameraIcon,
 	} from '#ui/icons/index.js'
 	import { replaceState } from '$app/navigation'
 	import { page } from '$app/state'
@@ -37,7 +37,7 @@
 		{ id: 'bullpen-fatigue', label: 'Bullpen fatigue', icon: BatteryIcon },
 		{ id: 'top-performers', label: 'Top performers', icon: RankIcon },
 		{ id: 'decisions', label: 'Decisions', icon: LawIcon },
-		{ id: 'reviews', label: 'Reviews', icon: HistoryIcon },
+		{ id: 'reviews', label: 'Reviews', icon: VideoCameraIcon },
 		{ id: 'home-runs', label: 'Home runs', icon: TrajectoryIcon },
 		{ id: 'umpires', label: 'Umpires', icon: StrikezoneIcon },
 	]
