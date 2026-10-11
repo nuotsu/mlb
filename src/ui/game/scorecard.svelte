@@ -369,7 +369,11 @@
 	shows in its red label, not its outline.
 -->
 {#snippet diamond(cell?: ScorecardCell)}
-	<svg viewBox="0 0 40 40" class="absolute inset-0.5 size-[calc(100%-0.25rem)]" aria-hidden="true">
+	<svg
+		viewBox="0 0 40 40"
+		class="absolute inset-x-0.5 inset-y-px h-[calc(100%-2px)] w-[calc(100%-0.25rem)]"
+		aria-hidden="true"
+	>
 		<path
 			class={cn(cell && 'stroke-foreground/45', cell?.scored && 'fill-blue-500 dark:fill-blue-400')}
 			d="M20 3 37 20 20 37 3 20Z"
@@ -445,7 +449,7 @@
 		tbody td:not(.end) {
 			width: 2.75rem;
 			min-width: 2.75rem;
-			height: 2.5rem;
+			height: 2.25rem;
 		}
 
 		/* The box score's name cell: the table is as wide as its content, so names never truncate,
