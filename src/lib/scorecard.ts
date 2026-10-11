@@ -37,7 +37,19 @@ export type ScorecardCell = Notation & {
 	isScoringPlay: boolean
 	/** The batter made an out, or put a runner out, with this plate appearance. */
 	madeOut: boolean
+	/** Bases this player tried to steal once on, in order. */
+	steals?: Steal[]
+	/** The base this player was picked off at, 1 to 3. */
+	pickedOff?: number
 	description: string
+}
+
+/** A steal from one base to the next, 1 to 4 like `bases`. */
+export type Steal = {
+	from: number
+	to: number
+	/** Tagged at the base they were stealing, or in a rundown short of it. */
+	caught?: 'atBase' | 'between'
 }
 
 export type BattingTotals = {
@@ -176,6 +188,37 @@ function batterBases(play: MLB.Play) {
 		.filter((r) => r.details?.runner?.id === batterId && !r.movement?.isOut)
 		.map((r) => BASE_NUMBERS[r.movement?.end ?? ''] ?? 0)
 	return Math.max(0, ...reached) || undefined
+}
+
+/**
+ * A runner's stolen base or caught stealing, like `stolen_base_2b`. A runner
+ * who only moved up on someone else's steal attempt carries the same event, so
+ * the base they started or ended on has to match it.
+ */
+export function steal(runner: MLB.Runner): Steal | undefined {
+	const match = runner.details?.eventType?.match(/(stolen_base|caught_stealing)_(2b|3b|home)$/)
+	if (!match) return
+	const to = match[2] === 'home' ? 4 : Number(match[2][0])
+	const from = to - 1
+	const { start, end, isOut, outBase } = runner.movement ?? {}
+	if (BASE_NUMBERS[start ?? ''] !== from) return
+	if (match[1] === 'stolen_base' && BASE_NUMBERS[end ?? ''] === to) return { from, to }
+	if (match[1] === 'caught_stealing' && isOut) {
+		// One throw and a tag (after the pickoff throw, if there was one); any more is a rundown
+		const throws = runner.details.eventType.startsWith('pickoff') ? 3 : 2
+		const between =
+			(!!outBase && OUT_BASE_NUMBERS[outBase] !== to) || (runner.credits?.length ?? 0) > throws
+		return { from, to, caught: between ? 'between' : 'atBase' }
+	}
+}
+
+/** `movement.outBase` calls home `4B`. */
+const OUT_BASE_NUMBERS: Record<string, number> = { ...BASE_NUMBERS, '4B': 4 }
+
+/** The base a runner was picked off at, like 1 for `pickoff_1b`. A pickoff error leaves them safe. */
+export function pickoff(runner: MLB.Runner) {
+	const match = runner.details?.eventType?.match(/^pickoff_([123])b$/)
+	if (match && runner.movement?.isOut) return Number(match[1])
 }
 
 /**
@@ -486,6 +529,11 @@ export function buildScorecard({
 
 			onBase.delete(runnerId)
 			const cell = spot?.cell
+
+			const attempt = steal(runner)
+			if (cell && attempt) cell.steals = [...(cell.steals ?? []), attempt]
+			const pickedOff = pickoff(runner)
+			if (cell && pickedOff) cell.pickedOff = pickedOff
 
 			if (isOut) {
 				if (cell && outNumber) cell.out = outNumber
