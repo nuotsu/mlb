@@ -466,11 +466,6 @@
 			}
 		}
 
-		/* The sticky headshot covers the names and diamonds that scroll under it */
-		tbody tr > :global(th:first-child:not(.bg-accent)) {
-			background: var(--color-background);
-		}
-
 		/* Room past the last inning, under the scroll container's fade */
 		.end {
 			min-width: 1.5ch;
