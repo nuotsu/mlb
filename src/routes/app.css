@@ -73,21 +73,34 @@
 		:root {
 			interpolate-size: allow-keywords;
 		}
+	}
 
+	@supports selector(::details-content) {
 		details {
-			:open::details-content {
-				height: auto;
-			}
+			--details-duration: var(--default-transition-duration);
+
+			display: grid;
+			grid-template-rows: auto 0fr;
+			align-content: start;
+			transition: grid-template-rows var(--details-duration)
+				var(--default-transition-timing-function);
 
 			&::details-content {
+				content-visibility: visible;
 				overflow: clip;
-				transition-duration: var(--default-transition-duration);
-				transition-property: content-visibility, block-size;
-				transition-behavior: allow-discrete;
+				min-block-size: 0;
 			}
 
-			&:not(:open)::details-content {
-				block-size: 0;
+			> :not(summary) {
+				transition: visibility var(--details-duration);
+			}
+
+			&:not(:is([open], :open)) > :not(summary) {
+				visibility: hidden;
+			}
+
+			&:is([open], :open) {
+				grid-template-rows: auto 1fr;
 			}
 		}
 	}
