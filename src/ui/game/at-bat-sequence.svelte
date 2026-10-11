@@ -773,6 +773,10 @@
 						{@const { type, isBall, isStrike, isInPlay } = pitch.details ?? {}}
 						{@const speed = pitch.pitchData?.startSpeed}
 						{@const outcome = pitchOutcome(play, pitch)}
+						{@const overturned =
+							pitch.reviewDetails?.reviewType?.toUpperCase() === 'MJ' &&
+							pitch.reviewDetails.isOverturned &&
+							(isBall || isStrike)}
 						{@const active = selectedPitch === i}
 						{@const dimmed = selectedPitch != null && !active}
 						<li data-pitch={i} class={cn('transition-opacity', dimmed && 'opacity-25')}>
@@ -785,16 +789,39 @@
 								onclick={() => togglePitch(i)}
 							>
 								<span
-									class={cn(
-										'inline-grid size-lh shrink-0 place-items-center rounded-full bg-foreground text-[10px] text-background',
-										{
-											'bg-accent text-dark': isBall,
-											'bg-yellow-300 text-dark': isStrike,
-											'bg-blue-500 text-light': isInPlay,
-										},
-									)}
+									class="relative inline-grid shrink-0 text-[10px]"
+									title={overturned
+										? `Called a ${isStrike ? 'ball' : 'strike'}, overturned by ABS challenge`
+										: undefined}
 								>
-									{i + 1}
+									{#if overturned}
+										<!-- The call on the field, peeking out from behind the call that stood after the ABS challenge -->
+										<span
+											class={cn(
+												'overturned-call absolute inset-0 rounded-full',
+												isStrike ? 'bg-accent' : 'bg-yellow-300',
+											)}
+										></span>
+									{/if}
+
+									<span
+										class={cn(
+											'relative inline-grid size-lh place-items-center rounded-full bg-foreground text-background',
+											{
+												'bg-accent text-dark': isBall,
+												'bg-yellow-300 text-dark': isStrike,
+												'bg-blue-500 text-light': isInPlay,
+											},
+										)}
+									>
+										{i + 1}
+									</span>
+
+									{#if overturned}
+										<span class="sr-only">
+											(called a {isStrike ? 'ball' : 'strike'}, overturned by ABS challenge)
+										</span>
+									{/if}
 								</span>
 
 								<span class="min-w-0 grow truncate">{pitchTypeLabel(type?.description)}</span>
@@ -869,3 +896,15 @@
 		{/if}
 	{/if}
 </div>
+
+<style>
+	/* Slid out from behind the pitch number, with a gap cut around it in the page's background */
+	.overturned-call {
+		translate: 0.35lh 0;
+		mask: radial-gradient(
+			circle calc(0.5lh + 1.5px) at calc(0.5lh - 0.35lh) center,
+			transparent 100%,
+			black calc(100% + 0.5px)
+		);
+	}
+</style>
