@@ -225,28 +225,6 @@
 		</div>
 	{/if}
 
-	{#if !isSpoilerPrevented && feedLive && (hasTopPerformers || hasDecisions || hasHomeRuns || hasReviews)}
-		<div
-			class="col-span-full flex flex-wrap items-start justify-evenly gap-lh px-[2ch] *:grow *:only:mx-auto *:only:max-w-max"
-		>
-			{#if hasTopPerformers}
-				<TopPerformers {feedLive} />
-			{/if}
-
-			{#if hasDecisions}
-				<Decision {feedLive} />
-			{/if}
-
-			{#if hasHomeRuns}
-				<HomeRuns {feedLive} />
-			{/if}
-
-			{#if hasReviews}
-				<Reviews {feedLive} />
-			{/if}
-		</div>
-	{/if}
-
 	{#if hasBattingOrder || hasBench}
 		<Boxscore
 			class="col-span-full"
@@ -259,6 +237,28 @@
 			{isSpoilerPrevented}
 			onAtBatSelect={selectAtBatFromPlay}
 		/>
+	{/if}
+
+	{#if !isSpoilerPrevented && feedLive && (hasTopPerformers || hasDecisions || hasReviews)}
+		<div
+			class="col-span-full flex flex-wrap items-start justify-evenly gap-lh px-[2ch] *:grow *:only:mx-auto *:only:max-w-max"
+		>
+			{#if hasTopPerformers}
+				<TopPerformers {feedLive} />
+			{/if}
+
+			{#if hasDecisions}
+				<Decision {feedLive} />
+			{/if}
+
+			{#if hasReviews}
+				<Reviews {feedLive} />
+			{/if}
+		</div>
+	{/if}
+
+	{#if !isSpoilerPrevented && feedLive && hasHomeRuns}
+		<HomeRuns class="col-span-full px-[2ch]" {feedLive} />
 	{/if}
 
 	{#if game}
