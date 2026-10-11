@@ -7,7 +7,6 @@
 		lineupFromBoxscore,
 		type ScorecardCell,
 		type ScorecardKind,
-		type ScorecardRow,
 		type Steal,
 	} from '#lib/scorecard.js'
 	import { cn, ordinal } from '#lib/utils.js'
@@ -187,13 +186,12 @@
 		}
 	})
 
-	/** Every position played, and the inning a substitute came in: `PH-C · 5th`. */
-	function positionLabel(p: MLB.BoxscorePlayer, row: ScorecardRow) {
-		const positions = (p.allPositions?.length ? p.allPositions : [p.position])
+	/** Every position played: `PH-C`. */
+	function positionLabel(p: MLB.BoxscorePlayer) {
+		return (p.allPositions?.length ? p.allPositions : [p.position])
 			.map((position) => position?.abbreviation)
 			.filter(Boolean)
 			.join('-')
-		return row.enteredInning ? `${positions} · ${ordinal(row.enteredInning)}` : positions
 	}
 
 	function cellLabel(cell: ScorecardCell) {
@@ -223,7 +221,7 @@
 
 			<tr class="hover:*:not-first:bg-foreground/5" data-substituted={replaced ? '' : undefined}>
 				{#if boxscorePlayer}
-					{@render player(boxscorePlayer, replaced, positionLabel(boxscorePlayer, row))}
+					{@render player(boxscorePlayer, replaced, positionLabel(boxscorePlayer))}
 				{:else}
 					<th class="sticky left-0 z-1 min-w-lh"></th>
 					<th class="pl-ch text-left">{row.playerId}</th>
