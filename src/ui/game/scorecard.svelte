@@ -37,11 +37,13 @@
 	const BASE_PATH = ['20,37', '37,20', '20,3', '3,20', '20,37']
 	const BASE_POINTS = BASE_PATH.map((p) => p.split(',').map(Number))
 
-	/** A steal's side of the diamond, cut off halfway when they were caught. */
+	/** A steal's side of the diamond, cut off halfway when they were caught in a rundown. */
 	function stealPoints({ from, to, caught }: Steal) {
 		const [x1, y1] = BASE_POINTS[from]
 		const [x2, y2] = BASE_POINTS[to]
-		return caught ? `${x1},${y1} ${(x1 + x2) / 2},${(y1 + y2) / 2}` : `${x1},${y1} ${x2},${y2}`
+		return caught === 'between'
+			? `${x1},${y1} ${(x1 + x2) / 2},${(y1 + y2) / 2}`
+			: `${x1},${y1} ${x2},${y2}`
 	}
 
 	const scorecard = $derived(
@@ -352,10 +354,10 @@
 			/>
 		{/if}
 
-		<!-- Stolen bases, dashed; half a side when caught stealing -->
+		<!-- Stolen bases, dashed; red when caught stealing, and half a side when caught in a rundown -->
 		{#each cell?.steals ?? [] as steal, i (i)}
 			<polyline
-				class="stroke-foreground"
+				class={steal.caught ? 'stroke-red-600 dark:stroke-red-400' : 'stroke-foreground'}
 				points={stealPoints(steal)}
 				fill="none"
 				stroke="currentColor"
@@ -365,6 +367,11 @@
 				vector-effect="non-scaling-stroke"
 			/>
 		{/each}
+
+		{#if cell?.pickedOff}
+			{@const [cx, cy] = BASE_POINTS[cell.pickedOff]}
+			<circle class="fill-red-600 dark:fill-red-400" {cx} {cy} r="3" />
+		{/if}
 	</svg>
 {/snippet}
 

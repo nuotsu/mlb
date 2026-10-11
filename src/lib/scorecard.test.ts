@@ -9,6 +9,8 @@ import {
 	isPlateAppearance,
 	madeOut,
 	notation,
+	pickoff,
+	steal,
 	type LineupEntry,
 } from './scorecard'
 
@@ -19,6 +21,7 @@ type RunnerInit = {
 	out?: number
 	credits?: [credit: string, position: string][]
 	eventType?: string
+	outBase?: string
 }
 
 function runner({
@@ -28,9 +31,10 @@ function runner({
 	out,
 	credits = [],
 	eventType = '',
+	outBase,
 }: RunnerInit): MLB.Runner {
 	return {
-		movement: { start, end, isOut: out != null, outNumber: out },
+		movement: { start, end, outBase, isOut: out != null, outNumber: out },
 		details: { event: '', eventType, runner: { id } as MLB.Person },
 		credits: credits.map(([credit, code]) => ({
 			credit,
@@ -448,8 +452,8 @@ describe('buildScorecard', () => {
 			],
 		})
 		expect(card.rows[0].cells[0].steals).toEqual([
-			{ from: 1, to: 2, caught: false },
-			{ from: 2, to: 3, caught: true },
+			{ from: 1, to: 2 },
+			{ from: 2, to: 3, caught: 'atBase' },
 		])
 		expect(card.rows[1].cells[0].steals).toBeUndefined()
 	})
@@ -623,6 +627,75 @@ describe('isInGame', () => {
 		expect(kwan.entered).toBeUndefined()
 		expect(kwan.exited).toBeUndefined()
 		expect([1, 9, 12].every((i) => isInGame(kwan, i, 'away'))).toBe(true)
+	})
+})
+
+describe('steal', () => {
+	const caught = (init: Omit<RunnerInit, 'id'>) => steal(runner({ id: 1, out: 1, ...init }))
+	const credits = (...positions: string[]) =>
+		positions.map((p, i): [string, string] => [
+			i === positions.length - 1 ? 'f_putout' : 'f_assist',
+			p,
+		])
+
+	test('one throw and a tag at the base', () => {
+		expect(
+			caught({
+				start: '1B',
+				outBase: '2B',
+				eventType: 'caught_stealing_2b',
+				credits: credits('2', '6'),
+			}),
+		).toEqual({ from: 1, to: 2, caught: 'atBase' })
+		expect(
+			caught({
+				start: '3B',
+				outBase: '4B',
+				eventType: 'caught_stealing_home',
+				credits: credits('1', '2'),
+			}),
+		).toEqual({ from: 3, to: 4, caught: 'atBase' })
+	})
+
+	test('a rundown is caught between bases', () => {
+		expect(
+			caught({
+				start: '1B',
+				outBase: '2B',
+				eventType: 'caught_stealing_2b',
+				credits: credits('2', '3', '4', '3'),
+			})?.caught,
+		).toBe('between')
+	})
+
+	test('picked off and caught stealing counts the pickoff throw', () => {
+		const eventType = 'pickoff_caught_stealing_2b'
+		expect(
+			caught({ start: '1B', outBase: '2B', eventType, credits: credits('1', '3', '4') })?.caught,
+		).toBe('atBase')
+		expect(
+			caught({ start: '1B', outBase: '2B', eventType, credits: credits('1', '3', '4', '1') })
+				?.caught,
+		).toBe('between')
+		// Tagged by the first baseman before getting far
+		expect(
+			caught({ start: '1B', outBase: '1B', eventType, credits: credits('1', '3') })?.caught,
+		).toBe('between')
+	})
+})
+
+describe('pickoff', () => {
+	test('the base a runner was picked off at', () => {
+		expect(pickoff(runner({ id: 1, start: '2B', out: 1, eventType: 'pickoff_2b' }))).toBe(2)
+	})
+
+	test('a pickoff error leaves them on base', () => {
+		expect(pickoff(runner({ id: 1, start: '1B', end: '2B', eventType: 'pickoff_error_1b' }))).toBe(
+			undefined,
+		)
+		expect(
+			pickoff(runner({ id: 1, start: '1B', out: 1, eventType: 'pickoff_caught_stealing_2b' })),
+		).toBe(undefined)
 	})
 })
 
