@@ -3,10 +3,12 @@
 	import { pitchSpeedColor } from '#lib/colors.js'
 	import {
 		pitchFlight,
+		pitchLocation,
 		PLATE_FRONT_Y,
 		project,
 		spinAxis,
 		UMPIRE_CAMERA,
+		zonePlaneY,
 	} from '#lib/pitch-flight.js'
 	import { pitchOutcome } from '#lib/pitch-outcome.js'
 	import { batterUniformSrc, uniformSeason, type BatterUniforms } from '#lib/uniforms.js'
@@ -282,22 +284,36 @@
 	})
 
 	/**
-	 * Each pitch's flight from release to the plate, through the umpire's-eye
-	 * camera. `x` / `z` are feet on the plane of the front of the plate, so the
-	 * zone and `pX` / `pZ` line up untouched. `null` falls back to just the dot.
+	 * The umpire's-eye camera, drawing the plane the zone is judged on at true
+	 * size: the middle of the plate under ABS, its front before. The batter
+	 * stands about there too.
+	 */
+	const camera = $derived({ ...UMPIRE_CAMERA, plane: zonePlaneY(pitches[0]?.pitchData) })
+
+	/** Each pitch's flight from release to the zone's plane, in feet. */
+	const paths = $derived(pitches.map((pitch) => pitchFlight(pitch.pitchData)))
+
+	/**
+	 * Where each pitch is judged: on the zone's plane, so it's a strike when
+	 * the ball touches the zone. `null` without a location.
+	 */
+	const locations = $derived(pitches.map((pitch, i) => pitchLocation(pitch.pitchData, paths[i])))
+
+	/**
+	 * Each flight through the camera. `x` / `z` are feet on the zone's plane,
+	 * so the flight ends on its location untouched. `null` falls back to just
+	 * the dot.
 	 */
 	const flights = $derived(
-		pitches.map((pitch) => {
-			const flight = pitchFlight(pitch.pitchData)
-			if (!flight) return null
-			return flight.map((p) => ({ ...project(UMPIRE_CAMERA, p.x, p.y, p.z), t: p.t }))
-		}),
+		paths.map(
+			(flight) => flight?.map((p) => ({ ...project(camera, p.x, p.y, p.z), t: p.t })) ?? null,
+		),
 	)
 
 	/**
-	 * Home plate lying on the ground, point toward the catcher. Its front edge
-	 * is on the plane of the zone, so it sits at `z = 0` with the batter's
-	 * feet, and the rest of it dips toward the camera.
+	 * Home plate lying on the ground, point toward the catcher. The ground is
+	 * at `z = 0` on the zone's plane, with the batter's feet; the plate rises
+	 * past it toward the mound and dips toward the camera.
 	 */
 	const plateFeet = $derived(
 		[
@@ -306,7 +322,7 @@
 			[PLATE_HALF, PLATE_HALF],
 			[0, 0],
 			[-PLATE_HALF, PLATE_HALF],
-		].map(([x, y]) => project(UMPIRE_CAMERA, x, y, 0)),
+		].map(([x, y]) => project(camera, x, y, 0)),
 	)
 
 	/**
@@ -332,9 +348,8 @@
 		}
 		for (const p of plateFeet) reach(p.x, p.x, p.z - FOOT_PAD, p.z)
 
-		pitches.forEach((pitch, i) => {
-			const c = pitch.pitchData?.coordinates
-			if (c?.pX != null && c?.pZ != null) reach(c.pX - 0.2, c.pX + 0.2, c.pZ - 0.2, c.pZ + 0.2)
+		locations.forEach((at, i) => {
+			if (at) reach(at.x - 0.2, at.x + 0.2, at.z - 0.2, at.z + 0.2)
 			for (const pt of flights[i] ?? []) reach(pt.x - 0.1, pt.x + 0.1, pt.z - 0.1, pt.z + 0.1)
 		})
 
@@ -437,9 +452,9 @@
 		if (selectedPitch == null) return null
 		const pitch = pitches[selectedPitch]
 		const { spinRate, spinDirection } = pitch?.pitchData?.breaks ?? {}
-		const c = pitch?.pitchData?.coordinates
-		if (spinRate == null || spinDirection == null || c?.pX == null || c?.pZ == null) return null
-		const { x, y } = toSvg(c.pX, c.pZ)
+		const at = locations[selectedPitch]
+		if (spinRate == null || spinDirection == null || !at) return null
+		const { x, y } = toSvg(at.x, at.z)
 		return {
 			x,
 			y,
@@ -672,10 +687,9 @@
 					{/each}
 
 					{#each paintOrder as i (pitches[i].index ?? i)}
-						{@const pX = pitches[i].pitchData?.coordinates?.pX}
-						{@const pZ = pitches[i].pitchData?.coordinates?.pZ}
-						{#if pX != null && pZ != null}
-							{@const { x, y } = toSvg(pX, pZ)}
+						{@const at = locations[i]}
+						{#if at}
+							{@const { x, y } = toSvg(at.x, at.z)}
 							{@const color = pitchColor(pitches[i].details)}
 							{@const active = selectedPitch === i}
 							<g

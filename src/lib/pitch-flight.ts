@@ -8,6 +8,8 @@
 
 /** Statcast reports `pX` / `pZ` where the ball crosses the front of the plate. */
 export const PLATE_FRONT_Y = 17 / 12
+/** Before 2025 the feed doesn't say, and Statcast's `zone` matches the middle of the plate. */
+const DEFAULT_ZONE_DEPTH = 8.5
 /** The mound's rubber, used with `extension` to find the release point. */
 const RUBBER_Y = 60.5
 /** Where the 9-parameter fit is anchored. */
@@ -16,6 +18,18 @@ const FIT_Y = 50
 export const BALL_RADIUS = 2.9 / 24
 
 export type FlightPoint = { x: number; y: number; z: number; t: number }
+
+/**
+ * How far from the back tip of the plate the zone is judged, ft: the plane
+ * where a pitch is a strike if any of the ball touches the zone.
+ * `strikeZoneDepth` is in inches, 8.5 under ABS (2026, the middle of the
+ * plate) and 17 in 2025 (the front, where `pX` / `pZ` are).
+ */
+export function zonePlaneY(pitchData: MLB.PitchData | undefined) {
+	const depth = pitchData?.strikeZoneDepth
+	const inches = typeof depth === 'number' && depth >= 0 && depth <= 17 ? depth : DEFAULT_ZONE_DEPTH
+	return inches / 12
+}
 
 /**
  * Smaller root of `0.5·a·t² + b·t + c = 0` in a form that stays accurate when
@@ -33,14 +47,14 @@ function timeAtY(y0: number, vY0: number, aY: number, y: number) {
 }
 
 /**
- * The ball's path from release to the front of the plate, from the
- * 9-parameter constant-acceleration fit: `p(t) = p0 + v0·t + ½·a·t²`. `null`
- * when any parameter is missing or the fit doesn't reach the plate.
+ * The ball's path from release to where the zone is judged (`zonePlaneY`),
+ * from the 9-parameter constant-acceleration fit: `p(t) = p0 + v0·t + ½·a·t²`.
+ * `null` when any parameter is missing or the fit doesn't reach the plate.
  *
  * The fit is extrapolated back to the release point (`60.5 ft − extension`)
- * the way Statcast does. If it lands a hair off `pX` / `pZ` (rounding in the
- * feed), the difference is eased in toward the plate so the path ends exactly
- * on the reported location.
+ * the way Statcast does. If it crosses the front of the plate a hair off
+ * `pX` / `pZ` (rounding in the feed), the difference is eased in toward the
+ * plate so the path runs exactly through the reported location.
  */
 export function pitchFlight(
 	pitchData: MLB.PitchData | undefined,
@@ -58,8 +72,10 @@ export function pitchFlight(
 	const releaseY = typeof extension === 'number' && extension > 0 ? RUBBER_Y - extension : y0
 
 	const tPlate = timeAtY(y0, vY0!, aY!, PLATE_FRONT_Y)
+	const tZone = timeAtY(y0, vY0!, aY!, zonePlaneY(pitchData))
 	const tRelease = timeAtY(y0, vY0!, aY!, releaseY)
-	if (tPlate == null || tRelease == null || !(tPlate > tRelease)) return null
+	if (tPlate == null || tZone == null || tRelease == null || !(tPlate > tRelease)) return null
+	const tEnd = Math.max(tPlate, tZone)
 
 	const at = (t: number) => ({
 		x: x0! + vX0! * t + 0.5 * aX! * t * t,
@@ -79,9 +95,9 @@ export function pitchFlight(
 		// The ball sweeps across the screen fastest as it nears the camera, so
 		// sample more densely toward the plate.
 		const u = Math.sqrt(i / steps)
-		const t = tRelease + (tPlate - tRelease) * u
+		const t = tRelease + (tEnd - tRelease) * u
 		const p = at(t)
-		const ease = u * u
+		const ease = Math.min(1, ((t - tRelease) / (tPlate - tRelease)) ** 2)
 		points.push({ x: p.x + dx * ease, y: p.y, z: p.z + dz * ease, t: t - tRelease })
 	}
 	return points
@@ -89,15 +105,18 @@ export function pitchFlight(
 
 /**
  * A pinhole camera behind home plate, looking out at the mound. Points are
- * projected onto the plane of the front of the plate, so anything at the
- * plate (the zone, `pX` / `pZ`) keeps its true size in feet and things
- * farther out shrink toward the camera's eye height.
+ * projected onto the plane `plane` ft from the back tip of the plate
+ * (`zonePlaneY`), so anything on it (the zone, where pitches are judged)
+ * keeps its true size in feet, things farther out shrink toward the camera's
+ * eye height, and nearer ones grow.
  */
 export type Camera = {
-	/** Feet behind the front of the plate. */
+	/** Feet behind `plane`. */
 	distance: number
 	/** Eye height, feet. */
 	height: number
+	/** The plane drawn at true size, feet from the back tip; the front of the plate by default. */
+	plane?: number
 }
 
 /**
@@ -108,7 +127,7 @@ export type Camera = {
 export const UMPIRE_CAMERA: Camera = { distance: 15, height: 3.5 }
 
 export function project(camera: Camera, x: number, y: number, z: number) {
-	const depth = Math.max(0.1, camera.distance + y - PLATE_FRONT_Y)
+	const depth = Math.max(0.1, camera.distance + y - (camera.plane ?? PLATE_FRONT_Y))
 	const scale = camera.distance / depth
 	return {
 		x: x * scale,
@@ -145,4 +164,18 @@ export function spinAxis(spinDirection: number): SpinAxis {
  */
 export function visibleSpinRevsPerSecond(spinRate: number) {
 	return Math.max(0, spinRate) / 2000
+}
+
+/**
+ * Where a pitch is judged against the zone, ft: where its flight crosses
+ * `zonePlaneY`, or `pX` / `pZ` (the front of the plate) without a fit.
+ */
+export function pitchLocation(
+	pitchData: MLB.PitchData | undefined,
+	flight: FlightPoint[] | null = pitchFlight(pitchData),
+) {
+	const end = flight?.at(-1)
+	if (end) return { x: end.x, z: end.z }
+	const c = pitchData?.coordinates
+	return c?.pX != null && c?.pZ != null ? { x: c.pX, z: c.pZ } : null
 }
