@@ -134,8 +134,16 @@
 		clearTimeout(settle)
 		settle = setTimeout(() => (jumping = false), 200)
 
-		if (id === TOP) scroller.scrollTo({ top: 0, behavior: behavior() })
-		else document.getElementById(id)?.scrollIntoView({ block: 'start', behavior: behavior() })
+		// Scroll `main` itself: `scrollIntoView` also scrolls any ancestor that can, and when the
+		// section can't reach the top (the last one), that shifts the whole app up
+		const el = id === TOP ? null : document.getElementById(id)
+		const top = el
+			? el.getBoundingClientRect().top -
+				scroller.getBoundingClientRect().top +
+				scroller.scrollTop -
+				parseFloat(getComputedStyle(el).scrollMarginTop)
+			: 0
+		scroller.scrollTo({ top, behavior: behavior() })
 
 		const url = new URL(page.url.href)
 		url.hash = id === TOP ? '' : id
@@ -155,7 +163,18 @@
 		if (next == null) return
 
 		e.preventDefault()
-		buttons[items[next].id]?.focus()
+		const button = buttons[items[next].id]
+		// Same reason as above; slide the icon into view within the bar instead
+		button?.focus({ preventScroll: true })
+		if (button) center(button)
+	}
+
+	/** Scroll the bar sideways (it overflows on narrow screens) to center an icon */
+	function center(button: HTMLButtonElement) {
+		toolbar?.scrollTo({
+			left: button.offsetLeft - (toolbar.clientWidth - button.offsetWidth) / 2,
+			behavior: behavior(),
+		})
 	}
 
 	$effect(() => {
@@ -214,15 +233,10 @@
 		}
 	})
 
-	// Keep the active icon in view when the bar overflows on narrow screens
+	// Keep the active icon in view
 	$effect(() => {
 		const button = buttons[active]
-		if (!show || !toolbar || !button) return
-
-		toolbar.scrollTo({
-			left: button.offsetLeft - (toolbar.clientWidth - button.offsetWidth) / 2,
-			behavior: behavior(),
-		})
+		if (show && button) center(button)
 	})
 </script>
 
@@ -248,9 +262,16 @@
 				aria-label="Jump to section"
 				aria-orientation="horizontal"
 				tabindex="-1"
-				class="relative no-scrollbar flex gap-0.5 overflow-x-auto overscroll-x-contain rounded-full p-0.5"
+				class="relative isolate no-scrollbar flex gap-0.5 overflow-x-auto overscroll-x-contain rounded-full p-0.5"
 				{onkeydown}
 			>
+				<!-- One highlight, anchored to the active icon, so it slides between them -->
+				<span
+					class="nav-highlight pointer-events-none absolute -z-1 rounded-full bg-accent"
+					style:position-anchor="--section-nav-{active}"
+					aria-hidden="true"
+				></span>
+
 				{#each items as { id, label, icon: Icon } (id)}
 					{@const selected = active === id}
 					<button
@@ -260,10 +281,11 @@
 						title={label}
 						aria-current={selected ? 'location' : undefined}
 						tabindex={id === tabStop ? 0 : -1}
+						style:anchor-name="--section-nav-{id}"
 						class={cn(
 							'grid size-9 shrink-0 place-items-center rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset',
 							selected
-								? 'bg-accent text-dark focus-visible:ring-light'
+								? 'text-dark focus-visible:ring-light'
 								: 'text-light/60 pointer-fine:hover:bg-accent/25 pointer-fine:hover:text-light',
 						)}
 						onclick={() => go(id)}
@@ -275,3 +297,28 @@
 		</nav>
 	{/if}
 </div>
+
+<style>
+	.nav-highlight {
+		top: anchor(top);
+		right: anchor(right);
+		bottom: anchor(bottom);
+		left: anchor(left);
+		transition: inset 250ms var(--ease-out);
+
+		@media (prefers-reduced-motion: reduce) {
+			transition: none;
+		}
+	}
+
+	/* Without anchor positioning, the active icon carries the highlight itself */
+	@supports not (anchor-name: --a) {
+		.nav-highlight {
+			display: none;
+		}
+
+		[aria-current='location'] {
+			background-color: var(--color-accent);
+		}
+	}
+</style>

@@ -768,7 +768,7 @@
 
 				<ol
 					bind:this={pitchListEl}
-					class="flex min-h-0 grow flex-col overflow-y-auto text-xs tabular-nums"
+					class="relative flex min-h-0 grow flex-col overflow-y-auto text-xs tabular-nums"
 				>
 					{#each pitches as pitch, i (pitch.index ?? i)}
 						{@const { type, isBall, isStrike, isInPlay } = pitch.details ?? {}}
