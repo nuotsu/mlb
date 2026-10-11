@@ -447,8 +447,8 @@
 		}
 
 		tbody td:not(.end) {
-			width: 2.75rem;
-			min-width: 2.75rem;
+			width: 2.5rem;
+			min-width: 2.5rem;
 			height: 2.25rem;
 		}
 
