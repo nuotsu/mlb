@@ -29,7 +29,9 @@
 		isFinal?: boolean
 		isSpoilerPrevented?: boolean
 		/** The box score's own headshot and name cells, so both views line up the same way */
-		player: Snippet<[player: MLB.BoxscorePlayer, substituted?: boolean, label?: string]>
+		player: Snippet<
+			[player: MLB.BoxscorePlayer, substituted?: boolean, label?: string, substitute?: boolean]
+		>
 		/** Show this plate appearance in the pitch sequence */
 		onAtBatSelect?: (atBatIndex: number) => void
 	} = $props()
@@ -214,14 +216,17 @@
 	</thead>
 
 	<tbody>
-		{#each scorecard.rows as row (row.playerId)}
+		{#each scorecard.rows as row, i (row.playerId)}
 			{@const boxscorePlayer = team.players[`ID${row.playerId}`]}
 			{@const replaced = !isSpoilerPrevented && !team.battingOrder.includes(row.playerId)}
+			{@const previous = scorecard.rows[i - 1]}
+			{@const substitute =
+				!isSpoilerPrevented && !!previous && !team.battingOrder.includes(previous.playerId)}
 			{@const cells = cellsByRow.get(row.playerId)}
 
 			<tr class="hover:*:not-first:bg-foreground/5" data-substituted={replaced ? '' : undefined}>
 				{#if boxscorePlayer}
-					{@render player(boxscorePlayer, replaced, positionLabel(boxscorePlayer))}
+					{@render player(boxscorePlayer, replaced, positionLabel(boxscorePlayer), substitute)}
 				{:else}
 					<th class="sticky left-0 z-1 min-w-lh"></th>
 					<th class="pl-ch text-left">{row.playerId}</th>
@@ -293,14 +298,15 @@
 												{:else}
 													<rect
 														class="stroke-tmobile"
-														x=".5"
-														y=".5"
-														width="4"
-														height="4"
+														x=".25"
+														y=".25"
+														width="4.5"
+														height="4.5"
 														fill="none"
+														stroke-width=".5"
 														shape-rendering="crispEdges"
 													/>
-													<path class="stroke-tmobile" d="M4.5 .5 .5 4.5" stroke-width="1" />
+													<path class="stroke-tmobile" d="M4.75 .25 .25 4.75" stroke-width=".5" />
 												{/if}
 											</svg>
 										{/each}
@@ -369,7 +375,7 @@
 {#snippet diamond(cell?: ScorecardCell)}
 	<svg
 		viewBox="0 0 40 40"
-		class="absolute inset-x-0.5 inset-y-px h-[calc(100%-2px)] w-[calc(100%-0.25rem)]"
+		class="absolute inset-x-0.5 inset-y-0 h-full w-[calc(100%-0.25rem)]"
 		aria-hidden="true"
 	>
 		<path
@@ -447,7 +453,7 @@
 		tbody td:not(.end) {
 			width: 2.5rem;
 			min-width: 2.5rem;
-			height: 2.25rem;
+			height: 2rem;
 		}
 
 		/* The box score's name cell: the table is as wide as its content, so names never truncate,
@@ -459,16 +465,6 @@
 			:global(a > span) {
 				flex-grow: 0;
 			}
-		}
-
-		/* The sticky headshot covers the names and diamonds that scroll under it */
-		tbody tr > :global(th:first-child:not(.bg-accent)) {
-			background: var(--color-background);
-		}
-
-		/* …but not the substitute arrow that hangs from the replaced player's cell into it */
-		tbody tr[data-substituted] > :global(th:first-child) {
-			z-index: 2;
 		}
 
 		/* Room past the last inning, under the scroll container's fade */
