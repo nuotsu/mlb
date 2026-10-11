@@ -298,14 +298,15 @@
 												{:else}
 													<rect
 														class="stroke-tmobile"
-														x=".5"
-														y=".5"
-														width="4"
-														height="4"
+														x=".25"
+														y=".25"
+														width="4.5"
+														height="4.5"
 														fill="none"
+														stroke-width=".5"
 														shape-rendering="crispEdges"
 													/>
-													<path class="stroke-tmobile" d="M4.5 .5 .5 4.5" stroke-width="1" />
+													<path class="stroke-tmobile" d="M4.75 .25 .25 4.75" stroke-width=".5" />
 												{/if}
 											</svg>
 										{/each}
