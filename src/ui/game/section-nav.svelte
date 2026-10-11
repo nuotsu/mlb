@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { cn } from '#lib/utils.js'
 	import {
-		BallIcon,
 		BatteryIcon,
 		GraphLineIcon,
 		HomePlateIcon,
 		InfoIcon,
 		ListUnorderedIcon,
+		PencilLineIcon,
 		ReplayCameraIcon,
 		StrikezoneIcon,
 		TableIcon,
@@ -27,7 +27,7 @@
 	 */
 	const SECTIONS: { id: string; label: string; icon: Component<Record<string, unknown>> }[] = [
 		{ id: TOP, label: 'Scoreboard', icon: HomePlateIcon },
-		{ id: 'pitch-sequence', label: 'Pitch sequence', icon: BallIcon },
+		{ id: 'pitch-sequence', label: 'Pitch sequence', icon: PencilLineIcon },
 		{ id: 'plays', label: 'Plays', icon: ListUnorderedIcon },
 		{ id: 'win-probability', label: 'Win probability', icon: GraphLineIcon },
 		{ id: 'highlights', label: 'Highlights', icon: VideoPlayIcon },
