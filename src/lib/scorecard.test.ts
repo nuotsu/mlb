@@ -4,6 +4,9 @@ import { describe, expect, test } from 'bun:test'
 import extras from './fixtures/scorecard-824624.json'
 import alds from './fixtures/scorecard-849832.json'
 import {
+	absChallenges,
+	absChallengeSummary,
+	absChallengeText,
 	buildScorecard,
 	isInGame,
 	isPlateAppearance,
@@ -743,5 +746,152 @@ describe('madeOut', () => {
 			],
 		})
 		expect(madeOut(p)).toBe(false)
+	})
+})
+
+describe('absChallenges', () => {
+	const BATTER = { id: 1, fullName: 'Sam Antonacci' } as MLB.Person
+	const PITCHER = { id: 2, fullName: 'Cade Smith' } as MLB.Person
+	const CATCHER = { id: 3, fullName: 'Patrick Bailey' } as MLB.Person
+
+	/** A pitch and the count after it, with an ABS review when `challenger` is set. */
+	function abs(
+		code: string,
+		[balls, strikes]: [number, number],
+		review?: { challenger: MLB.Person; overturned: boolean; inProgress?: boolean },
+	): MLB.PlayEvent {
+		return {
+			...pitch(code),
+			count: { balls, strikes, outs: 0 },
+			reviewDetails: review && {
+				reviewType: 'MJ',
+				isOverturned: review.overturned,
+				inProgress: review.inProgress ?? false,
+				player: review.challenger,
+			},
+		}
+	}
+
+	function atBat(playEvents: MLB.PlayEvent[], description = '') {
+		const p = play({ eventType: 'field_out', description, playEvents })
+		p.matchup = { ...p.matchup, batter: BATTER, pitcher: PITCHER }
+		return p
+	}
+
+	test('none', () => {
+		const p = atBat([abs('B', [1, 0]), abs('C', [1, 1]), abs('X', [1, 1])])
+		expect(absChallenges(p)).toEqual([])
+		expect(absChallengeSummary(absChallenges(p))).toBe('')
+	})
+
+	test('one successful', () => {
+		const p = atBat([
+			abs('B', [1, 0]),
+			// Called a strike, overturned to a ball: the feed already shows the ball
+			abs('B', [2, 0], { challenger: BATTER, overturned: true }),
+			abs('X', [2, 0]),
+		])
+		const challenges = absChallenges(p)
+		expect(challenges).toEqual([
+			{
+				overturned: true,
+				call: 'strike',
+				pitchNumber: 2,
+				count: { balls: 1, strikes: 0 },
+				challenger: { id: 1, name: 'Sam Antonacci', role: 'batter' },
+			},
+		])
+		expect(absChallengeText(challenges[0])).toBe(
+			'ABS challenge (batter Sam Antonacci): strike overturned to ball, successful · pitch 2, 1-0 count',
+		)
+		expect(absChallengeSummary(challenges)).toBe('1 successful ABS challenge')
+	})
+
+	test('one unsuccessful', () => {
+		const p = atBat([
+			abs('B', [1, 0], { challenger: CATCHER, overturned: false }),
+			abs('X', [1, 0]),
+		])
+		const challenges = absChallenges(p)
+		expect(challenges).toEqual([
+			{
+				overturned: false,
+				call: 'ball',
+				pitchNumber: 1,
+				count: { balls: 0, strikes: 0 },
+				challenger: { id: 3, name: 'Patrick Bailey', role: 'catcher' },
+			},
+		])
+		expect(absChallengeText(challenges[0])).toBe(
+			'ABS challenge (catcher Patrick Bailey): ball upheld, unsuccessful · pitch 1, 0-0 count',
+		)
+		expect(absChallengeSummary(challenges)).toBe('1 unsuccessful ABS challenge')
+	})
+
+	test('two mixed, by both teams, in pitch order', () => {
+		const p = atBat([
+			abs('B', [1, 0], { challenger: CATCHER, overturned: false }),
+			abs('C', [1, 1], { challenger: PITCHER, overturned: true }),
+			abs('X', [1, 1]),
+		])
+		const challenges = absChallenges(p)
+		expect(
+			challenges.map((c) => [c.overturned, c.call, c.pitchNumber, c.challenger?.role]),
+		).toEqual([
+			[false, 'ball', 1, 'catcher'],
+			[true, 'ball', 2, 'pitcher'],
+		])
+		expect(absChallengeSummary(challenges)).toBe('2 ABS challenges: 1 successful, 1 unsuccessful')
+	})
+
+	test('a challenge on the last pitch that only the description mentions', () => {
+		// 849833, bottom 9: the strikeout pitch was challenged, but only the description says so
+		const p = atBat(
+			[
+				abs('C', [0, 1]),
+				abs('B', [1, 1], { challenger: CATCHER, overturned: false }),
+				abs('F', [1, 2]),
+				abs('C', [1, 3]),
+			],
+			'Patrick Bailey challenged (pitch result), call on the field was overturned: Sam Antonacci called out on strikes.',
+		)
+		const challenges = absChallenges(p)
+		expect(challenges.map((c) => [c.overturned, c.pitchNumber])).toEqual([
+			[false, 2],
+			[true, 4],
+		])
+		expect(absChallengeText(challenges[1])).toBe(
+			'ABS challenge (catcher Patrick Bailey): ball overturned to strike, successful · pitch 4, 1-2 count',
+		)
+	})
+
+	test('the same last-pitch challenge in both places counts once', () => {
+		const p = atBat(
+			[abs('C', [0, 3], { challenger: CATCHER, overturned: true })],
+			'Patrick Bailey challenged (pitch result), call on the field was overturned: Sam Antonacci called out on strikes.',
+		)
+		expect(absChallenges(p)).toHaveLength(1)
+	})
+
+	test('skips play reviews and challenges still under review', () => {
+		const p = atBat(
+			[
+				abs('B', [1, 0], { challenger: CATCHER, overturned: false, inProgress: true }),
+				{ ...abs('F', [1, 1]), reviewDetails: { reviewType: 'MI', isOverturned: false } },
+				abs('X', [1, 1]),
+			],
+			'White Sox challenged (catch or drop), call on the field was upheld: Sam Antonacci flies out.',
+		)
+		expect(absChallenges(p)).toEqual([])
+	})
+
+	test("the batter's cell carries them", () => {
+		const p = atBat([abs('B', [1, 0], { challenger: BATTER, overturned: true }), abs('X', [1, 0])])
+		const card = buildScorecard({
+			side: 'away',
+			lineup: [{ playerId: 1, battingOrder: '100' }],
+			plays: [p],
+		})
+		expect(card.rows[0].cells[0].absChallenges).toHaveLength(1)
 	})
 })

@@ -1,5 +1,7 @@
 <script lang="ts">
 	import {
+		absChallengeSummary,
+		absChallengeText,
 		buildScorecard,
 		isInGame,
 		lineupFromBoxscore,
@@ -110,7 +112,7 @@
 	}
 
 	// Tooltip: hover with a mouse, tap on a touchscreen, or focus with a keyboard
-	let tooltip = $state.raw<{ key: string; text: string; anchor: HTMLElement } | null>(null)
+	let tooltip = $state.raw<{ key: string; lines: string[]; anchor: HTMLElement } | null>(null)
 	let tooltipEl = $state<HTMLElement>()
 
 	/** The open cell takes this name, and the tooltip anchors to it with CSS. */
@@ -123,8 +125,12 @@
 		return `${playerId}-${inning}-${column}`
 	}
 
-	function showTooltip(anchor: HTMLElement, key: string, text: string) {
-		tooltip = { key, text, anchor }
+	function showTooltip(anchor: HTMLElement, key: string, cell: ScorecardCell) {
+		tooltip = {
+			key,
+			lines: [cell.description, ...(cell.absChallenges ?? []).map(absChallengeText)],
+			anchor,
+		}
 	}
 
 	/** A second tap on the same cell closes its tooltip. */
@@ -191,7 +197,8 @@
 	}
 
 	function cellLabel(cell: ScorecardCell) {
-		return `${ordinal(cell.inning)} inning: ${cell.description}`
+		const abs = absChallengeSummary(cell.absChallenges)
+		return `${ordinal(cell.inning)} inning: ${cell.description}${abs ? ` ${abs}.` : ''}`
 	}
 </script>
 
@@ -237,16 +244,16 @@
 								aria-label={cellLabel(cell)}
 								data-scorecard-cell
 								onpointerenter={(e) =>
-									e.pointerType === 'mouse' && showTooltip(e.currentTarget, key, cell.description)}
+									e.pointerType === 'mouse' && showTooltip(e.currentTarget, key, cell)}
 								onpointerleave={(e) => e.pointerType === 'mouse' && hideTooltip(key)}
-								onfocus={(e) => showTooltip(e.currentTarget, key, cell.description)}
+								onfocus={(e) => showTooltip(e.currentTarget, key, cell)}
 								onblur={() => hideTooltip(key)}
 								onpointerdown={(e) =>
 									(tapToClose = e.pointerType !== 'mouse' && tooltip?.key === key)}
 								onclick={(e) => {
 									// A tap focuses the cell (which opens it) before the click, so decide on pointerdown
 									if (tapToClose) hideTooltip()
-									else showTooltip(e.currentTarget, key, cell.description)
+									else showTooltip(e.currentTarget, key, cell)
 									tapToClose = false
 									if (cell.kind !== 'runner') onAtBatSelect?.(cell.atBatIndex)
 								}}
@@ -267,6 +274,40 @@
 										aria-hidden="true"
 									>
 										{cell.out}
+									</span>
+								{/if}
+
+								<!-- ABS challenges, top to bottom in pitch order: filled when won, crossed out when lost -->
+								{#if cell.absChallenges?.length}
+									<span class="absolute top-[2px] right-px flex flex-col gap-px" aria-hidden="true">
+										{#each cell.absChallenges.slice(0, 2) as { overturned }, i (i)}
+											<svg viewBox="0 0 7 7" class="size-[7px]">
+												{#if overturned}
+													<rect
+														class="fill-tmobile"
+														width="7"
+														height="7"
+														shape-rendering="crispEdges"
+													/>
+												{:else}
+													<rect
+														class="stroke-tmobile"
+														x=".5"
+														y=".5"
+														width="6"
+														height="6"
+														fill="none"
+														shape-rendering="crispEdges"
+													/>
+													<path
+														class="stroke-red-600 dark:stroke-red-400"
+														d="M2 2 5 5M5 2 2 5"
+														stroke-width="1.25"
+														stroke-linecap="round"
+													/>
+												{/if}
+											</svg>
+										{/each}
 									</span>
 								{/if}
 
@@ -319,7 +360,9 @@
 		class="tooltip pointer-events-none fixed z-10 max-w-[min(40ch,calc(100vw-2ch))] border border-current/25 bg-background/70 px-ch py-[.5ch] text-left text-xs text-foreground shadow-lg backdrop-blur-md"
 		style:position-anchor={anchorName}
 	>
-		{tooltip.text}
+		{#each tooltip.lines as line, i (i)}
+			<p class={cn(i > 0 && 'mt-[.5ch] text-current/70')}>{line}</p>
+		{/each}
 	</div>
 {/if}
 
