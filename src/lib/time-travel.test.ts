@@ -1,7 +1,15 @@
 /// <reference types="bun" />
 
 import { describe, expect, test } from 'bun:test'
-import { delaySince, latestPitch, parseDelay, pitchTimeline, toTimecode } from './time-travel'
+import {
+	adjacentPitch,
+	delaySince,
+	latestPitch,
+	parseDelay,
+	pitchStartTimes,
+	pitchTimeline,
+	toTimecode,
+} from './time-travel'
 
 describe('toTimecode', () => {
 	test('formats UTC and floors to the second', () => {
@@ -130,5 +138,35 @@ describe('pitchTimeline', () => {
 
 		expect(latestPitch(timeline)).toEqual({ startTime: '2026-10-09T00:05:00Z', number: 1 })
 		expect(latestPitch([])).toBeUndefined()
+	})
+})
+
+describe('stepping by pitch', () => {
+	const times = pitchStartTimes([
+		play(true, smith, [
+			pitch('2026-10-09T00:01:20Z'),
+			{ isPitch: false, startTime: '2026-10-09T00:01:30Z' },
+			pitch('2026-10-09T00:01:00Z'),
+		]),
+		play(false, bibee, [pitch('2026-10-09T00:05:00Z'), { isPitch: true }]),
+	])
+
+	test('lists pitches only, oldest first', () => {
+		expect(times).toEqual(['2026-10-09T00:01:00Z', '2026-10-09T00:01:20Z', '2026-10-09T00:05:00Z'])
+	})
+
+	test('steps one pitch either way', () => {
+		expect(adjacentPitch(times, '2026-10-09T00:01:20Z', -1)).toBe('2026-10-09T00:01:00Z')
+		expect(adjacentPitch(times, '2026-10-09T00:01:20Z', 1)).toBe('2026-10-09T00:05:00Z')
+	})
+
+	test('runs out at either end', () => {
+		expect(adjacentPitch(times, '2026-10-09T00:01:00Z', -1)).toBeUndefined()
+		expect(adjacentPitch(times, '2026-10-09T00:05:00Z', 1)).toBeUndefined()
+	})
+
+	test('before the first pitch, forward lands on it and back goes nowhere', () => {
+		expect(adjacentPitch(times, undefined, 1)).toBe('2026-10-09T00:01:00Z')
+		expect(adjacentPitch(times, undefined, -1)).toBeUndefined()
 	})
 })

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { TimelinePitcher } from '#lib/time-travel.js'
 	import { cn } from '#lib/utils.js'
-	import { HistoryIcon } from '#ui/icons/index.js'
+	import { ChevronLeftIcon, ChevronRightIcon, HistoryIcon } from '#ui/icons/index.js'
 
 	let {
 		timeline,
@@ -10,6 +10,9 @@
 		final,
 		onselect,
 		onnudge,
+		onstep,
+		canStepBack = false,
+		canStepForward = false,
 		class: className,
 	}: {
 		/** Pitches up to the moment on screen, grouped by pitcher */
@@ -24,6 +27,12 @@
 		onselect: (startTime: string | null) => void
 		/** Shift the delay by this many ms (positive is further back) */
 		onnudge: (ms: number) => void
+		/** Show the pitch before (`-1`) or after (`1`) the one on screen */
+		onstep: (step: -1 | 1) => void
+		/** There's a pitch before the one on screen */
+		canStepBack?: boolean
+		/** There's a pitch, or live, after the one on screen */
+		canStepForward?: boolean
 		class?: string
 	} = $props()
 
@@ -54,6 +63,8 @@
 
 	/** One height for every control, so the row doesn't jump between live and delayed */
 	const control = 'h-[2.2em] shrink-0 rounded-full'
+	const stepper =
+		'grid place-items-center px-[.5ch]! text-current/60 hover:bg-accent/25 hover:text-current disabled:pointer-events-none disabled:text-current/20'
 	const pill =
 		'rounded-full px-[1ch] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent sm:px-[1.25ch]'
 </script>
@@ -116,6 +127,29 @@
 			</optgroup>
 		{/each}
 	</select>
+
+	<div class={cn(control, 'flex items-stretch gap-px border border-current/25 p-px')}>
+		<button
+			type="button"
+			class={cn(pill, stepper)}
+			aria-label="Previous pitch"
+			title="Previous pitch"
+			disabled={!canStepBack}
+			onclick={() => onstep(-1)}
+		>
+			<ChevronLeftIcon class="size-[1.2em]" aria-hidden="true" />
+		</button>
+		<button
+			type="button"
+			class={cn(pill, stepper)}
+			aria-label="Next pitch"
+			title="Next pitch"
+			disabled={!canStepForward}
+			onclick={() => onstep(1)}
+		>
+			<ChevronRightIcon class="size-[1.2em]" aria-hidden="true" />
+		</button>
+	</div>
 
 	{#if delayed}
 		<div class={cn(control, 'flex items-stretch gap-px border border-current/25 p-px')}>

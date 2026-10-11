@@ -96,6 +96,24 @@ export function pitchTimeline(
 	return [...pitchers.values()]
 }
 
+/** Every pitch's start time, oldest first */
+export function pitchStartTimes(plays: MLB.Play[] | undefined) {
+	return (plays ?? [])
+		.flatMap((play) => play.playEvents ?? [])
+		.flatMap((event) => (event.isPitch && event.startTime ? [event.startTime] : []))
+		.sort()
+}
+
+/**
+ * The pitch one step before or after `from` in `times` (oldest first). Without `from`
+ * (before the first pitch), stepping forward lands on the first pitch.
+ */
+export function adjacentPitch(times: string[], from: string | undefined, step: -1 | 1) {
+	if (step === 1) return times.find((time) => from == null || time > from)
+	if (from == null) return undefined
+	return times.findLast((time) => time < from)
+}
+
 /** The most recent pitch in the timeline, by start time */
 export function latestPitch(timeline: TimelinePitcher[]) {
 	let latest: TimelinePitch | undefined

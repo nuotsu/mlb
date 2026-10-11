@@ -1,5 +1,5 @@
 import { formatDate } from '#lib/temporal.js'
-import type { GameSnapshot } from '#lib/time-travel.js'
+import { pitchStartTimes, type GameSnapshot } from '#lib/time-travel.js'
 import { getWeekDates } from '#ui/schedule/store.svelte.js'
 import { createPreset as createFetcher, fetchMLB } from '.'
 
@@ -141,6 +141,17 @@ export const fetchWinProbability = createFetcher<
 		...params,
 	},
 }))
+
+/**
+ * Every pitch's start time so far, oldest first — times only, so stepping a delayed page
+ * forward can find the next pitch without learning anything else about it.
+ */
+export async function fetchPitchStartTimes(gamePk: string | number) {
+	const feed = await fetchMLB<MLB.LiveGameFeed>(`/api/v1.1/game/${gamePk}/feed/live`, {
+		fields: 'liveData,plays,allPlays,playEvents,isPitch,startTime',
+	})
+	return pitchStartTimes(feed.liveData?.plays?.allPlays)
+}
 
 /**
  * Everything the game page shows, as it stood at `timecode` (`YYYYMMDD_HHMMSS`, UTC).

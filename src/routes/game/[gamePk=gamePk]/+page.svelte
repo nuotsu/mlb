@@ -4,15 +4,18 @@
 		fetchfeedLive,
 		fetchGameSnapshot,
 		fetchLinescore,
+		fetchPitchStartTimes,
 		fetchWinProbability,
 	} from '#lib/fetch/presets.js'
 	import { formatDate } from '#lib/temporal.js'
 	import {
+		adjacentPitch,
 		DELAY_PARAM,
 		delaySince,
 		gameAsOf,
 		latestPitch,
 		parseDelay,
+		pitchStartTimes,
 		pitchTimeline,
 		toTimecode,
 		type GameSnapshot,
@@ -172,6 +175,34 @@
 		),
 	)
 
+	/** Pitches on screen, oldest first */
+	const pitchTimes = $derived(pitchStartTimes(feedLive?.liveData?.plays?.allPlays))
+
+	/** Where a step is headed, so quick presses keep stepping before the page catches up */
+	let stepTarget: string | null = null
+
+	/** Show the pitch before or after the one on screen; stepping past the last goes live */
+	async function stepPitch(step: -1 | 1) {
+		const from = stepTarget ?? pitchTimes.at(-1)
+		// Later pitches aren't on a delayed page, so look up just their times
+		const times =
+			step === 1 ? await fetchPitchStartTimes(params.gamePk).catch(() => null) : pitchTimes
+		if (!times) return
+
+		const target = adjacentPitch(times, from, step)
+		if (!target) {
+			if (step === 1) {
+				stepTarget = null
+				await setDelay(null)
+			}
+			return
+		}
+
+		stepTarget = target
+		await setDelay(delaySince(target))
+		if (stepTarget === target) stepTarget = null
+	}
+
 	/** Once the row has been used, keep it around even if the game is over */
 	const gamePk = $derived(params.gamePk)
 	let hasTimeTraveled = $derived(!!gamePk && untrack(() => isDelayed))
@@ -290,6 +321,9 @@
 		final={!isDelayed && feedLive?.gameData?.status?.abstractGameState === 'Final'}
 		onselect={(startTime) => setDelay(startTime ? delaySince(startTime) : null)}
 		onnudge={(ms) => setDelay((delay ?? 0) + ms)}
+		onstep={stepPitch}
+		canStepBack={pitchTimes.length > 1}
+		canStepForward={isDelayed}
 	/>
 {/if}
 
