@@ -518,8 +518,14 @@
 						>
 							<span class="hr-bg inline-block size-[1ch] shrink-0 rounded-full"></span>
 							<Headshot person={hr.batter} class="size-lh shrink-0" />
-							<span class="line-clamp-1 grow break-all">
-								{hr.batter.boxscoreName ?? hr.batter.lastName ?? hr.batter.fullName}
+							<span class="flex min-w-0 grow gap-[.5ch]">
+								<span class="line-clamp-1 break-all">
+									{hr.batter.boxscoreName ?? hr.batter.lastName ?? hr.batter.fullName}
+								</span>
+								<!-- Season home run count, kept visible when a long name truncates -->
+								{#if hr.ordinal != null}
+									<span class="shrink-0 text-current/60 tabular-nums">({hr.ordinal})</span>
+								{/if}
 							</span>
 							{#if hr.hitData?.totalDistance != null}
 								<span class="text-xs text-current/40 tabular-nums"
