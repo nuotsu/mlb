@@ -18,12 +18,20 @@ type RunnerInit = {
 	end?: string | null
 	out?: number
 	credits?: [credit: string, position: string][]
+	eventType?: string
 }
 
-function runner({ id, start = null, end = null, out, credits = [] }: RunnerInit): MLB.Runner {
+function runner({
+	id,
+	start = null,
+	end = null,
+	out,
+	credits = [],
+	eventType = '',
+}: RunnerInit): MLB.Runner {
 	return {
 		movement: { start, end, isOut: out != null, outNumber: out },
-		details: { event: '', eventType: '', runner: { id } as MLB.Person },
+		details: { event: '', eventType, runner: { id } as MLB.Person },
 		credits: credits.map(([credit, code]) => ({
 			credit,
 			position: { code } as MLB.Position,
@@ -415,6 +423,35 @@ describe('buildScorecard', () => {
 		})
 		expect(card.rows[0].cells[0].out).toBe(1)
 		expect(card.rows[1].cells[0].out).toBe(2)
+	})
+
+	test('steals go to the runner’s cell, and only for the runner who tried', () => {
+		const card = buildScorecard({
+			side: 'home',
+			lineup,
+			plays: [
+				play({ batter: 1, half: 'bottom', eventType: 'single' }),
+				play({ batter: 2, half: 'bottom', eventType: 'walk' }),
+				play({
+					batter: 3,
+					half: 'bottom',
+					eventType: 'strikeout',
+					outs: 2,
+					runners: [
+						runner({ id: 3, out: 1 }),
+						runner({ id: 1, start: '1B', end: '2B', eventType: 'stolen_base_2b' }),
+						runner({ id: 1, start: '2B', out: 2, eventType: 'caught_stealing_3b' }),
+						// Moved up behind the runner caught stealing
+						runner({ id: 2, start: '1B', end: '2B', eventType: 'caught_stealing_3b' }),
+					],
+				}),
+			],
+		})
+		expect(card.rows[0].cells[0].steals).toEqual([
+			{ from: 1, to: 2, caught: false },
+			{ from: 2, to: 3, caught: true },
+		])
+		expect(card.rows[1].cells[0].steals).toBeUndefined()
 	})
 
 	test('only counts this side’s half-innings', () => {

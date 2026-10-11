@@ -37,8 +37,13 @@ export type ScorecardCell = Notation & {
 	isScoringPlay: boolean
 	/** The batter made an out, or put a runner out, with this plate appearance. */
 	madeOut: boolean
+	/** Bases this player tried to steal once on, in order. */
+	steals?: Steal[]
 	description: string
 }
+
+/** A steal from one base to the next, 1 to 4 like `bases`. */
+export type Steal = { from: number; to: number; caught: boolean }
 
 export type BattingTotals = {
 	ab: number
@@ -176,6 +181,24 @@ function batterBases(play: MLB.Play) {
 		.filter((r) => r.details?.runner?.id === batterId && !r.movement?.isOut)
 		.map((r) => BASE_NUMBERS[r.movement?.end ?? ''] ?? 0)
 	return Math.max(0, ...reached) || undefined
+}
+
+/**
+ * A runner's stolen base or caught stealing, like `stolen_base_2b`. A runner
+ * who only moved up on someone else's steal attempt carries the same event, so
+ * the base they started or ended on has to match it.
+ */
+export function steal(runner: MLB.Runner): Steal | undefined {
+	const match = runner.details?.eventType?.match(/(stolen_base|caught_stealing)_(2b|3b|home)$/)
+	if (!match) return
+	const to = match[2] === 'home' ? 4 : Number(match[2][0])
+	const from = to - 1
+	const { start, end, isOut } = runner.movement ?? {}
+	if (BASE_NUMBERS[start ?? ''] !== from) return
+	if (match[1] === 'stolen_base' && BASE_NUMBERS[end ?? ''] === to) {
+		return { from, to, caught: false }
+	}
+	if (match[1] === 'caught_stealing' && isOut) return { from, to, caught: true }
 }
 
 /**
@@ -486,6 +509,9 @@ export function buildScorecard({
 
 			onBase.delete(runnerId)
 			const cell = spot?.cell
+
+			const attempt = steal(runner)
+			if (cell && attempt) cell.steals = [...(cell.steals ?? []), attempt]
 
 			if (isOut) {
 				if (cell && outNumber) cell.out = outNumber

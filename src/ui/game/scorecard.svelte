@@ -6,6 +6,7 @@
 		type ScorecardCell,
 		type ScorecardKind,
 		type ScorecardRow,
+		type Steal,
 	} from '#lib/scorecard.js'
 	import { cn, ordinal } from '#lib/utils.js'
 	import type { Snippet } from 'svelte'
@@ -34,6 +35,14 @@
 
 	/** Home, first, second, third and home again, on the diamond's 40 × 40 box. */
 	const BASE_PATH = ['20,37', '37,20', '20,3', '3,20', '20,37']
+	const BASE_POINTS = BASE_PATH.map((p) => p.split(',').map(Number))
+
+	/** A steal's side of the diamond, cut off halfway when they were caught. */
+	function stealPoints({ from, to, caught }: Steal) {
+		const [x1, y1] = BASE_POINTS[from]
+		const [x2, y2] = BASE_POINTS[to]
+		return caught ? `${x1},${y1} ${(x1 + x2) / 2},${(y1 + y2) / 2}` : `${x1},${y1} ${x2},${y2}`
+	}
 
 	const scorecard = $derived(
 		buildScorecard({
@@ -342,6 +351,20 @@
 				vector-effect="non-scaling-stroke"
 			/>
 		{/if}
+
+		<!-- Stolen bases, dotted; half a side when caught stealing -->
+		{#each cell?.steals ?? [] as steal, i (i)}
+			<polyline
+				class="stroke-foreground"
+				points={stealPoints(steal)}
+				fill="none"
+				stroke="currentColor"
+				stroke-width="2.5"
+				stroke-dasharray="0 4.5"
+				stroke-linecap="round"
+				vector-effect="non-scaling-stroke"
+			/>
+		{/each}
 	</svg>
 {/snippet}
 
