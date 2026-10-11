@@ -252,7 +252,7 @@
 			{/if}
 
 			{#if hasReviews}
-				<Reviews {feedLive} />
+				<Reviews {feedLive} onAtBatSelect={selectAtBatFromPlay} />
 			{/if}
 		</div>
 	{/if}
