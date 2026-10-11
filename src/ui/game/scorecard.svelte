@@ -352,7 +352,7 @@
 			/>
 		{/if}
 
-		<!-- Stolen bases, dotted; half a side when caught stealing -->
+		<!-- Stolen bases, dashed; half a side when caught stealing -->
 		{#each cell?.steals ?? [] as steal, i (i)}
 			<polyline
 				class="stroke-foreground"
@@ -360,8 +360,8 @@
 				fill="none"
 				stroke="currentColor"
 				stroke-width="2.5"
-				stroke-dasharray="0 4.5"
-				stroke-linecap="round"
+				stroke-dasharray="3.5 2.5"
+				stroke-linecap="butt"
 				vector-effect="non-scaling-stroke"
 			/>
 		{/each}
