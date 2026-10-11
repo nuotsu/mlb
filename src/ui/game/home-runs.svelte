@@ -32,8 +32,14 @@
 		4: 'Grand slam',
 	} as const
 
-	/** Landing dots closer than this (ft) are nudged apart so each stays tappable. */
-	const MIN_GAP = 18
+	/** Avatar radius (ft) at each landing spot; it scales with the chart. */
+	const AVATAR = 11
+	const AVATAR_ACTIVE = 16
+
+	/** Landing spots closer than this (ft) are nudged apart so avatars don't pile up. */
+	const MIN_GAP = AVATAR * 2
+
+	const uid = $props.id()
 
 	// Infield, in feet: 90 ft bases, the mound at 60.5 ft, and a 95 ft dirt arc around it.
 	const BASE = 90 / Math.SQRT2
@@ -176,14 +182,6 @@
 		}
 	}
 
-	function percent({ x, y }: Point) {
-		// Clamped so a headshot on a ball near the edge stays inside the figure
-		return {
-			left: `clamp(.75lh, ${((x - viewBox.x) / viewBox.width) * 100}%, 100% - .75lh)`,
-			top: `clamp(.75lh, ${((-y - viewBox.y) / viewBox.height) * 100}%, 100% - .75lh)`,
-		}
-	}
-
 	function label(hr: (typeof homeRuns)[number]) {
 		return [
 			hr.batter.fullName,
@@ -196,6 +194,30 @@
 			.join(', ')
 	}
 </script>
+
+<!-- The batter's headshot in a team-colored ring, centered on the landing spot -->
+{#snippet avatar(hr: (typeof homeRuns)[number], r: number)}
+	{@const { x, y } = hr.end}
+	<circle cx={x} cy={-y} {r} class="fill-background" />
+	<circle cx={x} cy={-y} {r} class="fill-current/10" />
+	<image
+		href="https://midfield.mlbstatic.com/v1/people/{hr.batter.id}/spots/96"
+		x={x - r}
+		y={-y - r}
+		width={r * 2}
+		height={r * 2}
+		clip-path="url(#{uid}-avatar)"
+		preserveAspectRatio="xMidYMid slice"
+	/>
+	<circle
+		cx={x}
+		cy={-y}
+		{r}
+		class="hr-stroke fill-none"
+		stroke-width={r > AVATAR ? 2 : 1.5}
+		vector-effect="non-scaling-stroke"
+	/>
+{/snippet}
 
 {#if homeRuns.length}
 	<!-- Chart beside the details and list when there's room, stacked otherwise -->
@@ -219,6 +241,12 @@
 					aria-label="Home run flight paths at {venue?.name ?? 'the ballpark'}"
 					onclick={() => (selected = null)}
 				>
+					<defs>
+						<clipPath id="{uid}-avatar" clipPathUnits="objectBoundingBox">
+							<circle cx=".5" cy=".5" r=".5" />
+						</clipPath>
+					</defs>
+
 					<g class="pointer-events-none" aria-hidden="true">
 						<path d={grass} class="fill-green-600/8 dark:fill-green-400/8" />
 
@@ -344,36 +372,32 @@
 							<circle
 								cx={hr.end.x}
 								cy={-hr.end.y}
-								r="13"
+								r={AVATAR + 4}
 								class="hidden fill-none stroke-current group-focus-visible/hr:block"
 								stroke-width="1.5"
 								vector-effect="non-scaling-stroke"
 							/>
+							{@render avatar(hr, AVATAR)}
 							<circle
 								cx={hr.end.x}
 								cy={-hr.end.y}
-								r={isActive ? 8 : 6}
-								class="hr-fill stroke-background"
-								stroke-width="1.5"
-								vector-effect="non-scaling-stroke"
+								r={Math.max(hr.hitRadius, AVATAR)}
+								class="fill-transparent"
 							/>
-							<circle cx={hr.end.x} cy={-hr.end.y} r={hr.hitRadius} class="fill-transparent" />
 						</g>
 					{/each}
-				</svg>
 
-				{#if activeHomeRun}
-					{@const { left, top } = percent(activeHomeRun.end)}
-					<div
-						class="hr-color hr-ring pointer-events-none absolute size-[1.5lh] -translate-1/2 rounded-full border-2 bg-background"
-						style:left
-						style:top
-						style:--light={activeHomeRun.color.light}
-						style:--dark={activeHomeRun.color.dark}
-					>
-						<Headshot person={activeHomeRun.batter} class="size-full" />
-					</div>
-				{/if}
+					<!-- The active one again, larger and on top of any neighbor it overlaps -->
+					{#if activeHomeRun}
+						<g
+							class="hr-color pointer-events-none"
+							style:--light={activeHomeRun.color.light}
+							style:--dark={activeHomeRun.color.dark}
+						>
+							{@render avatar(activeHomeRun, AVATAR_ACTIVE)}
+						</g>
+					{/if}
+				</svg>
 			</div>
 
 			<figcaption class="flex justify-center gap-[2ch] text-xs text-current/60">
@@ -527,10 +551,6 @@
 		stroke: var(--c);
 	}
 
-	.hr-fill {
-		fill: var(--c);
-	}
-
 	.hr-bg {
 		background-color: var(--c);
 	}
@@ -539,7 +559,6 @@
 		color: var(--c);
 	}
 
-	.hr-ring,
 	.hr-color :global(.hr-ring) {
 		border-color: var(--c);
 	}
