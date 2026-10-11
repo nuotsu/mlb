@@ -485,10 +485,6 @@
 										<dd>{Math.round(hr.hitData.launchAngle)}°</dd>
 									</div>
 								{/if}
-								<div>
-									<dt class="text-current/40">Direction</dt>
-									<dd>{hr.direction}</dd>
-								</div>
 							</dl>
 
 							{#if hr.pitcher?.fullName}
