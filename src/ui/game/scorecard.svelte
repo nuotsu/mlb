@@ -1,11 +1,12 @@
 <script lang="ts">
 	import {
+		absChallengeSummary,
+		absChallengeText,
 		buildScorecard,
 		isInGame,
 		lineupFromBoxscore,
 		type ScorecardCell,
 		type ScorecardKind,
-		type ScorecardRow,
 		type Steal,
 	} from '#lib/scorecard.js'
 	import { cn, ordinal } from '#lib/utils.js'
@@ -110,7 +111,7 @@
 	}
 
 	// Tooltip: hover with a mouse, tap on a touchscreen, or focus with a keyboard
-	let tooltip = $state.raw<{ key: string; text: string; anchor: HTMLElement } | null>(null)
+	let tooltip = $state.raw<{ key: string; lines: string[]; anchor: HTMLElement } | null>(null)
 	let tooltipEl = $state<HTMLElement>()
 
 	/** The open cell takes this name, and the tooltip anchors to it with CSS. */
@@ -123,8 +124,12 @@
 		return `${playerId}-${inning}-${column}`
 	}
 
-	function showTooltip(anchor: HTMLElement, key: string, text: string) {
-		tooltip = { key, text, anchor }
+	function showTooltip(anchor: HTMLElement, key: string, cell: ScorecardCell) {
+		tooltip = {
+			key,
+			lines: [cell.description, ...(cell.absChallenges ?? []).map(absChallengeText)],
+			anchor,
+		}
 	}
 
 	/** A second tap on the same cell closes its tooltip. */
@@ -181,17 +186,17 @@
 		}
 	})
 
-	/** Every position played, and the inning a substitute came in: `PH-C · 5th`. */
-	function positionLabel(p: MLB.BoxscorePlayer, row: ScorecardRow) {
-		const positions = (p.allPositions?.length ? p.allPositions : [p.position])
+	/** Every position played: `PH-C`. */
+	function positionLabel(p: MLB.BoxscorePlayer) {
+		return (p.allPositions?.length ? p.allPositions : [p.position])
 			.map((position) => position?.abbreviation)
 			.filter(Boolean)
 			.join('-')
-		return row.enteredInning ? `${positions} · ${ordinal(row.enteredInning)}` : positions
 	}
 
 	function cellLabel(cell: ScorecardCell) {
-		return `${ordinal(cell.inning)} inning: ${cell.description}`
+		const abs = absChallengeSummary(cell.absChallenges)
+		return `${ordinal(cell.inning)} inning: ${cell.description}${abs ? ` ${abs}.` : ''}`
 	}
 </script>
 
@@ -216,7 +221,7 @@
 
 			<tr class="hover:*:not-first:bg-foreground/5" data-substituted={replaced ? '' : undefined}>
 				{#if boxscorePlayer}
-					{@render player(boxscorePlayer, replaced, positionLabel(boxscorePlayer, row))}
+					{@render player(boxscorePlayer, replaced, positionLabel(boxscorePlayer))}
 				{:else}
 					<th class="sticky left-0 z-1 min-w-lh"></th>
 					<th class="pl-ch text-left">{row.playerId}</th>
@@ -237,16 +242,16 @@
 								aria-label={cellLabel(cell)}
 								data-scorecard-cell
 								onpointerenter={(e) =>
-									e.pointerType === 'mouse' && showTooltip(e.currentTarget, key, cell.description)}
+									e.pointerType === 'mouse' && showTooltip(e.currentTarget, key, cell)}
 								onpointerleave={(e) => e.pointerType === 'mouse' && hideTooltip(key)}
-								onfocus={(e) => showTooltip(e.currentTarget, key, cell.description)}
+								onfocus={(e) => showTooltip(e.currentTarget, key, cell)}
 								onblur={() => hideTooltip(key)}
 								onpointerdown={(e) =>
 									(tapToClose = e.pointerType !== 'mouse' && tooltip?.key === key)}
 								onclick={(e) => {
 									// A tap focuses the cell (which opens it) before the click, so decide on pointerdown
 									if (tapToClose) hideTooltip()
-									else showTooltip(e.currentTarget, key, cell.description)
+									else showTooltip(e.currentTarget, key, cell)
 									tapToClose = false
 									if (cell.kind !== 'runner') onAtBatSelect?.(cell.atBatIndex)
 								}}
@@ -267,6 +272,38 @@
 										aria-hidden="true"
 									>
 										{cell.out}
+									</span>
+								{/if}
+
+								<!-- ABS challenges, top to bottom in pitch order: filled when won, struck through when lost -->
+								{#if cell.absChallenges?.length}
+									<span
+										class="absolute top-[2px] right-[2px] flex flex-col gap-px"
+										aria-hidden="true"
+									>
+										{#each cell.absChallenges.slice(0, 2) as { overturned }, i (i)}
+											<svg viewBox="0 0 5 5" class="size-[5px]">
+												{#if overturned}
+													<rect
+														class="fill-tmobile"
+														width="5"
+														height="5"
+														shape-rendering="crispEdges"
+													/>
+												{:else}
+													<rect
+														class="stroke-tmobile"
+														x=".5"
+														y=".5"
+														width="4"
+														height="4"
+														fill="none"
+														shape-rendering="crispEdges"
+													/>
+													<path class="stroke-tmobile" d="M4.5 .5 .5 4.5" stroke-width="1" />
+												{/if}
+											</svg>
+										{/each}
 									</span>
 								{/if}
 
@@ -319,7 +356,9 @@
 		class="tooltip pointer-events-none fixed z-10 max-w-[min(40ch,calc(100vw-2ch))] border border-current/25 bg-background/70 px-ch py-[.5ch] text-left text-xs text-foreground shadow-lg backdrop-blur-md"
 		style:position-anchor={anchorName}
 	>
-		{tooltip.text}
+		{#each tooltip.lines as line, i (i)}
+			<p class={cn(i > 0 && 'mt-[.5ch] text-current/70')}>{line}</p>
+		{/each}
 	</div>
 {/if}
 
@@ -328,7 +367,11 @@
 	shows in its red label, not its outline.
 -->
 {#snippet diamond(cell?: ScorecardCell)}
-	<svg viewBox="0 0 40 40" class="absolute inset-0.5 size-[calc(100%-0.25rem)]" aria-hidden="true">
+	<svg
+		viewBox="0 0 40 40"
+		class="absolute inset-x-0.5 inset-y-px h-[calc(100%-2px)] w-[calc(100%-0.25rem)]"
+		aria-hidden="true"
+	>
 		<path
 			class={cn(cell && 'stroke-foreground/45', cell?.scored && 'fill-blue-500 dark:fill-blue-400')}
 			d="M20 3 37 20 20 37 3 20Z"
@@ -402,9 +445,9 @@
 		}
 
 		tbody td:not(.end) {
-			width: 2.75rem;
-			min-width: 2.75rem;
-			height: 2.5rem;
+			width: 2.5rem;
+			min-width: 2.5rem;
+			height: 2.25rem;
 		}
 
 		/* The box score's name cell: the table is as wide as its content, so names never truncate,

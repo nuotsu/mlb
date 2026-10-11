@@ -1,3 +1,5 @@
+import { isAbsReview } from '#lib/abs.js'
+
 /** Feed `officialType` → short position label, in the order a crew is listed. */
 export const UMPIRE_POSITIONS: Record<string, string> = {
 	'Home Plate': 'HP',
@@ -106,7 +108,7 @@ export function trackCalls(feedLive: MLB.LiveGameFeed): TrackedCalls {
 		const inning = `${play.about.isTopInning ? 'Top' : 'Bot'} ${play.about.inning}`
 
 		for (const event of play.playEvents ?? []) {
-			if (event.reviewDetails?.reviewType?.toUpperCase() === 'MJ') {
+			if (isAbsReview(event.reviewDetails)) {
 				result.abs.challenges++
 				if (event.reviewDetails.isOverturned) result.abs.overturned++
 			}

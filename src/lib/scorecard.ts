@@ -8,6 +8,8 @@
  * order bats around.
  */
 
+import { descriptionChallenges, isAbsReview } from '#lib/abs.js'
+
 /** What a cell is colored by. */
 export type ScorecardKind =
 	'hit' | 'homeRun' | 'walk' | 'strikeout' | 'error' | 'fieldersChoice' | 'out' | 'runner' | 'other'
@@ -41,7 +43,28 @@ export type ScorecardCell = Notation & {
 	steals?: Steal[]
 	/** The base this player was picked off at, 1 to 3. */
 	pickedOff?: number
+	/** ABS challenges by either team during the plate appearance, in pitch order. */
+	absChallenges?: AbsChallenge[]
 	description: string
+}
+
+export type AbsChallenger = {
+	id?: number
+	name?: string
+	/** Only the batter, pitcher or catcher can challenge. */
+	role: 'batter' | 'pitcher' | 'catcher'
+}
+
+export type AbsChallenge = {
+	/** The call on the field was overturned: the challenge was won. */
+	overturned: boolean
+	/** The call on the field, before the review. */
+	call?: 'ball' | 'strike'
+	/** 1 for the plate appearance's first pitch. */
+	pitchNumber?: number
+	/** Balls and strikes before the pitch. */
+	count?: { balls: number; strikes: number }
+	challenger?: AbsChallenger
 }
 
 /** A steal from one base to the next, 1 to 4 like `bases`. */
@@ -317,6 +340,128 @@ export function notation(play: MLB.Play): Notation {
 	}
 }
 
+const CALLED_STRIKE = new Set(['C'])
+const CALLED_BALL = new Set(['B', '*B'])
+
+/** The call that stands after any review: the feed rewrites an overturned pitch's code. */
+function finalCall(event: MLB.PlayEvent) {
+	const code = event.details?.code ?? event.details?.call?.code ?? ''
+	if (CALLED_STRIKE.has(code)) return 'strike'
+	if (CALLED_BALL.has(code)) return 'ball'
+}
+
+function challengerRole(play: MLB.Play, person: { id?: number; name?: string }) {
+	const { batter, pitcher } = play.matchup ?? {}
+	const is = (p?: MLB.Person) =>
+		!!p && (person.id != null ? p.id === person.id : p.fullName === person.name)
+	if (is(batter)) return 'batter'
+	if (is(pitcher)) return 'pitcher'
+	return 'catcher'
+}
+
+/**
+ * Every ABS challenge in a plate appearance, by either team, in pitch order.
+ * Pending challenges are left out until they're decided.
+ */
+export function absChallenges(play: MLB.Play): AbsChallenge[] {
+	const challenges: AbsChallenge[] = []
+	let pitchNumber = 0
+	let count = { balls: 0, strikes: 0 }
+	let last: { pitchNumber: number; count: typeof count; event: MLB.PlayEvent } | undefined
+	let lastChallenged = false
+
+	for (const event of play.playEvents ?? []) {
+		if (!event.isPitch) continue
+		pitchNumber++
+		const before = count
+		if (event.count) count = { balls: event.count.balls, strikes: event.count.strikes }
+		last = { pitchNumber, count: before, event }
+		lastChallenged = false
+
+		const details = event.reviewDetails
+		if (!isAbsReview(details) || details.inProgress) continue
+
+		const overturned = !!details.isOverturned
+		const player = details.player
+		const call = finalCall(event)
+		challenges.push({
+			overturned,
+			call: overturned ? flip(call) : call,
+			pitchNumber,
+			count: before,
+			challenger: player?.id
+				? {
+						id: player.id,
+						name: player.fullName,
+						role: challengerRole(play, { id: player.id }),
+					}
+				: undefined,
+		})
+		lastChallenged = true
+	}
+
+	// A challenge on the last pitch can show up only in the description, the way it was announced
+	for (const challenge of descriptionChallenges(play.result?.description)) {
+		if (!challenge.isAbs || !last || lastChallenged) continue
+		const call = finalCall(last.event)
+		challenges.push({
+			overturned: challenge.isOverturned,
+			call: challenge.isOverturned ? flip(call) : call,
+			pitchNumber: last.pitchNumber,
+			count: last.count,
+			challenger: {
+				name: challenge.challenger,
+				role: challengerRole(play, { name: challenge.challenger }),
+			},
+		})
+		lastChallenged = true
+	}
+
+	return challenges
+}
+
+function flip(call?: 'ball' | 'strike') {
+	return call && (call === 'ball' ? 'strike' : 'ball')
+}
+
+/** `ABS challenge (catcher Patrick Bailey): ball overturned to strike, successful · pitch 5, 1-2 count` */
+export function absChallengeText({
+	overturned,
+	call,
+	pitchNumber,
+	count,
+	challenger,
+}: AbsChallenge) {
+	const who = challenger && [challenger.role, challenger.name].filter(Boolean).join(' ')
+	const ruling = call
+		? overturned
+			? `${call} overturned to ${flip(call)}`
+			: `${call} upheld`
+		: overturned
+			? 'call overturned'
+			: 'call upheld'
+	const pitch = [
+		pitchNumber && `pitch ${pitchNumber}`,
+		count && `${count.balls}-${count.strikes} count`,
+	].filter(Boolean)
+	return [
+		`ABS challenge${who ? ` (${who})` : ''}: ${ruling}, ${overturned ? 'successful' : 'unsuccessful'}`,
+		...(pitch.length ? [pitch.join(', ')] : []),
+	].join(' · ')
+}
+
+/** `1 successful ABS challenge`, or `2 ABS challenges: 1 successful, 1 unsuccessful` */
+export function absChallengeSummary(challenges: AbsChallenge[] = []) {
+	if (!challenges.length) return ''
+	const won = challenges.filter((c) => c.overturned).length
+	const lost = challenges.length - won
+	if (challenges.length === 1) {
+		return `1 ${won ? 'successful' : 'unsuccessful'} ABS challenge`
+	}
+	const parts = [won && `${won} successful`, lost && `${lost} unsuccessful`].filter(Boolean)
+	return `${challenges.length} ABS challenges: ${parts.join(', ')}`
+}
+
 /** The batter finished their plate appearance, as opposed to the inning ending with a runner caught stealing. */
 export function isPlateAppearance(play: MLB.Play) {
 	return play.about?.isComplete !== false && !!batterRunner(play)
@@ -490,6 +635,7 @@ export function buildScorecard({
 				scored: false,
 				isScoringPlay: !!play.runners?.some((r) => r.movement?.end === 'score'),
 				madeOut: madeOut(play),
+				absChallenges: absChallenges(play),
 				description: play.result.description,
 			})
 

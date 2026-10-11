@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { descriptionChallenges, isAbsReview } from '#lib/abs.js'
 	import { cn } from '#lib/utils.js'
 	import Empty from '#ui/empty.svelte'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
@@ -29,30 +30,13 @@
 		inning: string
 	}
 
-	/** Ending-PA / play-result challenges often live only in result.description, not reviewDetails. */
-	const DESCRIPTION_CHALLENGE =
-		/(?:^|(?<=: ))(.+?) challenged \(([^)]+)\), call on the field was (confirmed|overturned|upheld)/gi
-
 	function formatInning(about: MLB.PlayAbout): string {
 		return `${about.isTopInning ? 'Top' : 'Bot'} ${about.inning}`
-	}
-
-	/** MLB feed codes: MJ = player ABS challenge; MA/MI/etc. = traditional play reviews */
-	function classifyReviewType(reviewType?: string): ReviewKind {
-		return reviewType?.toUpperCase() === 'MJ' ? 'ABS' : 'Play'
-	}
-
-	function classifyDescriptionKind(challengeOf: string): ReviewKind {
-		return /pitch result/i.test(challengeOf) ? 'ABS' : 'Play'
 	}
 
 	function formatOutcome(details: MLB.ReviewDetails): ReviewOutcome {
 		if (details.inProgress && details.isOverturned == null) return 'Pending'
 		return details.isOverturned ? 'Overturned' : 'Stands'
-	}
-
-	function outcomeFromDescription(result: string): ReviewOutcome {
-		return result.toLowerCase() === 'overturned' ? 'Overturned' : 'Stands'
 	}
 
 	/** Color by whether the challenging side keeps or spends a challenge — not call result alone. */
@@ -151,7 +135,7 @@
 					atBatIndex: play.about.atBatIndex,
 					player,
 					team,
-					kind: classifyReviewType(details.reviewType),
+					kind: isAbsReview(details) ? 'ABS' : 'Play',
 					outcome: formatOutcome(details),
 					fate: challengeFate(details, hasChallenger),
 					count: formatCount(event.count),
@@ -159,14 +143,11 @@
 				})
 			}
 
-			const description = play.result?.description
-			if (!description) continue
-
 			let descIndex = 0
-			for (const match of description.matchAll(DESCRIPTION_CHALLENGE)) {
-				const [, challengerName, challengeOf, result] = match
-				const kind = classifyDescriptionKind(challengeOf)
-				const outcome = outcomeFromDescription(result)
+			for (const challenge of descriptionChallenges(play.result?.description)) {
+				const challengerName = challenge.challenger
+				const kind: ReviewKind = challenge.isAbs ? 'ABS' : 'Play'
+				const outcome: ReviewOutcome = challenge.isOverturned ? 'Overturned' : 'Stands'
 				const player = resolvePlayerByName(challengerName, play)
 				const team = player ? undefined : resolveTeam(undefined, challengerName)
 				const hasChallenger = !!(player || team)
