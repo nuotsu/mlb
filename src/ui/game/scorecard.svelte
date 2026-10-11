@@ -374,7 +374,7 @@
 {#snippet diamond(cell?: ScorecardCell)}
 	<svg
 		viewBox="0 0 40 40"
-		class="absolute inset-x-0.5 inset-y-px h-[calc(100%-2px)] w-[calc(100%-0.25rem)]"
+		class="absolute inset-x-0.5 inset-y-0 h-full w-[calc(100%-0.25rem)]"
 		aria-hidden="true"
 	>
 		<path
@@ -452,7 +452,7 @@
 		tbody td:not(.end) {
 			width: 2.5rem;
 			min-width: 2.5rem;
-			height: 2.25rem;
+			height: 2rem;
 		}
 
 		/* The box score's name cell: the table is as wide as its content, so names never truncate,
