@@ -904,12 +904,12 @@
 		padding-left: var(--overturned-offset);
 	}
 
-	/* A hard-edged gap cut around the pitch number, in the page's background */
+	/* A gap cut around the pitch number, in the page's background, softened by a quarter pixel */
 	.overturned-call {
 		mask: radial-gradient(
 			circle calc(0.5lh + 1.5px) at calc(0.5lh + var(--overturned-offset)) center,
 			transparent 100%,
-			black 100%
+			black calc(100% + 0.25px)
 		);
 	}
 </style>
