@@ -5,7 +5,13 @@
 	import Headshot from '#ui/player/headshot.svelte'
 	import Logo from '#ui/team/logo.svelte'
 
-	let { feedLive }: { feedLive: MLB.LiveGameFeed } = $props()
+	let {
+		feedLive,
+		onAtBatSelect,
+	}: {
+		feedLive: MLB.LiveGameFeed
+		onAtBatSelect?: (atBatIndex: number) => void
+	} = $props()
 
 	type ReviewKind = 'ABS' | 'Play'
 	type ReviewOutcome = 'Pending' | 'Overturned' | 'Stands'
@@ -13,6 +19,7 @@
 
 	type ReviewItem = {
 		key: string
+		atBatIndex: number
 		player?: MLB.Person
 		team?: MLB.Team
 		kind: ReviewKind
@@ -141,6 +148,7 @@
 
 				items.push({
 					key: `${atBatIndex}-${event.index ?? i}`,
+					atBatIndex: play.about.atBatIndex,
 					player,
 					team,
 					kind: classifyReviewType(details.reviewType),
@@ -165,6 +173,7 @@
 
 				items.push({
 					key: `${atBatIndex}-desc-${descIndex++}`,
+					atBatIndex: play.about.atBatIndex,
 					player,
 					team,
 					kind,
@@ -185,7 +194,7 @@
 
 	<dl class="grid gap-[.5ch]">
 		{#each reviews as review (review.key)}
-			{@const { player, team, kind, outcome, fate, count, inning } = review}
+			{@const { atBatIndex, player, team, kind, outcome, fate, count, inning } = review}
 			{@const label =
 				player?.boxscoreName ??
 				player?.lastName ??
@@ -196,7 +205,7 @@
 
 			<div
 				class={cn(
-					'group/player relative flex items-center gap-ch',
+					'relative flex items-center gap-ch',
 					player &&
 						favoritesStore.has(`/player/${player.id}`) &&
 						'bg-accent text-dark [box-shadow:-.25ch_0_0_var(--color-accent),.25ch_0_0_var(--color-accent)]',
@@ -213,7 +222,7 @@
 
 					{#if player}
 						<a
-							class="line-clamp-1 min-w-[10ch] break-all decoration-dashed group-hover/player:underline"
+							class="line-clamp-1 min-w-[10ch] break-all decoration-dashed hover:underline"
 							href="/player/{player.id}"
 							title={player.fullName}
 						>
@@ -226,21 +235,31 @@
 					{/if}
 				</dt>
 
-				<dd class="flex flex-wrap items-center gap-x-[.5ch] leading-none tabular-nums">
-					<span class="text-xs text-current/40">{kind}</span>
-					<span class="text-current/40">·</span>
-					<span class={cn(fate === 'retained' && 'positive', fate === 'lost' && 'negative')}
-						>{outcome}</span
+				<!-- Above the player link's overlay, so it picks the at-bat instead -->
+				<dd class="relative grow self-stretch">
+					<button
+						type="button"
+						class="flex size-full cursor-pointer items-center gap-ch text-left hover:bg-foreground/5"
+						title="Show this at-bat"
+						onclick={() => onAtBatSelect?.(atBatIndex)}
 					>
-					{#if count}
-						<span class="text-current/40">·</span>
-						<span class="text-xs text-current/40">{count}</span>
-					{/if}
-				</dd>
+						<span class="flex flex-wrap items-center gap-x-[.5ch] leading-none tabular-nums">
+							<span class="text-xs text-current/40">{kind}</span>
+							<span class="text-current/40">·</span>
+							<span class={cn(fate === 'retained' && 'positive', fate === 'lost' && 'negative')}
+								>{outcome}</span
+							>
+							{#if count}
+								<span class="text-current/40">·</span>
+								<span class="text-xs text-current/40">{count}</span>
+							{/if}
+						</span>
 
-				<span class="ml-auto shrink-0 text-xs leading-none text-current/40 tabular-nums"
-					>{inning}</span
-				>
+						<span class="ml-auto shrink-0 text-xs leading-none text-current/40 tabular-nums"
+							>{inning}</span
+						>
+					</button>
+				</dd>
 			</div>
 		{:else}
 			<Empty data-empty>No reviews</Empty>
