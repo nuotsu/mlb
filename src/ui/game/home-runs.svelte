@@ -36,6 +36,12 @@
 	const AVATAR = 11
 	const AVATAR_ACTIVE = 16
 
+	/**
+	 * One headshot size for the whole section (chart, card and list), so each batter's
+	 * image loads once and selecting a home run never waits on a new one.
+	 */
+	const HEADSHOT_SIZE = 180
+
 	/** Landing spots closer than this (ft) are nudged apart so avatars don't pile up. */
 	const MIN_GAP = AVATAR * 2
 
@@ -163,6 +169,9 @@
 		homeRuns.find((hr) => hr.atBatIndex === (hovered ?? focused ?? selected))?.atBatIndex ?? null,
 	)
 	const activeHomeRun = $derived(homeRuns.find((hr) => hr.atBatIndex === active))
+	const avatarOrder = $derived(
+		activeHomeRun ? [...homeRuns.filter((hr) => hr !== activeHomeRun), activeHomeRun] : homeRuns,
+	)
 
 	function toggle(atBatIndex: number) {
 		selected = selected === atBatIndex ? null : atBatIndex
@@ -200,19 +209,15 @@
 	{@const { x, y } = hr.end}
 	<circle cx={x} cy={-y} {r} class="fill-background" />
 	<circle cx={x} cy={-y} {r} class="fill-current/10" />
-	<!-- The enlarged (selected) avatar layers a sharper image over the small one, which
-	     is already loaded, so it never flashes empty -->
-	{#each r > AVATAR ? [96, 240] : [96] as size (size)}
-		<image
-			href="https://midfield.mlbstatic.com/v1/people/{hr.batter.id}/spots/{size}"
-			x={x - r}
-			y={-y - r}
-			width={r * 2}
-			height={r * 2}
-			clip-path="url(#{uid}-avatar)"
-			preserveAspectRatio="xMidYMid slice"
-		/>
-	{/each}
+	<image
+		href="https://midfield.mlbstatic.com/v1/people/{hr.batter.id}/spots/{HEADSHOT_SIZE}"
+		x={x - r}
+		y={-y - r}
+		width={r * 2}
+		height={r * 2}
+		clip-path="url(#{uid}-avatar)"
+		preserveAspectRatio="xMidYMid slice"
+	/>
 	<circle
 		cx={x}
 		cy={-y}
@@ -346,17 +351,29 @@
 						</g>
 					{/each}
 
-					<!-- Landing spots sit above every path, so each stays reachable. They're the
-					     keyboard stops, too. -->
+					<!-- Avatars, with the active one last so it paints over any neighbor it overlaps.
+					     Reordering moves the existing elements and selecting only resizes them, so an
+					     image never has to load again. -->
+					<g class="pointer-events-none" aria-hidden="true">
+						{#each avatarOrder as hr (hr.atBatIndex)}
+							<g
+								class={cn(
+									'hr-color transition-opacity',
+									active !== null && active !== hr.atBatIndex && 'opacity-25',
+								)}
+								style:--light={hr.color.light}
+								style:--dark={hr.color.dark}
+							>
+								{@render avatar(hr, active === hr.atBatIndex ? AVATAR_ACTIVE : AVATAR)}
+							</g>
+						{/each}
+					</g>
+
+					<!-- Invisible tap targets over the avatars, above every path so each stays
+					     reachable. They're the keyboard stops too, in a fixed order. -->
 					{#each homeRuns as hr (hr.atBatIndex)}
-						{@const isActive = active === hr.atBatIndex}
 						<g
-							class={cn(
-								'hr-color group/hr cursor-pointer transition-opacity outline-none',
-								active !== null && !isActive && 'opacity-25',
-							)}
-							style:--light={hr.color.light}
-							style:--dark={hr.color.dark}
+							class="group/hr cursor-pointer outline-none"
 							role="button"
 							tabindex="0"
 							aria-pressed={selected === hr.atBatIndex}
@@ -376,12 +393,11 @@
 							<circle
 								cx={hr.end.x}
 								cy={-hr.end.y}
-								r={AVATAR + 4}
+								r={AVATAR_ACTIVE + 3}
 								class="hidden fill-none stroke-current group-focus-visible/hr:block"
 								stroke-width="1.5"
 								vector-effect="non-scaling-stroke"
 							/>
-							{@render avatar(hr, AVATAR)}
 							<circle
 								cx={hr.end.x}
 								cy={-hr.end.y}
@@ -390,17 +406,6 @@
 							/>
 						</g>
 					{/each}
-
-					<!-- The active one again, larger and on top of any neighbor it overlaps -->
-					{#if activeHomeRun}
-						<g
-							class="hr-color pointer-events-none"
-							style:--light={activeHomeRun.color.light}
-							style:--dark={activeHomeRun.color.dark}
-						>
-							{@render avatar(activeHomeRun, AVATAR_ACTIVE)}
-						</g>
-					{/if}
 				</svg>
 			</div>
 
@@ -441,7 +446,11 @@
 						style:--light={hr.color.light}
 						style:--dark={hr.color.dark}
 					>
-						<Headshot person={hr.batter} size={180} class="hr-ring size-[3lh] shrink-0 border-2" />
+						<Headshot
+							person={hr.batter}
+							size={HEADSHOT_SIZE}
+							class="hr-ring size-[3lh] shrink-0 border-2"
+						/>
 
 						<div class="min-w-0 grow space-y-[.25lh]">
 							<p class="flex flex-wrap items-baseline gap-x-ch">
@@ -521,7 +530,7 @@
 							onpointerleave={(e) => hover(e, null)}
 						>
 							<span class="hr-bg inline-block size-[1ch] shrink-0 rounded-full"></span>
-							<Headshot person={hr.batter} class="size-lh shrink-0" />
+							<Headshot person={hr.batter} size={HEADSHOT_SIZE} class="size-lh shrink-0" />
 							<span class="flex min-w-0 grow gap-[.5ch]">
 								<span class="line-clamp-1 break-all">
 									{hr.batter.boxscoreName ?? hr.batter.lastName ?? hr.batter.fullName}
