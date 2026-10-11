@@ -225,6 +225,20 @@
 		</div>
 	{/if}
 
+	{#if hasBattingOrder || hasBench}
+		<Boxscore
+			class="col-span-full"
+			{boxscore}
+			gameDate={game?.gameDate}
+			players={feedLive?.gameData?.players as Record<string, MLB.Person> | undefined}
+			plays={feedLive?.liveData?.plays?.allPlays}
+			scheduledInnings={linescore?.scheduledInnings}
+			{isFinal}
+			{isSpoilerPrevented}
+			onAtBatSelect={selectAtBatFromPlay}
+		/>
+	{/if}
+
 	{#if !isSpoilerPrevented && feedLive && (hasTopPerformers || hasDecisions || hasReviews)}
 		<div
 			class="col-span-full flex flex-wrap items-start justify-evenly gap-lh px-[2ch] *:grow *:only:mx-auto *:only:max-w-max"
@@ -245,20 +259,6 @@
 
 	{#if !isSpoilerPrevented && feedLive && hasHomeRuns}
 		<HomeRuns class="col-span-full px-[2ch]" {feedLive} />
-	{/if}
-
-	{#if hasBattingOrder || hasBench}
-		<Boxscore
-			class="col-span-full"
-			{boxscore}
-			gameDate={game?.gameDate}
-			players={feedLive?.gameData?.players as Record<string, MLB.Person> | undefined}
-			plays={feedLive?.liveData?.plays?.allPlays}
-			scheduledInnings={linescore?.scheduledInnings}
-			{isFinal}
-			{isSpoilerPrevented}
-			onAtBatSelect={selectAtBatFromPlay}
-		/>
 	{/if}
 
 	{#if game}
