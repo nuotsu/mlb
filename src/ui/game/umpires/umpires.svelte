@@ -46,7 +46,7 @@
 {/snippet}
 
 {#if crew.length && teams}
-	<section class={cn('space-y-ch px-ch', className)}>
+	<section id="umpires" class={cn('space-y-ch px-ch', className)}>
 		<h2 class="text-center text-xs text-current/40">Umpires</h2>
 
 		{#await scorecard}

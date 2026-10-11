@@ -508,6 +508,7 @@
 
 <div
 	bind:this={rootEl}
+	id="pitch-sequence"
 	class="mx-ch flex h-full min-h-0 flex-col overflow-hidden border border-stroke text-sm"
 >
 	<header class="flex items-stretch gap-px border-b border-stroke">

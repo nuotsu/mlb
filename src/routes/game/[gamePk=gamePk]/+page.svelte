@@ -17,6 +17,7 @@
 	import Highlights from '#ui/game/highlights.svelte'
 	import HomeRuns from '#ui/game/home-runs.svelte'
 	import Reviews from '#ui/game/reviews.svelte'
+	import SectionNav from '#ui/game/section-nav.svelte'
 	import TopPerformers from '#ui/game/top-performers.svelte'
 	import Umpires from '#ui/game/umpires/umpires.svelte'
 	import WinProbability from '#ui/game/win-probability.svelte'
@@ -171,7 +172,7 @@
 			{#if Array.isArray(winProbability)}
 				<!-- The chart derives its viewBox from its own measured height, so it needs a
 				     definite height to size against — `h-full` alone leaves it unbounded here. -->
-				<div class="flex h-full min-h-0 flex-col gap-ch max-lg:h-[8lh]">
+				<div id="win-probability" class="flex h-full min-h-0 flex-col gap-ch max-lg:h-[8lh]">
 					<h2 class="shrink-0 px-ch text-xs text-current/40">Win Probability</h2>
 					<WinProbability
 						class="min-h-0 grow"
@@ -198,6 +199,7 @@
 
 	{#if game && feedLive}
 		<div
+			id="game-info"
 			class={cn(
 				'm-auto px-ch md:group-not-has-[#theater-mode]/game-page:col-span-full md:group-has-[#theater-mode:checked]/game-page:col-span-full',
 				isFinal && 'order-first',
@@ -273,8 +275,15 @@
 	{/if}
 </section>
 
+<SectionNav />
+
 <style>
 	section {
 		padding-bottom: max(1ch, env(safe-area-inset-bottom));
+
+		/* Land section titles below the sticky header when jumping to them */
+		:global([id]) {
+			scroll-margin-top: calc(var(--header-height, 0px) + 1ch);
+		}
 	}
 </style>

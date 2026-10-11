@@ -8,7 +8,7 @@
 	const topPerformers = $derived(feedLive.liveData.boxscore.topPerformers)
 </script>
 
-<article class="max-w-max space-y-ch">
+<article id="top-performers" class="max-w-max space-y-ch">
 	<h2 class="text-xs text-current/40">Top Performers</h2>
 
 	<dl class="grid gap-[.5ch]">

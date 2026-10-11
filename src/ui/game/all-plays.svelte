@@ -84,6 +84,7 @@
 </script>
 
 <div
+	id="plays"
 	class={cn(
 		'group/plays mx-ch flex h-full min-h-0 flex-col overflow-hidden border border-stroke text-sm',
 		className,
