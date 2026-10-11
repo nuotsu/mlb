@@ -20,9 +20,15 @@ export function batterUniforms(response: MLB.UniformsResponse | null, gamePk: nu
 	return { home: codes(game.home), away: codes(game.away) } satisfies BatterUniforms
 }
 
-/** Gameday's batter render of one uniform piece; the season is the code's suffix. */
+/** The season a uniform's assets are drawn for: the code's suffix. */
+export function uniformSeason(code?: string) {
+	const year = code?.match(/_(\d{4})$/)?.[1]
+	return year ? Number(year) : null
+}
+
+/** Gameday's batter render of one uniform piece. */
 export function batterUniformSrc(code: string, batSide: 'L' | 'R') {
-	const year = code.match(/_(\d{4})$/)?.[1]
+	const year = uniformSeason(code)
 	if (!year) return null
 	return `https://prod-gameday.mlbstatic.com/responsive-gameday-assets/1.3.0/images/batters/${year}/${batSide === 'L' ? 'left' : 'right'}/${encodeURIComponent(code)}.png`
 }

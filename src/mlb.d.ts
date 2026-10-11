@@ -924,6 +924,8 @@ declare global {
 			endSpeed?: number
 			strikeZoneTop?: number
 			strikeZoneBottom?: number
+			/** Where the zone is judged, inches into the plate from its back tip. */
+			strikeZoneDepth?: number
 			coordinates?: PitchCoordinates
 			breaks?: PitchBreaks
 			zone?: number
