@@ -277,7 +277,7 @@
 									</span>
 								{/if}
 
-								<!-- ABS challenges, top to bottom in pitch order: filled when won, crossed out when lost -->
+								<!-- ABS challenges, top to bottom in pitch order: filled when won, struck through when lost -->
 								{#if cell.absChallenges?.length}
 									<span
 										class="absolute top-[2px] right-[2px] flex flex-col gap-px"
@@ -302,12 +302,7 @@
 														fill="none"
 														shape-rendering="crispEdges"
 													/>
-													<path
-														class="stroke-red-600 dark:stroke-red-400"
-														d="M1.5 1.5 3.5 3.5M3.5 1.5 1.5 3.5"
-														stroke-width="1"
-														stroke-linecap="round"
-													/>
+													<path class="stroke-tmobile" d="M4.5 .5 .5 4.5" stroke-width="1" />
 												{/if}
 											</svg>
 										{/each}
