@@ -1,4 +1,5 @@
 <script lang="ts">
+	import DelayShield from '#ui/game/delay-shield.svelte'
 	import { CollapseHorizontalIcon, ExpandHorizontalIcon } from '#ui/icons/index.js'
 	import Video from '#ui/video.svelte'
 	import { untrack } from 'svelte'
@@ -8,11 +9,14 @@
 		game: _game,
 		content,
 		theater = true,
+		delayed = false,
 		class: className,
 	}: {
 		game: MLB.Game
 		content: MLB.GameContent | null
 		theater?: boolean
+		/** The page runs behind live; clips aren't timestamped, so cover them */
+		delayed?: boolean
 	} & HTMLAttributes<HTMLDivElement> = $props()
 
 	let highlights = $derived(content?.highlights.highlights?.items.filter((h) => h.type === 'video'))
@@ -50,55 +54,59 @@
 />
 
 {#if highlights?.length}
-	<article id="highlights" class="relative grid gap-ch text-center sm:px-ch {className}">
-		<div class="flex items-center gap-ch">
-			<select
-				class="order-first button w-full"
-				bind:value={selectedIndex}
-				onchange={() => document.querySelectorAll('video')?.forEach((v) => v.pause())}
-			>
-				{#each grouped as { player, items } (player)}
-					{#if player}
-						<optgroup label={player}>
-							{#each items as { index, title } (index)}
-								<option value={index}>{title}</option>
-							{/each}
-						</optgroup>
-					{:else}
-						<optgroup label="Other">
-							{#each items as { index, title } (index)}
-								<option value={index}>{title}</option>
-							{/each}
-						</optgroup>
-					{/if}
-				{/each}
-			</select>
-
-			{#if theater}
-				<label
-					class="group/theater grid h-lh shrink-0 place-content-center not-hover:text-current/50 not-hover:transition-colors max-md:hidden"
-					title="Theater mode (t)"
+	<article id="highlights" class="relative text-center sm:px-ch {className}">
+		<DelayShield class="grid gap-ch *:grid *:gap-ch" hidden={delayed}>
+			<div class="flex items-center gap-ch">
+				<select
+					class="order-first button w-full"
+					bind:value={selectedIndex}
+					onchange={() => document.querySelectorAll('video')?.forEach((v) => v.pause())}
 				>
-					<input class="sr-only" id="theater-mode" type="checkbox" bind:checked={theaterMode} />
-					<ExpandHorizontalIcon class="group-has-checked/theater:hidden" />
-					<CollapseHorizontalIcon class="group-not-has-checked/theater:hidden" />
-				</label>
-			{/if}
-		</div>
+					{#each grouped as { player, items } (player)}
+						{#if player}
+							<optgroup label={player}>
+								{#each items as { index, title } (index)}
+									<option value={index}>{title}</option>
+								{/each}
+							</optgroup>
+						{:else}
+							<optgroup label="Other">
+								{#each items as { index, title } (index)}
+									<option value={index}>{title}</option>
+								{/each}
+							</optgroup>
+						{/if}
+					{/each}
+				</select>
 
-		{#each highlights as { playbacks, image }, i (i)}
-			{#if selectedIndex === i}
-				{@const poster = image?.cuts.find((cut) => cut.width <= 1280)?.src}
+				{#if theater}
+					<label
+						class="group/theater grid h-lh shrink-0 place-content-center not-hover:text-current/50 not-hover:transition-colors max-md:hidden"
+						title="Theater mode (t)"
+					>
+						<input class="sr-only" id="theater-mode" type="checkbox" bind:checked={theaterMode} />
+						<ExpandHorizontalIcon class="group-has-checked/theater:hidden" />
+						<CollapseHorizontalIcon class="group-not-has-checked/theater:hidden" />
+					</label>
+				{/if}
+			</div>
 
-				<figure class="w-full space-y-ch text-balance italic transition-opacity starting:opacity-0">
-					<Video
-						class="aspect-video w-full bg-current/10"
-						id={`highlights-${i}`}
-						{playbacks}
-						{poster}
-					/>
-				</figure>
-			{/if}
-		{/each}
+			{#each highlights as { playbacks, image }, i (i)}
+				{#if selectedIndex === i}
+					{@const poster = image?.cuts.find((cut) => cut.width <= 1280)?.src}
+
+					<figure
+						class="w-full space-y-ch text-balance italic transition-opacity starting:opacity-0"
+					>
+						<Video
+							class="aspect-video w-full bg-current/10"
+							id={`highlights-${i}`}
+							{playbacks}
+							{poster}
+						/>
+					</figure>
+				{/if}
+			{/each}
+		</DelayShield>
 	</article>
 {/if}

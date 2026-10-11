@@ -60,7 +60,8 @@
 		if (next === view) return
 		view = next
 
-		const url = new URL(page.url.href)
+		// The address bar, not `page.url`: other shallow updates (like `?delay=`) live only there
+		const url = new URL(location.href)
 		if (next === 'boxscore') url.searchParams.delete('view')
 		else url.searchParams.set('view', next)
 		goto(url, { shallow: true, replace: true, state: page.state })

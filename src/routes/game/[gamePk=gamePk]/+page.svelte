@@ -2,10 +2,21 @@
 	import {
 		fetchBoxscore,
 		fetchfeedLive,
+		fetchGameSnapshot,
 		fetchLinescore,
 		fetchWinProbability,
 	} from '#lib/fetch/presets.js'
 	import { formatDate } from '#lib/temporal.js'
+	import {
+		DELAY_PARAM,
+		delaySince,
+		gameAsOf,
+		latestPitch,
+		parseDelay,
+		pitchTimeline,
+		toTimecode,
+		type GameSnapshot,
+	} from '#lib/time-travel.js'
 	import { cn } from '#lib/utils.js'
 	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
 	import AllPlays from '#ui/game/all-plays.svelte'
@@ -18,37 +29,156 @@
 	import HomeRuns from '#ui/game/home-runs.svelte'
 	import Reviews from '#ui/game/reviews.svelte'
 	import SectionNav from '#ui/game/section-nav.svelte'
+	import TimeTravel from '#ui/game/time-travel.svelte'
 	import TopPerformers from '#ui/game/top-performers.svelte'
 	import Umpires from '#ui/game/umpires/umpires.svelte'
 	import WinProbability from '#ui/game/win-probability.svelte'
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
+	import { goto } from '$app/navigation'
+	import { page } from '$app/state'
+	import { untrack } from 'svelte'
 	import type { PageProps } from './$types'
 
 	let { data, params }: PageProps = $props()
 
-	const game = $derived(data.game)
+	/** The game as the schedule had it when the page loaded */
+	const isGameLive = $derived(data.game?.status?.abstractGameState === 'Live')
+	const isGameFinal = $derived(data.game?.status?.abstractGameState === 'Final')
 
-	const isLive = $derived(data.game?.status?.abstractGameState === 'Live')
-	const isFinal = $derived(data.game?.status?.abstractGameState === 'Final')
+	/**
+	 * Time travel: how far behind live the page runs, in ms (`null` is live), so it can
+	 * trail a TV or stream. Mirrored to `?delay=` (seconds) so a reload keeps the sync;
+	 * a different game or a fresh visit starts live.
+	 */
+	let delay = $derived(
+		isGameLive || isGameFinal ? parseDelay(page.url.searchParams.get(DELAY_PARAM)) : null,
+	)
+	const isDelayed = $derived(delay != null)
 
-	const [{ data: feedLive }, { data: linescore }, { data: boxscore }, { data: winProbability }] =
-		$derived(
-			isLive
-				? [
-						fetchfeedLive.live(params.gamePk),
-						fetchLinescore.live(params.gamePk),
-						fetchBoxscore.live(params.gamePk),
-						fetchWinProbability.live(params.gamePk),
-					]
-				: [
-						{ data: data.feedLive },
-						{ data: data.feedLive?.liveData.linescore },
-						{ data: data.boxscore },
-						{ data: data.winProbability },
-					],
-		)
+	/** The whole page as of "now − delay", refreshed on the live polling cadence */
+	let snapshot = $derived<GameSnapshot | null>(data.snapshot ?? null)
+
+	/** Bumped by every delay change, so a reply for an older delay is dropped */
+	let generation = 0
+
+	$effect(() => {
+		if (delay == null) return
+
+		const gamePk = params.gamePk
+		const ms = delay
+		const current = generation
+		let busy = false
+
+		async function tick() {
+			if (busy) return
+			busy = true
+			try {
+				const next = await fetchGameSnapshot(gamePk, toTimecode(Date.now() - ms), {
+					unchangedFrom: untrack(() => snapshot?.timecode),
+				})
+				if (next && current === generation) snapshot = next
+			} catch {
+				// Keep the last snapshot; the next tick tries again
+			} finally {
+				busy = false
+			}
+		}
+
+		tick()
+		const timer = setInterval(tick, 3_000)
+		return () => clearInterval(timer)
+	})
+
+	/** Run `ms` behind live, or go live with `null` */
+	async function setDelay(ms: number | null) {
+		const next = ms != null && ms > 0 ? ms : null
+		const current = ++generation
+		pinnedAtBatIndex = null
+
+		// Load the moment first, so the page jumps straight to it instead of flashing
+		if (next != null) {
+			const fresh = await fetchGameSnapshot(params.gamePk, toTimecode(Date.now() - next)).catch(
+				() => null,
+			)
+			if (current !== generation) return
+			if (fresh) snapshot = fresh
+		}
+
+		// The address bar, not `page.url`: shallow updates (like `?view=`) live only there
+		const url = new URL(location.href)
+		if (next == null) url.searchParams.delete(DELAY_PARAM)
+		else url.searchParams.set(DELAY_PARAM, String(Math.round(next / 1000)))
+
+		// A page that loaded delayed has no data past the delay; a finished game won't be
+		// polled for it either, so load it (which also clears the delay)
+		hasTimeTraveled = true
+		if (next == null && !isGameLive && !data.feedLive) {
+			return goto(url, { replace: true, reset: false })
+		}
+
+		delay = next
+		goto(url, { shallow: true, replace: true, state: page.state })
+	}
+
+	/** Delayed, but the moment to show hasn't loaded yet: show nothing that could spoil it */
+	const isPending = $derived(isDelayed && !snapshot)
+
+	const game = $derived(
+		isDelayed && snapshot && data.game ? gameAsOf(data.game, snapshot) : data.game,
+	)
+
+	/** The game as shown, which trails the real one while delayed */
+	const isLive = $derived(game?.status?.abstractGameState === 'Live')
+	const isFinal = $derived(game?.status?.abstractGameState === 'Final')
+
+	/** Polled only while showing a live game in real time */
+	const live = $derived(
+		isGameLive && !isDelayed
+			? {
+					feedLive: fetchfeedLive.live(params.gamePk),
+					linescore: fetchLinescore.live(params.gamePk),
+					boxscore: fetchBoxscore.live(params.gamePk),
+					winProbability: fetchWinProbability.live(params.gamePk),
+				}
+			: null,
+	)
+
+	const [feedLive, linescore, boxscore, winProbability] = $derived(
+		isDelayed
+			? [
+					snapshot?.feedLive,
+					snapshot?.feedLive.liveData.linescore,
+					snapshot?.boxscore,
+					snapshot?.winProbability,
+				]
+			: // Just back from a delay, the last snapshot stands in until the live data lands
+				[
+					live?.feedLive.data ?? data.feedLive ?? snapshot?.feedLive,
+					live?.linescore.data ??
+						data.feedLive?.liveData.linescore ??
+						snapshot?.feedLive.liveData.linescore,
+					live?.boxscore.data ?? data.boxscore ?? snapshot?.boxscore,
+					live?.winProbability.data ?? data.winProbability ?? snapshot?.winProbability,
+				],
+	)
+
+	/** Every pitch up to the moment on screen, so the picker can't run ahead of it */
+	const timeline = $derived(
+		pitchTimeline(
+			feedLive?.liveData?.plays?.allPlays,
+			feedLive?.gameData?.players as Record<string, MLB.Person> | undefined,
+		),
+	)
+
+	/** Once the row has been used, keep it around even if the game is over */
+	const gamePk = $derived(params.gamePk)
+	let hasTimeTraveled = $derived(!!gamePk && untrack(() => isDelayed))
+
+	const showTimeTravel = $derived(
+		!!game && (isGameLive || hasTimeTraveled) && (isDelayed || !!feedLive),
+	)
 
 	const [away, home] = $derived([boxscore?.teams.away.team, boxscore?.teams.home.team])
 	const date = $derived(
@@ -139,9 +269,29 @@
 	]}
 >
 	{#if game}
-		<Game class="w-full" {game} boxscore={boxscore ?? undefined} {linescore} showLiveDetails />
+		<Game
+			class="w-full"
+			{game}
+			boxscore={boxscore ?? undefined}
+			{linescore}
+			feed={isDelayed ? snapshot?.feedLive : undefined}
+			concealed={isPending}
+			showLiveDetails
+		/>
 	{/if}
 </Header>
+
+{#if showTimeTravel}
+	<TimeTravel
+		class="border-b border-current/10 dark:border-current/25"
+		{timeline}
+		{delay}
+		value={isDelayed ? (latestPitch(timeline)?.startTime ?? '') : 'live'}
+		final={!isDelayed && feedLive?.gameData?.status?.abstractGameState === 'Final'}
+		onselect={(startTime) => setDelay(startTime ? delaySince(startTime) : null)}
+		onnudge={(ms) => setDelay((delay ?? 0) + ms)}
+	/>
+{/if}
 
 <section class="group/game-page grid gap-[2lh] py-lh md:grid-cols-2">
 	{#if !isSpoilerPrevented && Array.isArray(winProbability) && (isLive || isFinal)}
@@ -194,6 +344,7 @@
 			)}
 			{game}
 			content={data.content}
+			delayed={isDelayed}
 		/>
 	{/if}
 
@@ -205,7 +356,13 @@
 				isFinal && 'order-first',
 			)}
 		>
-			<GameData {game} {feedLive} seriesRecord={data.seriesRecord} />
+			<!-- A finished series' standings already count this game -->
+			<GameData
+				{game}
+				{feedLive}
+				seriesRecord={isDelayed && isGameFinal ? null : data.seriesRecord}
+				delayed={isDelayed}
+			/>
 
 			<hr class="my-ch border-dashed border-stroke" />
 
