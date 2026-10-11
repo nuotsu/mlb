@@ -279,14 +279,17 @@
 
 								<!-- ABS challenges, top to bottom in pitch order: filled when won, crossed out when lost -->
 								{#if cell.absChallenges?.length}
-									<span class="absolute top-[2px] right-px flex flex-col gap-px" aria-hidden="true">
+									<span
+										class="absolute top-[2px] right-[2px] flex flex-col gap-px"
+										aria-hidden="true"
+									>
 										{#each cell.absChallenges.slice(0, 2) as { overturned }, i (i)}
-											<svg viewBox="0 0 7 7" class="size-[7px]">
+											<svg viewBox="0 0 5 5" class="size-[5px]">
 												{#if overturned}
 													<rect
 														class="fill-tmobile"
-														width="7"
-														height="7"
+														width="5"
+														height="5"
 														shape-rendering="crispEdges"
 													/>
 												{:else}
@@ -294,15 +297,15 @@
 														class="stroke-tmobile"
 														x=".5"
 														y=".5"
-														width="6"
-														height="6"
+														width="4"
+														height="4"
 														fill="none"
 														shape-rendering="crispEdges"
 													/>
 													<path
 														class="stroke-red-600 dark:stroke-red-400"
-														d="M2 2 5 5M5 2 2 5"
-														stroke-width="1.25"
+														d="M1.5 1.5 3.5 3.5M3.5 1.5 1.5 3.5"
+														stroke-width="1"
 														stroke-linecap="round"
 													/>
 												{/if}
