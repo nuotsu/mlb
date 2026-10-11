@@ -201,10 +201,13 @@
 			const delta = scrollTop - lastScrollTop
 			lastScrollTop = scrollTop
 
+			// iOS momentum overshoots the ends: scrollTop goes negative (or past the max) and springs
+			// back, which would read as scrolling the other way, so the ends always show the bar
+			const atTop = scrollTop <= 1
 			const atBottom = scrollTop + clientHeight >= scrollHeight - 2
 			// Only keyboard focus holds the bar open; a tapped button keeps focus too
 			const focused = !!wrapper.querySelector(':focus-visible')
-			if (atBottom || focused || jumping || delta < -2) hidden = false
+			if (atTop || atBottom || focused || jumping || delta < -2) hidden = false
 			else if (delta > 2) hidden = true
 
 			clearTimeout(idle)
