@@ -789,7 +789,7 @@
 								onclick={() => togglePitch(i)}
 							>
 								<span
-									class="relative inline-grid shrink-0 text-[10px]"
+									class="pitch-number relative inline-grid shrink-0 text-[10px]"
 									title={overturned
 										? `Called a ${isStrike ? 'ball' : 'strike'}, overturned by ABS challenge`
 										: undefined}
@@ -798,7 +798,7 @@
 										<!-- The call on the field, peeking out from behind the call that stood after the ABS challenge -->
 										<span
 											class={cn(
-												'overturned-call absolute inset-0 rounded-full',
+												'overturned-call absolute top-0 left-0 size-lh rounded-full',
 												isStrike ? 'bg-accent' : 'bg-yellow-300',
 											)}
 										></span>
@@ -898,13 +898,18 @@
 </div>
 
 <style>
-	/* Slid out from behind the pitch number, with a gap cut around it in the page's background */
+	/* Room on the left for an overturned call to peek out, kept on every row so the numbers line up */
+	.pitch-number {
+		--overturned-offset: 4px;
+		padding-left: var(--overturned-offset);
+	}
+
+	/* A hard-edged gap cut around the pitch number, in the page's background */
 	.overturned-call {
-		translate: 0.35lh 0;
 		mask: radial-gradient(
-			circle calc(0.5lh + 1.5px) at calc(0.5lh - 0.35lh) center,
+			circle calc(0.5lh + 1.5px) at calc(0.5lh + var(--overturned-offset)) center,
 			transparent 100%,
-			black calc(100% + 0.5px)
+			black 100%
 		);
 	}
 </style>
