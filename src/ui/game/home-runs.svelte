@@ -289,11 +289,8 @@
 								class="fill-current/50"
 							/>
 						{/each}
-						<path
-							d="M-2.5 0h5v-2.5l-2.5-2.5-2.5 2.5Z"
-							class="fill-current/50"
-							transform="scale(1.4)"
-						/>
+						<!-- Home plate: the point sits where the foul lines meet, the flat edge faces the mound -->
+						<path d="M0 0l2.5-2.5v-2.5h-5v2.5Z" class="fill-current/50" transform="scale(1.4)" />
 
 						<path
 							d="{toPath([fence[0], { x: 0, y: 0 }, fence.at(-1)!])}{toPath(fence)}"
