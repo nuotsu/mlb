@@ -7,12 +7,12 @@
 		HomePlateIcon,
 		InfoIcon,
 		ListUnorderedIcon,
-		PlayCircleIcon,
 		ReplayCameraIcon,
 		StrikezoneIcon,
 		TableIcon,
 		TrajectoryIcon,
 		TrophyCupIcon,
+		VideoPlayIcon,
 	} from '#ui/icons/index.js'
 	import { replaceState } from '$app/navigation'
 	import { page } from '$app/state'
@@ -30,7 +30,7 @@
 		{ id: 'pitch-sequence', label: 'Pitch sequence', icon: BallIcon },
 		{ id: 'plays', label: 'Plays', icon: ListUnorderedIcon },
 		{ id: 'win-probability', label: 'Win probability', icon: GraphLineIcon },
-		{ id: 'highlights', label: 'Highlights', icon: PlayCircleIcon },
+		{ id: 'highlights', label: 'Highlights', icon: VideoPlayIcon },
 		{ id: 'game-info', label: 'Game info', icon: InfoIcon },
 		{ id: 'boxscore', label: 'Box score', icon: TableIcon },
 		{ id: 'bullpen-fatigue', label: 'Bullpen fatigue', icon: BatteryIcon },
