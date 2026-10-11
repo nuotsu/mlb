@@ -200,15 +200,19 @@
 	{@const { x, y } = hr.end}
 	<circle cx={x} cy={-y} {r} class="fill-background" />
 	<circle cx={x} cy={-y} {r} class="fill-current/10" />
-	<image
-		href="https://midfield.mlbstatic.com/v1/people/{hr.batter.id}/spots/96"
-		x={x - r}
-		y={-y - r}
-		width={r * 2}
-		height={r * 2}
-		clip-path="url(#{uid}-avatar)"
-		preserveAspectRatio="xMidYMid slice"
-	/>
+	<!-- The enlarged (selected) avatar layers a sharper image over the small one, which
+	     is already loaded, so it never flashes empty -->
+	{#each r > AVATAR ? [96, 240] : [96] as size (size)}
+		<image
+			href="https://midfield.mlbstatic.com/v1/people/{hr.batter.id}/spots/{size}"
+			x={x - r}
+			y={-y - r}
+			width={r * 2}
+			height={r * 2}
+			clip-path="url(#{uid}-avatar)"
+			preserveAspectRatio="xMidYMid slice"
+		/>
+	{/each}
 	<circle
 		cx={x}
 		cy={-y}
@@ -437,7 +441,7 @@
 						style:--light={hr.color.light}
 						style:--dark={hr.color.dark}
 					>
-						<Headshot person={hr.batter} class="hr-ring size-[3lh] shrink-0 border-2" />
+						<Headshot person={hr.batter} size={180} class="hr-ring size-[3lh] shrink-0 border-2" />
 
 						<div class="min-w-0 grow space-y-[.25lh]">
 							<p class="flex flex-wrap items-baseline gap-x-ch">
@@ -524,7 +528,7 @@
 								</span>
 								<!-- Season home run count, kept visible when a long name truncates -->
 								{#if hr.ordinal != null}
-									<span class="shrink-0 text-current/60 tabular-nums">({hr.ordinal})</span>
+									<span class="shrink-0 text-current/60 tabular-nums">(#{hr.ordinal})</span>
 								{/if}
 							</span>
 							{#if hr.hitData?.totalDistance != null}
