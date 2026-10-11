@@ -178,17 +178,24 @@
 								</tr>
 							</thead>
 							<tbody>
-								{#each team.batters as playerId}
+								{#each team.batters as playerId, i}
 									{@const { stats, seasonStats, ...player } = team.players[`ID${playerId}`]}
 									{@const substituted =
 										!isSpoilerPrevented && !team.battingOrder.includes(playerId)}
+									{@const previous = team.batters
+										.slice(0, i)
+										.findLast((id) => team.players[`ID${id}`]?.position?.abbreviation !== 'P')}
+									{@const substitute =
+										!isSpoilerPrevented &&
+										previous !== undefined &&
+										!team.battingOrder.includes(previous)}
 
 									{#if player?.position?.abbreviation !== 'P'}
 										<tr
 											class="hover:*:not-first:bg-foreground/10"
 											data-substituted={substituted ? '' : undefined}
 										>
-											{@render p(player, substituted)}
+											{@render p(player, substituted, undefined, substitute)}
 
 											<!-- game stats -->
 											{#each ['atBats', 'hits', 'runs', 'rbi', 'homeRuns', 'baseOnBalls', 'strikeOuts', 'stolenBases'] as stat}
@@ -342,22 +349,28 @@
 	{/if}
 {/snippet}
 
-{#snippet p({ position, person }: MLB.BoxscorePlayer, substituted?: boolean, label?: string)}
+{#snippet p(
+	{ position, person }: MLB.BoxscorePlayer,
+	substituted?: boolean,
+	label?: string,
+	substitute?: boolean,
+)}
 	{@const isFavorite = favoritesStore.has(`/player/${person.id}`)}
 	{@const throwSide = players?.[`ID${person.id}`]?.pitchHand?.code}
 	{@const sideLabel =
 		position?.abbreviation === 'P' ? (throwSide ?? position.abbreviation) : position?.abbreviation}
 
 	<th class={cn('sticky left-0 z-1 min-w-lh', isFavorite && 'bg-accent')}>
-		<a href="/player/{person.id}">
-			<Headshot {person} size={72} class="size-lh" />
-		</a>
-
-		{#if substituted}
-			<div class="absolute top-full left-0 grid size-lh place-content-center">
+		<!-- In the substitute's own cell, centered on its row, and before the headshot so it's drawn under it -->
+		{#if substitute}
+			<div class="absolute inset-y-0 left-0 grid w-lh place-content-center" aria-hidden="true">
 				<ArrowDownRightIcon class="size-ch text-current/40" />
 			</div>
 		{/if}
+
+		<a href="/player/{person.id}">
+			<Headshot {person} size={72} class="size-lh" />
+		</a>
 	</th>
 
 	<th
