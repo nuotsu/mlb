@@ -50,7 +50,7 @@
 />
 
 {#if highlights?.length}
-	<article class="relative grid gap-ch text-center sm:px-ch {className}">
+	<article id="highlights" class="relative grid gap-ch text-center sm:px-ch {className}">
 		<div class="flex items-center gap-ch">
 			<select
 				class="order-first button w-full"

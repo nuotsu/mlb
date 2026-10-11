@@ -10,8 +10,9 @@
 	let {
 		team,
 		gameDate,
+		id,
 		class: className,
-	}: { team: MLB.TeamBoxscore; gameDate: string; class?: string } = $props()
+	}: { team: MLB.TeamBoxscore; gameDate: string; id?: string; class?: string } = $props()
 	const WINDOW_DAYS = 14
 	const FATIGUE_CAP = 100
 	const BACK_TO_BACK_PENALTY = 10
@@ -179,7 +180,7 @@
 </script>
 
 {#snippet heading()}
-	<h3 class="flex min-h-rlh items-center px-rch text-xs text-current/40 max-sm:px-ch">
+	<h3 {id} class="flex min-h-rlh items-center px-rch text-xs text-current/40 max-sm:px-ch">
 		Bullpen Fatigue (Last 14 days)
 	</h3>
 {/snippet}

@@ -508,6 +508,7 @@
 
 <div
 	bind:this={rootEl}
+	id="pitch-sequence"
 	class="mx-ch flex h-full min-h-0 flex-col overflow-hidden border border-stroke text-sm"
 >
 	<header class="flex items-stretch gap-px border-b border-stroke">
@@ -767,7 +768,7 @@
 
 				<ol
 					bind:this={pitchListEl}
-					class="flex min-h-0 grow flex-col overflow-y-auto text-xs tabular-nums"
+					class="relative flex min-h-0 grow flex-col overflow-y-auto text-xs tabular-nums"
 				>
 					{#each pitches as pitch, i (pitch.index ?? i)}
 						{@const { type, isBall, isStrike, isInPlay } = pitch.details ?? {}}

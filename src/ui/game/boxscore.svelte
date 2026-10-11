@@ -82,7 +82,7 @@
 	}
 </script>
 
-<div class={cn('min-w-0', className)}>
+<div id="boxscore" class={cn('min-w-0', className)}>
 	{#if away?.batters.length || home?.batters.length}
 		<div
 			role="tablist"
@@ -121,7 +121,6 @@
 	{/if}
 
 	<article
-		id="boxscore"
 		class="grid snap-x snap-mandatory auto-cols-[min(var(--container-sm),calc(100vw-2ch))] grid-flow-col overflow-x-auto sm:grid-cols-2 sm:px-ch"
 	>
 		{@render team(away, 'away')}
@@ -295,7 +294,8 @@
 
 				{#if gameDate && !isSpoilerPrevented}
 					<hr class="my-[.5ch] border-dashed border-current/25" />
-					<BullpenFatigue {team} {gameDate} />
+					<!-- One anchor for the section navigator, on the away side since it comes first -->
+					<BullpenFatigue {team} {gameDate} id={side === 'away' ? 'bullpen-fatigue' : undefined} />
 				{/if}
 			{:else if team.bench?.length || team.bullpen?.length}
 				{#if team.bench?.length}

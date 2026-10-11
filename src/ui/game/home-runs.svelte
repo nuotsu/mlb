@@ -231,6 +231,7 @@
 {#if homeRuns.length}
 	<!-- Chart beside the details and list when there's room, stacked otherwise -->
 	<article
+		id="home-runs"
 		class={cn(
 			'grid items-start gap-x-lh gap-y-ch md:grid-cols-[minmax(0,32rem)_minmax(0,26rem)] md:justify-center',
 			className,
