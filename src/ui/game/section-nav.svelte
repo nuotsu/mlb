@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '#lib/utils.js'
 	import {
+		BallIcon,
 		BatteryIcon,
 		GraphLineIcon,
 		HomePlateIcon,
@@ -9,7 +10,6 @@
 		PencilLineIcon,
 		ReplayCameraIcon,
 		StrikezoneIcon,
-		TableIcon,
 		TrajectoryIcon,
 		TrophyCupIcon,
 		VideoPlayIcon,
@@ -27,12 +27,12 @@
 	 */
 	const SECTIONS: { id: string; label: string; icon: Component<Record<string, unknown>> }[] = [
 		{ id: TOP, label: 'Scoreboard', icon: HomePlateIcon },
-		{ id: 'pitch-sequence', label: 'Pitch sequence', icon: PencilLineIcon },
+		{ id: 'pitch-sequence', label: 'Pitch sequence', icon: BallIcon },
 		{ id: 'plays', label: 'Plays', icon: ListUnorderedIcon },
 		{ id: 'win-probability', label: 'Win probability', icon: GraphLineIcon },
 		{ id: 'highlights', label: 'Highlights', icon: VideoPlayIcon },
 		{ id: 'game-info', label: 'Game info', icon: InfoIcon },
-		{ id: 'boxscore', label: 'Box score', icon: TableIcon },
+		{ id: 'boxscore', label: 'Box score', icon: PencilLineIcon },
 		{ id: 'bullpen-fatigue', label: 'Bullpen fatigue', icon: BatteryIcon },
 		{ id: 'top-performers', label: 'Top performers', icon: TrophyCupIcon },
 		{ id: 'reviews', label: 'Reviews', icon: ReplayCameraIcon },
