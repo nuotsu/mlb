@@ -11,9 +11,9 @@
 		ListUnorderedIcon,
 		PlayCircleIcon,
 		RankIcon,
-		RocketIcon,
 		StrikezoneIcon,
 		TableIcon,
+		TrajectoryIcon,
 	} from '#ui/icons/index.js'
 	import { replaceState } from '$app/navigation'
 	import { page } from '$app/state'
@@ -38,7 +38,7 @@
 		{ id: 'top-performers', label: 'Top performers', icon: RankIcon },
 		{ id: 'decisions', label: 'Decisions', icon: LawIcon },
 		{ id: 'reviews', label: 'Reviews', icon: HistoryIcon },
-		{ id: 'home-runs', label: 'Home runs', icon: RocketIcon },
+		{ id: 'home-runs', label: 'Home runs', icon: TrajectoryIcon },
 		{ id: 'umpires', label: 'Umpires', icon: StrikezoneIcon },
 	]
 
