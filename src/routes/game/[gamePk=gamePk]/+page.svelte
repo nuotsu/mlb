@@ -163,7 +163,7 @@
 	const isPending = $derived(isDelayed && !snapshot)
 
 	const game = $derived(
-		isDelayed && snapshot && data.game ? gameAsOf(data.game, snapshot) : data.game,
+		isDelayed && snapshot && data.game ? gameAsOf(data.game, snapshot.feedLive) : data.game,
 	)
 
 	/** The game as shown, which trails the real one while delayed */

@@ -201,12 +201,14 @@ export type GameSnapshot = {
 }
 
 /**
- * The schedule entry as of a snapshot: its status, scores, and flags, so the scorebug
- * can't read ahead. Records and series standings move once a game ends, so they're
- * dropped when the real game is already over.
+ * The schedule entry as of a snapshot's feed: its status, scores, and flags, so the
+ * scorebug can't read ahead. Records and series standings move once a game ends, so
+ * they're dropped when the real game is already over.
  */
-export function gameAsOf(game: MLB.Game, snapshot: GameSnapshot): MLB.Game {
-	const { gameData, liveData } = snapshot.feedLive
+export function gameAsOf(
+	game: MLB.Game,
+	{ gameData, liveData }: Pick<MLB.LiveGameFeed, 'gameData' | 'liveData'>,
+): MLB.Game {
 	const isOver = game.status.abstractGameState === 'Final'
 
 	const team = (side: 'away' | 'home') => ({
@@ -220,6 +222,17 @@ export function gameAsOf(game: MLB.Game, snapshot: GameSnapshot): MLB.Game {
 		...game,
 		status: gameData?.status ?? game.status,
 		teams: { away: team('away'), home: team('home') },
-		...({ flags: gameData?.flags ?? {} } as object),
+		// The schedule's own linescore and flags are live
+		...({ flags: gameData?.flags ?? {}, linescore: liveData?.linescore } as object),
 	} as MLB.Game
+}
+
+/**
+ * An inline `<head>` script for any full page load: game cards with a saved moment are
+ * hidden until the browser takes them over (they then carry `data-time-travel`), so the
+ * live score the server rendered never shows. Mirrors `readStoredDelay`'s freshness check.
+ */
+export function hideDelayedGamesScript() {
+	const prefix = JSON.stringify(delayStorageKey(''))
+	return `(()=>{try{const p=${prefix},n=Date.now(),g=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i)||'';if(!k.startsWith(p))continue;const pk=k.slice(p.length),s=JSON.parse(localStorage.getItem(k)||'null');if(/^\\d+$/.test(pk)&&s&&n-(s.savedAt||0)<${DELAY_TTL_MS}&&typeof s.at==='number')g.push('[data-gamepk="'+pk+'"]:not([data-time-travel])')}if(!g.length)return;const e=document.createElement('style');e.textContent=g.join(',')+'{visibility:hidden}';document.head.append(e)}catch{}})()`
 }

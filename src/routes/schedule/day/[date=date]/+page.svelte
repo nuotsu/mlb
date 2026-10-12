@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fetchDaySchedule, fetchSeason } from '#lib/fetch/presets.js'
 	import { formatDate, getToday, slash } from '#lib/temporal.js'
+	import { readStoredDelay } from '#lib/time-travel.js'
 	import { maintainSearchParams } from '#lib/url.svelte.js'
 	import Divider from '#ui/divider.svelte'
 	import Empty from '#ui/empty.svelte'
@@ -14,6 +15,7 @@
 	import SelectSport from '#ui/select-sport.svelte'
 	import { goto, invalidate } from '$app/navigation'
 	import { page } from '$app/state'
+	import { onMount } from 'svelte'
 	import type { PageProps } from './$types'
 	import { fetchSeasonProgress } from './fetch-season-progress'
 
@@ -50,6 +52,18 @@
 		seasonProgress = data.seasonProgress
 		season = data.season
 	})
+
+	/** Saved delays live in storage, so they're read once hydrated */
+	let mounted = $state(false)
+	onMount(() => (mounted = true))
+
+	/** A game you're watching behind live stays under Live, even once the real one is over */
+	function stateOf(game: MLB.Game) {
+		const state = game.status.abstractGameState
+		return mounted && state === 'Final' && readStoredDelay(localStorage, game.gamePk) != null
+			? 'Live'
+			: state
+	}
 
 	const isToday = $derived(currentDate === getToday().toISOString().split('T')[0])
 
@@ -122,9 +136,7 @@
 </section>
 
 {#snippet groupedGames(games: MLB.Game[], state: string)}
-	{@const processedGames = games
-		.filter((game) => game.status.abstractGameState === state)
-		.sort(sortFavorite)}
+	{@const processedGames = games.filter((game) => stateOf(game) === state).sort(sortFavorite)}
 
 	{#if processedGames.length}
 		<Divider>

@@ -84,8 +84,8 @@
 		title={delay != null ? describeDelay(delay) : undefined}
 	>
 		{#if delayed}
-			<HistoryIcon class="size-[1.2em] text-amber-600 dark:text-amber-300" aria-hidden="true" />
-			<span class="text-amber-700 dark:text-amber-300">Delayed</span>
+			<HistoryIcon class="size-[1.2em] text-yellow-600 dark:text-yellow-300" aria-hidden="true" />
+			<span class="text-yellow-600 dark:text-yellow-300">Delayed</span>
 		{:else if final}
 			<span class="size-[.8em] rounded-full bg-current/40" aria-hidden="true"></span>
 			<span class="text-current/50">Final</span>

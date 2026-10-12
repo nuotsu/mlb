@@ -1,15 +1,22 @@
 <script lang="ts">
 	import { isAppleTV } from '#lib/broadcasts.js'
 	import { fetchLiveMLB } from '#lib/fetch/live.svelte.js'
-	import { fetchBoxscore, fetchLinescore, SCOREBUG_FIELDS } from '#lib/fetch/presets.js'
+	import {
+		fetchBoxscore,
+		fetchLinescore,
+		fetchScorebugAt,
+		SCOREBUG_FIELDS,
+	} from '#lib/fetch/presets.js'
+	import { gameAsOf, readStoredDelay, toTimecode, writeStoredDelay } from '#lib/time-travel.js'
 	import { cn } from '#lib/utils.js'
 	import Linescore from '#ui/game/linescore.svelte'
 	import ProbablePitchers from '#ui/game/probable-pitchers.svelte'
 	import TeamScores from '#ui/game/team-scores.svelte'
-	import { AppleTVIcon, ChevronRightIcon } from '#ui/icons/index.js'
+	import { AppleTVIcon, ChevronRightIcon, HistoryIcon } from '#ui/icons/index.js'
 	import Loading from '#ui/loading.svelte'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import { page } from '$app/state'
+	import { onMount, untrack } from 'svelte'
 	import BaseRunners from './base-runners.svelte'
 	import BSO from './bso.svelte'
 	import Matchup from './matchup.svelte'
@@ -17,14 +24,14 @@
 	import Status from './status.svelte'
 
 	let {
-		game,
+		game: scheduled,
 		boxscore,
-		linescore,
+		linescore: scheduledLinescore,
 		showDescription,
 		showLiveDetails,
-		seriesRecord,
-		feed,
-		concealed = false,
+		seriesRecord: scheduledSeriesRecord,
+		feed: givenFeed,
+		concealed: givenConcealed = false,
 		class: className = '',
 	}: {
 		game: MLB.Game
@@ -40,12 +47,75 @@
 		class?: string
 	} = $props()
 
+	const isGamePage = $derived(page.url.pathname === `/game/${scheduled.gamePk}`)
+
+	/** Saved delays live in storage, so they're read once hydrated */
+	let mounted = $state(false)
+	onMount(() => (mounted = true))
+
+	/**
+	 * A delay saved on the game's own page (which passes its own `feed`), so this card
+	 * trails the stream too instead of showing the live game
+	 */
+	const savedDelay = $derived(
+		mounted && !isGamePage && !givenFeed && scheduled.status.abstractGameState !== 'Preview'
+			? readStoredDelay(localStorage, scheduled.gamePk)
+			: null,
+	)
+	const isDelayedCard = $derived(savedDelay != null)
+
+	/** The scorebug as of "now − delay", on the live polling cadence */
+	let delayedFeed = $state<MLB.LiveGameFeed>()
+
+	$effect(() => {
+		if (savedDelay == null) return
+
+		const gamePk = scheduled.gamePk
+		const ms = savedDelay
+		let stopped = false
+		let busy = false
+
+		async function tick() {
+			if (busy) return
+			busy = true
+			try {
+				const next = await fetchScorebugAt(gamePk, toTimecode(Date.now() - ms))
+				if (stopped) return
+				// Still watching delayed, so the saved moment moves along with this card
+				writeStoredDelay(localStorage, gamePk, ms)
+				if (next.metaData?.timeStamp !== untrack(() => delayedFeed?.metaData?.timeStamp)) {
+					delayedFeed = next
+				}
+			} catch {
+				// Keep the last moment; the next tick tries again
+			} finally {
+				busy = false
+			}
+		}
+
+		tick()
+		const timer = setInterval(tick, 3_000)
+		return () => {
+			stopped = true
+			clearInterval(timer)
+			// Leaving: the game's page picks up from exactly here
+			writeStoredDelay(localStorage, gamePk, ms)
+		}
+	})
+
+	const feed = $derived(givenFeed ?? (isDelayedCard ? delayedFeed : undefined))
+	const concealed = $derived(givenConcealed || (isDelayedCard && !delayedFeed))
+	const game = $derived(isDelayedCard && delayedFeed ? gameAsOf(scheduled, delayedFeed) : scheduled)
+	const linescore = $derived(isDelayedCard ? delayedFeed?.liveData?.linescore : scheduledLinescore)
+	// A finished series' standings already count this game
+	const seriesRecord = $derived(
+		isDelayedCard && scheduled.status.abstractGameState === 'Final' ? null : scheduledSeriesRecord,
+	)
+
 	const { flags } = $derived(game as unknown as { flags: MLB.GameFlags })
 
 	const isFinal = $derived(game.status.abstractGameState === 'Final')
 	const isLive = $derived(game.status.abstractGameState === 'Live')
-
-	const isGamePage = $derived(page.url.pathname === `/game/${game.gamePk}`)
 
 	const onAppleTV = $derived(isAppleTV(game))
 
@@ -102,6 +172,7 @@
 	class="group/game @container/game isolate grid items-end {className}"
 	data-gamePk={game.gamePk}
 	data-spoiler-prevented={isSpoilerPrevented || undefined}
+	data-time-travel={givenFeed || isDelayedCard ? 'delayed' : mounted ? 'live' : undefined}
 >
 	<div
 		class={cn(
@@ -222,12 +293,19 @@
 	{/if}
 
 	{#if !isGamePage}
-		<div
-			class="text-center text-xs font-light group-not-hover/game:transition-[translate,opacity] md:group-not-hover/game:-translate-y-full md:group-not-hover/game:opacity-0"
-			style:grid-area="link"
-		>
+		<div class="flex items-center justify-center gap-ch text-xs font-light" style:grid-area="link">
+			<!-- Always shown, unlike the link, so a card running behind live never passes for live -->
+			{#if isDelayedCard}
+				<span
+					class="inline-flex h-rlh items-center gap-[.5ch] text-yellow-600 dark:text-yellow-300"
+				>
+					<HistoryIcon class="size-[1.2em]" aria-hidden="true" />
+					Delayed
+				</span>
+			{/if}
+
 			<a
-				class="inline-flex h-rlh items-center gap-[.5ch] text-current/50 hover-link hover:text-current"
+				class="inline-flex h-rlh items-center gap-[.5ch] text-current/50 hover-link group-not-hover/game:transition-[translate,opacity] hover:text-current md:group-not-hover/game:-translate-y-full md:group-not-hover/game:opacity-0"
 				href="/game/{game.gamePk}"
 			>
 				See details

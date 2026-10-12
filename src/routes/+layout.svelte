@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { hideDelayedGamesScript } from '#lib/time-travel.js'
 	import Offline from '#ui/offline.svelte'
 	import Sidebar from '#ui/sidebar/nav.svelte'
 	import { browser } from '$app/env'
@@ -28,6 +29,9 @@
 </script>
 
 <svelte:head>
+	<!-- Game cards running behind live stay hidden until the browser shows the delayed moment -->
+	{@html `<script>${hideDelayedGamesScript()}<\/script>`}
+
 	<link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 
 	<link rel="preconnect" href="https://statsapi.mlb.com" />
