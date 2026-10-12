@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { dueUp } from '#lib/due-up.js'
 	import { cn } from '#lib/utils.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import Headshot from '#ui/player/headshot.svelte'
@@ -15,13 +16,23 @@
 
 	const { players } = $derived((liveGame?.gameData as MLB.GameData) ?? {})
 
+	const battingSide = $derived(linescore?.inningHalf === 'Top' ? 'away' : 'home')
+
+	/** Still at the plate, so not "next up" */
+	const atBat = $derived(
+		liveGame?.liveData?.plays.currentPlay?.about?.isComplete ? undefined : batter?.id,
+	)
+
 	const [{ pitching }, { batting }, ...lineups] = $derived([
-		(boxscore?.teams[linescore.inningHalf === 'Top' ? 'home' : 'away'].players[`ID${pitcher?.id}`]
+		(boxscore?.teams[battingSide === 'away' ? 'home' : 'away'].players[`ID${pitcher?.id}`]
 			.stats as unknown as MLB.TeamStats) ?? {},
-		(boxscore?.teams[linescore.inningHalf === 'Top' ? 'away' : 'home'].players[`ID${batter?.id}`]
-			.stats as unknown as MLB.TeamStats) ?? {},
-		linescore?.offense ?? {},
-		linescore?.defense ?? {},
+		(boxscore?.teams[battingSide].players[`ID${batter?.id}`].stats as unknown as MLB.TeamStats) ??
+			{},
+		dueUp(linescore?.offense, {
+			atBat,
+			battingOrder: boxscore?.teams[battingSide].battingOrder,
+		}),
+		[linescore?.defense?.batter, linescore?.defense?.onDeck, linescore?.defense?.inHole],
 	])
 </script>
 
@@ -41,12 +52,14 @@
 			</div>
 		{/if}
 
-		{#each lineups as { batter: nextUp, onDeck, inHole }}
+		{#each lineups as [nextUp, onDeck, inHole]}
 			<div>
-				{#if nextUp && onDeck && inHole}
+				{#if nextUp && onDeck}
 					{@render player({ person: nextUp }, 'Next up')}
 					{@render player({ person: onDeck }, 'On deck')}
-					{@render player({ person: inHole }, 'In the hole')}
+					{#if inHole}
+						{@render player({ person: inHole }, 'In the hole')}
+					{/if}
 				{/if}
 			</div>
 		{/each}
