@@ -145,6 +145,23 @@ export const fetchWinProbability = createFetcher<
 }))
 
 /**
+ * Just what a schedule card shows, as it stood at `timecode` (`YYYYMMDD_HHMMSS`, UTC):
+ * the scorebug, the linescore, the status, and the no-hitter flags.
+ */
+export function fetchScorebugAt(gamePk: string | number, timecode: string) {
+	return fetchMLB<MLB.LiveGameFeed>(`/api/v1.1/game/${gamePk}/feed/live`, {
+		timecode,
+		fields: [
+			...SCOREBUG_FIELDS,
+			'scheduledInnings,innings,num,hits,errors,leftOnBase',
+			'status,abstractGameState,detailedState,statusCode,reason',
+			'flags,noHitter,perfectGame',
+			'metaData,timeStamp',
+		],
+	})
+}
+
+/**
  * Every pitch's start time so far, oldest first — times only, so stepping a delayed page
  * forward can find the next pitch without learning anything else about it.
  */

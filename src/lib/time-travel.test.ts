@@ -6,6 +6,7 @@ import {
 	DELAY_TTL_MS,
 	delaySince,
 	delayStorageKey,
+	hideDelayedGamesScript,
 	latestPitch,
 	parseDelay,
 	pitchStartTimes,
@@ -290,5 +291,48 @@ describe('restoreDelayScript', () => {
 		)
 		expect(replaced).toBeUndefined()
 		expect(storage.items.size).toBe(0)
+	})
+})
+
+describe('hideDelayedGamesScript', () => {
+	/** Run the inline script against a fake page; returns the CSS it added, if any */
+	function run(items: Record<string, unknown>, now: number) {
+		const entries = Object.entries(items).map(([k, v]) => [k, JSON.stringify(v)] as const)
+		const localStorage = {
+			length: entries.length,
+			key: (i: number) => entries[i]?.[0] ?? null,
+			getItem: (k: string) => entries.find(([key]) => key === k)?.[1] ?? null,
+		}
+		let css: string | undefined
+		const document = {
+			createElement: () => ({ textContent: '' }),
+			head: { append: (el: { textContent: string }) => (css = el.textContent) },
+		}
+		new Function('localStorage', 'document', 'Date', hideDelayedGamesScript())(
+			localStorage,
+			document,
+			{ now: () => now },
+		)
+		return css
+	}
+
+	const now = Date.parse('2026-10-09T02:00:00Z')
+
+	test('hides only fresh delayed games until the browser takes over', () => {
+		expect(
+			run(
+				{
+					[delayStorageKey(849832)]: { at: now - 95_000, savedAt: now },
+					[delayStorageKey(849809)]: { at: now - 95_000, savedAt: now - DELAY_TTL_MS },
+					favorites: [],
+				},
+				now,
+			),
+		).toBe('[data-gamepk="849832"]:not([data-time-travel]){visibility:hidden}')
+	})
+
+	test('adds nothing without a saved moment, or for a malformed key', () => {
+		expect(run({ favorites: [] }, now)).toBeUndefined()
+		expect(run({ [delayStorageKey('1"]{x')]: { at: now, savedAt: now } }, now)).toBeUndefined()
 	})
 })
