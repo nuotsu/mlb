@@ -245,6 +245,8 @@
 								<th class="w-full" colspan="2"></th>
 								<th>IP</th>
 								<th>P</th>
+								<th>B</th>
+								<th>S</th>
 								<th>H</th>
 								<th>R</th>
 								<th>ER</th>
@@ -263,7 +265,7 @@
 										{@render p(player)}
 
 										<!-- game stats -->
-										{#each ['inningsPitched', 'numberOfPitches', 'hits', 'runs', 'earnedRuns', 'homeRuns', 'baseOnBalls', 'strikeOuts', 'hitBatsmen'] as stat}
+										{#each ['inningsPitched', 'numberOfPitches', 'balls', 'strikes', 'hits', 'runs', 'earnedRuns', 'homeRuns', 'baseOnBalls', 'strikeOuts', 'hitBatsmen'] as stat}
 											{@const value = stats?.pitching?.[stat as keyof MLB.PitchingStats]}
 											<td
 												class={cn(

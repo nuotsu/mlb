@@ -1213,6 +1213,7 @@ declare global {
 			gamesPitched?: number
 			completeGames?: number
 			shutouts?: number
+			balls?: number
 			strikes?: number
 			strikePercentage?: string
 			hitBatsmen?: number
