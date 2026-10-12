@@ -36,7 +36,7 @@
 		class?: string
 	} = $props()
 
-	const NUDGE_MS = 5_000
+	const NUDGE_MS = 3_000
 
 	const delayed = $derived(delay != null)
 
@@ -156,10 +156,10 @@
 			<button
 				type="button"
 				class={cn(pill, 'px-[.75ch]! text-current/60 hover:bg-accent/25 hover:text-current')}
-				aria-label="Back 5 seconds"
+				aria-label="Back 3 seconds"
 				onclick={() => onnudge(NUDGE_MS)}
 			>
-				−5s
+				−3s
 			</button>
 
 			<!-- Room is tight on phones; the status's tooltip and screen readers still get it -->
@@ -174,10 +174,10 @@
 			<button
 				type="button"
 				class={cn(pill, 'px-[.75ch]! text-current/60 hover:bg-accent/25 hover:text-current')}
-				aria-label="Forward 5 seconds"
+				aria-label="Forward 3 seconds"
 				onclick={() => onnudge(-NUDGE_MS)}
 			>
-				+5s
+				+3s
 			</button>
 		</div>
 

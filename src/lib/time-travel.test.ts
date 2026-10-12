@@ -186,15 +186,26 @@ function memoryStorage(initial: Record<string, string> = {}) {
 	}
 }
 
-describe('saved delay', () => {
+describe('saved moment', () => {
 	const now = Date.parse('2026-10-09T02:00:00Z')
 
-	test('saves per game and reads back', () => {
+	test('saves the moment on screen, per game', () => {
 		const storage = memoryStorage()
 		writeStoredDelay(storage, 849832, 95_400, now)
 
-		expect(readStoredDelay(storage, 849832, now + 60_000)).toBe(95_000)
+		expect(JSON.parse(storage.items.get(delayStorageKey(849832))!)).toEqual({
+			at: now - 95_400,
+			savedAt: now,
+		})
 		expect(readStoredDelay(storage, 849809, now)).toBeNull()
+	})
+
+	test('coming back later lands on the same moment, as if paused', () => {
+		const storage = memoryStorage()
+		writeStoredDelay(storage, 849832, 95_000, now)
+
+		// Two minutes away: the delay grows by two minutes, so the same pitch is on screen
+		expect(readStoredDelay(storage, 849832, now + 120_000)).toBe(215_000)
 	})
 
 	test('going live forgets it', () => {
@@ -205,11 +216,14 @@ describe('saved delay', () => {
 		expect(storage.items.size).toBe(0)
 	})
 
-	test('expires and clears itself', () => {
+	test('expires and clears itself, as does an entry without a moment', () => {
 		const storage = memoryStorage()
 		writeStoredDelay(storage, 849832, 95_000, now)
-
 		expect(readStoredDelay(storage, 849832, now + DELAY_TTL_MS)).toBeNull()
+		expect(storage.items.size).toBe(0)
+
+		storage.setItem(delayStorageKey(849832), JSON.stringify({ delay: 95, savedAt: now }))
+		expect(readStoredDelay(storage, 849832, now)).toBeNull()
 		expect(storage.items.size).toBe(0)
 	})
 
@@ -245,29 +259,34 @@ describe('restoreDelayScript', () => {
 		return { replaced, storage }
 	}
 
-	const at = Date.parse('2026-10-09T02:00:00Z')
+	const now = Date.parse('2026-10-09T02:00:00Z')
+	/** Left 95s behind live, two minutes ago */
+	const saved = { at: now - 120_000 - 95_000, savedAt: now - 120_000 }
 
-	test('adds the saved delay and reloads', () => {
-		const { replaced } = run(
-			'https://x.test/game/849832?view=scorecard',
-			{ delay: 95, savedAt: at },
-			at,
-		)
-		expect(replaced).toBe('https://x.test/game/849832?view=scorecard&delay=95')
+	test('lands on the saved moment', () => {
+		const { replaced } = run('https://x.test/game/849832?view=scorecard', saved, now)
+		expect(replaced).toBe('https://x.test/game/849832?view=scorecard&delay=215')
 	})
 
-	test('leaves an explicit delay, or no saved one, alone', () => {
-		expect(
-			run('https://x.test/game/849832?delay=30', { delay: 95, savedAt: at }, at).replaced,
-		).toBeUndefined()
+	test('replaces a stale delay, like one from the back button', () => {
+		expect(run('https://x.test/game/849832?delay=95', saved, now).replaced).toBe(
+			'https://x.test/game/849832?delay=215',
+		)
+	})
+
+	test('keeps a delay that already lands there, so a reload does not bounce', () => {
+		expect(run('https://x.test/game/849832?delay=213', saved, now).replaced).toBeUndefined()
+	})
+
+	test('does nothing without a saved moment', () => {
 		expect(run('https://x.test/game/849832').replaced).toBeUndefined()
 	})
 
 	test('drops an expired one without reloading', () => {
 		const { replaced, storage } = run(
 			'https://x.test/game/849832',
-			{ delay: 95, savedAt: at - DELAY_TTL_MS },
-			at,
+			{ at: now - 95_000, savedAt: now - DELAY_TTL_MS },
+			now,
 		)
 		expect(replaced).toBeUndefined()
 		expect(storage.items.size).toBe(0)

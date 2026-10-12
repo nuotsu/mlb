@@ -43,7 +43,7 @@
 	import Metadata from '#ui/metadata.svelte'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import { browser } from '$app/env'
-	import { goto } from '$app/navigation'
+	import { beforeNavigate, goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { untrack } from 'svelte'
 	import type { PageProps } from './$types'
@@ -56,13 +56,14 @@
 
 	/**
 	 * Time travel: how far behind live the page runs, in ms (`null` is live), so it can
-	 * trail a TV or stream. Kept on `?delay=` (seconds) and saved per game, so a reload,
-	 * or following a link away and back, stays in sync; other games start live.
+	 * trail a TV or stream. Kept on `?delay=` (seconds), and the moment on screen is saved
+	 * per game, so following a link away and back resumes at the same pitch (it wins over
+	 * an older `?delay=`, like the back button's); other games start live.
 	 */
 	let delay = $derived(
 		isGameLive || isGameFinal
-			? (parseDelay(page.url.searchParams.get(DELAY_PARAM)) ??
-					(browser ? readStoredDelay(localStorage, params.gamePk) : null))
+			? ((browser ? readStoredDelay(localStorage, params.gamePk) : null) ??
+					parseDelay(page.url.searchParams.get(DELAY_PARAM)))
 			: null,
 	)
 	const isDelayed = $derived(delay != null)
@@ -119,6 +120,15 @@
 		return () => clearInterval(timer)
 	})
 
+	/** Set while going live reloads the page, which mustn't save the moment it's leaving */
+	let goingLive = false
+
+	/** Leaving: save the exact moment on screen, to pick up from there on the way back */
+	function saveMoment() {
+		if (delay != null && !goingLive) writeStoredDelay(localStorage, params.gamePk, delay)
+	}
+	beforeNavigate(saveMoment)
+
 	/** Run `ms` behind live, or go live with `null` */
 	async function setDelay(ms: number | null) {
 		const next = ms != null && ms > 0 ? ms : null
@@ -142,7 +152,8 @@
 			writeStoredDelay(localStorage, params.gamePk, null)
 			const url = new URL(location.href)
 			url.searchParams.delete(DELAY_PARAM)
-			return goto(url, { replace: true, reset: false })
+			goingLive = true
+			return goto(url, { replace: true, reset: false }).finally(() => (goingLive = false))
 		}
 
 		delay = next
@@ -281,11 +292,13 @@
 	}
 </script>
 
+<svelte:window onpagehide={saveMoment} />
+
 <svelte:head>
 	<link rel="preconnect" href="https://mlb-cuts-diamond.mlb.com" />
 
-	<!-- A full load without `?delay=` picks up the saved one before anything paints -->
-	{#if (isGameLive || isGameFinal) && !page.url.searchParams.has(DELAY_PARAM)}
+	<!-- A full load lands on the saved moment before anything paints -->
+	{#if isGameLive || isGameFinal}
 		{@html `<script>${restoreDelayScript(params.gamePk)}<\/script>`}
 	{/if}
 
