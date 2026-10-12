@@ -315,15 +315,22 @@
 	</svg>
 
 	<figcaption
-		class="pointer-events-none relative z-1 mr-auto grid grid-cols-2 text-center text-[xx-small] text-current uppercase sm:text-xs"
-		style:writing-mode="vertical-rl"
+		class="pointer-events-none relative z-1 mr-auto grid grid-rows-2 text-[xx-small] text-current uppercase sm:text-xs"
 		style:margin-top="{labelBand}px"
 		style:height="calc(100% - {labelBand}px)"
 	>
-		<span class="transition-opacity {hoveredHalf === 'away' ? 'opacity-100' : 'opacity-25'}">
+		<span
+			class="place-self-center transition-opacity [writing-mode:vertical-rl] {hoveredHalf === 'away'
+				? 'opacity-100'
+				: 'opacity-25'}"
+		>
 			{boxscore?.teams.away.team.abbreviation ?? 'Away'}
 		</span>
-		<span class="transition-opacity {hoveredHalf === 'home' ? 'opacity-100' : 'opacity-25'}">
+		<span
+			class="place-self-center transition-opacity [writing-mode:vertical-rl] {hoveredHalf === 'home'
+				? 'opacity-100'
+				: 'opacity-25'}"
+		>
 			{boxscore?.teams.home.team.abbreviation ?? 'Home'}
 		</span>
 	</figcaption>
