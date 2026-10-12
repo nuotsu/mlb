@@ -252,7 +252,7 @@
 		<nav
 			aria-label="Game sections"
 			class={cn(
-				'pointer-events-auto max-w-full min-w-0 rounded-full border border-light/15 bg-dark/70 text-light shadow-lg backdrop-blur-md transition-[translate,opacity] duration-300 motion-reduce:transition-none',
+				'pointer-events-auto max-w-full min-w-0 rounded-full border border-foreground/15 bg-background/70 text-foreground shadow-lg backdrop-blur-md transition-[translate,opacity] duration-300 motion-reduce:transition-none',
 				hidden && 'pointer-events-none translate-y-[calc(100%+1ch)] opacity-0',
 			)}
 			onfocusin={() => (hidden = false)}
@@ -286,8 +286,8 @@
 						class={cn(
 							'grid size-9 shrink-0 place-items-center rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset',
 							selected
-								? 'text-dark focus-visible:ring-light'
-								: 'text-light/60 pointer-fine:hover:bg-accent/25 pointer-fine:hover:text-light',
+								? 'text-dark focus-visible:ring-foreground'
+								: 'text-foreground/60 pointer-fine:hover:bg-accent/25 pointer-fine:hover:text-foreground',
 						)}
 						onclick={() => go(id)}
 					>
