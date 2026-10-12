@@ -89,10 +89,12 @@ export const SCOREBUG_FIELDS = [
 	'teams,away,home,runs,offense,defense,first,second,third',
 	'balls,strikes,outs',
 	'currentInning,currentInningOrdinal,inningHalf,inningState',
-	'plays,currentPlay,result,description,eventType,rbi,about,isScoringPlay',
+	'plays,currentPlay,result,description,eventType,rbi,about,isScoringPlay,isComplete',
 	'playEvents,isPitch,index,details,type,isBall,isStrike,isInPlay,call,pitchData,startSpeed',
 	'reviewDetails,inProgress,challengeTeamId,reviewType',
 	'matchup,pitcher,batter,id,lastInitName,pitchHand,batSide,code,onDeck,inHole',
+	// Who bats after the batter in the hole
+	'battingOrder',
 ]
 
 export const fetchfeedLive = createFetcher<[gamePk: string | number], MLB.LiveGameFeed>(

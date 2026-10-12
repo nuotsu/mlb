@@ -3,12 +3,17 @@
 import { describe, expect, test } from 'bun:test'
 import {
 	adjacentPitch,
+	DELAY_TTL_MS,
 	delaySince,
+	delayStorageKey,
 	latestPitch,
 	parseDelay,
 	pitchStartTimes,
 	pitchTimeline,
+	readStoredDelay,
+	restoreDelayScript,
 	toTimecode,
+	writeStoredDelay,
 } from './time-travel'
 
 describe('toTimecode', () => {
@@ -168,5 +173,122 @@ describe('stepping by pitch', () => {
 	test('before the first pitch, forward lands on it and back goes nowhere', () => {
 		expect(adjacentPitch(times, undefined, 1)).toBe('2026-10-09T00:01:00Z')
 		expect(adjacentPitch(times, undefined, -1)).toBeUndefined()
+	})
+})
+
+function memoryStorage(initial: Record<string, string> = {}) {
+	const items = new Map(Object.entries(initial))
+	return {
+		items,
+		getItem: (key: string) => items.get(key) ?? null,
+		setItem: (key: string, value: string) => void items.set(key, value),
+		removeItem: (key: string) => void items.delete(key),
+	}
+}
+
+describe('saved moment', () => {
+	const now = Date.parse('2026-10-09T02:00:00Z')
+
+	test('saves the moment on screen, per game', () => {
+		const storage = memoryStorage()
+		writeStoredDelay(storage, 849832, 95_400, now)
+
+		expect(JSON.parse(storage.items.get(delayStorageKey(849832))!)).toEqual({
+			at: now - 95_400,
+			savedAt: now,
+		})
+		expect(readStoredDelay(storage, 849809, now)).toBeNull()
+	})
+
+	test('coming back later lands on the same moment, as if paused', () => {
+		const storage = memoryStorage()
+		writeStoredDelay(storage, 849832, 95_000, now)
+
+		// Two minutes away: the delay grows by two minutes, so the same pitch is on screen
+		expect(readStoredDelay(storage, 849832, now + 120_000)).toBe(215_000)
+	})
+
+	test('going live forgets it', () => {
+		const storage = memoryStorage()
+		writeStoredDelay(storage, 849832, 95_000, now)
+		writeStoredDelay(storage, 849832, null, now)
+
+		expect(storage.items.size).toBe(0)
+	})
+
+	test('expires and clears itself, as does an entry without a moment', () => {
+		const storage = memoryStorage()
+		writeStoredDelay(storage, 849832, 95_000, now)
+		expect(readStoredDelay(storage, 849832, now + DELAY_TTL_MS)).toBeNull()
+		expect(storage.items.size).toBe(0)
+
+		storage.setItem(delayStorageKey(849832), JSON.stringify({ delay: 95, savedAt: now }))
+		expect(readStoredDelay(storage, 849832, now)).toBeNull()
+		expect(storage.items.size).toBe(0)
+	})
+
+	test('shrugs off junk and blocked storage', () => {
+		expect(readStoredDelay(memoryStorage({ [delayStorageKey(1)]: '{' }), 1, now)).toBeNull()
+
+		const blocked = {
+			getItem: () => {
+				throw new Error('denied')
+			},
+			setItem: () => {
+				throw new Error('denied')
+			},
+			removeItem: () => {},
+		}
+		expect(readStoredDelay(blocked, 1, now)).toBeNull()
+		expect(() => writeStoredDelay(blocked, 1, 5_000, now)).not.toThrow()
+	})
+})
+
+describe('restoreDelayScript', () => {
+	/** Run the inline script against a fake page; returns where it sent the browser, if anywhere */
+	function run(href: string, saved?: object, at = Date.now()) {
+		const storage = memoryStorage(saved ? { [delayStorageKey(849832)]: JSON.stringify(saved) } : {})
+		let replaced: string | undefined
+		const location = { href, replace: (url: string) => (replaced = url) }
+		const date = { now: () => at }
+		new Function('localStorage', 'location', 'Date', restoreDelayScript(849832))(
+			storage,
+			location,
+			date,
+		)
+		return { replaced, storage }
+	}
+
+	const now = Date.parse('2026-10-09T02:00:00Z')
+	/** Left 95s behind live, two minutes ago */
+	const saved = { at: now - 120_000 - 95_000, savedAt: now - 120_000 }
+
+	test('lands on the saved moment', () => {
+		const { replaced } = run('https://x.test/game/849832?view=scorecard', saved, now)
+		expect(replaced).toBe('https://x.test/game/849832?view=scorecard&delay=215')
+	})
+
+	test('replaces a stale delay, like one from the back button', () => {
+		expect(run('https://x.test/game/849832?delay=95', saved, now).replaced).toBe(
+			'https://x.test/game/849832?delay=215',
+		)
+	})
+
+	test('keeps a delay that already lands there, so a reload does not bounce', () => {
+		expect(run('https://x.test/game/849832?delay=213', saved, now).replaced).toBeUndefined()
+	})
+
+	test('does nothing without a saved moment', () => {
+		expect(run('https://x.test/game/849832').replaced).toBeUndefined()
+	})
+
+	test('drops an expired one without reloading', () => {
+		const { replaced, storage } = run(
+			'https://x.test/game/849832',
+			{ at: now - 95_000, savedAt: now - DELAY_TTL_MS },
+			now,
+		)
+		expect(replaced).toBeUndefined()
+		expect(storage.items.size).toBe(0)
 	})
 })

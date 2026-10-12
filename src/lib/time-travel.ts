@@ -21,6 +21,74 @@ export function parseDelay(value: string | null | undefined) {
 }
 
 /**
+ * The moment on screen is saved per game, so following a link away and coming back picks
+ * up at the same pitch, as if the stream was paused meanwhile, and plays on from there.
+ * It's forgotten once it goes this long without being looked at.
+ */
+export const DELAY_TTL_MS = 6 * 60 * 60 * 1000
+
+/**
+ * A full load keeps its `?delay=` when it's within this many seconds of the saved moment,
+ * the time a reload takes, so reloading doesn't bounce through a second redirect.
+ */
+const RESTORE_TOLERANCE_S = 5
+
+type DelayStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
+
+export function delayStorageKey(gamePk: string | number) {
+	return `time-travel:${gamePk}`
+}
+
+/**
+ * The delay (ms) that puts a game back on its saved moment, or `null`. An expired or
+ * unusable entry is cleared.
+ */
+export function readStoredDelay(storage: DelayStorage, gamePk: string | number, now = Date.now()) {
+	try {
+		const key = delayStorageKey(gamePk)
+		const saved = JSON.parse(storage.getItem(key) ?? 'null') as {
+			at?: number
+			savedAt?: number
+		} | null
+		if (!saved) return null
+		if (!(now - (saved.savedAt ?? 0) < DELAY_TTL_MS) || typeof saved.at !== 'number') {
+			storage.removeItem(key)
+			return null
+		}
+		return parseDelay(String((now - saved.at) / 1000))
+	} catch {
+		return null
+	}
+}
+
+/** Save the moment a delay (ms) puts on screen now, or forget it with `null` */
+export function writeStoredDelay(
+	storage: DelayStorage,
+	gamePk: string | number,
+	ms: number | null,
+	now = Date.now(),
+) {
+	try {
+		const key = delayStorageKey(gamePk)
+		if (ms == null) storage.removeItem(key)
+		else storage.setItem(key, JSON.stringify({ at: now - ms, savedAt: now }))
+	} catch {
+		// Storage can be full or blocked; the URL still carries the delay
+	}
+}
+
+/**
+ * An inline `<head>` script for a full page load of a game with a saved moment: it sets
+ * `?delay=` to land on that moment and reloads before anything paints, so the server
+ * renders it instead of flashing the live game. Mirrors `readStoredDelay`.
+ */
+export function restoreDelayScript(gamePk: string | number) {
+	const key = JSON.stringify(delayStorageKey(gamePk))
+	const param = JSON.stringify(DELAY_PARAM)
+	return `(()=>{try{const k=${key},s=JSON.parse(localStorage.getItem(k)||'null');if(!s)return;const n=Date.now();if(!(n-(s.savedAt||0)<${DELAY_TTL_MS})||typeof s.at!=='number'){localStorage.removeItem(k);return}const d=Math.floor((n-s.at)/1000);if(!(d>0))return;const u=new URL(location.href),c=u.searchParams.get(${param});if(c&&Math.abs(Number(c)-d)<=${RESTORE_TOLERANCE_S})return;u.searchParams.set(${param},String(d));location.replace(u.href)}catch{}})()`
+}
+
+/**
  * The delay that lands "now − delay" on `startTime`, in whole seconds. Rounding down
  * keeps the target at or after the moment, so its snapshot already holds that event.
  */

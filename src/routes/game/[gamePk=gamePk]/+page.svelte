@@ -17,7 +17,10 @@
 		parseDelay,
 		pitchStartTimes,
 		pitchTimeline,
+		readStoredDelay,
+		restoreDelayScript,
 		toTimecode,
+		writeStoredDelay,
 		type GameSnapshot,
 	} from '#lib/time-travel.js'
 	import { cn } from '#lib/utils.js'
@@ -39,7 +42,8 @@
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
-	import { goto } from '$app/navigation'
+	import { browser } from '$app/env'
+	import { beforeNavigate, goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { untrack } from 'svelte'
 	import type { PageProps } from './$types'
@@ -52,13 +56,31 @@
 
 	/**
 	 * Time travel: how far behind live the page runs, in ms (`null` is live), so it can
-	 * trail a TV or stream. Mirrored to `?delay=` (seconds) so a reload keeps the sync;
-	 * a different game or a fresh visit starts live.
+	 * trail a TV or stream. Kept on `?delay=` (seconds), and the moment on screen is saved
+	 * per game, so following a link away and back resumes at the same pitch (it wins over
+	 * an older `?delay=`, like the back button's); other games start live.
 	 */
 	let delay = $derived(
-		isGameLive || isGameFinal ? parseDelay(page.url.searchParams.get(DELAY_PARAM)) : null,
+		isGameLive || isGameFinal
+			? ((browser ? readStoredDelay(localStorage, params.gamePk) : null) ??
+					parseDelay(page.url.searchParams.get(DELAY_PARAM)))
+			: null,
 	)
 	const isDelayed = $derived(delay != null)
+
+	// Save the delay for this game and keep it on the address (the address bar, not
+	// `page.url`: shallow updates like `?view=` live only there)
+	$effect(() => {
+		writeStoredDelay(localStorage, params.gamePk, delay)
+
+		const url = new URL(location.href)
+		const seconds = delay == null ? null : String(Math.round(delay / 1000))
+		if (url.searchParams.get(DELAY_PARAM) === seconds) return
+
+		if (seconds == null) url.searchParams.delete(DELAY_PARAM)
+		else url.searchParams.set(DELAY_PARAM, seconds)
+		untrack(() => goto(url, { shallow: true, replace: true, state: page.state }))
+	})
 
 	/** The whole page as of "now − delay", refreshed on the live polling cadence */
 	let snapshot = $derived<GameSnapshot | null>(data.snapshot ?? null)
@@ -81,7 +103,11 @@
 				const next = await fetchGameSnapshot(gamePk, toTimecode(Date.now() - ms), {
 					unchangedFrom: untrack(() => snapshot?.timecode),
 				})
-				if (next && current === generation) snapshot = next
+				if (next && current === generation) {
+					snapshot = next
+					// Still watching delayed, so keep it saved
+					writeStoredDelay(localStorage, gamePk, ms)
+				}
 			} catch {
 				// Keep the last snapshot; the next tick tries again
 			} finally {
@@ -93,6 +119,15 @@
 		const timer = setInterval(tick, 3_000)
 		return () => clearInterval(timer)
 	})
+
+	/** Set while going live reloads the page, which mustn't save the moment it's leaving */
+	let goingLive = false
+
+	/** Leaving: save the exact moment on screen, to pick up from there on the way back */
+	function saveMoment() {
+		if (delay != null && !goingLive) writeStoredDelay(localStorage, params.gamePk, delay)
+	}
+	beforeNavigate(saveMoment)
 
 	/** Run `ms` behind live, or go live with `null` */
 	async function setDelay(ms: number | null) {
@@ -109,20 +144,19 @@
 			if (fresh) snapshot = fresh
 		}
 
-		// The address bar, not `page.url`: shallow updates (like `?view=`) live only there
-		const url = new URL(location.href)
-		if (next == null) url.searchParams.delete(DELAY_PARAM)
-		else url.searchParams.set(DELAY_PARAM, String(Math.round(next / 1000)))
+		hasTimeTraveled = true
 
 		// A page that loaded delayed has no data past the delay; a finished game won't be
 		// polled for it either, so load it (which also clears the delay)
-		hasTimeTraveled = true
 		if (next == null && !isGameLive && !data.feedLive) {
-			return goto(url, { replace: true, reset: false })
+			writeStoredDelay(localStorage, params.gamePk, null)
+			const url = new URL(location.href)
+			url.searchParams.delete(DELAY_PARAM)
+			goingLive = true
+			return goto(url, { replace: true, reset: false }).finally(() => (goingLive = false))
 		}
 
 		delay = next
-		goto(url, { shallow: true, replace: true, state: page.state })
 	}
 
 	/** Delayed, but the moment to show hasn't loaded yet: show nothing that could spoil it */
@@ -258,8 +292,15 @@
 	}
 </script>
 
+<svelte:window onpagehide={saveMoment} />
+
 <svelte:head>
 	<link rel="preconnect" href="https://mlb-cuts-diamond.mlb.com" />
+
+	<!-- A full load lands on the saved moment before anything paints -->
+	{#if isGameLive || isGameFinal}
+		{@html `<script>${restoreDelayScript(params.gamePk)}<\/script>`}
+	{/if}
 
 	{#if awayTeam && homeTeam && game}
 		{@html `<script type="application/ld+json">${JSON.stringify({
