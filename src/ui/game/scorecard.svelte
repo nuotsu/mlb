@@ -5,6 +5,7 @@
 		buildScorecard,
 		isInGame,
 		lineupFromBoxscore,
+		type AbsChallenge,
 		type ScorecardCell,
 		type ScorecardKind,
 		type Steal,
@@ -196,6 +197,13 @@
 			.join('-')
 	}
 
+	/** The batter challenges for their own team; the pitcher or catcher for the other one. */
+	function challengedBy({ challenger }: AbsChallenge) {
+		if (!challenger) return
+		if (challenger.role === 'batter') return side
+		return side === 'away' ? 'home' : 'away'
+	}
+
 	function cellLabel(cell: ScorecardCell) {
 		const abs = absChallengeSummary(cell.absChallenges)
 		return `${ordinal(cell.inning)} inning: ${cell.description}${abs ? ` ${abs}.` : ''}`
@@ -237,6 +245,12 @@
 					{@const key = cellKey(row.playerId, column)}
 					<td class="p-0" class:inning-start={column.column === 0}>
 						{#if cell}
+							{@const homeChallenges = (cell.absChallenges ?? []).filter(
+								(c) => challengedBy(c) === 'home',
+							)}
+							{@const awayChallenges = (cell.absChallenges ?? []).filter(
+								(c) => challengedBy(c) !== 'home',
+							)}
 							<button
 								type="button"
 								class={cn(
@@ -280,42 +294,20 @@
 									</span>
 								{/if}
 
-								<!-- ABS challenges, top to bottom in pitch order: filled when won, struck through when lost -->
-								{#if cell.absChallenges?.length}
-									<span
-										class="absolute top-[2px] right-[2px] flex flex-col gap-px"
-										aria-hidden="true"
-									>
-										{#each cell.absChallenges.slice(0, 2) as { overturned }, i (i)}
-											<svg viewBox="0 0 5 5" class="size-[5px]">
-												{#if overturned}
-													<rect
-														class="fill-tmobile"
-														width="5"
-														height="5"
-														shape-rendering="crispEdges"
-													/>
-												{:else}
-													<rect
-														class="stroke-tmobile"
-														x=".25"
-														y=".25"
-														width="4.5"
-														height="4.5"
-														fill="none"
-														stroke-width=".5"
-														shape-rendering="crispEdges"
-													/>
-													<path class="stroke-tmobile" d="M4.75 .25 .25 4.75" stroke-width=".5" />
-												{/if}
-											</svg>
-										{/each}
-									</span>
+								<!-- ABS challenges: the away team's top right, the home team's bottom right -->
+								{#if awayChallenges.length}
+									{@render absChallengeMarks(awayChallenges, 'top-[2px]')}
+								{/if}
+								{#if homeChallenges.length}
+									{@render absChallengeMarks(homeChallenges, 'bottom-[2px]')}
 								{/if}
 
 								{#if cell.rbi > 0}
 									<span
-										class="absolute right-0.5 bottom-0 text-[0.5625rem] leading-tight font-bold"
+										class={cn(
+											'absolute bottom-0 text-[0.5625rem] leading-tight font-bold',
+											homeChallenges.length ? 'right-2' : 'right-0.5',
+										)}
 										aria-hidden="true"
 										title="{cell.rbi} RBI"
 									>
@@ -367,6 +359,31 @@
 		{/each}
 	</div>
 {/if}
+
+<!-- Top to bottom in pitch order: filled when won, struck through when lost -->
+{#snippet absChallengeMarks(challenges: AbsChallenge[], position: string)}
+	<span class={cn('absolute right-[2px] flex flex-col gap-px', position)} aria-hidden="true">
+		{#each challenges.slice(0, 2) as { overturned }, i (i)}
+			<svg viewBox="0 0 5 5" class="size-[5px]">
+				{#if overturned}
+					<rect class="fill-tmobile" width="5" height="5" shape-rendering="crispEdges" />
+				{:else}
+					<rect
+						class="stroke-tmobile"
+						x=".25"
+						y=".25"
+						width="4.5"
+						height="4.5"
+						fill="none"
+						stroke-width=".5"
+						shape-rendering="crispEdges"
+					/>
+					<path class="stroke-tmobile" d="M4.75 .25 .25 4.75" stroke-width=".5" />
+				{/if}
+			</svg>
+		{/each}
+	</span>
+{/snippet}
 
 <!--
 	An empty diamond takes its cell's color. A plate appearance's outline is always gray; an out
