@@ -74,7 +74,7 @@
 	role="group"
 	aria-label="Delay"
 	class={cn(
-		'no-scrollbar flex items-center gap-[.75ch] overflow-x-auto px-ch py-[.5ch] text-xs sm:gap-ch',
+		'no-scrollbar flex items-center gap-[.75ch] overflow-x-auto px-ch py-[.5ch] text-xs tabular-nums sm:gap-ch',
 		className,
 	)}
 >
@@ -164,7 +164,7 @@
 
 			<!-- Room is tight on phones; the status's tooltip and screen readers still get it -->
 			<span
-				class="self-center px-[.5ch] text-current/50 tabular-nums max-sm:hidden"
+				class="self-center px-[.5ch] text-current/50 max-sm:hidden"
 				aria-hidden="true"
 			>
 				−{formatDelay(delay!)}
