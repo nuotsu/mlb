@@ -1,11 +1,17 @@
 import { error } from '@sveltejs/kit'
 import { cacheControlForGame } from '#lib/cache-control.js'
 import { fetchMLB } from '#lib/fetch/index.js'
-import { fetchBoxscore, fetchfeedLive, fetchWinProbability } from '#lib/fetch/presets.js'
+import {
+	fetchBoxscore,
+	fetchfeedLive,
+	fetchGameSnapshot,
+	fetchWinProbability,
+} from '#lib/fetch/presets.js'
+import { DELAY_PARAM, parseDelay, toTimecode } from '#lib/time-travel.js'
 import { batterUniforms } from '#lib/uniforms.js'
 import type { PageServerLoad } from './$types'
 
-export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
+export const load: PageServerLoad = async ({ params, url, fetch, setHeaders }) => {
 	const schedule = await fetchMLB<MLB.ScheduleResponse>(
 		`/api/v1/schedule`,
 		{
@@ -30,24 +36,34 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 	}
 
 	const state = game.status.abstractGameState
-	setHeaders({ 'cache-control': cacheControlForGame(state) })
-
 	const isFinal = state === 'Final'
 	const isLive = state === 'Live'
 
-	const [feedLiveResult, boxscoreResult, contentResult, uniformsResult] = await Promise.allSettled([
-		isLive || isFinal ? fetchfeedLive(params.gamePk) : Promise.resolve(null),
-		fetchBoxscore(params.gamePk),
-		fetchMLB<MLB.GameContent>(`/api/v1/game/${params.gamePk}/content`, undefined, { fetch }),
-		// Uniforms are set before first pitch, so live games don't need to poll them
-		isLive || isFinal
-			? fetchMLB<MLB.UniformsResponse>(
-					'/api/v1/uniforms/game',
-					{ gamePks: params.gamePk },
-					{ fetch },
-				)
-			: Promise.resolve(null),
-	])
+	// A delayed page is pinned to "now − delay", so it's only good for this request
+	const delay = isLive || isFinal ? parseDelay(url.searchParams.get(DELAY_PARAM)) : null
+	setHeaders({ 'cache-control': delay ? 'private, no-store' : cacheControlForGame(state) })
+
+	// Delayed pages get the game as of "now − delay" and nothing newer, not even in the
+	// hydration payload; the live data is loaded once the delay is cleared
+	const showLive = (isLive || isFinal) && !delay
+
+	const [snapshotResult, feedLiveResult, boxscoreResult, contentResult, uniformsResult] =
+		await Promise.allSettled([
+			delay ? fetchGameSnapshot(params.gamePk, toTimecode(Date.now() - delay), { fetch }) : null,
+			showLive ? fetchfeedLive(params.gamePk) : Promise.resolve(null),
+			delay ? Promise.resolve(null) : fetchBoxscore(params.gamePk),
+			fetchMLB<MLB.GameContent>(`/api/v1/game/${params.gamePk}/content`, undefined, { fetch }),
+			// Uniforms are set before first pitch, so live games don't need to poll them
+			isLive || isFinal
+				? fetchMLB<MLB.UniformsResponse>(
+						'/api/v1/uniforms/game',
+						{ gamePks: params.gamePk },
+						{ fetch },
+					)
+				: Promise.resolve(null),
+		])
+
+	const snapshot = snapshotResult.status === 'fulfilled' ? snapshotResult.value : null
 
 	const feedLive = feedLiveResult.status === 'fulfilled' ? feedLiveResult.value : null
 	const boxscore = boxscoreResult.status === 'fulfilled' ? boxscoreResult.value : null
@@ -57,8 +73,9 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 		game.gamePk,
 	)
 
-	const winProbability =
-		isLive || isFinal ? await fetchWinProbability(params.gamePk).catch(() => null) : null
+	const winProbability = showLive
+		? await fetchWinProbability(params.gamePk).catch(() => null)
+		: null
 
 	let seriesRecord: { homeWins: number; awayWins: number } | null = null
 	if (game.gamesInSeries && game.gamesInSeries > 1) {
@@ -116,5 +133,6 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 		content,
 		uniforms,
 		seriesRecord,
+		snapshot,
 	}
 }

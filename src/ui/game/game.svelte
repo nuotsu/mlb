@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { isAppleTV } from '#lib/broadcasts.js'
 	import { fetchLiveMLB } from '#lib/fetch/live.svelte.js'
-	import { fetchBoxscore, fetchLinescore } from '#lib/fetch/presets.js'
+	import { fetchBoxscore, fetchLinescore, SCOREBUG_FIELDS } from '#lib/fetch/presets.js'
 	import { cn } from '#lib/utils.js'
 	import Linescore from '#ui/game/linescore.svelte'
 	import ProbablePitchers from '#ui/game/probable-pitchers.svelte'
@@ -23,6 +23,8 @@
 		showDescription,
 		showLiveDetails,
 		seriesRecord,
+		feed,
+		concealed = false,
 		class: className = '',
 	}: {
 		game: MLB.Game
@@ -31,6 +33,10 @@
 		showDescription?: boolean
 		showLiveDetails?: boolean
 		seriesRecord?: { homeWins: number; awayWins: number } | null
+		/** A feed to show instead of polling the live one, like a time-travel snapshot */
+		feed?: MLB.LiveGameFeed
+		/** Show no scores or live details, as with spoiler prevention, until the moment to show loads */
+		concealed?: boolean
 		class?: string
 	} = $props()
 
@@ -44,32 +50,24 @@
 	const onAppleTV = $derived(isAppleTV(game))
 
 	const isSpoilerPrevented = $derived(
-		spoilerPreventionStore.has(game.teams.away.team.id) ||
+		concealed ||
+			spoilerPreventionStore.has(game.teams.away.team.id) ||
 			spoilerPreventionStore.has(game.teams.home.team.id),
 	)
 
 	const { data: liveGame } = $derived(
-		isLive
-			? fetchLiveMLB<MLB.LiveGameFeed>(`/api/v1.1/game/${game.gamePk}/feed/live`, {
-					fields: [
-						'gameData,liveData,linescore,boxscore',
-						'absChallenges,hasChallenges,usedSuccessful,usedFailed,remaining',
-						'fullName,players,stats,pitching,batting,numberOfPitches,summary',
-						'teams,away,home,runs,offense,defense,first,second,third',
-						'balls,strikes,outs',
-						'currentInning,currentInningOrdinal,inningHalf,inningState',
-						'plays,currentPlay,result,description,eventType,rbi,about,isScoringPlay',
-						'playEvents,isPitch,index,details,type,isBall,isStrike,isInPlay,call,pitchData,startSpeed',
-						'reviewDetails,inProgress,challengeTeamId,reviewType',
-						'matchup,pitcher,batter,id,lastInitName,pitchHand,batSide,code,onDeck,inHole',
-					],
-					hydrate: 'flags,linescore',
-				})
-			: { data: undefined },
+		feed
+			? { data: feed }
+			: isLive && !concealed
+				? fetchLiveMLB<MLB.LiveGameFeed>(`/api/v1.1/game/${game.gamePk}/feed/live`, {
+						fields: SCOREBUG_FIELDS,
+						hydrate: 'flags,linescore',
+					})
+				: { data: undefined },
 	)
 
 	const { data: absFeed } = $derived(
-		isFinal && !isSpoilerPrevented
+		isFinal && !feed && !isSpoilerPrevented
 			? fetchLiveMLB<Pick<MLB.LiveGameFeed, 'gameData'>>(
 					`/api/v1.1/game/${game.gamePk}/feed/live`,
 					{
@@ -81,6 +79,9 @@
 				)
 			: { data: undefined },
 	)
+
+	/** Scores from the feed, or the caller's linescore while the feed (re)loads, like after going live */
+	const scoreLinescore = $derived(liveGame?.liveData?.linescore ?? (isLive ? linescore : undefined))
 
 	const absChallenges = $derived(
 		liveGame?.gameData?.absChallenges ?? absFeed?.gameData?.absChallenges,
@@ -181,7 +182,7 @@
 			<TeamScores
 				{game}
 				{boxscore}
-				linescore={liveGame?.liveData?.linescore}
+				linescore={scoreLinescore}
 				{absChallenges}
 				{absChallengeTeamId}
 				{isSpoilerPrevented}
@@ -193,7 +194,7 @@
 				<TeamScores
 					{game}
 					boxscore={data}
-					linescore={liveGame?.liveData?.linescore}
+					linescore={scoreLinescore}
 					{absChallenges}
 					{absChallengeTeamId}
 					{isSpoilerPrevented}
@@ -204,7 +205,7 @@
 
 	{#if (isFinal || isLive) && !isSpoilerPrevented}
 		{#if linescore}
-			<Linescore {linescore} {game} />
+			<Linescore {linescore} {game} poll={!feed} />
 		{:else}
 			{#await fetchLinescore(game.gamePk) then data}
 				<Linescore linescore={data} {game} />

@@ -1,4 +1,5 @@
 import { formatDate } from '#lib/temporal.js'
+import { pitchStartTimes, type GameSnapshot } from '#lib/time-travel.js'
 import { getWeekDates } from '#ui/schedule/store.svelte.js'
 import { createPreset as createFetcher, fetchMLB } from '.'
 
@@ -59,28 +60,45 @@ export async function fetchDaySchedule(date: string, sportId = '1') {
 	})
 }
 
+/** What the game page reads from the live feed */
+const FEED_LIVE_FIELDS = [
+	'gamePk,gameData,liveData',
+	'players,id,fullName,lastName,boxscoreName,pitchHand,code,height',
+	'gameInfo,firstPitch,attendance,gameDurationMinutes',
+	'weather,condition,temp,wind',
+	'teams,home,away,id,name,abbreviation,teamName',
+	// Home run chart: the park's fence distances
+	'venue,fieldInfo,leftLine,leftCenter,center,rightCenter,rightLine',
+	'absChallenges,hasChallenges,usedSuccessful,usedFailed,remaining',
+	'linescore,currentInning,scheduledInnings,innings,num,runs,hits,errors,leftOnBase',
+	'boxscore,position,abbreviation,topPerformers,type,player,boxscoreName,stats,batting,pitching,summary',
+	'decisions,winner,loser,save,id',
+	'officials,official,officialType',
+	'plays,allPlays,result,description,event,eventType,rbi,about,inning,isTopInning,atBatIndex,isScoringPlay,hasOut,hasReview,runnerIndex,count,balls,strikes,outs,awayScore,homeScore,matchup,batter,pitcher,batSide,pitchHand,code,id,fullName,lastName,boxscoreName,playEvents,isPitch,details,isBall,isStrike,isInPlay,call,reviewDetails,isOverturned,inProgress,challengeTeamId,reviewType,player,hitData,launchSpeed,launchAngle,totalDistance,trajectory,coordinates,coordX,coordY,pitchData,startSpeed,strikeZoneTop,strikeZoneBottom,strikeZoneDepth,pX,pZ,pfxX,pfxZ,x0,y0,z0,vX0,vY0,vZ0,aX,aY,aZ,extension,breaks,spinRate,spinDirection,type',
+	// Scorecard: who ran where, who fielded the outs, and who came in when
+	'halfInning,isComplete,runners,movement,start,end,isOut,outNumber,runner,playIndex,credits,credit,position,base',
+	// Time travel: when each pitch happened, and whether the game is still going
+	'startTime,status,abstractGameState,detailedState,statusCode,reason',
+]
+
+/** What the scorebug reads from the live feed: the count, runners, and who's up */
+export const SCOREBUG_FIELDS = [
+	'gameData,liveData,linescore,boxscore',
+	'absChallenges,hasChallenges,usedSuccessful,usedFailed,remaining',
+	'fullName,players,stats,pitching,batting,numberOfPitches,summary',
+	'teams,away,home,runs,offense,defense,first,second,third',
+	'balls,strikes,outs',
+	'currentInning,currentInningOrdinal,inningHalf,inningState',
+	'plays,currentPlay,result,description,eventType,rbi,about,isScoringPlay',
+	'playEvents,isPitch,index,details,type,isBall,isStrike,isInPlay,call,pitchData,startSpeed',
+	'reviewDetails,inProgress,challengeTeamId,reviewType',
+	'matchup,pitcher,batter,id,lastInitName,pitchHand,batSide,code,onDeck,inHole',
+]
+
 export const fetchfeedLive = createFetcher<[gamePk: string | number], MLB.LiveGameFeed>(
 	(gamePk) => ({
 		endpoint: `/api/v1.1/game/${gamePk}/feed/live`,
-		params: {
-			fields: [
-				'gamePk,gameData,liveData',
-				'players,id,fullName,lastName,boxscoreName,pitchHand,code,height',
-				'gameInfo,firstPitch,attendance,gameDurationMinutes',
-				'weather,condition,temp,wind',
-				'teams,home,away,id,name,abbreviation,teamName',
-				// Home run chart: the park's fence distances
-				'venue,fieldInfo,leftLine,leftCenter,center,rightCenter,rightLine',
-				'absChallenges,hasChallenges,usedSuccessful,usedFailed,remaining',
-				'linescore,currentInning,scheduledInnings,innings,num,runs,hits,errors,leftOnBase',
-				'boxscore,position,abbreviation,topPerformers,type,player,boxscoreName,stats,batting,pitching,summary',
-				'decisions,winner,loser,save,id',
-				'officials,official,officialType',
-				'plays,allPlays,result,description,event,eventType,rbi,about,inning,isTopInning,atBatIndex,isScoringPlay,hasOut,hasReview,runnerIndex,count,balls,strikes,outs,awayScore,homeScore,matchup,batter,pitcher,batSide,pitchHand,code,id,fullName,lastName,boxscoreName,playEvents,isPitch,details,isBall,isStrike,isInPlay,call,reviewDetails,isOverturned,inProgress,challengeTeamId,reviewType,player,hitData,launchSpeed,launchAngle,totalDistance,trajectory,coordinates,coordX,coordY,pitchData,startSpeed,strikeZoneTop,strikeZoneBottom,strikeZoneDepth,pX,pZ,pfxX,pfxZ,x0,y0,z0,vX0,vY0,vZ0,aX,aY,aZ,extension,breaks,spinRate,spinDirection,type',
-				// Scorecard: who ran where, who fielded the outs, and who came in when
-				'halfInning,isComplete,runners,movement,start,end,isOut,outNumber,runner,playIndex,credits,credit,position,base',
-			],
-		},
+		params: { fields: FEED_LIVE_FIELDS },
 	}),
 )
 
@@ -113,15 +131,66 @@ export const fetchLinescore = createFetcher<[gamePk: string | number], MLB.Lines
 }))
 
 export const fetchWinProbability = createFetcher<
-	[gamePk: string | number],
+	[gamePk: string | number, params?: Fetch.Params],
 	MLB.PlayWinProbability[]
->((gamePk) => ({
+>((gamePk, params = {}) => ({
 	endpoint: `/api/v1/game/${gamePk}/winProbability`,
 	params: {
 		fields:
 			'result,about,inning,isTopInning,isScoringPlay,atBatIndex,halfInning,homeTeamWinProbability,awayTeamWinProbability,homeTeamWinProbabilityAdded',
+		...params,
 	},
 }))
+
+/**
+ * Every pitch's start time so far, oldest first — times only, so stepping a delayed page
+ * forward can find the next pitch without learning anything else about it.
+ */
+export async function fetchPitchStartTimes(gamePk: string | number) {
+	const feed = await fetchMLB<MLB.LiveGameFeed>(`/api/v1.1/game/${gamePk}/feed/live`, {
+		fields: 'liveData,plays,allPlays,playEvents,isPitch,startTime',
+	})
+	return pitchStartTimes(feed.liveData?.plays?.allPlays)
+}
+
+/**
+ * Everything the game page shows, as it stood at `timecode` (`YYYYMMDD_HHMMSS`, UTC).
+ * The feed resolves to the latest snapshot at or before it; the box score and win
+ * probability are then pinned to that exact snapshot so every section agrees.
+ *
+ * Pass the previous snapshot's timecode to skip the follow-up requests when nothing
+ * has happened since: the result is `null` and the caller keeps what it has.
+ */
+export async function fetchGameSnapshot(
+	gamePk: string | number,
+	timecode: string,
+	{ fetch: _fetch, unchangedFrom }: { fetch?: typeof fetch; unchangedFrom?: string } = {},
+): Promise<GameSnapshot | null> {
+	const feedLive = await fetchMLB<MLB.LiveGameFeed>(
+		`/api/v1.1/game/${gamePk}/feed/live`,
+		{
+			timecode,
+			fields: [
+				...FEED_LIVE_FIELDS,
+				...SCOREBUG_FIELDS,
+				'metaData,timeStamp',
+				'flags,noHitter,perfectGame',
+			],
+		},
+		{ fetch: _fetch },
+	)
+
+	// Before the first snapshot there's nothing to show yet; hold on the earliest one
+	const snapshotTimecode = feedLive.metaData?.timeStamp ?? timecode
+	if (unchangedFrom && snapshotTimecode === unchangedFrom) return null
+
+	const [boxscore, winProbability] = await Promise.all([
+		fetchBoxscore(gamePk, { timecode: snapshotTimecode }).catch(() => null),
+		fetchWinProbability(gamePk, { timecode: snapshotTimecode }).catch(() => null),
+	])
+
+	return { timecode: snapshotTimecode, feedLive, boxscore, winProbability }
+}
 
 export async function fetchPitchingGameLogs(
 	personIds: (string | number)[],

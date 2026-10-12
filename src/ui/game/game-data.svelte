@@ -6,11 +6,14 @@
 		game,
 		feedLive,
 		seriesRecord,
+		delayed = false,
 		class: className,
 	}: {
 		game: MLB.Game
 		feedLive: MLB.LiveGameFeed
 		seriesRecord?: { homeWins: number; awayWins: number } | null
+		/** The page runs behind live; the game's length isn't rewound, so leave it out */
+		delayed?: boolean
 	} & HTMLAttributes<HTMLDListElement> = $props()
 
 	const { gameInfo, weather } = $derived(feedLive.gameData)
@@ -60,7 +63,7 @@
 		<dd>{formatDate(gameInfo?.firstPitch, { hour: 'numeric', minute: '2-digit' })}</dd>
 	{/if}
 
-	{#if gameInfo?.gameDurationMinutes}
+	{#if gameInfo?.gameDurationMinutes && !delayed}
 		{@const duration = gameInfo?.gameDurationMinutes ?? 0}
 		{@const hours = Math.floor(duration / 60)}
 		{@const remainingMinutes = duration % 60}

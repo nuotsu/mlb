@@ -2,12 +2,21 @@
 	import { fetchLiveMLB } from '#lib/fetch/live.svelte.js'
 	import { cn } from '#lib/utils.js'
 
-	let { linescore, game }: { linescore?: MLB.Linescore; game: MLB.Game } = $props()
+	let {
+		linescore,
+		game,
+		poll = true,
+	}: {
+		linescore?: MLB.Linescore
+		game: MLB.Game
+		/** Keep a live game's linescore fresh. Off when the caller already has the moment to show. */
+		poll?: boolean
+	} = $props()
 
 	const isLive = $derived(game?.status.abstractGameState === 'Live')
 
 	let { data } = $derived(
-		isLive
+		isLive && poll
 			? fetchLiveMLB<MLB.Linescore>(`/api/v1/game/${game.gamePk}/linescore`, {
 					fields: [
 						'currentInning,scheduledInnings,inningState',
