@@ -21,6 +21,63 @@ export function parseDelay(value: string | null | undefined) {
 }
 
 /**
+ * A delay is saved per game, so following a link away and coming back keeps the page in
+ * sync with the stream. It's forgotten once it goes this long without being looked at.
+ */
+export const DELAY_TTL_MS = 6 * 60 * 60 * 1000
+
+type DelayStorage = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
+
+export function delayStorageKey(gamePk: string | number) {
+	return `time-travel:${gamePk}`
+}
+
+/** The saved delay for a game in ms, or `null`; an expired one is cleared */
+export function readStoredDelay(storage: DelayStorage, gamePk: string | number, now = Date.now()) {
+	try {
+		const key = delayStorageKey(gamePk)
+		const saved = JSON.parse(storage.getItem(key) ?? 'null') as {
+			delay?: number
+			savedAt?: number
+		} | null
+		if (!saved) return null
+		if (!(now - (saved.savedAt ?? 0) < DELAY_TTL_MS)) {
+			storage.removeItem(key)
+			return null
+		}
+		return parseDelay(String(saved.delay))
+	} catch {
+		return null
+	}
+}
+
+/** Save a game's delay (ms), or forget it with `null` */
+export function writeStoredDelay(
+	storage: DelayStorage,
+	gamePk: string | number,
+	ms: number | null,
+	now = Date.now(),
+) {
+	try {
+		const key = delayStorageKey(gamePk)
+		if (ms == null) storage.removeItem(key)
+		else storage.setItem(key, JSON.stringify({ delay: Math.round(ms / 1000), savedAt: now }))
+	} catch {
+		// Storage can be full or blocked; the URL still carries the delay
+	}
+}
+
+/**
+ * An inline `<head>` script for a full page load of a game with a saved delay: it puts
+ * `?delay=` on the address and reloads before anything paints, so the server renders
+ * the delayed moment instead of flashing the live one. Mirrors `readStoredDelay`.
+ */
+export function restoreDelayScript(gamePk: string | number) {
+	const key = JSON.stringify(delayStorageKey(gamePk))
+	return `(()=>{try{const k=${key},s=JSON.parse(localStorage.getItem(k)||'null');if(!s)return;if(!(Date.now()-(s.savedAt||0)<${DELAY_TTL_MS})){localStorage.removeItem(k);return}const d=Math.floor(Number(s.delay));if(!(d>0))return;const u=new URL(location.href);if(u.searchParams.has(${JSON.stringify(DELAY_PARAM)}))return;u.searchParams.set(${JSON.stringify(DELAY_PARAM)},String(d));location.replace(u.href)}catch{}})()`
+}
+
+/**
  * The delay that lands "now − delay" on `startTime`, in whole seconds. Rounding down
  * keeps the target at or after the moment, so its snapshot already holds that event.
  */

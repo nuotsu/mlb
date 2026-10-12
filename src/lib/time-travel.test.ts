@@ -3,12 +3,17 @@
 import { describe, expect, test } from 'bun:test'
 import {
 	adjacentPitch,
+	DELAY_TTL_MS,
 	delaySince,
+	delayStorageKey,
 	latestPitch,
 	parseDelay,
 	pitchStartTimes,
 	pitchTimeline,
+	readStoredDelay,
+	restoreDelayScript,
 	toTimecode,
+	writeStoredDelay,
 } from './time-travel'
 
 describe('toTimecode', () => {
@@ -168,5 +173,103 @@ describe('stepping by pitch', () => {
 	test('before the first pitch, forward lands on it and back goes nowhere', () => {
 		expect(adjacentPitch(times, undefined, 1)).toBe('2026-10-09T00:01:00Z')
 		expect(adjacentPitch(times, undefined, -1)).toBeUndefined()
+	})
+})
+
+function memoryStorage(initial: Record<string, string> = {}) {
+	const items = new Map(Object.entries(initial))
+	return {
+		items,
+		getItem: (key: string) => items.get(key) ?? null,
+		setItem: (key: string, value: string) => void items.set(key, value),
+		removeItem: (key: string) => void items.delete(key),
+	}
+}
+
+describe('saved delay', () => {
+	const now = Date.parse('2026-10-09T02:00:00Z')
+
+	test('saves per game and reads back', () => {
+		const storage = memoryStorage()
+		writeStoredDelay(storage, 849832, 95_400, now)
+
+		expect(readStoredDelay(storage, 849832, now + 60_000)).toBe(95_000)
+		expect(readStoredDelay(storage, 849809, now)).toBeNull()
+	})
+
+	test('going live forgets it', () => {
+		const storage = memoryStorage()
+		writeStoredDelay(storage, 849832, 95_000, now)
+		writeStoredDelay(storage, 849832, null, now)
+
+		expect(storage.items.size).toBe(0)
+	})
+
+	test('expires and clears itself', () => {
+		const storage = memoryStorage()
+		writeStoredDelay(storage, 849832, 95_000, now)
+
+		expect(readStoredDelay(storage, 849832, now + DELAY_TTL_MS)).toBeNull()
+		expect(storage.items.size).toBe(0)
+	})
+
+	test('shrugs off junk and blocked storage', () => {
+		expect(readStoredDelay(memoryStorage({ [delayStorageKey(1)]: '{' }), 1, now)).toBeNull()
+
+		const blocked = {
+			getItem: () => {
+				throw new Error('denied')
+			},
+			setItem: () => {
+				throw new Error('denied')
+			},
+			removeItem: () => {},
+		}
+		expect(readStoredDelay(blocked, 1, now)).toBeNull()
+		expect(() => writeStoredDelay(blocked, 1, 5_000, now)).not.toThrow()
+	})
+})
+
+describe('restoreDelayScript', () => {
+	/** Run the inline script against a fake page; returns where it sent the browser, if anywhere */
+	function run(href: string, saved?: object, at = Date.now()) {
+		const storage = memoryStorage(saved ? { [delayStorageKey(849832)]: JSON.stringify(saved) } : {})
+		let replaced: string | undefined
+		const location = { href, replace: (url: string) => (replaced = url) }
+		const date = { now: () => at }
+		new Function('localStorage', 'location', 'Date', restoreDelayScript(849832))(
+			storage,
+			location,
+			date,
+		)
+		return { replaced, storage }
+	}
+
+	const at = Date.parse('2026-10-09T02:00:00Z')
+
+	test('adds the saved delay and reloads', () => {
+		const { replaced } = run(
+			'https://x.test/game/849832?view=scorecard',
+			{ delay: 95, savedAt: at },
+			at,
+		)
+		expect(replaced).toBe('https://x.test/game/849832?view=scorecard&delay=95')
+	})
+
+	test('leaves an explicit delay, or no saved one, alone', () => {
+		expect(
+			run('https://x.test/game/849832?delay=30', { delay: 95, savedAt: at }, at).replaced,
+		).toBeUndefined()
+		expect(run('https://x.test/game/849832').replaced).toBeUndefined()
+	})
+
+	test('drops an expired one without reloading', () => {
+		const { replaced, storage } = run(
+			'https://x.test/game/849832',
+			{ delay: 95, savedAt: at - DELAY_TTL_MS },
+			at,
+		)
+		expect(replaced).toBeUndefined()
+		expect(storage.items.size).toBe(0)
 	})
 })
