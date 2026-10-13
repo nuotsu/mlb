@@ -308,18 +308,20 @@ export function notation(play: MLB.Play): Notation {
 
 	if (FIELDERS_CHOICES.has(eventType)) return { label: 'FC', kind: 'fieldersChoice' }
 
-	if (eventType === 'sac_fly' || eventType === 'sac_fly_double_play') {
-		return { label: 'SF', kind: 'out', badge }
+	const sacFly = eventType === 'sac_fly' || eventType === 'sac_fly_double_play'
+	const sacBunt = eventType === 'sac_bunt' || eventType === 'sac_bunt_double_play'
+
+	// A sacrifice the defense botched: E1 for the pitcher's throw down the line
+	if ((sacFly || sacBunt) && !batterRunner(play)?.movement?.isOut) {
+		const position = batterRunner(play)?.credits?.find((c) => isError(c.credit))?.position?.code
+		if (position) return { label: `E${position}`, kind: 'error', bases: batterBases(play) }
 	}
 
-	if (eventType === 'sac_bunt' || eventType === 'sac_bunt_double_play') {
-		return { label: 'SAC', kind: 'out', badge }
-	}
-
-	if (eventType === 'field_out' || badge) {
+	if (eventType === 'field_out' || sacFly || sacBunt || badge) {
 		const batter = batterRunner(play)
 		const batterChain = batter ? outChain(batter) : []
-		const prefix = caughtPrefix(play)
+		// The feed words it "sacrifice fly", so the catch's prefix can't be read off the text
+		const prefix = sacFly ? 'F' : caughtPrefix(play)
 
 		// Caught on the fly: F8, L6, P4, and on a double play off the catch, L6-3
 		if (prefix && batterChain.length === 1) {
@@ -332,6 +334,10 @@ export function notation(play: MLB.Play): Notation {
 		if (chain.length === 1) return { label: `${chain[0]}U`, kind: 'out', badge }
 		if (chain.length) return { label: chain.join('-'), kind: 'out', badge }
 	}
+
+	// No fielders credited: `shortName` would make a sac bunt `SB`
+	if (sacFly) return { label: 'SF', kind: 'out', badge }
+	if (sacBunt) return { label: 'SAC', kind: 'out', badge }
 
 	return {
 		label: shortName(play.result?.event || eventType || '?'),
