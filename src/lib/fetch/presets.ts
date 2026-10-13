@@ -219,7 +219,9 @@ export async function fetchPitchingGameLogs(
 
 	return fetchMLB<MLB.PersonResponse>('/api/v1/people', {
 		personIds: personIds.map(String),
-		hydrate: `stats(group=[pitching],type=[gameLog],season=${season})`,
+		// gameLog defaults to regular season only; list the postseason rounds too so
+		// October appearances count toward bullpen fatigue.
+		hydrate: `stats(group=[pitching],type=[gameLog],season=${season},gameType=[R,F,D,L,W])`,
 		fields: [
 			'people,id,lastName,lastInitName,pitchHand,code',
 			'stats,type,displayName,group,splits,date,stat,numberOfPitches,inningsPitched,gamesStarted',
