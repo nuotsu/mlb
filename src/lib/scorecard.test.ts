@@ -294,13 +294,36 @@ describe('notation', () => {
 		expect(notation(p)).toEqual({ label: '5-4-3', kind: 'out', badge: 'TP' })
 	})
 
-	test('sacrifices', () => {
-		const out = [runner({ id: 1, out: 1, credits: [['f_putout', '9']] })]
-		expect(notation(play({ eventType: 'sac_fly', runners: out }))).toMatchObject({
-			label: 'SF',
+	test('sacrifices name the fielders', () => {
+		const caught = [runner({ id: 1, out: 1, credits: [['f_putout', '8']] })]
+		expect(notation(play({ eventType: 'sac_fly', runners: caught }))).toMatchObject({
+			label: 'F8',
 			kind: 'out',
 		})
-		expect(notation(play({ eventType: 'sac_bunt', runners: out })).label).toBe('SAC')
+
+		const thrownOut = [
+			runner({
+				id: 1,
+				out: 1,
+				credits: [
+					['f_assist', '1'],
+					['f_putout', '3'],
+				],
+			}),
+		]
+		expect(notation(play({ eventType: 'sac_bunt', runners: thrownOut })).label).toBe('1-3')
+
+		const throwingError = [runner({ id: 1, end: '2B', credits: [['f_throwing_error', '1']] })]
+		expect(notation(play({ eventType: 'sac_bunt', runners: throwingError }))).toEqual({
+			label: 'E1',
+			kind: 'error',
+			bases: 2,
+		})
+	})
+
+	test('sacrifices without credited fielders', () => {
+		expect(notation(play({ eventType: 'sac_fly', event: 'Sac Fly' })).label).toBe('SF')
+		expect(notation(play({ eventType: 'sac_bunt', event: 'Sac Bunt' })).label).toBe('SAC')
 	})
 
 	test('unknown events fall back to a short name', () => {
