@@ -1,6 +1,7 @@
 /**
  * Geometry for the home run chart on /game/[gamePk]: a top-down ballpark built from the
- * venue's published fence distances, and each home run's landing spot in feet.
+ * venue's published fence distances (straight walls between them, with softened corners),
+ * and each home run's landing spot in feet.
  *
  * Feet are measured from home plate with +x toward right field and +y toward center field.
  * The SVG flips y, so a point is drawn at (x, -y).
@@ -59,31 +60,26 @@ export function fenceDistances(fieldInfo?: MLB.FieldInfo): number[] {
 	)
 }
 
+/** The five published fence distances as points, from the left-field pole to the right. */
+export function fenceCorners(distances: number[]): Point[] {
+	return FENCE_ANGLES.map((angle, i) => polar(angle, distances[i]))
+}
+
 /**
- * Fence distance at a spray angle: a Catmull-Rom curve through the five published
- * distances, so the wall bends smoothly between them. Clamped to the foul poles.
+ * Fence distance at a spray angle: where the ray from home plate crosses the straight wall
+ * between the two published distances on either side. Clamped to the foul poles.
  */
 export function fenceDistanceAt(distances: number[], angle: number): number {
 	const a = Math.max(-45, Math.min(45, angle))
-	const step = 22.5
-	const i = Math.min(3, Math.floor((a + 45) / step))
-	const t = (a - FENCE_ANGLES[i]) / step
+	const i = Math.min(3, Math.floor((a + 45) / 22.5))
+	const from = polar(FENCE_ANGLES[i], distances[i])
+	const to = polar(FENCE_ANGLES[i + 1], distances[i + 1])
+	const ray = polar(a, 1)
 
-	const p1 = distances[i]
-	const p2 = distances[i + 1]
-	// Mirror the ends so the curve meets the foul poles without overshooting.
-	const p0 = distances[i - 1] ?? 2 * p1 - p2
-	const p3 = distances[i + 2] ?? 2 * p2 - p1
-
-	const t2 = t * t
-	const t3 = t2 * t
-	return (
-		0.5 *
-		(2 * p1 +
-			(-p0 + p2) * t +
-			(2 * p0 - 5 * p1 + 4 * p2 - p3) * t2 +
-			(-p0 + 3 * p1 - 3 * p2 + p3) * t3)
-	)
+	// Solve distance * ray = from + s * (to - from) for distance.
+	const dx = to.x - from.x
+	const dy = to.y - from.y
+	return (from.x * dy - from.y * dx) / (ray.x * dy - ray.y * dx)
 }
 
 export function polar(angle: number, distance: number): Point {
@@ -97,15 +93,6 @@ export function angleOf({ x, y }: Point): number {
 
 export function distanceOf({ x, y }: Point): number {
 	return Math.hypot(x, y)
-}
-
-/** Points along the outfield wall from the left-field pole to the right-field pole. */
-export function fencePoints(distances: number[], stepDegrees = 1.5): Point[] {
-	const points: Point[] = []
-	for (let angle = -45; angle <= 45 + 1e-9; angle += stepDegrees) {
-		points.push(polar(angle, fenceDistanceAt(distances, angle)))
-	}
-	return points
 }
 
 export function hitChartToFeet(coordX: number, coordY: number): Point {
@@ -253,6 +240,27 @@ export function round(n: number) {
 
 export function toPath(points: Point[]) {
 	return points.map((p, i) => `${i ? 'L' : 'M'}${round(p.x)} ${round(-p.y)}`).join('')
+}
+
+/**
+ * Like `toPath`, but each interior corner is softened with a curve that leaves the corner
+ * `radius` feet up each side (less when a side is short), so the wall has no sharp bends.
+ */
+export function toRoundedPath(points: Point[], radius: number) {
+	const xy = (p: Point) => `${round(p.x)} ${round(-p.y)}`
+	const toward = (from: Point, to: Point, length: number) => {
+		const d = Math.hypot(to.x - from.x, to.y - from.y) || 1
+		const t = Math.min(length, d / 2) / d
+		return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t }
+	}
+
+	let d = `M${xy(points[0])}`
+	for (let i = 1; i < points.length - 1; i++) {
+		const corner = points[i]
+		d += `L${xy(toward(corner, points[i - 1], radius))}`
+		d += `Q${xy(corner)} ${xy(toward(corner, points[i + 1], radius))}`
+	}
+	return points.length > 1 ? `${d}L${xy(points.at(-1)!)}` : d
 }
 
 type Oklch = { l: number; c: number; h: number }

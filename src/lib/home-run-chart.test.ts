@@ -6,14 +6,17 @@ import {
 	directionFromAngle,
 	directionFromDescription,
 	distanceOf,
+	fenceCorners,
 	fenceDistanceAt,
 	fenceDistances,
 	flightPath,
 	GENERIC_FIELD,
 	hitChartToFeet,
 	landingSpot,
+	polar,
 	separate,
 	teamChartColors,
+	toRoundedPath,
 } from './home-run-chart'
 
 // Rate Field, from gamePk 849832
@@ -46,6 +49,30 @@ describe('fenceDistanceAt', () => {
 		expect(lcf).toBeGreaterThan(377)
 		expect(lcf).toBeLessThan(400)
 		expect(fenceDistanceAt(RATE_FIELD, 60)).toBeCloseTo(335)
+	})
+
+	test('runs straight between neighboring distances', () => {
+		const [, lcf, cf] = fenceCorners(RATE_FIELD)
+		const p = polar(-11, fenceDistanceAt(RATE_FIELD, -11))
+		// Collinear with the left-center and center field corners
+		const cross = (p.x - lcf.x) * (cf.y - lcf.y) - (p.y - lcf.y) * (cf.x - lcf.x)
+		expect(cross).toBeCloseTo(0)
+	})
+})
+
+describe('toRoundedPath', () => {
+	const points = [
+		{ x: 0, y: 0 },
+		{ x: 100, y: 0 },
+		{ x: 100, y: 100 },
+	]
+
+	test('keeps the ends and curves through each interior corner', () => {
+		expect(toRoundedPath(points, 20)).toBe('M0 0L80 0Q100 0 100 -20L100 -100')
+	})
+
+	test('never rounds past the middle of a side', () => {
+		expect(toRoundedPath(points, 80)).toBe('M0 0L50 0Q100 0 100 -50L100 -100')
 	})
 })
 
