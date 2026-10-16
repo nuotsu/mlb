@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
 	import Divider from '#ui/divider.svelte'
 	import Empty from '#ui/empty.svelte'
@@ -10,13 +11,16 @@
 	import InjuredList from '#ui/team/injured-list.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import Roster from '#ui/team/roster.svelte'
+	import SelectSeason from '#ui/team/select-season.svelte'
 	import SeriesCalendar from '#ui/team/series-calendar.svelte'
-	import TeamCalendar from '#ui/team/team-calendar.svelte'
+	import SeriesList from '#ui/team/series-list.svelte'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
 
 	const team = $derived(data.team as MLB.TeamDetailed)
+	const isCurrentSeason = $derived(data.season === Number(data.today.slice(0, 4)))
+	const isToday = $derived(data.date === data.today)
 </script>
 
 <svelte:head>
@@ -71,36 +75,49 @@
 </Header>
 
 <section class="grid gap-lh pt-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
-	<div class="px-ch">
-		<TeamCalendar {team} />
+	<SelectSeason class="px-ch" {team} season={data.season} date={data.date} today={data.today} />
+
+	<div class="space-y-ch">
+		<SeriesCalendar {team} season={data.season} date={data.date} />
 	</div>
 
 	<div class="space-y-ch">
-		<SeriesCalendar {team} />
+		<SeriesList {team} season={data.season} />
 	</div>
 
 	<div class="space-y-ch">
-		<Divider>Roster</Divider>
+		<Divider>{isCurrentSeason ? 'Active Roster' : `${data.season} Roster`}</Divider>
 
-		{#if data.roster.roster}
-			<div class="grid gap-y-ch md:grid-cols-[repeat(auto-fill,minmax(var(--container-xs),1fr))]">
-				<Roster roster={data.roster.roster} coaches={data.coaches.roster} />
-			</div>
-		{:else}
-			<Empty>No roster</Empty>
-		{/if}
+		{#await Promise.all([data.roster, data.coaches])}
+			<Loading class="justify-center p-lh text-current/40">Loading roster...</Loading>
+		{:then [roster, coaches]}
+			{#if roster?.length || coaches.length}
+				<div class="grid gap-y-ch md:grid-cols-[repeat(auto-fill,minmax(var(--container-xs),1fr))]">
+					<Roster roster={roster ?? []} {coaches} />
+				</div>
+			{:else}
+				<Empty>{roster ? `No roster for ${data.season}` : 'Failed to load roster'}</Empty>
+			{/if}
+		{/await}
 	</div>
 
 	<div class="space-y-ch">
-		<Divider>Injured List</Divider>
+		<Divider>
+			Injured List{#if !isToday}
+				{' '}as of {formatDate(data.date, { month: 'short', day: 'numeric', year: 'numeric' })}{/if}
+		</Divider>
 
 		{#await data.injuredList}
 			<Loading class="justify-center p-lh text-current/40">Loading injured list...</Loading>
 		{:then injuredList}
 			{#if injuredList?.length}
-				<InjuredList players={injuredList} />
+				<InjuredList players={injuredList} asOf={data.date} />
 			{:else}
-				<Empty>{injuredList ? 'No players on the IL' : 'Failed to load injured list'}</Empty>
+				<Empty>
+					{injuredList
+						? `No players on the IL${isToday ? '' : ' that day'}`
+						: 'Failed to load injured list'}
+				</Empty>
 			{/if}
 		{/await}
 	</div>

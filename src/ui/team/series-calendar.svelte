@@ -1,258 +1,284 @@
 <script lang="ts">
-	import { fetchMLB } from '#lib/fetch/index.js'
-	import { fetchSeason } from '#lib/fetch/presets.js'
+	import { fetchTeamSeasonSchedule } from '#lib/fetch/presets.js'
+	import { teamColor } from '#lib/team-colors.js'
 	import { formatDate } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
 	import Divider from '#ui/divider.svelte'
 	import Empty from '#ui/empty.svelte'
+	import { ChevronLeftIcon, ChevronRightIcon } from '#ui/icons/index.js'
 	import Loading from '#ui/loading.svelte'
+	import Headshot from '#ui/player/headshot.svelte'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import { browser } from '$app/env'
-	import StyledTeam from './styled-team.svelte'
+	import Logo from './logo.svelte'
+	import {
+		groupSeries,
+		monthWeeks,
+		predictStarters,
+		seasonMonths,
+		toTeamGames,
+		weekSegments,
+		type TeamGame,
+		type TeamSeries,
+	} from './series'
 
 	let {
 		team,
+		season,
+		date,
 		class: className,
 	}: {
 		team: MLB.TeamDetailed
+		season: number
+		/** The page's as-of day (YYYY-MM-DD); the calendar opens on its month */
+		date: string
 		class?: string
 	} = $props()
 
-	type SeriesGame = {
-		gamePk: number
-		gameNumber: number | null
-		awayScore: number | null
-		homeScore: number | null
-		didWin: boolean | undefined
+	const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+	type CalendarData = {
+		series: TeamSeries[]
+		months: string[]
+		gamesByDate: Map<string, TeamGame[]>
 	}
 
-	type SeriesRow =
-		| {
-				type: 'series'
-				opponent: MLB.Team
-				isHome: boolean
-				startDate: string
-				games: SeriesGame[]
-		  }
-		| { type: 'all-star' }
+	const cache = new Map<string, Promise<CalendarData>>()
 
-	type SeriesCalendarData = {
-		rows: SeriesRow[]
-		wins: number
-		losses: number
-	}
+	async function buildCalendar(teamId: number, year: number): Promise<CalendarData> {
+		const schedule = await fetchTeamSeasonSchedule(teamId, year, {
+			sportId: String(team.sport?.id ?? 1),
+			hydrate: 'team,probablePitcher',
+			fields: [
+				'dates,date',
+				'games,gamePk,gameDate,gameType,description',
+				'status,abstractGameState,detailedState,startTimeTBD',
+				'teams,home,away,team,id,name,clubName,teamName,abbreviation,isWinner,score',
+				'probablePitcher,fullName',
+			],
+		})
 
-	function isNonCountable(status: MLB.GameStatus) {
-		const state = status.detailedState
+		const games = predictStarters(toTeamGames(schedule, teamId))
 
-		return (
-			state === 'Postponed' ||
-			state === 'Cancelled' ||
-			state.startsWith('Suspended') ||
-			state === 'Canceled'
-		)
-	}
-
-	function buildRows(games: MLB.Game[], allStarDate?: string): SeriesCalendarData {
-		const gameNumbers = new Map<number, number>()
-		let count = 0
+		const gamesByDate = new Map<string, TeamGame[]>()
 		for (const game of games) {
-			if (isNonCountable(game.status) || gameNumbers.has(game.gamePk)) continue
-			gameNumbers.set(game.gamePk, ++count)
+			gamesByDate.set(game.date, [...(gamesByDate.get(game.date) ?? []), game])
 		}
 
-		const rows: Extract<SeriesRow, { type: 'series' }>[] = []
-		let current: Extract<SeriesRow, { type: 'series' }> | null = null
-		let wins = 0
-		let losses = 0
-
-		for (const game of games) {
-			const isHome = game.teams.home.team.id === team.id
-			const opponent = isHome ? game.teams.away.team : game.teams.home.team
-			if (
-				!current ||
-				game.seriesGameNumber === 1 ||
-				current.opponent.id !== opponent.id ||
-				current.isHome !== isHome
-			) {
-				current = {
-					type: 'series',
-					opponent,
-					isHome,
-					startDate: game.officialDate || game.gameDate.slice(0, 10),
-					games: [],
-				}
-				rows.push(current)
-			}
-
-			const nonCountable = isNonCountable(game.status)
-			const teamSide = isHome ? game.teams.home : game.teams.away
-			const isFinal = game.status.abstractGameState === 'Final' && !nonCountable
-			const hasScore =
-				!nonCountable && game.teams.away.score != null && game.teams.home.score != null
-			const didWin = isFinal ? teamSide.isWinner : undefined
-
-			if (didWin === true) wins++
-			else if (didWin === false) losses++
-
-			current.games.push({
-				gamePk: game.gamePk,
-				gameNumber: nonCountable ? null : (gameNumbers.get(game.gamePk) ?? null),
-				awayScore: hasScore ? (game.teams.away.score ?? null) : null,
-				homeScore: hasScore ? (game.teams.home.score ?? null) : null,
-				didWin,
-			})
-		}
-
-		if (!allStarDate) return { rows, wins, losses }
-
-		const withBreak: SeriesRow[] = []
-		let inserted = false
-		for (const row of rows) {
-			if (!inserted && row.startDate > allStarDate) {
-				withBreak.push({ type: 'all-star' })
-				inserted = true
-			}
-			withBreak.push(row)
-		}
-		return { rows: withBreak, wins, losses }
+		return { series: groupSeries(games), months: seasonMonths(games), gamesByDate }
 	}
 
-	const cache = new Map<number, Promise<SeriesCalendarData>>()
-
-	async function buildSeriesCalendar(teamId: number): Promise<SeriesCalendarData> {
-		const year = new Date().getFullYear()
-		const sportId = String(team.sport?.id ?? 1)
-
-		const [schedule, season] = await Promise.all([
-			fetchMLB<MLB.ScheduleResponse>(`/api/v1/schedule`, {
-				sportId,
-				teamId: String(teamId),
-				season: String(year),
-				gameType: 'R',
-				fields: [
-					'dates,date',
-					'games,gamePk,gameDate,officialDate,seriesGameNumber',
-					'status,abstractGameState,detailedState',
-					'teams,home,away,team,id,name,clubName,teamName,abbreviation,isWinner,score',
-				],
-				hydrate: 'team',
-			}),
-			fetchSeason(String(year), sportId).catch(() => undefined),
-		])
-
-		const games = (schedule?.dates ?? [])
-			.flatMap(({ games }) => games)
-			.sort((a, b) => a.gameDate.localeCompare(b.gameDate))
-
-		return buildRows(games, season?.allStarDate)
+	function fetchCalendar(teamId: number, year: number) {
+		const key = `${teamId}-${year}`
+		if (!cache.has(key)) cache.set(key, buildCalendar(teamId, year))
+		return cache.get(key)!
 	}
 
-	function fetchSeriesCalendar() {
-		const teamId = team.id
-		if (!cache.has(teamId)) cache.set(teamId, buildSeriesCalendar(teamId))
-		return cache.get(teamId)!
+	/** Follows the page's date; the arrows move it from there */
+	let month = $derived(date.slice(0, 7))
+
+	/** The selected month, held inside the months the team played */
+	function clampMonth(months: string[]) {
+		if (month < months[0]) return months[0]
+		if (month > months.at(-1)!) return months.at(-1)!
+		return month
 	}
 
 	const hideSpoilers = $derived(spoilerPreventionStore.has(team.id))
+
+	function result(game: TeamGame) {
+		switch (game.state) {
+			case 'postponed':
+				return 'PPD'
+			case 'cancelled':
+				return 'CXL'
+			case 'suspended':
+				return 'SUSP'
+			case 'preview':
+				return game.startTimeTBD
+					? 'TBD'
+					: formatDate(game.gameDate, { hour: 'numeric', minute: '2-digit' })
+		}
+
+		if (hideSpoilers || game.teamScore == null || game.opponentScore == null) {
+			return game.state === 'live' ? 'Live' : 'Final'
+		}
+
+		const score = `${game.teamScore}-${game.opponentScore}`
+		if (game.state === 'live') return score
+		return `${game.didWin === true ? 'W' : game.didWin === false ? 'L' : 'T'} ${score}`
+	}
+
+	function title(game: TeamGame) {
+		return [
+			`${game.isHome ? 'vs' : '@'} ${game.opponent.name}`,
+			game.gameType !== 'R' && game.description,
+			result(game),
+			game.pitcher && `SP: ${game.pitcher.fullName}${game.predicted ? ' (predicted)' : ''}`,
+		]
+			.filter(Boolean)
+			.join(' · ')
+	}
 </script>
 
-{#snippet fallback()}
-	<Divider>Series Calendar</Divider>
-	<div class={cn('px-ch', className)}>
-		<Loading class="justify-center">Loading series calendar...</Loading>
-	</div>
+<Divider>Series Calendar</Divider>
+
+{#snippet loading()}
+	<Loading class="justify-center p-lh text-current/40">Loading series calendar...</Loading>
 {/snippet}
 
-{#if browser}
-	{#await fetchSeriesCalendar()}
-		{@render fallback()}
-	{:then { rows, wins, losses }}
-		<Divider>
-			Series Calendar{#if !hideSpoilers}
-				{' '}({wins}-{losses}){/if}
-		</Divider>
-		{#if rows.length === 0}
-			<div class={cn('px-ch', className)}>
-				<Empty>No series</Empty>
-			</div>
-		{:else}
-			<ul class={cn('gap-x-lh px-ch *:mb-px *:break-inside-avoid md:columns-3', className)}>
-				{#each rows as row, i (row.type === 'all-star' ? 'all-star' : `${row.startDate}-${row.opponent.id}-${row.isHome}-${i}`)}
-					{#if row.type === 'all-star'}
-						<li class="grid min-h-rlh items-center text-xs tracking-wide text-current/40">
-							All-Star Break
-						</li>
-					{:else}
-						<li class="flex items-center gap-px">
-							<a
-								href="/schedule/day/{row.startDate}"
-								class="w-[5ch] shrink-0 text-center text-sm text-current/60 tabular-nums hover-link"
-							>
-								{formatDate(row.startDate, { month: 'numeric', day: 'numeric' })}
-							</a>
+<div class={cn('px-ch', className)}>
+	{#if browser}
+		{#await fetchCalendar(team.id, season)}
+			{@render loading()}
+		{:then { series, months, gamesByDate }}
+			{#if !months.length}
+				<Empty>No games in {season}</Empty>
+			{:else}
+				{@const shown = clampMonth(months)}
+				{@const index = months.indexOf(shown)}
 
-							<StyledTeam
-								class="h-lh w-[calc(1lh+3ch)] shrink-0 justify-center gap-[.5ch] overflow-hidden *:data-name:hidden"
-								team={row.opponent}
-								linked
-							>
-								<small class="order-first text-xs text-foreground dark:text-white">
-									{row.isHome ? 'vs' : '@'}
-								</small>
-							</StyledTeam>
+				<fieldset class="flex justify-center gap-px text-center">
+					<button
+						type="button"
+						class={cn(
+							'order-first button border-b-0 border-l',
+							index <= 0 && 'pointer-events-none opacity-50',
+						)}
+						aria-label="Previous month"
+						onclick={() => (month = months[index - 1] ?? shown)}
+					>
+						<ChevronLeftIcon />
+					</button>
 
-							<div class="grid min-w-0 flex-1 grid-cols-4 gap-px">
-								{#each { length: Math.max(4, row.games.length) } as _, j (j)}
-									{@const game = row.games[j]}
-									{#if game}
-										{@const isColored =
-											!hideSpoilers && (game.didWin === true || game.didWin === false)}
+					<select
+						class="button min-w-[16ch] text-center"
+						aria-label="Month"
+						value={shown}
+						onchange={(e) => (month = e.currentTarget.value)}
+					>
+						{#each months as m (m)}
+							<option value={m}>{formatDate(`${m}-01`, { month: 'long', year: 'numeric' })}</option>
+						{/each}
+					</select>
+
+					<button
+						type="button"
+						class={cn(
+							'order-last button border-r border-b-0',
+							index >= months.length - 1 && 'pointer-events-none opacity-50',
+						)}
+						aria-label="Next month"
+						onclick={() => (month = months[index + 1] ?? shown)}
+					>
+						<ChevronRightIcon />
+					</button>
+				</fieldset>
+
+				<div class="mt-ch grid gap-y-[.5ch]">
+					<div class="grid grid-cols-7 text-center text-sm text-current/40">
+						{#each DOW as d (d)}
+							<span>{d}</span>
+						{/each}
+					</div>
+
+					{#each monthWeeks(shown) as week, wi (`${shown}-${wi}`)}
+						<div class="grid grid-cols-7">
+							<!-- One band per series, behind the days it spans -->
+							{#each weekSegments(week, series) as segment (segment.series.startDate + segment.series.opponent.id)}
+								<div
+									class={cn(
+										'band row-start-1 mt-4 rounded-t-sm',
+										!segment.continuesBefore && 'ml-px border-l-2',
+										!segment.continuesAfter && 'mr-px border-r-2',
+										segment.continuesBefore && 'rounded-tl-none',
+										segment.continuesAfter && 'rounded-tr-none',
+									)}
+									style:grid-column="{segment.column} / span {segment.span}"
+									style:--band={teamColor(segment.series.opponent.id)}
+								></div>
+							{/each}
+
+							{#each week as day, di (di)}
+								<div
+									class="row-start-1 grid min-w-0 content-start justify-items-center pb-px text-center"
+									style:grid-column={di + 1}
+								>
+									{#if day}
+										{@const games = gamesByDate.get(day)}
+
 										<a
-											href="/game/{game.gamePk}"
 											class={cn(
-												'group/cell grid min-h-lh place-content-center text-center tabular-nums',
-												isColored
-													? game.didWin
-														? 'bg-green-700 text-white'
-														: 'bg-red-700 text-white'
-													: 'bg-current/5',
+												'h-4 px-[.5ch] text-xs leading-4 tabular-nums hover-link',
+												day === date ? 'bg-accent text-dark' : !games && 'text-current/40',
 											)}
+											href="/schedule/day/{day}"
 										>
-											{#if game.gameNumber != null}
-												<span
+											{Number(day.slice(-2))}
+										</a>
+
+										{#each games ?? [] as game (game.gamePk)}
+											<a
+												class="grid w-full justify-items-center gap-px py-[.25ch] leading-none hover:bg-current/10"
+												href="/game/{game.gamePk}"
+												title={title(game)}
+											>
+												<span class="flex items-center gap-[.25ch]">
+													<small class="text-[length:xx-small] text-current/60">
+														{game.isHome ? 'vs' : '@'}
+													</small>
+
+													<Logo class="size-[1.25rem] object-contain" team={game.opponent} />
+
+													{#if game.pitcher}
+														<Headshot
+															class={cn(
+																'size-[1.25rem] shrink-0 max-lg:hidden',
+																game.predicted && 'opacity-50',
+															)}
+															person={game.pitcher}
+															size={72}
+														/>
+													{/if}
+												</span>
+
+												<small
 													class={cn(
-														'text-[length:xx-small] leading-none decoration-dashed group-hover/cell:underline',
-														isColored ? 'text-white/60' : 'text-current/50',
+														'text-[length:xx-small] whitespace-nowrap tabular-nums sm:text-xs',
+														game.state !== 'final' && game.state !== 'live' && 'text-current/60',
+														!hideSpoilers && game.didWin === true && 'positive',
+														!hideSpoilers && game.didWin === false && 'negative',
+														game.state === 'live' && 'font-bold',
 													)}
 												>
-													{game.gameNumber}
-												</span>
-											{/if}
-											{#if !hideSpoilers && game.awayScore != null && game.homeScore != null}
-												<span class="text-xs leading-none">
-													<span class={cn(!row.isHome && 'font-bold')}>{game.awayScore}</span>-<span
-														class={cn(row.isHome && 'font-bold')}>{game.homeScore}</span
-													>
-												</span>
-											{/if}
-										</a>
-									{:else}
-										<span class="min-h-lh"></span>
+													{result(game)}
+												</small>
+											</a>
+										{/each}
 									{/if}
-								{/each}
-							</div>
-						</li>
-					{/if}
-				{/each}
-			</ul>
-		{/if}
-	{:catch}
-		<Divider>Series Calendar</Divider>
-		<div class={cn('px-ch', className)}>
+								</div>
+							{/each}
+						</div>
+					{/each}
+				</div>
+			{/if}
+		{:catch}
 			<Empty>Failed to load series calendar</Empty>
-		</div>
-	{/await}
-{:else}
-	{@render fallback()}
-{/if}
+		{/await}
+	{:else}
+		{@render loading()}
+	{/if}
+</div>
+
+<style>
+	.band {
+		--band-edge: color-mix(in oklab, var(--band) 75%, var(--color-foreground));
+
+		border-top: 2px solid var(--band-edge);
+		border-inline-color: var(--band-edge);
+		background: linear-gradient(
+			color-mix(in oklab, var(--band) 20%, transparent),
+			color-mix(in oklab, var(--band) 4%, transparent)
+		);
+	}
+</style>

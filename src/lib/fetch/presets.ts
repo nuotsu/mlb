@@ -3,13 +3,52 @@ import { pitchStartTimes, type GameSnapshot } from '#lib/time-travel.js'
 import { getWeekDates } from '#ui/schedule/store.svelte.js'
 import { createPreset as createFetcher, fetchMLB } from '.'
 
-export async function fetchSeason(year: string, sportId = '1') {
-	const seasons = await fetchMLB<MLB.SeasonResponse>(`/api/v1/seasons`, {
-		sportId,
-		season: year,
-	})
+export async function fetchSeason(
+	year: string,
+	sportId = '1',
+	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
+) {
+	const seasons = await fetchMLB<MLB.SeasonResponse>(
+		`/api/v1/seasons`,
+		{
+			sportId,
+			season: year,
+		},
+		{ fetch: _fetch },
+	)
 
 	return seasons?.seasons?.[0]
+}
+
+/** Regular season and postseason; spring training and exhibitions are left out */
+const SEASON_GAME_TYPES = 'R,F,D,L,W'
+
+/**
+ * A team's games for one season, from opening day through the end of the
+ * postseason. The season's dates come from the seasons endpoint, so leagues
+ * whose season crosses the new year are covered; a calendar year stands in
+ * when it has none.
+ */
+export async function fetchTeamSeasonSchedule(
+	teamId: string | number,
+	season: string | number,
+	{ sportId = '1', ...params }: Fetch.Params & { sportId?: string } = {},
+	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
+) {
+	const dates = await fetchSeason(String(season), sportId, { fetch: _fetch }).catch(() => undefined)
+
+	return fetchMLB<MLB.ScheduleResponse>(
+		'/api/v1/schedule',
+		{
+			sportId,
+			teamId: String(teamId),
+			startDate: dates?.regularSeasonStartDate ?? `${season}-01-01`,
+			endDate: dates?.postSeasonEndDate ?? dates?.seasonEndDate ?? `${season}-12-31`,
+			gameType: SEASON_GAME_TYPES,
+			...params,
+		},
+		{ fetch: _fetch },
+	)
 }
 
 export async function fetchWeekSchedule(date: string, sportId = '1') {
@@ -237,12 +276,14 @@ export async function fetchPitchingGameLogs(
 export async function fetchRosterByType(
 	teamId: string | number,
 	rosterType: '40Man' | 'fullRoster',
-	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
+	{ fetch: _fetch, date }: { fetch?: typeof fetch; date?: string } = {},
 ) {
 	return fetchMLB<MLB.RosterResponse>(
 		`/api/v1/teams/${teamId}/roster`,
 		{
 			rosterType,
+			// Statuses as they stood on `date`, so the IL can be read for any day
+			date,
 			hydrate: 'person',
 			fields: [
 				'roster,startDate,endDate',
@@ -253,6 +294,39 @@ export async function fetchRosterByType(
 		},
 		{ fetch: _fetch },
 	)
+}
+
+/**
+ * Who played for the team in `season`. The current season shows today's active
+ * roster, falling back to the 40-man when there's no active one (the
+ * offseason); a past season shows everyone who appeared for the team that year.
+ */
+export async function fetchSeasonRoster(
+	teamId: string | number,
+	{ season, isCurrent }: { season: number; isCurrent: boolean },
+	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
+) {
+	const fetchRoster = (rosterType: string) =>
+		fetchMLB<MLB.RosterResponse>(
+			`/api/v1/teams/${teamId}/roster`,
+			{
+				rosterType,
+				season: String(season),
+				hydrate: 'person',
+				fields: [
+					'roster,jerseyNumber',
+					'person,id,fullName,lastName,lastFirstName,primaryNumber,batSide,pitchHand,code',
+					'position,abbreviation,type',
+					'status,description',
+				],
+			},
+			{ fetch: _fetch },
+		)
+
+	if (!isCurrent) return fetchRoster('fullSeason')
+
+	const active = await fetchRoster('active')
+	return active.roster?.length ? active : fetchRoster('40Man')
 }
 
 export async function fetchTeamTransactions(

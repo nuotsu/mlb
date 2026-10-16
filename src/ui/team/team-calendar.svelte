@@ -4,6 +4,7 @@
 	import { cn } from '#lib/utils.js'
 	import Headshot from '#ui/player/headshot.svelte'
 	import Calendar from '#ui/schedule/calendar.svelte'
+	import { extractRotation } from './series'
 	import StyledTeam from './styled-team.svelte'
 
 	let {
@@ -23,29 +24,6 @@
 		predictions: Map<number, MLB.Person>
 		/** gamePk → confirmed pitcher for past games */
 		confirmedPast: Map<number, MLB.Person>
-	}
-
-	/**
-	 * Build the rotation from recent completed starts, ordered by when each
-	 * pitcher last started. Scanning backwards keeps the latest starter at the
-	 * end of the list, so predictions always have a slot to continue from — a
-	 * spot start or bullpen game earlier in the window would otherwise truncate
-	 * the rotation before the latest starter and drop every prediction.
-	 */
-	function extractRotation(pitchers: MLB.Person[]): MLB.Person[] {
-		const rotation: MLB.Person[] = []
-		const seen = new Set<number>()
-		for (let i = pitchers.length - 1; i >= 0; i--) {
-			const p = pitchers[i]
-			if (seen.has(p.id)) break
-			seen.add(p.id)
-			rotation.unshift(p)
-		}
-		if (rotation.length >= 2) return rotation
-
-		// Back-to-back starts by the same pitcher leave no cycle to walk —
-		// fall back to every distinct starter in the window, oldest first
-		return pitchers.filter((p, i) => pitchers.findIndex((q) => q.id === p.id) === i)
 	}
 
 	async function fetchProbablePitcher(gamePk: number): Promise<MLB.Person | null> {

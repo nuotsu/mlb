@@ -134,6 +134,8 @@ declare global {
 			isWinner?: boolean
 			splitSquad?: boolean
 			seriesNumber?: number
+			/** With `hydrate=probablePitcher` on the schedule */
+			probablePitcher?: Person
 		}
 
 		interface Social {

@@ -6,12 +6,15 @@
 		person,
 		size = 96,
 		type = 'spots',
+		src,
 		class: className,
 		...props
 	}: {
 		person: Partial<MLB.Person>
 		size?: number
 		type?: 'spots' | 'silo'
+		/** Defaults to the midfield headshot for `type` and `size` */
+		src?: string
 	} & HTMLAttributes<HTMLImageElement> = $props()
 </script>
 
@@ -21,7 +24,7 @@
 		type !== 'silo' && 'rounded-full bg-foreground/10',
 		className,
 	)}
-	src="https://midfield.mlbstatic.com/v1/people/{person.id}/{type}/{size}"
+	src={src ?? `https://midfield.mlbstatic.com/v1/people/${person.id}/${type}/${size}`}
 	width={size}
 	height={size}
 	alt={person.fullName ?? ''}
