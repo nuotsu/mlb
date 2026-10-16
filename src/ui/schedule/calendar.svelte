@@ -7,12 +7,15 @@
 
 	let {
 		class: className,
+		value = $bindable(formatDate(getToday(), { locale: 'en-CA' }).slice(0, 7)),
 		buttons = true,
 		onchange,
 		inputProps,
 		cells,
 	}: {
 		class?: string
+		/** Month shown, as `YYYY-MM` */
+		value?: string
 		buttons?: boolean
 		onchange?: HTMLAttributes<HTMLInputElement>['onchange']
 		inputProps?: HTMLInputAttributes
@@ -21,13 +24,8 @@
 
 	const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
-	const today = getToday()
-	const todayYear = today.getFullYear()
-	const todayMonth = today.getMonth() + 1
-
-	let selected = $state(`${todayYear}-${String(todayMonth).padStart(2, '0')}`)
-	let year = $derived(Number(selected.split('-')[0]))
-	let month = $derived(Number(selected.split('-')[1]))
+	let year = $derived(Number(value.split('-')[0]))
+	let month = $derived(Number(value.split('-')[1]))
 
 	let weeks = $derived.by(() => {
 		const firstDay = new Date(year, month - 1, 1)
@@ -43,7 +41,7 @@
 </script>
 
 <div class={className}>
-	<SelectMonthWithYear bind:value={selected} {buttons} {onchange} {...inputProps} />
+	<SelectMonthWithYear bind:value {buttons} {onchange} {...inputProps} />
 
 	<table class="w-full table-fixed text-center">
 		<thead class="text-sm">

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { fetchSeason } from '#lib/fetch/presets.js'
-	import { formatDate } from '#lib/temporal.js'
+	import { formatDate, getToday } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
 	import Divider from '#ui/divider.svelte'
 	import Empty from '#ui/empty.svelte'
@@ -12,11 +12,16 @@
 
 	let {
 		team,
+		date = formatDate(getToday(), { locale: 'en-CA' }),
 		class: className,
 	}: {
 		team: MLB.TeamDetailed
+		/** Selected date (`YYYY-MM-DD`); its season is the one shown */
+		date?: string
 		class?: string
 	} = $props()
+
+	const season = $derived(Number(date.slice(0, 4)))
 
 	type SeriesGame = {
 		gamePk: number
@@ -118,17 +123,17 @@
 		return { rows: withBreak, wins, losses }
 	}
 
-	const cache = new Map<number, Promise<SeriesCalendarData>>()
+	const cache = new Map<string, Promise<SeriesCalendarData>>()
 
-	async function buildSeriesCalendar(teamId: number): Promise<SeriesCalendarData> {
-		const year = new Date().getFullYear()
+	async function buildSeriesCalendar(teamId: number, year: number): Promise<SeriesCalendarData> {
 		const sportId = String(team.sport?.id ?? 1)
 
 		const [schedule, season] = await Promise.all([
 			fetchMLB<MLB.ScheduleResponse>(`/api/v1/schedule`, {
 				sportId,
 				teamId: String(teamId),
-				season: String(year),
+				startDate: `${year}-01-01`,
+				endDate: `${year}-12-31`,
 				gameType: 'R',
 				fields: [
 					'dates,date',
@@ -148,10 +153,12 @@
 		return buildRows(games, season?.allStarDate)
 	}
 
-	function fetchSeriesCalendar() {
+	/** Memoized per team + season; a superseded season's promise is ignored by `{#await}` */
+	function fetchSeriesCalendar(year: number) {
 		const teamId = team.id
-		if (!cache.has(teamId)) cache.set(teamId, buildSeriesCalendar(teamId))
-		return cache.get(teamId)!
+		const key = `${teamId}-${year}`
+		if (!cache.has(key)) cache.set(key, buildSeriesCalendar(teamId, year))
+		return cache.get(key)!
 	}
 
 	const hideSpoilers = $derived(spoilerPreventionStore.has(team.id))
@@ -165,7 +172,7 @@
 {/snippet}
 
 {#if browser}
-	{#await fetchSeriesCalendar()}
+	{#await fetchSeriesCalendar(season)}
 		{@render fallback()}
 	{:then { rows, wins, losses }}
 		<Divider>

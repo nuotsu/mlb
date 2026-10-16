@@ -237,11 +237,12 @@ export async function fetchPitchingGameLogs(
 export async function fetchRosterByType(
 	teamId: string | number,
 	rosterType: '40Man' | 'fullRoster',
-	{ fetch: _fetch }: { fetch?: typeof fetch } = {},
+	{ fetch: _fetch, ...params }: { fetch?: typeof fetch; date?: string; season?: string } = {},
 ) {
 	return fetchMLB<MLB.RosterResponse>(
 		`/api/v1/teams/${teamId}/roster`,
 		{
+			...params,
 			rosterType,
 			hydrate: 'person',
 			fields: [
