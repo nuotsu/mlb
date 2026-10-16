@@ -360,6 +360,7 @@
 		onstep={stepPitch}
 		canStepBack={pitchTimes.length > 1}
 		canStepForward={isDelayed}
+		canNudge={!isGameFinal}
 	/>
 {/if}
 
