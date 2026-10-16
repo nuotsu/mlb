@@ -10,13 +10,46 @@
 	import InjuredList from '#ui/team/injured-list.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import Roster from '#ui/team/roster.svelte'
+	import { DATE_PARAM, getDateForMonth, getSelectedDate } from '#ui/team/selected-date.js'
 	import SeriesCalendar from '#ui/team/series-calendar.svelte'
 	import TeamCalendar from '#ui/team/team-calendar.svelte'
+	import { goto } from '$app/navigation'
+	import { page } from '$app/state'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
 
 	const team = $derived(data.team as MLB.TeamDetailed)
+
+	/** Single source of truth: the roster, calendars, and IL all follow it */
+	const date = $derived(getSelectedDate(page.url))
+
+	/**
+	 * Month just picked, held only while its date resolves and the page reloads
+	 * so the picker responds immediately; the URL takes over once it lands.
+	 */
+	let pendingMonth = $state<string | null>(null)
+	let latestPick = 0
+
+	async function selectMonth(month: string) {
+		const pick = ++latestPick
+		const from = date
+		pendingMonth = month
+
+		try {
+			const next = await getDateForMonth(month, from, team)
+			// A newer pick (or the server load for one) supersedes this one
+			if (pick !== latestPick || next === from) return
+
+			pendingMonth = next.slice(0, 7)
+
+			const url = new URL(page.url.href)
+			url.searchParams.set(DATE_PARAM, next)
+			await goto(url, { reset: false })
+		} finally {
+			if (pick === latestPick) pendingMonth = null
+		}
+	}
 </script>
 
 <svelte:head>
@@ -72,11 +105,11 @@
 
 <section class="grid gap-lh pt-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
 	<div class="px-ch">
-		<TeamCalendar {team} />
+		<TeamCalendar {team} bind:value={() => pendingMonth ?? date.slice(0, 7), selectMonth} />
 	</div>
 
 	<div class="space-y-ch">
-		<SeriesCalendar {team} />
+		<SeriesCalendar {team} {date} />
 	</div>
 
 	<div class="space-y-ch">
@@ -98,7 +131,7 @@
 			<Loading class="justify-center p-lh text-current/40">Loading injured list...</Loading>
 		{:then injuredList}
 			{#if injuredList?.length}
-				<InjuredList players={injuredList} />
+				<InjuredList players={injuredList} today={date} />
 			{:else}
 				<Empty>{injuredList ? 'No players on the IL' : 'Failed to load injured list'}</Empty>
 			{/if}

@@ -1,9 +1,16 @@
 <script lang="ts">
-	import { formatDate, formatRelativeDays } from '#lib/temporal.js'
+	import { formatDate, formatRelativeDays, getToday } from '#lib/temporal.js'
 	import Headshot from '#ui/player/headshot.svelte'
 	import type { InjuredPlayer } from './injured-list'
 
-	let { players }: { players: InjuredPlayer[] } = $props()
+	let {
+		players,
+		today = getToday(),
+	}: {
+		players: InjuredPlayer[]
+		/** What "in 12d" / "12d ago" is relative to: the list's as-of date */
+		today?: Date | string
+	} = $props()
 </script>
 
 <dl class="grid px-rch max-sm:px-ch">
@@ -47,7 +54,7 @@
 				<small class="col-start-4 row-start-2 shrink-0 text-right sm:col-start-5 sm:row-start-1">
 					{formatDate(player.eligibleDate, { month: 'short', day: 'numeric' })}
 					<span class="text-current/50 tabular-nums"
-						>({formatRelativeDays(player.eligibleDate)})</span
+						>({formatRelativeDays(player.eligibleDate, { from: today })})</span
 					>
 				</small>
 			{:else if player.daysOnIL != null}

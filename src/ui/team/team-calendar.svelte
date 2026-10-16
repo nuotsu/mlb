@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
 	import { fetchMLB } from '#lib/fetch/index.js'
+	import { formatDate, getToday } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
 	import Headshot from '#ui/player/headshot.svelte'
 	import Calendar from '#ui/schedule/calendar.svelte'
@@ -8,9 +9,12 @@
 
 	let {
 		team,
+		value = $bindable(formatDate(getToday(), { locale: 'en-CA' }).slice(0, 7)),
 		class: className,
 	}: {
 		team: MLB.TeamDetailed
+		/** Month shown, as `YYYY-MM` */
+		value?: string
 		class?: string
 	} = $props()
 
@@ -144,7 +148,7 @@
 	}
 </script>
 
-<Calendar class={className} {cells} />
+<Calendar class={className} bind:value {cells} />
 
 {#snippet cells({ day, year, month }: { day: number | null; year: number; month: number })}
 	{#if day}

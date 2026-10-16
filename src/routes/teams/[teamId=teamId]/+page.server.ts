@@ -1,14 +1,30 @@
 import { fetchMLB } from '#lib/fetch/index.js'
 import { fetchRosterByType, fetchTeamTransactions } from '#lib/fetch/presets.js'
-import { formatDate, getToday } from '#lib/temporal.js'
+import { addDays, getToday } from '#lib/temporal.js'
 import { buildInjuredList } from '#ui/team/injured-list.js'
+import { getSelectedDate } from '#ui/team/selected-date.js'
 import type { PageServerLoad } from './$types'
 
 /** How far back to scan transactions for the placement that explains an injury */
 const TRANSACTION_LOOKBACK_DAYS = 90
 
-export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
+export const load: PageServerLoad = async ({ params, url, fetch, setHeaders }) => {
 	setHeaders({ 'cache-control': 'public, s-maxage=3600, stale-while-revalidate=86400' })
+
+	/** Everything below is as of the selected date, not today */
+	const date = getSelectedDate(url)
+	const season = date.slice(0, 4)
+	const isPastSeason = Number(season) < getToday().getFullYear()
+
+	/**
+	 * A date can predate a past season's rosters (or fall where the API kept
+	 * none), so an empty answer there falls back to the season's roster.
+	 */
+	async function asOfDate(fetchRoster: (params: Fetch.Params) => Promise<MLB.RosterResponse>) {
+		const roster = await fetchRoster({ date })
+		if (roster.roster?.length || !isPastSeason) return roster
+		return fetchRoster({ season })
+	}
 
 	const teams = await fetchMLB<MLB.TeamsResponse>(
 		`/api/v1/teams/${params.teamId}`,
@@ -18,27 +34,28 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 		{ fetch },
 	)
 
-	const roster = await fetchMLB<MLB.RosterResponse>(
-		`/api/v1/teams/${params.teamId}/roster`,
-		{
-			fields: ['roster', 'person,id,lastName,lastFirstName', 'position,code,abbreviation'],
-			hydrate: 'person',
-		},
-		{ fetch },
+	const roster = await asOfDate((rosterParams) =>
+		fetchMLB<MLB.RosterResponse>(
+			`/api/v1/teams/${params.teamId}/roster`,
+			{
+				...rosterParams,
+				rosterType: 'active',
+				fields: ['roster', 'person,id,lastName,lastFirstName', 'position,code,abbreviation'],
+				hydrate: 'person',
+			},
+			{ fetch },
+		),
 	)
 
 	const coaches = await fetchMLB<MLB.CoachesResponse>(
 		`/api/v1/teams/${params.teamId}/coaches`,
 		{
+			date,
 			fields: ['roster', 'person,id,lastName,lastFirstName', 'job'],
 			hydrate: 'person',
 		},
 		{ fetch },
 	)
-
-	const today = getToday()
-	const lookback = new Date(today)
-	lookback.setDate(lookback.getDate() - TRANSACTION_LOOKBACK_DAYS)
 
 	return {
 		team: teams.teams[0],
@@ -54,13 +71,17 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 		 * Failures resolve to `null` so the section degrades instead of erroring.
 		 */
 		injuredList: Promise.all([
-			fetchRosterByType(params.teamId, 'fullRoster', { fetch }),
-			fetchRosterByType(params.teamId, '40Man', { fetch }),
+			asOfDate((rosterParams) =>
+				fetchRosterByType(params.teamId, 'fullRoster', { fetch, ...rosterParams }),
+			),
+			asOfDate((rosterParams) =>
+				fetchRosterByType(params.teamId, '40Man', { fetch, ...rosterParams }),
+			),
 			fetchTeamTransactions(
 				{
 					teamId: params.teamId,
-					startDate: formatDate(lookback, { locale: 'en-CA' }),
-					endDate: formatDate(today, { locale: 'en-CA' }),
+					startDate: addDays(date, -TRANSACTION_LOOKBACK_DAYS),
+					endDate: date,
 				},
 				{ fetch },
 			),
@@ -68,7 +89,7 @@ export const load: PageServerLoad = async ({ params, fetch, setHeaders }) => {
 			.then(([fullRoster, fortyMan, transactions]) =>
 				buildInjuredList(fullRoster.roster ?? [], transactions.transactions ?? [], {
 					fortyManIds: new Set((fortyMan.roster ?? []).map(({ person }) => person.id)),
-					today,
+					today: date,
 				}),
 			)
 			.catch((e) => {
