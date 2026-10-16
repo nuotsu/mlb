@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { analyticsEnabled } from '#lib/analytics.js'
 	import { hideDelayedGamesScript } from '#lib/time-travel.js'
 	import Offline from '#ui/offline.svelte'
 	import Sidebar from '#ui/sidebar/nav.svelte'
@@ -11,13 +12,13 @@
 
 	if (browser) {
 		beforeNavigate(({ shallow }) => {
-			if (shallow) return
+			if (shallow || !analyticsEnabled) return
 
 			return posthog.capture('$pageleave')
 		})
 
 		afterNavigate(({ shallow }) => {
-			if (shallow) return
+			if (shallow || !analyticsEnabled) return
 
 			return posthog.capture('$pageview')
 		})

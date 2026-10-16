@@ -1,6 +1,5 @@
 import { getPostHogClient } from '#lib/server/posthog.js'
 import { HOST } from '#ui/playground/constants.js'
-import { dev } from '$app/env'
 
 export async function playgroundAction({ request }: { request: Request }) {
 	const formData = await request.formData()
@@ -32,15 +31,13 @@ export async function playgroundAction({ request }: { request: Request }) {
 		result = { error: e instanceof Error ? e.message : String(e) }
 	}
 
-	if (!dev) {
-		getPostHogClient().capture({
-			event: 'playground_form_submitted',
-			distinctId: formData.get('distinctId') as string,
-			properties: {
-				fetchUrl: fetchUrl.toString(),
-			},
-		})
-	}
+	getPostHogClient()?.capture({
+		event: 'playground_form_submitted',
+		distinctId: formData.get('distinctId') as string,
+		properties: {
+			fetchUrl: fetchUrl.toString(),
+		},
+	})
 
 	return {
 		entries: Object.fromEntries(formData.entries()),

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { analyticsEnabled } from '#lib/analytics.js'
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { count, debounce } from '#lib/utils.js'
 	import ToggleCompare from '#ui/compare/toggle-compare.svelte'
@@ -6,7 +7,6 @@
 	import { SearchIcon } from '#ui/icons/index.js'
 	import Loading from '#ui/loading.svelte'
 	import Headshot from '#ui/player/headshot.svelte'
-	import { dev } from '$app/env'
 	import { page } from '$app/state'
 	import posthog from 'posthog-js'
 	import { untrack } from 'svelte'
@@ -28,7 +28,7 @@
 			names: query,
 			fields: 'people,id,fullName,primaryNumber,primaryPosition,abbreviation,active',
 		}).then((results) => {
-			if (!dev) posthog.capture('player_search_query', { query })
+			if (analyticsEnabled) posthog.capture('player_search_query', { query })
 			return results
 		})
 	}

@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { analyticsEnabled } from '#lib/analytics.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import { StarEmptyIcon, StarIcon } from '#ui/icons/index.js'
-	import { dev } from '$app/env'
 	import posthog from 'posthog-js'
 	import type { HTMLAttributes } from 'svelte/elements'
 
@@ -15,7 +15,7 @@
 	function toggle() {
 		favoritesStore.toggle(target)
 
-		if (!checked && !dev) {
+		if (!checked && analyticsEnabled) {
 			posthog.capture('favorite_added', { href: target.href })
 		}
 	}

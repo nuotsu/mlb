@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { analyticsEnabled } from '#lib/analytics.js'
 	import { EyeIcon, EyeOffIcon } from '#ui/icons/index.js'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
-	import { dev } from '$app/env'
 	import posthog from 'posthog-js'
 	import type { HTMLAttributes } from 'svelte/elements'
 
@@ -17,7 +17,7 @@
 	function toggle() {
 		spoilerPreventionStore.toggle(team)
 
-		if (!checked && !dev) {
+		if (!checked && analyticsEnabled) {
 			posthog.capture('spoiler_prevention_added', { teamId: team.id })
 		}
 	}
