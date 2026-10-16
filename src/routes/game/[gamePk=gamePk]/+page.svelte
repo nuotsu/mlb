@@ -407,6 +407,7 @@
 	{/if}
 
 	{#if (isLive || isFinal) && !isSpoilerPrevented}
+		<!-- Clips can't be rewound, so they're covered while delayed, unless the game is over -->
 		<Highlights
 			class={cn(
 				'md:group-has-[#theater-mode:checked]/game-page:col-span-full',
@@ -414,7 +415,7 @@
 			)}
 			{game}
 			content={data.content}
-			delayed={isDelayed}
+			delayed={isDelayed && !isGameFinal}
 		/>
 	{/if}
 
