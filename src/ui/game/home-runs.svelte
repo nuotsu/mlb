@@ -47,7 +47,7 @@
 	const MIN_GAP = AVATAR * 2
 
 	/** How far (ft) up each wall the bend at an outfield dimension is rounded off. */
-	const FENCE_CORNER = 40
+	const FENCE_CORNER = 15
 
 	const uid = $props.id()
 
