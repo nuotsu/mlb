@@ -144,8 +144,6 @@
 			if (fresh) snapshot = fresh
 		}
 
-		hasTimeTraveled = true
-
 		// A page that loaded delayed has no data past the delay; a finished game won't be
 		// polled for it either, so load it (which also clears the delay)
 		if (next == null && !isGameLive && !data.feedLive) {
@@ -237,12 +235,9 @@
 		if (stepTarget === target) stepTarget = null
 	}
 
-	/** Once the row has been used, keep it around even if the game is over */
-	const gamePk = $derived(params.gamePk)
-	let hasTimeTraveled = $derived(!!gamePk && untrack(() => isDelayed))
-
+	/** Live games, and finished ones too, so a game can be replayed from any pitch */
 	const showTimeTravel = $derived(
-		!!game && (isGameLive || hasTimeTraveled) && (isDelayed || !!feedLive),
+		!!game && (isGameLive || isGameFinal) && (isDelayed || !!feedLive),
 	)
 
 	const [away, home] = $derived([boxscore?.teams.away.team, boxscore?.teams.home.team])
@@ -365,6 +360,7 @@
 		onstep={stepPitch}
 		canStepBack={pitchTimes.length > 1}
 		canStepForward={isDelayed}
+		canNudge={!isGameFinal}
 	/>
 {/if}
 
@@ -412,6 +408,7 @@
 	{/if}
 
 	{#if (isLive || isFinal) && !isSpoilerPrevented}
+		<!-- Clips can't be rewound, so they're covered while delayed, unless the game is over -->
 		<Highlights
 			class={cn(
 				'md:group-has-[#theater-mode:checked]/game-page:col-span-full',
@@ -419,7 +416,7 @@
 			)}
 			{game}
 			content={data.content}
-			delayed={isDelayed}
+			delayed={isDelayed && !isGameFinal}
 		/>
 	{/if}
 

@@ -13,6 +13,7 @@
 		onstep,
 		canStepBack = false,
 		canStepForward = false,
+		canNudge = true,
 		class: className,
 	}: {
 		/** Pitches up to the moment on screen, grouped by pitcher */
@@ -33,6 +34,8 @@
 		canStepBack?: boolean
 		/** There's a pitch, or live, after the one on screen */
 		canStepForward?: boolean
+		/** Offer the ±3s nudges, which only matter while syncing to a live stream */
+		canNudge?: boolean
 		class?: string
 	} = $props()
 
@@ -151,7 +154,7 @@
 		</button>
 	</div>
 
-	{#if delayed}
+	{#if delayed && canNudge}
 		<div class={cn(control, 'flex items-stretch gap-px border border-current/25 p-px')}>
 			<button
 				type="button"
@@ -163,10 +166,7 @@
 			</button>
 
 			<!-- Room is tight on phones; the status's tooltip and screen readers still get it -->
-			<span
-				class="self-center px-[.5ch] text-current/50 max-sm:hidden"
-				aria-hidden="true"
-			>
+			<span class="self-center px-[.5ch] text-current/50 max-sm:hidden" aria-hidden="true">
 				−{formatDelay(delay!)}
 			</span>
 			<span class="sr-only">{describeDelay(delay!)}</span>
@@ -180,7 +180,9 @@
 				+3s
 			</button>
 		</div>
+	{/if}
 
+	{#if delayed}
 		<button
 			type="button"
 			class={cn(pill, control, 'bg-accent text-dark hover:bg-accent/80')}
