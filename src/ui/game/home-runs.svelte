@@ -5,9 +5,9 @@
 		directionFromAngle,
 		directionFromDescription,
 		distanceOf,
+		fenceCorners,
 		fenceDistanceAt,
 		fenceDistances,
-		fencePoints,
 		flightPath,
 		isInsideTheParkHomeRun,
 		landingSpot,
@@ -16,6 +16,7 @@
 		separate,
 		teamChartColors,
 		toPath,
+		toRoundedPath,
 		type Point,
 	} from '#lib/home-run-chart.js'
 	import { teamColor } from '#lib/team-colors.js'
@@ -45,6 +46,9 @@
 	/** Landing spots closer than this (ft) are nudged apart so avatars don't pile up. */
 	const MIN_GAP = AVATAR * 2
 
+	/** How far (ft) up each wall the bend at an outfield dimension is rounded off. */
+	const FENCE_CORNER = 40
+
 	const uid = $props.id()
 
 	// Infield, in feet: 90 ft bases, the mound at 60.5 ft, and a 95 ft dirt arc around it.
@@ -72,7 +76,9 @@
 
 	const venue = $derived(feedLive.gameData.venue)
 	const distances = $derived(fenceDistances(venue?.fieldInfo))
-	const fence = $derived(fencePoints(distances))
+	const fence = $derived(fenceCorners(distances))
+	// Straight walls between the published distances, rounded where they meet
+	const wall = $derived(toRoundedPath(fence, FENCE_CORNER))
 
 	const teams = $derived(feedLive.gameData.teams)
 	const colors = $derived(
@@ -152,7 +158,7 @@
 		return { x: -halfWidth, y: -top, width: halfWidth * 2, height: top + bottom }
 	})
 
-	const grass = $derived(`M0 0${toPath(fence).replace('M', 'L')}Z`)
+	const grass = $derived(`M0 0${wall.replace('M', 'L')}Z`)
 
 	const labels = $derived(
 		[-42, -22.5, 0, 22.5, 42].map((angle, i) => ({
@@ -294,7 +300,7 @@
 						<path d="M0 0l2.5-2.5v-2.5h-5v2.5Z" class="fill-current/50" transform="scale(1.4)" />
 
 						<path
-							d="{toPath([fence[0], { x: 0, y: 0 }, fence.at(-1)!])}{toPath(fence)}"
+							d="{toPath([fence[0], { x: 0, y: 0 }, fence.at(-1)!])}{wall}"
 							class="fill-none stroke-current/40"
 							stroke-width="1"
 							stroke-linejoin="round"
