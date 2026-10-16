@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { analyticsEnabled } from '#lib/analytics.js'
 	import { resolveQuery } from '#lib/quick-search.js'
 	import { cn } from '#lib/utils.js'
 	import { SearchIcon } from '#ui/icons/index.js'
-	import { dev } from '$app/env'
 	import { goto } from '$app/navigation'
 	import posthog from 'posthog-js'
 
@@ -21,7 +21,7 @@
 
 		try {
 			const href = await resolveQuery(q)
-			if (!dev) posthog.capture('quick_search_query', { query: q, href })
+			if (analyticsEnabled) posthog.capture('quick_search_query', { query: q, href })
 			await goto(href)
 		} finally {
 			resolving = false

@@ -61,7 +61,7 @@ async function handle(request: Request): Promise<Response> {
 	const method = body?.method as string | undefined
 
 	if (method) {
-		getPostHogClient().capture({
+		getPostHogClient()?.capture({
 			distinctId: request.headers.get('x-forwarded-for') ?? 'anonymous',
 			event: 'mcp_request',
 			properties: {

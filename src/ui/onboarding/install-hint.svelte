@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { analyticsEnabled } from '#lib/analytics.js'
 	import Hint from '#ui/onboarding/hint.svelte'
 	import { HINTS, onboardingStore } from '#ui/onboarding/store.svelte.js'
-	import { browser, dev } from '$app/env'
+	import { browser } from '$app/env'
 	import posthog from 'posthog-js'
 	import { onMount } from 'svelte'
 
@@ -46,7 +47,7 @@
 	async function install() {
 		if (!deferredPrompt) return
 
-		if (!dev) {
+		if (analyticsEnabled) {
 			posthog.capture('pwa_install_clicked', { platform: 'browser' })
 		}
 
