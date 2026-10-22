@@ -7,11 +7,13 @@
 		leagueSide,
 	} from '#lib/postseason/bracket.js'
 	import { formatDate } from '#lib/temporal.js'
+	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
 	import { cn } from '#lib/utils.js'
 	import Empty from '#ui/empty.svelte'
 	import Header from '#ui/header.svelte'
 	import { ArrowUpIcon, TrophyIcon } from '#ui/icons/index.js'
 	import Metadata from '#ui/metadata.svelte'
+	import PillSwitcher from '#ui/pill-switcher.svelte'
 	import SelectGameType from '#ui/select-game-type.svelte'
 	import SelectSport from '#ui/select-sport.svelte'
 	import SelectSeason from '#ui/stats/select-season.svelte'
@@ -53,84 +55,110 @@
 			(records = []) => ({
 				key: records[0]?.league?.id ?? 0,
 				heading: records[0]?.league?.name,
+				/** "American" rather than "American League", to keep the switcher compact */
+				label: records[0]?.league?.nameShort ?? records[0]?.league?.name,
 				records,
 			}),
 		),
 	)
 
-	const groups = $derived.by((): { key: number; heading?: string; tables: Table[] }[] => {
-		if (data.view === 'mlb') {
-			const teamRecords = data.standings.records
-				.flatMap(({ teamRecords }) => teamRecords)
-				.sort(
-					(a, b) =>
-						(Number(a.sportRank) || Infinity) - (Number(b.sportRank) || Infinity) || byRecord(a, b),
-				)
+	const groups = $derived.by(
+		(): { key: number; heading?: string; label?: string; tables: Table[] }[] => {
+			if (data.view === 'mlb') {
+				const teamRecords = data.standings.records
+					.flatMap(({ teamRecords }) => teamRecords)
+					.sort(
+						(a, b) =>
+							(Number(a.sportRank) || Infinity) - (Number(b.sportRank) || Infinity) ||
+							byRecord(a, b),
+					)
 
-			return teamRecords.length
-				? [
-						{
-							key: 0,
-							tables: [
-								{ title: 'MLB', teamRecords, gamesBack: 'sportGamesBack', showLeague: true },
-							],
-						},
-					]
-				: []
-		}
+				return teamRecords.length
+					? [
+							{
+								key: 0,
+								tables: [
+									{ title: 'MLB', teamRecords, gamesBack: 'sportGamesBack', showLeague: true },
+								],
+							},
+						]
+					: []
+			}
 
-		if (data.view === 'playoff') {
-			return leagueGroups.map(({ key, heading, records }) => {
-				const prefix = leagueSide(key) ? `${leagueSide(key)} ` : ''
-				const teamRecords = records.flatMap(({ teamRecords }) => teamRecords)
-				const leaders = teamRecords.filter(isDivisionLeader).sort(byRecord)
-				const others = teamRecords.filter((r) => !isDivisionLeader(r)).sort(byWildCardRank)
+			if (data.view === 'playoff') {
+				return leagueGroups.map(({ key, heading, label, records }) => {
+					const prefix = leagueSide(key) ? `${leagueSide(key)} ` : ''
+					const teamRecords = records.flatMap(({ teamRecords }) => teamRecords)
+					const leaders = teamRecords.filter(isDivisionLeader).sort(byRecord)
+					const others = teamRecords.filter((r) => !isDivisionLeader(r)).sort(byWildCardRank)
 
-				// 2020's expanded field took every division's runner-up ahead of the wild cards.
-				const wildCards =
-					page.params.season === '2020'
-						? [
-								...others.filter((r) => r.divisionRank === '2').sort(byRecord),
-								...others.filter((r) => r.divisionRank !== '2'),
-							]
-						: others
-
-				return {
-					key,
-					heading,
-					tables: [
-						{
-							title: `${prefix}Division Leaders`,
-							teamRecords: leaders,
-							gamesBack: 'leagueGamesBack',
-							firstSeed: 1,
-						},
-						...(data.wildCardSpots
+					// 2020's expanded field took every division's runner-up ahead of the wild cards.
+					const wildCards =
+						page.params.season === '2020'
 							? [
-									{
-										title: `${prefix}Wild Card`,
-										teamRecords: wildCards,
-										gamesBack: 'wildCardGamesBack',
-										firstSeed: leaders.length + 1,
-										cutAfter: data.wildCardSpots,
-									} satisfies Table,
+									...others.filter((r) => r.divisionRank === '2').sort(byRecord),
+									...others.filter((r) => r.divisionRank !== '2'),
 								]
-							: []),
-					],
-				}
-			})
-		}
+							: others
 
-		return leagueGroups.map(({ key, heading, records }) => ({
-			key,
-			heading,
-			tables: removeDuplicates(records.sort(sortOrder)).map(({ division, teamRecords }) => ({
-				title: division?.nameShort ?? '',
-				teamRecords,
-				gamesBack: 'gamesBack',
-			})),
-		}))
+					return {
+						key,
+						heading,
+						label,
+						tables: [
+							{
+								title: `${prefix}Division Leaders`,
+								teamRecords: leaders,
+								gamesBack: 'leagueGamesBack',
+								firstSeed: 1,
+							},
+							...(data.wildCardSpots
+								? [
+										{
+											title: `${prefix}Wild Card`,
+											teamRecords: wildCards,
+											gamesBack: 'wildCardGamesBack',
+											firstSeed: leaders.length + 1,
+											cutAfter: data.wildCardSpots,
+										} satisfies Table,
+									]
+								: []),
+						],
+					}
+				})
+			}
+
+			return leagueGroups.map(({ key, heading, label, records }) => ({
+				key,
+				heading,
+				label,
+				tables: removeDuplicates(records.sort(sortOrder)).map(({ division, teamRecords }) => ({
+					title: division?.nameShort ?? '',
+					teamRecords,
+					gamesBack: 'gamesBack',
+				})),
+			}))
+		},
+	)
+
+	/** `al`/`nl` for MLB's leagues, the league ID for any other sport's. */
+	const leagueParam = (key: number) => leagueSide(key)?.toLowerCase() ?? String(key)
+
+	const leagueOptions = $derived(
+		groups.map(({ key, label }) => ({ id: leagueParam(key), label: label ?? '' })),
+	)
+
+	/** Kept in `?league=` so a shared link opens the same league; the first one by default. */
+	const league = $derived.by(() => {
+		const requested = currentUrl().searchParams.get('league')
+		return leagueOptions.find(({ id }) => id === requested)?.id ?? leagueOptions[0]?.id
 	})
+
+	// One league at a time when there's more than one to switch between.
+	const showSwitcher = $derived(groups.length > 1)
+	const shownGroups = $derived(
+		showSwitcher ? groups.filter(({ key }) => leagueParam(key) === league) : groups,
+	)
 
 	// Magic and elimination numbers only exist for the regular season.
 	const showMagicNumber = $derived(data.standingsType === 'regularSeason')
@@ -248,16 +276,32 @@
 			{/if}
 			<SelectSeason
 				onchange={(e) =>
-					goto(`/standings/${(e.currentTarget as HTMLSelectElement).value}${page.url.search}`)}
+					goto(`/standings/${(e.currentTarget as HTMLSelectElement).value}${currentUrl().search}`)}
 			/>
 		</div>
 	{/snippet}
 </Header>
 
-<section class="grid gap-lh p-ch">
-	{#each groups as { key, heading, tables } (key)}
-		<div class="flex flex-col gap-ch">
-			{#if heading}
+<section class="grid grid-cols-1 gap-lh p-ch">
+	{#if showSwitcher}
+		<PillSwitcher
+			id="standings-league"
+			aria-label="League"
+			options={leagueOptions}
+			value={league}
+			controls="standings-league-panel"
+			onchange={(next) => setViewParam('league', next, leagueOptions[0].id)}
+		/>
+	{/if}
+
+	{#each shownGroups as { key, heading, tables } (key)}
+		<div
+			class="flex flex-col gap-ch"
+			id={showSwitcher ? 'standings-league-panel' : undefined}
+			role={showSwitcher ? 'tabpanel' : undefined}
+			aria-labelledby={showSwitcher ? `standings-league-tab-${league}` : undefined}
+		>
+			{#if heading && !showSwitcher}
 				<h2 class="px-ch text-sm text-current/50">{heading}</h2>
 			{/if}
 			<div class={cn('grid items-start', data.view === 'playoff' ? 'gap-[.5lh]' : 'gap-[2lh]')}>

@@ -1,15 +1,15 @@
 <script lang="ts">
+	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
 	import { cn } from '#lib/utils.js'
 	import Empty from '#ui/empty.svelte'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import BullpenFatigue from '#ui/game/bullpen-fatigue.svelte'
 	import Scorecard from '#ui/game/scorecard.svelte'
 	import { ArrowDownRightIcon } from '#ui/icons/index.js'
+	import PillSwitcher from '#ui/pill-switcher.svelte'
 	import Headshot from '#ui/player/headshot.svelte'
 	import ToggleSpoilerPrevention from '#ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
 	import StyledTeam from '#ui/team/styled-team.svelte'
-	import { goto } from '$app/navigation'
-	import { page } from '$app/state'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {
@@ -50,75 +50,22 @@
 	type View = (typeof VIEWS)[number]['id']
 
 	/** Kept in `?view=` so a shared link opens the same tab. */
-	let view = $derived<View>(
-		page.url.searchParams.get('view') === 'scorecard' ? 'scorecard' : 'boxscore',
+	const view = $derived<View>(
+		currentUrl().searchParams.get('view') === 'scorecard' ? 'scorecard' : 'boxscore',
 	)
-
-	const tabs: HTMLButtonElement[] = $state([])
-
-	function select(next: View) {
-		if (next === view) return
-		view = next
-
-		// The address bar, not `page.url`: other shallow updates (like `?delay=`) live only there
-		const url = new URL(location.href)
-		if (next === 'boxscore') url.searchParams.delete('view')
-		else url.searchParams.set('view', next)
-		goto(url, { shallow: true, replace: true, state: page.state })
-	}
-
-	function onkeydown(e: KeyboardEvent) {
-		const i = VIEWS.findIndex((v) => v.id === view)
-		const next = {
-			ArrowRight: (i + 1) % VIEWS.length,
-			ArrowLeft: (i - 1 + VIEWS.length) % VIEWS.length,
-			Home: 0,
-			End: VIEWS.length - 1,
-		}[e.key]
-		if (next == null) return
-
-		e.preventDefault()
-		select(VIEWS[next].id)
-		tabs[next]?.focus()
-	}
 </script>
 
 <div id="boxscore" class={cn('min-w-0', className)}>
 	{#if away?.batters.length || home?.batters.length}
-		<div
-			role="tablist"
+		<PillSwitcher
+			id="boxscore"
 			aria-label="Lineup view"
-			class="relative isolate mx-auto mb-[.5lh] flex w-max gap-px rounded-full border border-current/25 p-px text-xs"
-		>
-			<!-- One highlight, anchored to the selected tab, so it slides between them -->
-			<span
-				class="tab-highlight pointer-events-none absolute -z-1 rounded-full bg-accent"
-				style:position-anchor="--boxscore-tab-{view}"
-				aria-hidden="true"
-			></span>
-
-			{#each VIEWS as { id, label }, i (id)}
-				{@const selected = view === id}
-				<button
-					bind:this={tabs[i]}
-					type="button"
-					role="tab"
-					id="boxscore-tab-{id}"
-					aria-selected={selected}
-					aria-controls="boxscore-lineup-away boxscore-lineup-home"
-					tabindex={selected ? 0 : -1}
-					style:anchor-name="--boxscore-tab-{id}"
-					class={cn(
-						'rounded-full px-[1.25ch] py-[.25ch] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent',
-						selected ? 'text-dark' : 'text-current/60 hover:bg-accent/25 hover:text-current',
-					)}
-					onclick={() => select(id)}
-					{onkeydown}
-				>
-					{label}
-				</button>
-			{/each}
-		</div>
+			class="mb-[.5lh]"
+			options={VIEWS}
+			value={view}
+			controls="boxscore-lineup-away boxscore-lineup-home"
+			onchange={(next) => setViewParam('view', next, 'boxscore')}
+		/>
 	{/if}
 
 	<article
@@ -397,29 +344,6 @@
 {/snippet}
 
 <style>
-	.tab-highlight {
-		top: anchor(top);
-		right: anchor(right);
-		bottom: anchor(bottom);
-		left: anchor(left);
-		transition: inset 250ms var(--ease-out);
-
-		@media (prefers-reduced-motion: reduce) {
-			transition: none;
-		}
-	}
-
-	/* Without anchor positioning, the selected tab carries the highlight itself */
-	@supports not (anchor-name: --a) {
-		.tab-highlight {
-			display: none;
-		}
-
-		[role='tab'][aria-selected='true'] {
-			background-color: var(--color-accent);
-		}
-	}
-
 	table tr {
 		> :first-child:not(:has(img)) {
 			padding-left: 1rch;

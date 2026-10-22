@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
+	import { currentUrl } from '#lib/url.svelte.js'
 	import { browser } from '$app/env'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
@@ -39,7 +40,7 @@
 		id="sport"
 		class="absolute inset-0 opacity-0"
 		onchange={(e) => {
-			const url = new URL(page.url.href)
+			const url = new URL(currentUrl().href)
 
 			if ((e.target as HTMLSelectElement).value !== '1') {
 				url.searchParams.set('sportId', (e.target as HTMLSelectElement).value)

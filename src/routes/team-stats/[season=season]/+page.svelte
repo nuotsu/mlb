@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { monthName } from '#lib/temporal.js'
+	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
 	import { cn, ordinal } from '#lib/utils.js'
 	import Empty from '#ui/empty.svelte'
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
+	import PillSwitcher from '#ui/pill-switcher.svelte'
 	import SelectGameType from '#ui/select-game-type.svelte'
 	import SelectSport from '#ui/select-sport.svelte'
 	import SelectMonth from '#ui/stats/select-month.svelte'
@@ -17,6 +19,16 @@
 	let { data }: PageProps = $props()
 
 	type StatTable = PageData['hitting']
+
+	const GROUPS = [
+		{ id: 'hitting', label: 'Hitting' },
+		{ id: 'pitching', label: 'Pitching' },
+	] as const satisfies { id: StatGroup; label: string }[]
+
+	/** Kept in `?group=` so a shared link opens the same table. */
+	const group = $derived<StatGroup>(
+		currentUrl().searchParams.get('group') === 'pitching' ? 'pitching' : 'hitting',
+	)
 
 	let period = $derived(
 		data.month ? `${monthName(data.month)} ${page.params.season}` : page.params.season,
@@ -43,7 +55,7 @@
 	}
 
 	function withParam(key: string, value: string) {
-		const url = new URL(page.url.href)
+		const url = new URL(currentUrl().href)
 		if (value) {
 			url.searchParams.set(key, value)
 		} else {
@@ -93,7 +105,7 @@
 
 			<SelectSeason
 				onchange={(e) =>
-					goto(`/team-stats/${(e.currentTarget as HTMLSelectElement).value}${page.url.search}`)}
+					goto(`/team-stats/${(e.currentTarget as HTMLSelectElement).value}${currentUrl().search}`)}
 			/>
 
 			<SelectMonth
@@ -107,22 +119,20 @@
 </Header>
 
 <section class="space-y-lh py-lh md:px-ch">
-	{@render statTable('Hitting', data.hitting)}
+	<PillSwitcher
+		id="team-stats-group"
+		aria-label="Stat group"
+		options={GROUPS}
+		value={group}
+		controls="team-stats-table"
+		onchange={(next) => setViewParam('group', next, 'hitting')}
+	/>
 
-	<hr class="border-dashed border-stroke" />
-
-	{@render statTable('Pitching', data.pitching)}
+	{@render statTable(data[group])}
 </section>
 
-{#snippet statTable(
-	heading: string,
-	{ group, param, sortStat, stats, rows, unavailable }: StatTable,
-)}
-	<article class="space-y-ch">
-		<h2 class="px-ch text-sm text-current/50">
-			{heading} — {period}
-		</h2>
-
+{#snippet statTable({ group, param, sortStat, stats, rows, unavailable }: StatTable)}
+	<div id="team-stats-table" role="tabpanel" aria-labelledby="team-stats-group-tab-{group}">
 		<div class="overflow-x-auto overflow-y-hidden">
 			<table class="w-max min-w-full text-center">
 				<thead class="text-sm">
@@ -216,7 +226,7 @@
 				</tbody>
 			</table>
 		</div>
-	</article>
+	</div>
 {/snippet}
 
 <style>
