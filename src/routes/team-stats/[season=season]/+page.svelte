@@ -128,23 +128,11 @@
 		onchange={(next) => setViewParam('group', next, 'hitting')}
 	/>
 
-	{@render statTable(group === 'hitting' ? 'Hitting' : 'Pitching', data[group])}
+	{@render statTable(data[group])}
 </section>
 
-{#snippet statTable(
-	heading: string,
-	{ group, param, sortStat, stats, rows, unavailable }: StatTable,
-)}
-	<div
-		id="team-stats-table"
-		role="tabpanel"
-		aria-labelledby="team-stats-group-tab-{group}"
-		class="space-y-ch"
-	>
-		<h2 class="px-ch text-sm text-current/50">
-			{heading} — {period}
-		</h2>
-
+{#snippet statTable({ group, param, sortStat, stats, rows, unavailable }: StatTable)}
+	<div id="team-stats-table" role="tabpanel" aria-labelledby="team-stats-group-tab-{group}">
 		<div class="overflow-x-auto overflow-y-hidden">
 			<table class="w-max min-w-full text-center">
 				<thead class="text-sm">

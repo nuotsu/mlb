@@ -1,6 +1,7 @@
 <script lang="ts" generics="T extends string">
 	import { cn } from '#lib/utils.js'
 	import type { HTMLAttributes } from 'svelte/elements'
+	import { prefersReducedMotion } from 'svelte/motion'
 
 	let {
 		id,
@@ -20,6 +21,7 @@
 		controls?: string
 	} & Omit<HTMLAttributes<HTMLDivElement>, 'id' | 'onchange'> = $props()
 
+	let tablist = $state<HTMLDivElement>()
 	const tabs: HTMLButtonElement[] = $state([])
 
 	function select(next: T) {
@@ -38,14 +40,27 @@
 
 		e.preventDefault()
 		select(options[next].id)
-		tabs[next]?.focus()
+		// Without scrolling the page; the effect below brings the tab into view within the pill
+		tabs[next]?.focus({ preventScroll: true })
 	}
+
+	// Many options overflow on narrow screens, so keep the selected one centered in view
+	$effect(() => {
+		const tab = tabs[options.findIndex((o) => o.id === value)]
+		if (!tablist || !tab || tablist.scrollWidth <= tablist.clientWidth) return
+
+		tablist.scrollTo({
+			left: tab.offsetLeft - (tablist.clientWidth - tab.offsetWidth) / 2,
+			behavior: prefersReducedMotion.current ? 'instant' : 'smooth',
+		})
+	})
 </script>
 
 <div
+	bind:this={tablist}
 	role="tablist"
 	class={cn(
-		'relative isolate mx-auto flex w-max max-w-full gap-px rounded-full border border-current/25 p-px',
+		'relative isolate mx-auto no-scrollbar flex w-max max-w-full gap-px overflow-x-auto overscroll-x-contain rounded-full border border-current/25 p-px text-xs',
 		className,
 	)}
 	{...props}
@@ -69,7 +84,7 @@
 			tabindex={selected ? 0 : -1}
 			style:anchor-name="--{id}-tab-{option.id}"
 			class={cn(
-				'rounded-full px-[1.25ch] py-[.25ch] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent',
+				'shrink-0 rounded-full px-[1.25ch] py-[.25ch] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset',
 				selected ? 'text-dark' : 'text-current/60 hover:bg-accent/25 hover:text-current',
 			)}
 			onclick={() => select(option.id)}

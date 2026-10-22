@@ -60,7 +60,7 @@
 		<PillSwitcher
 			id="boxscore"
 			aria-label="Lineup view"
-			class="mb-[.5lh] text-xs"
+			class="mb-[.5lh]"
 			options={VIEWS}
 			value={view}
 			controls="boxscore-lineup-away boxscore-lineup-home"
