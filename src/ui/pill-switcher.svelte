@@ -60,7 +60,7 @@
 	bind:this={tablist}
 	role="tablist"
 	class={cn(
-		'relative isolate mx-auto no-scrollbar flex w-max max-w-full gap-px overflow-x-auto overscroll-x-contain rounded-full border border-current/25 p-px text-xs',
+		'relative isolate mx-auto no-scrollbar flex w-max max-w-full gap-px overflow-x-auto overscroll-x-contain rounded-full border border-current/25 p-px',
 		className,
 	)}
 	{...props}
