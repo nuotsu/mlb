@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
 	import ToggleCompare from '#ui/compare/toggle-compare.svelte'
 	import Divider from '#ui/divider.svelte'
 	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
+	import PillSwitcher from '#ui/pill-switcher.svelte'
 	import Draft from '#ui/player/draft.svelte'
 	import HeadshotHistory from '#ui/player/headshot-history.svelte'
 	import Headshot from '#ui/player/headshot.svelte'
@@ -29,6 +31,38 @@
 	)
 
 	const team = $derived(person.active ? person.currentTeam : person.preferredTeam?.team)
+
+	const GROUPS = [
+		{ id: 'hitting', label: 'Hitting' },
+		{ id: 'pitching', label: 'Pitching' },
+	] as const
+
+	type Group = (typeof GROUPS)[number]['id']
+
+	/** The groups the player has a year-by-year line in, the same test the stat lists use. */
+	const groups = $derived(
+		GROUPS.filter(({ id }) =>
+			person.stats?.some(
+				(s) =>
+					s.type?.displayName === 'yearByYear' &&
+					(s.group as unknown as MLB.StatGroupRef)?.displayName === id &&
+					s.splits?.length,
+			),
+		),
+	)
+
+	/** Pitchers open on their pitching; everyone else, two-way players included, on hitting. */
+	const defaultGroup = $derived<Group>(
+		person.primaryPosition?.type === 'Pitcher' && groups.some(({ id }) => id === 'pitching')
+			? 'pitching'
+			: (groups[0]?.id ?? 'hitting'),
+	)
+
+	/** Kept in `?group=` so a shared link opens the same stats. */
+	const group = $derived.by(() => {
+		const requested = currentUrl().searchParams.get('group')
+		return groups.find(({ id }) => id === requested)?.id ?? defaultGroup
+	})
 </script>
 
 <svelte:head>
@@ -120,9 +154,29 @@
 
 	<HeadshotHistory {person} />
 
-	{#each ['hitting', 'pitching'] as const as group}
-		<section class="group/stats space-y-lh px-ch has-data-empty:hidden">
-			<Divider class="capitalize">{group} stats</Divider>
+	{#if groups.length > 1}
+		<PillSwitcher
+			id="player-group"
+			aria-label="Stat group"
+			class="my-lh"
+			options={groups}
+			value={group}
+			controls="player-stats"
+			onchange={(next) => setViewParam('group', next, defaultGroup)}
+		/>
+	{/if}
+
+	<!-- Keyed, so each group mounts its own lists (season pickers and all), as when both were shown -->
+	{#key group}
+		<section
+			id="player-stats"
+			role={groups.length > 1 ? 'tabpanel' : undefined}
+			aria-labelledby={groups.length > 1 ? `player-group-tab-${group}` : undefined}
+			class="group/stats space-y-lh px-ch has-data-empty:hidden"
+		>
+			{#if groups.length < 2}
+				<Divider class="capitalize">{group} stats</Divider>
+			{/if}
 
 			<SeasonSplits {group} {person} baseballStats={data.baseballStats} />
 
@@ -140,5 +194,5 @@
 				</article>
 			</div>
 		</section>
-	{/each}
+	{/key}
 </div>

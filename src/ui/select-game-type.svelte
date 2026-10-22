@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { currentUrl } from '#lib/url.svelte.js'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 
@@ -26,7 +27,7 @@
 	class={className}
 	value={gameType}
 	onchange={(e) => {
-		const url = new URL(page.url.href)
+		const url = new URL(currentUrl().href)
 		const value = (e.target as HTMLSelectElement).value
 
 		if (value !== 'R') {

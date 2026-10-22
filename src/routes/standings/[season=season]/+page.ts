@@ -91,7 +91,7 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 			leagueId,
 			season: params.season,
 			standingsType,
-			hydrate: 'division,team',
+			hydrate: 'division,team,league',
 			fields: [
 				'records,sport,division,nameShort,league,springLeague,id,name',
 				'teamRecords,wins,losses,winningPercentage,gamesBack,streak,streakCode,leagueRank,divisionRank',
