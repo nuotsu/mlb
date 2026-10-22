@@ -22,9 +22,7 @@
 <table class="min-w-full table-fixed text-center">
 	<thead class="text-sm">
 		<tr>
-			<th class="min-w-[5ch]" colspan="4">
-				<span class="block px-[.5ch] text-left uppercase">Longest HRs</span>
-			</th>
+			<th class="min-w-[5ch]" colspan="4"></th>
 
 			{#each COLUMNS as { key, title, label, width }}
 				<th class={cn('px-[.5ch] whitespace-nowrap', width)}>
