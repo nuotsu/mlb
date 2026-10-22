@@ -29,12 +29,21 @@
 	const GROUPS = [
 		{ id: 'hitting', label: 'Hitting' },
 		{ id: 'pitching', label: 'Pitching' },
+		{ id: 'longest-home-runs', label: 'Longest HRs' },
 	] as const
 
-	/** Kept in `?group=` so a shared link opens the same leaders. */
-	const group = $derived(
-		currentUrl().searchParams.get('group') === 'pitching' ? 'pitching' : 'hitting',
+	// Statcast, where the longest home runs come from, only covers MLB
+	const groups = $derived(
+		(page.url.searchParams.get('sportId') ?? '1') === '1'
+			? GROUPS
+			: GROUPS.filter(({ id }) => id !== 'longest-home-runs'),
 	)
+
+	/** Kept in `?group=` so a shared link opens the same leaders. */
+	const group = $derived.by(() => {
+		const requested = currentUrl().searchParams.get('group')
+		return groups.find(({ id }) => id === requested)?.id ?? 'hitting'
+	})
 
 	let hittingSortStat = $derived(page.url.searchParams.get('hittingSortStat') ?? 'homeRuns')
 	let pitchingSortStat = $derived(page.url.searchParams.get('pitchingSortStat') ?? 'era')
@@ -118,7 +127,7 @@
 	<PillSwitcher
 		id="stats-group"
 		aria-label="Stat group"
-		options={GROUPS}
+		options={groups}
 		value={group}
 		controls="stats-leaders"
 		onchange={(next) => setViewParam('group', next, 'hitting')}
@@ -210,7 +219,7 @@
 					</tbody>
 				</table>
 			</article>
-		{:else}
+		{:else if group === 'pitching'}
 			<article class="overflow-x-auto has-[table]:flex">
 				<table class="min-w-full table-fixed text-center">
 					<thead class="text-sm">
@@ -277,18 +286,18 @@
 					</tbody>
 				</table>
 			</article>
+		{:else}
+			<article class="overflow-x-auto overflow-y-hidden has-[table]:flex">
+				{#await data.longestHomeRuns}
+					<Loading class="w-full justify-center p-lh text-current/40"
+						>Loading longest HRs...</Loading
+					>
+				{:then longestHomeRuns}
+					<LongestHomeRuns homeRuns={longestHomeRuns} />
+				{/await}
+			</article>
 		{/if}
 	</div>
-
-	<hr class="border-dashed border-stroke" />
-
-	<article class="overflow-x-auto overflow-y-hidden has-[table]:flex">
-		{#await data.longestHomeRuns}
-			<Loading class="w-full justify-center p-lh text-current/40">Loading longest HRs...</Loading>
-		{:then longestHomeRuns}
-			<LongestHomeRuns homeRuns={longestHomeRuns} />
-		{/await}
-	</article>
 </section>
 
 {#snippet p(person: MLB.Person, { rank, position, league, team }: MLB.StatSplit, sport?: MLB.Sport)}
