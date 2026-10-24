@@ -11,13 +11,19 @@
 		zonePlaneY,
 	} from '#lib/pitch-flight.js'
 	import { pitchOutcome } from '#lib/pitch-outcome.js'
-	import { batterUniformSrc, uniformSeason, type BatterUniforms } from '#lib/uniforms.js'
+	import {
+		batterUniformSrc,
+		uniformSeason,
+		withBaseJersey,
+		type BatterUniforms,
+	} from '#lib/uniforms.js'
 	import { cn } from '#lib/utils.js'
 	import BatterFigure from '#ui/game/batter-figure.svelte'
 	import SpinningBaseball from '#ui/game/spinning-baseball.svelte'
 	import { ChevronLeftIcon, ChevronRightIcon } from '#ui/icons/index.js'
 	import Headshot from '#ui/player/headshot.svelte'
 	import { prefersReducedMotion } from 'svelte/motion'
+	import { SvelteSet } from 'svelte/reactivity'
 
 	let {
 		plays,
@@ -153,12 +159,23 @@
 	const pitcher = $derived(play?.matchup?.pitcher)
 	const batter = $derived(play?.matchup?.batter)
 
-	/** The batting team's uniform, drawn for the side batted from in this at-bat. */
+	/** Batter renders that failed to load, by their joined srcs. */
+	const failedFigures = new SvelteSet<string>()
+
+	/**
+	 * The batting team's uniform, drawn for the side batted from in this at-bat.
+	 * A jersey Gameday has no render of gives way to the team's base one.
+	 */
 	const batterSrcs = $derived.by(() => {
-		const codes = play?.about?.isTopInning ? uniforms?.away : uniforms?.home
+		const side = play?.about?.isTopInning ? 'away' : 'home'
+		const codes = uniforms?.[side]
 		if (!codes || (batSide !== 'L' && batSide !== 'R')) return null
-		const srcs = codes.map((code) => batterUniformSrc(code, batSide))
-		return srcs.every(Boolean) ? (srcs as string[]) : null
+		for (const candidate of [codes, withBaseJersey(codes, side)]) {
+			const srcs = candidate?.map((code) => batterUniformSrc(code, batSide))
+			if (!srcs?.every(Boolean)) continue
+			if (!failedFigures.has(srcs.join(' '))) return srcs as string[]
+		}
+		return null
 	})
 
 	function lastName(person?: MLB.Person) {
@@ -271,14 +288,13 @@
 		return Math.min(7.5, Math.max(5, zone.top / ABS_ZONE.top))
 	})
 
-	/** A batter whose render failed to load isn't drawn, so the zone gets his room. */
-	let failedFigure = $state<string | null>(null)
-
-	/** The batter standing in the box, in feet. */
+	/**
+	 * The batter standing in the box, in feet. One with no render that loads
+	 * isn't drawn, so the zone gets his room.
+	 */
 	const figure = $derived.by(() => {
 		if (!batterSrcs || (batSide !== 'L' && batSide !== 'R')) return null
 		const key = batterSrcs.join(' ')
-		if (failedFigure === key) return null
 		const codes = play?.about?.isTopInning ? uniforms?.away : uniforms?.home
 		return { key, ...batterPlacement(batterHeight, batSide, uniformSeason(codes?.[0])) }
 	})
@@ -610,7 +626,11 @@
 					{#if figure && figureBox && batterSrcs}
 						{@const key = figure.key}
 						{#key key}
-							<BatterFigure srcs={batterSrcs} {...figureBox} onerror={() => (failedFigure = key)} />
+							<BatterFigure
+								srcs={batterSrcs}
+								{...figureBox}
+								onerror={() => failedFigures.add(key)}
+							/>
 						{/key}
 					{/if}
 
