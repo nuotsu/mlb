@@ -197,14 +197,40 @@
 		padding-inline: max(1ch, env(safe-area-inset-left)) 1ch;
 	}
 
-	.active::before {
-		content: '';
-		position: absolute;
-		inset: 50% auto auto 0;
-		translate: -50% -50%;
-		width: 0.5ch;
-		aspect-ratio: 1;
-		border-radius: 100%;
-		background-color: var(--color-accent);
+	.active {
+		isolation: isolate;
+
+		/* accent bar on the drawer edge */
+		&::before {
+			content: '';
+			position: absolute;
+			inset: 0.25ch auto 0.25ch 0;
+			width: 3px;
+			border-radius: 0 3px 3px 0;
+			background-color: var(--color-accent);
+		}
+
+		/* inset pill, accent fading into a neutral tint */
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0 0.5ch;
+			z-index: -1;
+			border: 1px solid color-mix(in srgb, var(--color-foreground) 8%, transparent);
+			border-radius: 0.5ch;
+			background: linear-gradient(
+				to right,
+				color-mix(in srgb, var(--color-accent) 25%, transparent),
+				color-mix(in srgb, var(--color-foreground) 3%, transparent)
+			);
+		}
+
+		:global(svg) {
+			color: var(--color-green-700);
+
+			:global(html:has([data-color-scheme='dark'])) & {
+				color: var(--color-accent);
+			}
+		}
 	}
 </style>
