@@ -70,7 +70,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 				<a href="/api/v1">query the Stats API</a>, all in one app.
 			</p>
 
-			<Baseball class="mx-auto my-[-5lh] mb-[-8lh] w-[300px] text-[8px]" />
+			<Baseball class="mx-auto my-6 w-60 text-[8px]" />
 
 			<QuickSearch class="mx-auto mt-lh! w-full max-w-sm" />
 			<InstallHint class="mx-auto max-w-md" />
