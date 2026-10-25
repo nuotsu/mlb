@@ -163,15 +163,18 @@
 </Drawer>
 
 {#snippet navLink({ class: className, href, label, icon: Icon }: LinkItem & { class?: string })}
+	{@const active = page.url.pathname.startsWith(href)}
+
 	<li class={className}>
-		<a
-			{href}
-			class="group/link relative flex items-center gap-ch py-px"
-			class:active={page.route.id?.startsWith(href)}
-		>
+		<a {href} class="group/link relative flex items-center gap-ch py-px" class:active>
 			<Icon />
 
-			<span class="grow decoration-dashed group-hover/link:underline sm:sidebar-closed-hidden">
+			<span
+				class={[
+					'grow sm:sidebar-closed-hidden',
+					!active && 'decoration-dashed group-hover/link:underline',
+				]}
+			>
 				{label}
 			</span>
 
@@ -216,7 +219,6 @@
 			position: absolute;
 			inset: 0 0.5ch;
 			z-index: -1;
-			border: 1px solid color-mix(in srgb, var(--color-foreground) 8%, transparent);
 			border-radius: 0.5ch;
 			background: linear-gradient(
 				to right,
