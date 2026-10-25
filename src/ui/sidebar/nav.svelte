@@ -166,15 +166,10 @@
 	{@const active = page.url.pathname.startsWith(href)}
 
 	<li class={className}>
-		<a {href} class="group/link relative flex items-center gap-ch py-px" class:active>
+		<a {href} class="relative flex items-center gap-ch py-px" class:active>
 			<Icon />
 
-			<span
-				class={[
-					'grow sm:sidebar-closed-hidden',
-					!active && 'decoration-dashed group-hover/link:underline',
-				]}
-			>
+			<span class="grow sm:sidebar-closed-hidden">
 				{label}
 			</span>
 
