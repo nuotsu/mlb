@@ -103,7 +103,9 @@
 </script>
 
 <Drawer>
-	<div class="flex h-full flex-col overflow-x-clip overflow-y-auto pt-ch sidebar-open:gap-ch">
+	<div
+		class="relative flex h-full flex-col overflow-x-clip overflow-y-auto pt-ch sidebar-open:gap-ch"
+	>
 		<div class="mb-ch sm:sidebar-closed-hidden">
 			<a class="flex items-center gap-ch" href="/">
 				<figure class="relative size-4">
@@ -140,6 +142,8 @@
 			</div>
 		{/each}
 
+		<span class="indicator" aria-hidden="true"></span>
+
 		<ul class="mt-auto text-sm *:py-[2px] sidebar-not-open:landscape:max-lg:overflow-clip">
 			<li><CompareList /></li>
 			<li><FavoritesList /></li>
@@ -163,15 +167,13 @@
 </Drawer>
 
 {#snippet navLink({ class: className, href, label, icon: Icon }: LinkItem & { class?: string })}
+	{@const active = page.url.pathname.startsWith(href)}
+
 	<li class={className}>
-		<a
-			{href}
-			class="group/link relative flex items-center gap-ch py-px"
-			class:active={page.route.id?.startsWith(href)}
-		>
+		<a {href} class="relative flex items-center gap-ch py-px" class:active>
 			<Icon />
 
-			<span class="grow decoration-dashed group-hover/link:underline sm:sidebar-closed-hidden">
+			<span class="grow sm:sidebar-closed-hidden">
 				{label}
 			</span>
 
@@ -197,14 +199,69 @@
 		padding-inline: max(1ch, env(safe-area-inset-left)) 1ch;
 	}
 
-	.active::before {
-		content: '';
+	/* accent bar on the drawer edge, gliding to whichever link is active */
+	.indicator {
+		display: none;
 		position: absolute;
-		inset: 50% auto auto 0;
-		translate: -50% -50%;
-		width: 0.5ch;
-		aspect-ratio: 1;
-		border-radius: 100%;
+		width: 3px;
+		border-radius: 0 3px 3px 0;
 		background-color: var(--color-accent);
+		pointer-events: none;
+	}
+
+	@supports (anchor-name: --a) {
+		.active {
+			anchor-name: --active-nav-link;
+		}
+
+		.indicator {
+			display: block;
+			position-anchor: --active-nav-link;
+			inset: calc(anchor(top) + 0.25ch) auto calc(anchor(bottom) + 0.25ch) 0;
+			transition:
+				inset 300ms ease-in-out,
+				opacity 150ms;
+		}
+
+		div:not(:has(.active)) > .indicator {
+			opacity: 0;
+		}
+	}
+
+	.active {
+		isolation: isolate;
+
+		@supports not (anchor-name: --a) {
+			&::before {
+				content: '';
+				position: absolute;
+				inset: 0.25ch auto 0.25ch 0;
+				width: 3px;
+				border-radius: 0 3px 3px 0;
+				background-color: var(--color-accent);
+			}
+		}
+
+		/* inset pill, accent fading into a neutral tint */
+		&::after {
+			content: '';
+			position: absolute;
+			inset: 0 0.5ch;
+			z-index: -1;
+			border-radius: 0.5ch;
+			background: linear-gradient(
+				to right,
+				color-mix(in srgb, var(--color-accent) 25%, transparent),
+				color-mix(in srgb, var(--color-foreground) 3%, transparent)
+			);
+		}
+
+		:global(svg) {
+			color: var(--color-green-700);
+
+			:global(html:has([data-color-scheme='dark'])) & {
+				color: var(--color-accent);
+			}
+		}
 	}
 </style>
