@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { tick } from 'svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let { text, ...props }: { text: string } & HTMLAttributes<HTMLPreElement> = $props()
@@ -21,18 +22,48 @@
 				})),
 			)
 	})
+
+	let pre = $state<HTMLPreElement>()
+	/** Bumped to replay: re-creating the characters restarts their CSS animations. */
+	let run = $state(0)
+	/** Until the reveal settles, taps are ignored so it can't be spammed. */
+	let animating = $state(true)
+
+	/** Waits for every character to settle; resolves right away if nothing is animating. */
+	async function settle() {
+		await Promise.allSettled(pre!.getAnimations({ subtree: true }).map((a) => a.finished))
+		animating = false
+	}
+
+	$effect(() => {
+		// The first reveal may still be playing when the page hydrates
+		if (pre) settle()
+	})
+
+	async function replay() {
+		if (animating) return
+		animating = true
+		run++
+		await tick()
+		await settle()
+	}
 </script>
 
 <!--
 	The reveal is pure CSS so it plays from the first server-rendered paint, before hydration,
-	without the finished text flashing first.
+	without the finished text flashing first. Tapping replays it, a decorative extra that's
+	left out of keyboard navigation.
 -->
+<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
 <pre
-	{...props}>{#each lines as line, row}{#each line as { char, delay, phase }}{#if char === ' '}{char}{:else}<span
-					class="cell"
-					style:--delay="{delay}ms"
-					style:--phase={phase}>{char}</span
-				>{/if}{/each}{#if row < lines.length - 1}{'\n'}{/if}{/each}</pre>
+	bind:this={pre}
+	{...props}
+	class={[props.class, !animating && 'cursor-pointer motion-reduce:cursor-auto']}
+	onclick={replay}>{#key run}{#each lines as line, row}{#each line as { char, delay, phase }}{#if char === ' '}{char}{:else}<span
+						class="cell"
+						style:--delay="{delay}ms"
+						style:--phase={phase}>{char}</span
+					>{/if}{/each}{#if row < lines.length - 1}{'\n'}{/if}{/each}{/key}</pre>
 
 <style>
 	/* Each character stays hidden until the wave reaches it, flickers through random glyphs,
