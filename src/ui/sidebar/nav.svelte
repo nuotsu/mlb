@@ -103,7 +103,9 @@
 </script>
 
 <Drawer>
-	<div class="flex h-full flex-col overflow-x-clip overflow-y-auto pt-ch sidebar-open:gap-ch">
+	<div
+		class="relative flex h-full flex-col overflow-x-clip overflow-y-auto pt-ch sidebar-open:gap-ch"
+	>
 		<div class="mb-ch sm:sidebar-closed-hidden">
 			<a class="flex items-center gap-ch" href="/">
 				<figure class="relative size-4">
@@ -139,6 +141,8 @@
 				</ul>
 			</div>
 		{/each}
+
+		<span class="indicator" aria-hidden="true"></span>
 
 		<ul class="mt-auto text-sm *:py-[2px] sidebar-not-open:landscape:max-lg:overflow-clip">
 			<li><CompareList /></li>
@@ -195,17 +199,47 @@
 		padding-inline: max(1ch, env(safe-area-inset-left)) 1ch;
 	}
 
+	/* accent bar on the drawer edge, gliding to whichever link is active */
+	.indicator {
+		display: none;
+		position: absolute;
+		width: 3px;
+		border-radius: 0 3px 3px 0;
+		background-color: var(--color-accent);
+		pointer-events: none;
+	}
+
+	@supports (anchor-name: --a) {
+		.active {
+			anchor-name: --active-nav-link;
+		}
+
+		.indicator {
+			display: block;
+			position-anchor: --active-nav-link;
+			inset: calc(anchor(top) + 0.25ch) auto calc(anchor(bottom) + 0.25ch) 0;
+			transition:
+				inset 300ms ease-in-out,
+				opacity 150ms;
+		}
+
+		div:not(:has(.active)) > .indicator {
+			opacity: 0;
+		}
+	}
+
 	.active {
 		isolation: isolate;
 
-		/* accent bar on the drawer edge */
-		&::before {
-			content: '';
-			position: absolute;
-			inset: 0.25ch auto 0.25ch 0;
-			width: 3px;
-			border-radius: 0 3px 3px 0;
-			background-color: var(--color-accent);
+		@supports not (anchor-name: --a) {
+			&::before {
+				content: '';
+				position: absolute;
+				inset: 0.25ch auto 0.25ch 0;
+				width: 3px;
+				border-radius: 0 3px 3px 0;
+				background-color: var(--color-accent);
+			}
 		}
 
 		/* inset pill, accent fading into a neutral tint */
