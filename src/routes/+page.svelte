@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
+	import AsciiReveal from '#ui/ascii-reveal.svelte'
 	import Awards from '#ui/banner/awards.svelte'
 	import Baseball from '#ui/baseball.svelte'
 	import Rollup from '#ui/blog/rollup.svelte'
@@ -60,8 +61,10 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 		<header class="space-y-ch">
 			<h1 class="mx-auto flex max-w-max flex-col text-xl" aria-label="Welcome to MLB.TheOhtani.com">
 				<div class="mb-1">Welcome to</div>
-				<pre
-					class="-mt-ch overflow-x-auto overflow-y-clip text-[x-small] leading-none">{ascii}</pre>
+				<AsciiReveal
+					text={ascii}
+					class="-mt-ch overflow-x-auto overflow-y-clip text-[x-small] leading-none"
+				/>
 				<p class="ml-auto">.TheOhtani.com</p>
 			</h1>
 
@@ -70,7 +73,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 				<a href="/api/v1">query the Stats API</a>, all in one app.
 			</p>
 
-			<Baseball class="mx-auto my-[-5lh] mb-[-8lh] w-[300px] text-[8px]" />
+			<Baseball class="mx-auto my-6 w-60 text-[8px]" />
 
 			<QuickSearch class="mx-auto mt-lh! w-full max-w-sm" />
 			<InstallHint class="mx-auto max-w-md" />

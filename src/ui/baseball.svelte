@@ -1,415 +1,399 @@
 <script lang="ts">
 	// @reference https://alexharri.com/blog/ascii-rendering
 
+	import {
+		advance,
+		IDLE_SPIN,
+		LEATHER,
+		length,
+		lightingAt,
+		quatFromRotation,
+		quatMul,
+		quatNormalize,
+		randomOrientation,
+		releaseSpin,
+		rotationBetween,
+		rotationMatrix,
+		scale,
+		seamStyle,
+		shade,
+		sphereAt,
+		surfaceAt,
+		THREAD,
+		type Quat,
+		type RotationSample,
+		type Vec3,
+	} from '#lib/baseball.js'
 	import { colorSchemeStore } from '#ui/store.svelte.js'
 	import type { HTMLAttributes } from 'svelte/elements'
 
-	type Vec3 = [number, number, number]
-	type Mat3 = [number, number, number, number, number, number, number, number, number]
-
 	let { ...props }: HTMLAttributes<HTMLElement> = $props()
 
-	let containerWidth = $state(0)
+	/** Caps the grid so huge containers stay cheap to render. */
+	const MAX_COLS = 120
+	/** Fraction of the grid's shorter side the ball spans. */
+	const FILL = 0.94
+	/** Sub-cell samples, matching where each glyph's shape is sampled below. */
+	const SUBSAMPLES: [number, number][] = [
+		[0.25, 0.17],
+		[0.75, 0.17],
+		[0.25, 0.5],
+		[0.75, 0.5],
+		[0.25, 0.83],
+		[0.75, 0.83],
+	]
+	/** Most orientations blended per frame for motion blur. */
+	const MAX_BLUR_STEPS = 5
+
+	let pre = $state<HTMLPreElement>()
+	let probe = $state<HTMLSpanElement>()
+	let width = $state(0)
+	let height = $state(0)
+	let cell = $state({ width: 0, height: 0 })
 
 	const isDark = $derived(colorSchemeStore.mode !== 'light')
-	const cols = $derived(Math.floor(Math.min(containerWidth / 7, 80)))
-	const rows = $derived(Math.floor(cols * 0.5))
+	const cols = $derived(cell.width ? Math.min(MAX_COLS, Math.floor(width / cell.width)) : 0)
+	const rows = $derived(cell.height ? Math.floor(height / cell.height) : 0)
+	/** Ball radius in pixels; cells aren't square, so this keeps it round. */
+	const radius = $derived((Math.min(cols * cell.width, rows * cell.height) / 2) * FILL)
+	const style = $derived(seamStyle(Math.max(cell.width, cell.height) / radius))
 
-	// Ball orientation as rotation matrix (row-major) — start at random orientation
-	let ballMat: Mat3 = (() => {
-		const a = Math.random() * Math.PI * 2
-		const b = Math.random() * Math.PI * 2
-		return matMul(axisAngleMat(1, 0, 0, a), axisAngleMat(0, 1, 0, b))
-	})()
+	/** Per-sample world-space normals and lighting, fixed until the grid changes. */
+	const samples = $derived.by(() => {
+		const count = cols * rows * SUBSAMPLES.length
+		const normals = new Float32Array(count * 3)
+		const diffuse = new Float32Array(count)
+		const specular = new Float32Array(count)
+		const inside = new Uint8Array(count)
 
-	let isDragging = $state(false)
-	let activePointerId = -1
-	let velocityX = (Math.random() - 0.5) * 0.8
-	let velocityY = (Math.random() - 0.5) * 0.8
-	let lastPointerX = 0
-	let lastPointerY = 0
-	let lastPointerTime = 0
-
-	let asciiFrame = $state<{ char: string; isSeam: boolean }[][]>([])
-	let charVectors: { char: string; vec: number[] }[] = []
-	let quantCache = new Map<number, string>()
-
-	// --- Vector math ---
-
-	function dot(a: Vec3, b: Vec3): number {
-		return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-	}
-
-	function normalize(v: Vec3): Vec3 {
-		const len = Math.sqrt(dot(v, v))
-		return len > 0 ? [v[0] / len, v[1] / len, v[2] / len] : [0, 0, 0]
-	}
-
-	// --- Matrix math ---
-
-	function matMul(a: Mat3, b: Mat3): Mat3 {
-		return [
-			a[0] * b[0] + a[1] * b[3] + a[2] * b[6],
-			a[0] * b[1] + a[1] * b[4] + a[2] * b[7],
-			a[0] * b[2] + a[1] * b[5] + a[2] * b[8],
-			a[3] * b[0] + a[4] * b[3] + a[5] * b[6],
-			a[3] * b[1] + a[4] * b[4] + a[5] * b[7],
-			a[3] * b[2] + a[4] * b[5] + a[5] * b[8],
-			a[6] * b[0] + a[7] * b[3] + a[8] * b[6],
-			a[6] * b[1] + a[7] * b[4] + a[8] * b[7],
-			a[6] * b[2] + a[7] * b[5] + a[8] * b[8],
-		]
-	}
-
-	function matTVec(m: Mat3, v: Vec3): Vec3 {
-		return [
-			m[0] * v[0] + m[3] * v[1] + m[6] * v[2],
-			m[1] * v[0] + m[4] * v[1] + m[7] * v[2],
-			m[2] * v[0] + m[5] * v[1] + m[8] * v[2],
-		]
-	}
-
-	function axisAngleMat(ax: number, ay: number, az: number, angle: number): Mat3 {
-		const c = Math.cos(angle),
-			s = Math.sin(angle),
-			t = 1 - c
-		return [
-			t * ax * ax + c,
-			t * ax * ay - s * az,
-			t * ax * az + s * ay,
-			t * ax * ay + s * az,
-			t * ay * ay + c,
-			t * ay * az - s * ax,
-			t * ax * az - s * ay,
-			t * ay * az + s * ax,
-			t * az * az + c,
-		]
-	}
-
-	function reortho(m: Mat3): Mat3 {
-		let x: Vec3 = [m[0], m[1], m[2]]
-		let y: Vec3 = [m[3], m[4], m[5]]
-		x = normalize(x)
-		const d = dot(x, y)
-		y = normalize([y[0] - d * x[0], y[1] - d * x[1], y[2] - d * x[2]])
-		const z: Vec3 = [
-			x[1] * y[2] - x[2] * y[1],
-			x[2] * y[0] - x[0] * y[2],
-			x[0] * y[1] - x[1] * y[0],
-		]
-		return [x[0], x[1], x[2], y[0], y[1], y[2], z[0], z[1], z[2]]
-	}
-
-	// --- Baseball seam distance ---
-
-	const SEAM_POINTS: Vec3[] = []
-	{
-		const steps = 128
-		const TILT = 0.42
-		const ct = Math.cos(TILT),
-			st = Math.sin(TILT)
-
-		for (let i = 0; i < steps; i++) {
-			const t = (i / steps) * Math.PI * 4
-			const x = Math.cos(t)
-			const y0 = Math.sin(t)
-			const y = y0 * ct
-			const z = y0 * st
-			const ca = Math.cos(t / 2),
-				sa = Math.sin(t / 2)
-			SEAM_POINTS.push([x * ca + z * sa, y, -x * sa + z * ca])
+		for (let row = 0; row < rows; row++) {
+			for (let col = 0; col < cols; col++) {
+				SUBSAMPLES.forEach(([sx, sy], k) => {
+					const i = (row * cols + col) * SUBSAMPLES.length + k
+					const x = ((col + sx - cols / 2) * cell.width) / radius
+					const y = ((rows / 2 - row - sy) * cell.height) / radius
+					const r2 = x * x + y * y
+					if (r2 > 1) return
+					const n: Vec3 = [x, y, Math.sqrt(1 - r2)]
+					const light = lightingAt(n)
+					normals.set(n, i * 3)
+					diffuse[i] = light.diffuse
+					specular[i] = light.specular
+					inside[i] = 1
+				})
+			}
 		}
-	}
 
-	function seamDistance(p: Vec3): number {
-		const n = normalize(p)
-		let minDist = Infinity
-		for (const s of SEAM_POINTS) {
-			const dx = n[0] - s[0],
-				dy = n[1] - s[1],
-				dz = n[2] - s[2]
-			const d = dx * dx + dy * dy + dz * dz
-			if (d < minDist) minDist = d
-		}
-		return Math.sqrt(minDist)
-	}
+		return { normals, diffuse, specular, inside }
+	})
 
-	// --- Single ray → lightness ---
+	let orientation: Quat = randomOrientation()
+	/** Angular velocity in world space (rad/s). */
+	let spin: Vec3 = scale(sphereAt(Math.random() * 2 - 1, Math.random() * 2 - 1), IDLE_SPIN)
+	let idle = IDLE_SPIN
 
-	function computeLightness(u: number, v: number): { lightness: number; isSeam: boolean } {
-		const RADIUS = 0.9
-		const lightDir: Vec3 = normalize([0.15, 0.25, -1])
-		const viewDir: Vec3 = [0, 0, -1]
+	let frame = $state.raw<{ text: string; stitch: boolean }[]>([])
+	let dirty = true
 
-		const rayOz = -2
-		const c = u * u + v * v + rayOz * rayOz - RADIUS * RADIUS
-		const disc = rayOz * rayOz - c
+	// --- Glyphs ---
 
-		if (disc < 0) return { lightness: 0, isSeam: false }
+	let glyphs: { char: string; shape: number[] }[] = []
+	let glyphCache = new Map<number, string>()
 
-		const t = -rayOz - Math.sqrt(disc)
-		const hit: Vec3 = [u, v, rayOz + t]
-		const normal: Vec3 = normalize(hit)
-
-		// Transform to ball-local space for seam lookup only
-		const rp: Vec3 = matTVec(ballMat, hit)
-
-		// Lighting in fixed world space
-		const diffuse = Math.max(0, dot(normal, lightDir))
-
-		const half: Vec3 = normalize([
-			lightDir[0] - viewDir[0],
-			lightDir[1] - viewDir[1],
-			lightDir[2] - viewDir[2],
-		])
-		const spec = Math.pow(Math.max(0, dot(normal, half)), 32) * 0.3
-
-		const rim = Math.pow(1 - Math.max(0, -dot(normal, viewDir)), 3) * 0.2
-
-		// Seam
-		const sd = seamDistance(rp)
-		const seamW = 0.16
-		const seamColorW = isDark ? 0.08 : seamW
-		const isSeam = sd < seamColorW
-		const seamBase = isDark ? 0.1 : 0.3
-		const seamFactor = isSeam ? seamBase + (1 - seamBase) * (sd / seamW) : 1.0
-
-		const lightness = Math.min(1, (0.4 + diffuse * 0.5 + spec + rim) * seamFactor)
-		return { lightness: isDark ? lightness * 0.5 : 1 - lightness, isSeam }
-	}
-
-	// --- Pre-compute character shape vectors ---
-
-	function precomputeCharVectors(): { char: string; vec: number[] }[] {
+	/** How much of each sample region every glyph covers, scaled so the densest region is 1. */
+	function measureGlyphs(aspect: number) {
 		const chars = " .`'^,:;Il!i><~+_-?][}{1)(|/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
+		const w = 12
+		const h = Math.round(w / aspect)
 		const canvas = document.createElement('canvas')
-		const ctx = canvas.getContext('2d')!
-		const cellW = 12
-		const cellH = 24
-		canvas.width = cellW
-		canvas.height = cellH
-
-		const samples: [number, number][] = [
-			[0.25, 0.17],
-			[0.75, 0.17],
-			[0.25, 0.5],
-			[0.75, 0.5],
-			[0.25, 0.83],
-			[0.75, 0.83],
-		]
+		canvas.width = w
+		canvas.height = h
+		const ctx = canvas.getContext('2d', { willReadFrequently: true })!
+		ctx.font = `${h}px "Geist Mono", monospace`
+		ctx.textBaseline = 'top'
+		ctx.fillStyle = 'white'
 		const r = 3
 
-		return [...chars].map((char) => {
-			ctx.clearRect(0, 0, cellW, cellH)
-			ctx.fillStyle = 'white'
-			ctx.font = `${cellH - 2}px "Geist Mono", monospace`
-			ctx.textBaseline = 'top'
-			ctx.fillText(char, 0, 0)
-
-			const imgData = ctx.getImageData(0, 0, cellW, cellH)
-			const vec = samples.map(([sx, sy]) => {
+		const measured = [...chars].map((char) => {
+			ctx.clearRect(0, 0, w, h)
+			ctx.fillText(char, (w - ctx.measureText(char).width) / 2, 0)
+			const { data } = ctx.getImageData(0, 0, w, h)
+			const shape = SUBSAMPLES.map(([sx, sy]) => {
+				const cx = Math.floor(sx * w)
+				const cy = Math.floor(sy * h)
 				let sum = 0,
 					count = 0
-				const cx = Math.floor(sx * cellW)
-				const cy = Math.floor(sy * cellH)
 				for (let dy = -r; dy <= r; dy++) {
 					for (let dx = -r; dx <= r; dx++) {
-						if (dx * dx + dy * dy > r * r) continue
 						const px = cx + dx,
 							py = cy + dy
-						if (px < 0 || px >= cellW || py < 0 || py >= cellH) continue
-						sum += imgData.data[(py * cellW + px) * 4 + 3]
+						if (dx * dx + dy * dy > r * r || px < 0 || px >= w || py < 0 || py >= h) continue
+						sum += data[(py * w + px) * 4 + 3]
 						count++
 					}
 				}
-				return count > 0 ? sum / count / 255 : 0
+				return sum / count / 255
 			})
-
-			return { char, vec }
+			return { char, shape }
 		})
+
+		const max = Math.max(...measured.flatMap((g) => g.shape))
+		glyphs = measured.map(({ char, shape }) => ({ char, shape: shape.map((v) => v / max) }))
+		glyphCache = new Map()
+		dirty = true
 	}
 
-	// --- Character matching with quantization cache ---
-
-	function quantize(v: number[]): number {
+	/** Glyph whose shape best matches a cell's sampled ink, sharpened a little at edges. */
+	function glyphFor(ink: number[]) {
 		let key = 0
-		for (let i = 0; i < 6; i++) {
-			const q = Math.round(Math.min(1, Math.max(0, v[i])) * 31)
-			key = (key << 5) | q
-		}
-		return key
-	}
-
-	function findChar(cellVec: number[]): string {
-		const key = quantize(cellVec)
-		const cached = quantCache.get(key)
+		for (const v of ink) key = key * 32 + Math.round(Math.min(1, Math.max(0, v)) * 31)
+		const cached = glyphCache.get(key)
 		if (cached !== undefined) return cached
 
-		const maxVal = Math.max(...cellVec)
-		if (maxVal < 0.01) {
-			quantCache.set(key, ' ')
-			return ' '
-		}
-
-		const enhanced = isDark ? cellVec : cellVec.map((v) => Math.pow(v / maxVal, 1.4) * maxVal)
-
-		let bestChar = ' '
-		let bestDist = Infinity
-		for (const { char, vec } of charVectors) {
-			let dist = 0
-			for (let i = 0; i < 6; i++) {
-				const d = enhanced[i] - vec[i]
-				dist += d * d
-			}
-			if (dist < bestDist) {
-				bestDist = dist
-				bestChar = char
+		const max = Math.max(...ink)
+		let best = ' '
+		if (max > 0.02) {
+			const sharpened = ink.map((v) => Math.pow(v / max, 1.3) * max)
+			let bestDist = Infinity
+			for (const { char, shape } of glyphs) {
+				let dist = 0
+				for (let i = 0; i < shape.length; i++) dist += (sharpened[i] - shape[i]) ** 2
+				if (dist < bestDist) {
+					bestDist = dist
+					best = char
+				}
 			}
 		}
 
-		quantCache.set(key, bestChar)
-		return bestChar
+		glyphCache.set(key, best)
+		return best
 	}
 
-	// --- Render a full frame ---
+	// --- Rendering ---
 
-	function renderFrame(): { char: string; isSeam: boolean }[][] {
-		if (cols <= 0 || rows <= 0) return []
+	/** Renders the ball, blending orientations across `blur` (the rotation during the exposure). */
+	function render(blur: Vec3) {
+		if (!glyphs.length || !cols || !rows) return
 
-		const subOffsets: [number, number][] = [
-			[-0.25, -0.3],
-			[0.25, -0.3],
-			[-0.25, 0.0],
-			[0.25, 0.0],
-			[-0.25, 0.3],
-			[0.25, 0.3],
-		]
+		const blurAngle = length(blur)
+		const steps = Math.min(
+			MAX_BLUR_STEPS,
+			Math.max(1, Math.ceil(blurAngle / ((0.5 * cell.width) / radius))),
+		)
+		const matrices = Array.from({ length: steps }, (_, k) =>
+			rotationMatrix(quatMul(quatFromRotation(scale(blur, (k + 1) / steps - 1)), orientation)),
+		)
 
-		const lines: { char: string; isSeam: boolean }[][] = []
+		const { normals, diffuse, specular, inside } = samples
+		const light = { diffuse: 0, specular: 0 }
+		const ink = new Array<number>(SUBSAMPLES.length)
+		const thread = new Array<number>(SUBSAMPLES.length)
+		const segments: { text: string; stitch: boolean }[] = []
+		let text = ''
+		let stitch = false
 
 		for (let row = 0; row < rows; row++) {
-			const line: { char: string; isSeam: boolean }[] = []
 			for (let col = 0; col < cols; col++) {
-				const samples = subOffsets.map(([du, dv]) => {
-					const u = ((col + 0.5 + du) / cols) * 2 - 1
-					const v = -(((row + 0.5 + dv) / rows) * 2 - 1)
-					return computeLightness(u, v)
-				})
+				let threads = 0
+				for (let k = 0; k < SUBSAMPLES.length; k++) {
+					const i = (row * cols + col) * SUBSAMPLES.length + k
+					ink[k] = thread[k] = 0
+					if (!inside[i]) continue
+					const nx = normals[i * 3],
+						ny = normals[i * 3 + 1],
+						nz = normals[i * 3 + 2]
+					light.diffuse = diffuse[i]
+					light.specular = specular[i]
 
-				const cellVec = samples.map((s) => s.lightness)
-				const isSeam = samples.some((s) => s.isSeam)
-				line.push({ char: findChar(cellVec), isSeam })
+					let brightness = 0
+					for (const m of matrices) {
+						// World → ball-local is the transpose of the orientation matrix
+						const surface = surfaceAt(
+							m[0] * nx + m[3] * ny + m[6] * nz,
+							m[1] * nx + m[4] * ny + m[7] * nz,
+							m[2] * nx + m[5] * ny + m[8] * nz,
+							style,
+						)
+						// Count thread here; shade it as leather unless enough of the cell is stitched
+						if (surface === THREAD) thread[k]++
+						else brightness += shade(surface, light)
+					}
+					brightness = (brightness + thread[k] * shade(LEATHER, light)) / steps
+					thread[k] /= steps
+					threads += thread[k]
+
+					// Light text on dark draws light as ink; dark text on light draws shadow as ink,
+					// with a floor so the lit side of a white ball doesn't vanish into the page
+					ink[k] = isDark ? brightness : 0.1 + 0.8 * (1 - brightness)
+				}
+
+				// Stitched cells draw just the thread, in red, so its shape picks the glyph. Red thread
+				// is darker than leather, so on a light page it stays inky even in shadow
+				const isStitch = threads / SUBSAMPLES.length > 0.12
+				if (isStitch) {
+					for (let k = 0; k < SUBSAMPLES.length; k++) {
+						const lit = Math.min(1, diffuse[(row * cols + col) * SUBSAMPLES.length + k])
+						ink[k] = thread[k] * (isDark ? 0.3 + 0.45 * lit : 0.55 + 0.25 * (1 - lit))
+					}
+				}
+				if (isStitch !== stitch && text) {
+					segments.push({ text, stitch })
+					text = ''
+				}
+				stitch = isStitch
+				text += glyphFor(ink)
 			}
-			lines.push(line)
+			if (row < rows - 1) text += '\n'
 		}
+		if (text) segments.push({ text, stitch })
 
-		return lines
+		frame = segments
 	}
 
 	// --- Lifecycle ---
 
-	$effect(() => {
-		isDark
-		quantCache = new Map()
-	})
-
-	$effect(() => {
-		document.fonts.load('22px "Geist Mono"').then(() => {
-			charVectors = precomputeCharVectors()
+	function measureCell() {
+		if (!probe) return
+		const rect = probe.getBoundingClientRect()
+		if (!rect.width || !rect.height) return
+		const next = { width: rect.width / 10, height: rect.height / 2 }
+		if (next.width === cell.width && next.height === cell.height) return
+		cell = next
+		document.fonts.load(`${next.height}px "Geist Mono"`).then(() => {
+			measureGlyphs(next.width / next.height)
 		})
+	}
+
+	$effect(() => {
+		if (!probe) return
+		// Font loads and font-size changes both resize the probe
+		const observer = new ResizeObserver(measureCell)
+		observer.observe(probe)
+		return () => observer.disconnect()
 	})
 
 	$effect(() => {
-		let animFrame = 0
-		let lastTime = 0
-		let frames = 0
+		samples
+		style
+		isDark
+		dirty = true
+	})
 
-		function animate(time: number) {
-			const dt = lastTime ? (time - lastTime) / 1000 : 0
-			lastTime = time
+	$effect(() => {
+		const motion = window.matchMedia('(prefers-reduced-motion: reduce)')
+		const update = () => {
+			idle = motion.matches ? 0 : IDLE_SPIN
+			if (motion.matches) spin = [0, 0, 0]
+		}
+		update()
+		motion.addEventListener('change', update)
+		return () => motion.removeEventListener('change', update)
+	})
 
-			if (!isDragging) {
-				const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY)
-				if (speed > 0.001) {
-					const angle = speed * dt
-					ballMat = matMul(axisAngleMat(velocityX / speed, velocityY / speed, 0, angle), ballMat)
+	let visible = true
 
-					const friction = Math.pow(0.2, dt)
-					velocityX *= friction
-					velocityY *= friction
+	$effect(() => {
+		if (!pre) return
+		const observer = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting))
+		observer.observe(pre)
+		return () => observer.disconnect()
+	})
 
-					// Enforce min speed in the current spin direction
-					const newSpeed = Math.sqrt(velocityX * velocityX + velocityY * velocityY)
-					const MIN_SPEED = 0.3
-					if (newSpeed < MIN_SPEED && newSpeed > 0.001) {
-						const scale = MIN_SPEED / newSpeed
-						velocityX *= scale
-						velocityY *= scale
-					}
-				}
+	$effect(() => {
+		let raf = 0
+		let last = 0
+
+		function tick(time: number) {
+			raf = requestAnimationFrame(tick)
+			// Big gaps (background tabs, offscreen) resume smoothly instead of lurching
+			const dt = last ? Math.min(0.05, (time - last) / 1000) : 0
+			last = time
+			if (!visible) return
+
+			let blur: Vec3 = [0, 0, 0]
+			if (!dragging && length(spin) > 1e-6) {
+				const before = spin
+				;({ orientation, spin } = advance(orientation, spin, dt, idle))
+				if (length(spin) < 1e-3) spin = [0, 0, 0]
+				// Exposure of one frame, like a camera with a 360° shutter
+				blur = scale(before, dt)
+				dirty = true
 			}
 
-			if (++frames % 60 === 0) ballMat = reortho(ballMat)
-
-			asciiFrame = renderFrame()
-			animFrame = requestAnimationFrame(animate)
+			if (!dirty) return
+			dirty = false
+			render(blur)
 		}
 
-		animFrame = requestAnimationFrame(animate)
-		return () => cancelAnimationFrame(animFrame)
+		raf = requestAnimationFrame(tick)
+		return () => cancelAnimationFrame(raf)
 	})
 
 	// --- Pointer interaction ---
 
+	let dragging = false
+	let pointerId = -1
+	let grabbed: Vec3 = [0, 0, 1]
+	let history: RotationSample[] = []
+
+	/** Point on the ball (world space) under the pointer. */
+	function pointOnBall(e: PointerEvent) {
+		const rect = pre!.getBoundingClientRect()
+		return sphereAt(
+			(e.clientX - rect.left - rect.width / 2) / radius,
+			(rect.top + rect.height / 2 - e.clientY) / radius,
+		)
+	}
+
 	function onpointerdown(e: PointerEvent) {
-		if (activePointerId !== -1) return
-		activePointerId = e.pointerId
-		isDragging = true
-		lastPointerX = e.clientX
-		lastPointerY = e.clientY
-		lastPointerTime = performance.now()
-		velocityX = 0
-		velocityY = 0
+		if (pointerId !== -1 || !radius) return
+		pointerId = e.pointerId
+		dragging = true
+		grabbed = pointOnBall(e)
+		history = []
+		spin = [0, 0, 0]
 		;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
 	}
 
 	function onpointermove(e: PointerEvent) {
-		if (!isDragging || e.pointerId !== activePointerId) return
-		const dx = e.clientX - lastPointerX
-		const dy = e.clientY - lastPointerY
-
-		const angleX = -dy * 0.01
-		const angleY = -dx * 0.01
-		ballMat = matMul(axisAngleMat(0, 1, 0, angleY), matMul(axisAngleMat(1, 0, 0, angleX), ballMat))
-
+		if (e.pointerId !== pointerId) return
+		// Roll the ball so the leather under the pointer stays under it
+		const point = pointOnBall(e)
+		const rotation = rotationBetween(grabbed, point)
+		grabbed = point
+		orientation = quatNormalize(quatMul(quatFromRotation(rotation), orientation))
 		const now = performance.now()
-		const dt = (now - lastPointerTime) / 1000
-		if (dt > 0) {
-			velocityX = angleX / dt
-			velocityY = angleY / dt
-		}
-		lastPointerX = e.clientX
-		lastPointerY = e.clientY
-		lastPointerTime = now
+		history = [...history.filter((s) => now - s.time < 250), { time: now, rotation }]
+		dirty = true
 	}
 
 	function onpointerup(e: PointerEvent) {
-		if (e.pointerId !== activePointerId) return
-		activePointerId = -1
-		isDragging = false
+		if (e.pointerId !== pointerId) return
+		pointerId = -1
+		dragging = false
+		// Let go and it keeps the spin the drag gave it
+		spin = releaseSpin(history, performance.now())
 	}
 </script>
 
-<figure {...props} bind:clientWidth={containerWidth}>
+<figure {...props}>
 	<pre
-		class="grid aspect-square cursor-grab touch-none place-content-center font-mono leading-none tracking-tighter select-none active:cursor-grabbing"
+		bind:this={pre}
+		bind:clientWidth={width}
+		bind:clientHeight={height}
+		class="relative grid aspect-square cursor-grab touch-none place-content-center font-mono leading-none tracking-tighter select-none active:cursor-grabbing"
 		{onpointerdown}
 		{onpointermove}
 		{onpointerup}
+		onpointercancel={onpointerup}
 		role="img"
 		aria-label="Interactive 3D baseball rendered in ASCII art"><span
-			>{#each asciiFrame as line, i}{#each line as { char, isSeam }}{#if isSeam}<span
-							class="text-red-700 dark:text-red-300">{char}</span
-						>{:else}{char}{/if}{/each}{#if i < asciiFrame.length - 1}{'\n'}{/if}{/each}</span
+			bind:this={probe}
+			class="invisible absolute top-0 left-0"
+			aria-hidden="true">{'0000000000\n0'}</span
+		><span
+			>{#each frame as { text, stitch }, i (i)}{#if stitch}<span
+						class="text-red-700 dark:text-red-400">{text}</span
+					>{:else}{text}{/if}{/each}</span
 		></pre>
 </figure>
