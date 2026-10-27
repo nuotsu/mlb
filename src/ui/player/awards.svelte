@@ -131,7 +131,7 @@
 								class={cn(
 									'text-sm tabular-nums',
 									i % 2 && 'bg-foreground/5 dark:bg-foreground/8',
-									notable ? 'positive' : 'text-current/50',
+									notable ? 'font-bold positive' : 'text-current/50',
 								)}
 							>
 								{#if count > 1}
@@ -145,7 +145,7 @@
 								class={cn(
 									'text-left leading-tight',
 									i % 2 && 'bg-foreground/5 dark:bg-foreground/8',
-									notable && 'positive',
+									notable && 'font-bold positive',
 								)}>{name}</td
 							>
 						</tr>
