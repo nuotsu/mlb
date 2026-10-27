@@ -82,7 +82,7 @@
 				</colgroup>
 
 				<tbody>
-					{#each rows as { key, name, season, team, count, nth, total } (key)}
+					{#each rows as { key, name, season, team, count, nth, total }, i (key)}
 						{@const bg = team
 							? `url(https://midfield.mlbstatic.com/v1/team/${team.id}/spots/32)`
 							: undefined}
@@ -116,7 +116,7 @@
 								{/if}
 							</td>
 
-							<td class="text-sm text-current/50 tabular-nums">
+							<td class={cn('text-sm text-current/50 tabular-nums', i % 2 && 'bg-foreground/5')}>
 								{#if count > 1}
 									×{count}
 								{:else if total > 1}
@@ -124,7 +124,7 @@
 								{/if}
 							</td>
 
-							<td class="text-left">{name}</td>
+							<td class={cn('text-left', i % 2 && 'bg-foreground/5')}>{name}</td>
 						</tr>
 					{/each}
 				</tbody>
