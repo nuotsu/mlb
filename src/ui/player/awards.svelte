@@ -123,7 +123,12 @@
 								{/if}
 							</td>
 
-							<td class={cn('text-sm text-current/50 tabular-nums', i % 2 && 'bg-foreground/5')}>
+							<td
+								class={cn(
+									'text-sm text-current/50 tabular-nums',
+									i % 2 && 'bg-foreground/5 dark:bg-foreground/8',
+								)}
+							>
 								{#if count > 1}
 									×{count}
 								{:else if total > 1}
@@ -131,7 +136,9 @@
 								{/if}
 							</td>
 
-							<td class={cn('text-left', i % 2 && 'bg-foreground/5')}>{name}</td>
+							<td class={cn('text-left', i % 2 && 'bg-foreground/5 dark:bg-foreground/8')}
+								>{name}</td
+							>
 						</tr>
 					{/each}
 				</tbody>
