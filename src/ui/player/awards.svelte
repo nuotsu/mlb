@@ -12,11 +12,23 @@
 		}
 	} = $props()
 
-	/** One row per award per season, latest first; repeats in a season (e.g. Player of the Week) are counted. */
+	/**
+	 * One row per award per season, latest first; repeats in a season (e.g. Player of the Week) are counted.
+	 * `nth` is how many times the award had been won by that row's last win, and `total` across the career.
+	 */
 	const rows = $derived.by(() => {
 		const byKey = new Map<
 			string,
-			{ key: string; name: string; season?: string; team?: MLB.Team; count: number }
+			{
+				key: string
+				id: string
+				name: string
+				season?: string
+				team?: MLB.Team
+				count: number
+				nth: number
+				total: number
+			}
 		>()
 
 		const sorted = (person.awards ?? []).toSorted((a, b) =>
@@ -27,16 +39,29 @@
 			const key = `${season}-${id}`
 			const row = byKey.get(key) ?? {
 				key,
+				id,
 				name,
 				season,
 				team,
 				count: 0,
+				nth: 0,
+				total: 0,
 			}
 			row.count++
 			byKey.set(key, row)
 		}
 
-		return [...byKey.values()]
+		const rows = [...byKey.values()]
+		const wins = new Map<string, number>()
+
+		for (const row of rows.toReversed()) {
+			row.nth = (wins.get(row.id) ?? 0) + row.count
+			wins.set(row.id, row.nth)
+		}
+
+		for (const row of rows) row.total = wins.get(row.id)!
+
+		return rows
 	})
 </script>
 
@@ -47,7 +72,7 @@
 		<article class="overflow-x-auto has-[table]:flex">
 			<table class="mx-auto table-fixed">
 				<tbody>
-					{#each rows as { key, name, season, team, count } (key)}
+					{#each rows as { key, name, season, team, count, nth, total } (key)}
 						{@const bg = team
 							? `url(https://midfield.mlbstatic.com/v1/team/${team.id}/spots/32)`
 							: undefined}
@@ -81,13 +106,15 @@
 								{/if}
 							</td>
 
-							<td class="text-left">
-								{name}
-
+							<td class="text-sm text-current/50 tabular-nums">
 								{#if count > 1}
-									<small class="text-current/50">×{count}</small>
+									×{count}
+								{:else if total > 1}
+									#{nth}
 								{/if}
 							</td>
+
+							<td class="text-left">{name}</td>
 						</tr>
 					{/each}
 				</tbody>
