@@ -6,6 +6,7 @@
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import PillSwitcher from '#ui/pill-switcher.svelte'
+	import Awards from '#ui/player/awards.svelte'
 	import Draft from '#ui/player/draft.svelte'
 	import HeadshotHistory from '#ui/player/headshot-history.svelte'
 	import Headshot from '#ui/player/headshot.svelte'
@@ -27,6 +28,7 @@
 			rosterEntries: MLB.Roster[]
 			drafts: MLB.DraftPick[]
 			relatives: MLB.Relative[]
+			awards?: MLB.Award[]
 		},
 	)
 
@@ -195,4 +197,6 @@
 			</div>
 		</section>
 	{/key}
+
+	<Awards {person} />
 </div>
