@@ -1,0 +1,19 @@
+#!/bin/sh
+# Bumps the patch version in package.json on every commit, so the sidebar's
+# version number tracks each change. Enabled via `git config core.hooksPath .githooks`,
+# which the `prepare` script runs on install.
+
+# Only bump when package.json is tracked and its version isn't already being changed by hand
+git cat-file -e :package.json 2>/dev/null || exit 0
+staged=$(git show :package.json | sed -n 's/^\t"version": "\(.*\)",$/\1/p')
+head=$(git show HEAD:package.json 2>/dev/null | sed -n 's/^\t"version": "\(.*\)",$/\1/p')
+[ -n "$staged" ] || exit 0
+[ -z "$head" ] || [ "$staged" = "$head" ] || exit 0
+
+next=$(echo "$staged" | awk -F. -v OFS=. '{ $NF = $NF + 1; print }')
+pattern="s/^\t\"version\": \"$staged\",$/\t\"version\": \"$next\",/"
+
+# Bump the staged blob directly so unstaged edits to package.json stay unstaged
+blob=$(git show :package.json | sed "$pattern" | git hash-object -w --stdin)
+git update-index --cacheinfo 100644,"$blob",package.json
+sed -i.bak "$pattern" package.json && rm -f package.json.bak
