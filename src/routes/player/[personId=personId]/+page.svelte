@@ -141,7 +141,7 @@
 				/>
 			</figure>
 
-			<PlayerInfo {person} />
+			<PlayerInfo {person} retirementDate={data.retirementDate} />
 		</header>
 	</section>
 

@@ -3,10 +3,12 @@
 
 	let {
 		person,
+		retirementDate,
 	}: {
 		person: MLB.Person & {
 			relatives?: MLB.Relative[]
 		}
+		retirementDate?: string
 	} = $props()
 </script>
 
@@ -66,6 +68,19 @@
 		<dd>
 			<a class="link" href="/schedule/day/{person.mlbDebutDate}">
 				{formatDate(slash(person.mlbDebutDate), {
+					month: 'long',
+					day: 'numeric',
+					year: 'numeric',
+				})}
+			</a>
+		</dd>
+	{/if}
+
+	{#if retirementDate}
+		<dt>Retired</dt>
+		<dd>
+			<a class="link" href="/transactions/{retirementDate}">
+				{formatDate(slash(retirementDate), {
 					month: 'long',
 					day: 'numeric',
 					year: 'numeric',
