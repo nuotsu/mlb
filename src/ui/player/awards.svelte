@@ -15,7 +15,7 @@
 	/** Drops the league from an award ID, so AL and NL versions (`ALMVP`, `NLMVP`) count as one award. */
 	const leaguelessId = (id: string) => id.replace(/^(MLBPC|W)?[AN]L/, '$1')
 
-	/** MVP and Cy Young, either league, are bolded as the most notable awards. */
+	/** MVP and Cy Young, either league, are highlighted as the most notable awards. */
 	const NOTABLE = new Set(['MVP', 'CY'])
 
 	/**
@@ -129,9 +129,9 @@
 
 							<td
 								class={cn(
-									'text-sm text-current/50 tabular-nums',
+									'text-sm tabular-nums',
 									i % 2 && 'bg-foreground/5 dark:bg-foreground/8',
-									notable && 'font-bold',
+									notable ? 'positive' : 'text-current/50',
 								)}
 							>
 								{#if count > 1}
@@ -145,7 +145,7 @@
 								class={cn(
 									'text-left leading-tight',
 									i % 2 && 'bg-foreground/5 dark:bg-foreground/8',
-									notable && 'font-bold',
+									notable && 'positive',
 								)}>{name}</td
 							>
 						</tr>
