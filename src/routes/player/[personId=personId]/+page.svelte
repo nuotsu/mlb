@@ -124,7 +124,7 @@
 </Header>
 
 <div class="player-page space-y-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
-	<section id="profile" class="space-y-lh">
+	<section class="space-y-lh">
 		<header class="grid gap-y-ch md:grid-cols-2">
 			<figure class="max-md:mask-b-from-25% md:mask-r-from-50%">
 				<img

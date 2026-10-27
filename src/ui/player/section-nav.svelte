@@ -2,7 +2,7 @@
 	import {
 		BallIcon,
 		GraphLineIcon,
-		IdCardIcon,
+		HomeIcon,
 		JerseyIcon,
 		PortraitIcon,
 		StrikezoneIcon,
@@ -11,9 +11,8 @@
 	} from '#ui/icons/index.js'
 	import SectionNav, { type Section } from '#ui/section-nav.svelte'
 
-	/** The profile opens the page under the sticky header, so its button scrolls back to the top */
 	const SECTIONS: Section[] = [
-		{ id: 'profile', label: 'Profile', icon: IdCardIcon },
+		{ id: 'top', label: 'Back to top', icon: HomeIcon },
 		{ id: 'teams', label: 'Teams', icon: JerseyIcon },
 		{ id: 'headshots', label: 'Headshots', icon: PortraitIcon },
 		{ id: 'stats', label: 'Season stats', icon: TableIcon },
