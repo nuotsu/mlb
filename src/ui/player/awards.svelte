@@ -15,6 +15,9 @@
 	/** Drops the league from an award ID, so AL and NL versions (`ALMVP`, `NLMVP`) count as one award. */
 	const leaguelessId = (id: string) => id.replace(/^(MLBPC|W)?[AN]L/, '$1')
 
+	/** MVP and Cy Young, either league, are bolded as the most notable awards. */
+	const NOTABLE = new Set(['MVP', 'CY'])
+
 	/**
 	 * One row per award per season, latest first; repeats in a season (e.g. Player of the Week) are counted.
 	 * `nth` is how many times the award (either league) had been won by that row's last win, and `total` across the career.
@@ -82,7 +85,8 @@
 				</colgroup>
 
 				<tbody>
-					{#each rows as { key, name, season, team, count, nth, total }, i (key)}
+					{#each rows as { key, id, name, season, team, count, nth, total }, i (key)}
+						{@const notable = NOTABLE.has(leaguelessId(id))}
 						{@const bg = team
 							? `url(https://midfield.mlbstatic.com/v1/team/${team.id}/spots/32)`
 							: undefined}
@@ -127,6 +131,7 @@
 								class={cn(
 									'text-sm text-current/50 tabular-nums',
 									i % 2 && 'bg-foreground/5 dark:bg-foreground/8',
+									notable && 'font-bold',
 								)}
 							>
 								{#if count > 1}
@@ -140,6 +145,7 @@
 								class={cn(
 									'text-left leading-tight',
 									i % 2 && 'bg-foreground/5 dark:bg-foreground/8',
+									notable && 'font-bold',
 								)}>{name}</td
 							>
 						</tr>
