@@ -4,7 +4,6 @@
 		GraphLineIcon,
 		HomePlateIcon,
 		JerseyIcon,
-		PortraitIcon,
 		StrikezoneIcon,
 		TableIcon,
 		TrophyCupIcon,
@@ -14,7 +13,6 @@
 	const SECTIONS: Section[] = [
 		{ id: 'top', label: 'Back to top', icon: HomePlateIcon },
 		{ id: 'teams', label: 'Teams', icon: JerseyIcon },
-		{ id: 'headshots', label: 'Headshots', icon: PortraitIcon },
 		{ id: 'stats', label: 'Season stats', icon: TableIcon },
 		{ id: 'pitch-arsenal', label: 'Pitch arsenal', icon: BallIcon },
 		{ id: 'year-by-year', label: 'Year-by-year', icon: GraphLineIcon },

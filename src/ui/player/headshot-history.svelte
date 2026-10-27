@@ -81,7 +81,7 @@
 </script>
 
 <!-- Every candidate year is requested up front but stays hidden until its headshot loads -->
-<section id="headshots" class="px-ch" class:hidden={!loaded.size}>
+<section class="px-ch" class:hidden={!loaded.size}>
 	<ol class="flex items-end gap-ch overflow-x-auto overflow-y-clip before:m-auto after:m-auto">
 		{#each seasons as { season, teams } (season)}
 			{@const src = `https://img.mlbstatic.com/mlb-photos/image/upload/w_240,q_auto:best/v1/people/${person.id}/headshot/silo/${usesCurrent.has(season) ? 'current' : season}`}
