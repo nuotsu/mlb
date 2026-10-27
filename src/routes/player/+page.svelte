@@ -22,9 +22,14 @@
 			class="mx-auto no-scrollbar flex max-w-max items-start gap-ch overflow-auto pr-lh pl-ch max-md:mask-r-from-[calc(100%-2lh)]"
 		>
 			{#each data.players.people as person (person.id)}
-				<a class="flex min-w-[5.5ch] flex-col items-center hover-link" href="/player/{person.id}">
-					<Headshot {person} class="size-[2lh]" />
-					<span>{person.lastName}</span>
+				<a
+					class="flex w-[2.5lh] min-w-[5.5ch] shrink-0 flex-col items-center hover-link"
+					href="/player/{person.id}"
+				>
+					<Headshot {person} class="size-[2.5lh]" />
+					<span class="line-clamp-1 leading-tight break-all" title={person.lastName}>
+						{person.lastName}
+					</span>
 				</a>
 			{/each}
 		</div>
