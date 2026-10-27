@@ -2,7 +2,7 @@
 	import {
 		BallIcon,
 		GraphLineIcon,
-		HomeIcon,
+		HomePlateIcon,
 		JerseyIcon,
 		PortraitIcon,
 		StrikezoneIcon,
@@ -12,7 +12,7 @@
 	import SectionNav, { type Section } from '#ui/section-nav.svelte'
 
 	const SECTIONS: Section[] = [
-		{ id: 'top', label: 'Back to top', icon: HomeIcon },
+		{ id: 'top', label: 'Back to top', icon: HomePlateIcon },
 		{ id: 'teams', label: 'Teams', icon: JerseyIcon },
 		{ id: 'headshots', label: 'Headshots', icon: PortraitIcon },
 		{ id: 'stats', label: 'Season stats', icon: TableIcon },
