@@ -52,7 +52,7 @@
 </script>
 
 {#if seasons.length && season}
-	<article class="space-y-ch">
+	<article id="pitch-arsenal" class="space-y-ch">
 		<header class="flex items-center justify-center gap-ch">
 			<h2 class="text-sm text-current/50">Pitch arsenal</h2>
 

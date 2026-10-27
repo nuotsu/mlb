@@ -15,6 +15,7 @@
 	import PlayerInfo from '#ui/player/player-info.svelte'
 	import RosterEntries from '#ui/player/roster-entries.svelte'
 	import SeasonSplits from '#ui/player/season-splits.svelte'
+	import SectionNav from '#ui/player/section-nav.svelte'
 	import YearByYearList from '#ui/stats/year-by-year-list.svelte'
 	import type { PageProps } from './$types'
 
@@ -122,8 +123,8 @@
 	{/snippet}
 </Header>
 
-<div class="space-y-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
-	<section class="space-y-lh">
+<div class="player-page space-y-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
+	<section id="profile" class="space-y-lh">
 		<header class="grid gap-y-ch md:grid-cols-2">
 			<figure class="max-md:mask-b-from-25% md:mask-r-from-50%">
 				<img
@@ -147,6 +148,7 @@
 
 	{#if person.rosterEntries}
 		<section
+			id="teams"
 			class="flex items-start gap-ch overflow-x-auto overflow-y-clip px-ch pt-[.5lh] before:m-auto after:m-auto"
 		>
 			<RosterEntries class="contents!" rosterEntries={person.rosterEntries} />
@@ -156,47 +158,59 @@
 
 	<HeadshotHistory {person} />
 
-	{#if groups.length > 1}
-		<PillSwitcher
-			id="player-group"
-			aria-label="Stat group"
-			class="my-lh"
-			options={groups}
-			value={group}
-			controls="player-stats"
-			onchange={(next) => setViewParam('group', next, defaultGroup)}
-		/>
-	{/if}
+	<!-- Wraps the group switcher too, so jumping to the stats lands above it -->
+	<div id="stats" class="space-y-lh has-data-empty:hidden">
+		{#if groups.length > 1}
+			<PillSwitcher
+				id="player-group"
+				aria-label="Stat group"
+				class="my-lh"
+				options={groups}
+				value={group}
+				controls="player-stats"
+				onchange={(next) => setViewParam('group', next, defaultGroup)}
+			/>
+		{/if}
 
-	<!-- Keyed, so each group mounts its own lists (season pickers and all), as when both were shown -->
-	{#key group}
-		<section
-			id="player-stats"
-			role={groups.length > 1 ? 'tabpanel' : undefined}
-			aria-labelledby={groups.length > 1 ? `player-group-tab-${group}` : undefined}
-			class="group/stats space-y-lh px-ch has-data-empty:hidden"
-		>
-			{#if groups.length < 2}
-				<Divider class="capitalize">{group} stats</Divider>
-			{/if}
-
-			<SeasonSplits {group} {person} baseballStats={data.baseballStats} />
-
-			{#if group === 'pitching'}
-				<PitchArsenal {person} />
-			{/if}
-
-			<div
-				class="grid items-start gap-[2lh] md:grid-cols-[repeat(auto-fit,minmax(var(--container-sm),1fr))]"
+		<!-- Keyed, so each group mounts its own lists (season pickers and all), as when both were shown -->
+		{#key group}
+			<section
+				id="player-stats"
+				role={groups.length > 1 ? 'tabpanel' : undefined}
+				aria-labelledby={groups.length > 1 ? `player-group-tab-${group}` : undefined}
+				class="group/stats space-y-lh px-ch has-data-empty:hidden"
 			>
-				<YearByYearList {group} {person} />
+				{#if groups.length < 2}
+					<Divider class="capitalize">{group} stats</Divider>
+				{/if}
 
-				<article class="space-y-lh">
-					<HotColdZonesList {group} {person} baseballStats={data.baseballStats} />
-				</article>
-			</div>
-		</section>
-	{/key}
+				<SeasonSplits {group} {person} baseballStats={data.baseballStats} />
+
+				{#if group === 'pitching'}
+					<PitchArsenal {person} />
+				{/if}
+
+				<div
+					class="grid items-start gap-[2lh] md:grid-cols-[repeat(auto-fit,minmax(var(--container-sm),1fr))]"
+				>
+					<YearByYearList id="year-by-year" {group} {person} />
+
+					<article id="hot-cold-zones" class="space-y-lh">
+						<HotColdZonesList {group} {person} baseballStats={data.baseballStats} />
+					</article>
+				</div>
+			</section>
+		{/key}
+	</div>
 
 	<Awards {person} />
 </div>
+
+<SectionNav />
+
+<style>
+	/* Land section titles below the sticky header when jumping to them */
+	.player-page :global([id]) {
+		scroll-margin-top: calc(var(--header-height, 0px) + 1ch);
+	}
+</style>

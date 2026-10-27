@@ -73,7 +73,7 @@
 </script>
 
 {#if rows.length}
-	<section class="px-ch">
+	<section id="awards" class="px-ch">
 		<Divider>Awards</Divider>
 
 		<article class="overflow-x-auto has-[table]:flex">
