@@ -12,9 +12,12 @@
 		}
 	} = $props()
 
+	/** Drops the league from an award ID, so AL and NL versions (`ALMVP`, `NLMVP`) count as one award. */
+	const leaguelessId = (id: string) => id.replace(/^(MLBPC|W)?[AN]L/, '$1')
+
 	/**
 	 * One row per award per season, latest first; repeats in a season (e.g. Player of the Week) are counted.
-	 * `nth` is how many times the award had been won by that row's last win, and `total` across the career.
+	 * `nth` is how many times the award (either league) had been won by that row's last win, and `total` across the career.
 	 */
 	const rows = $derived.by(() => {
 		const byKey = new Map<
@@ -55,11 +58,12 @@
 		const wins = new Map<string, number>()
 
 		for (const row of rows.toReversed()) {
-			row.nth = (wins.get(row.id) ?? 0) + row.count
-			wins.set(row.id, row.nth)
+			const id = leaguelessId(row.id)
+			row.nth = (wins.get(id) ?? 0) + row.count
+			wins.set(id, row.nth)
 		}
 
-		for (const row of rows) row.total = wins.get(row.id)!
+		for (const row of rows) row.total = wins.get(leaguelessId(row.id))!
 
 		return rows
 	})
