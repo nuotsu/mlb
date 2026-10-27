@@ -92,7 +92,7 @@
 								'hover:[&>td]:bg-foreground/10 hover:[&>th]:bg-foreground/10',
 								i > 0 &&
 									rows[i - 1].season !== season &&
-									'border-t border-dashed border-current/15',
+									'*:border-t *:border-dashed *:border-foreground/30',
 							)}
 						>
 							<th
