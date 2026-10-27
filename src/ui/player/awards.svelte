@@ -87,7 +87,14 @@
 							? `url(https://midfield.mlbstatic.com/v1/team/${team.id}/spots/32)`
 							: undefined}
 
-						<tr class="hover:[&>td]:bg-foreground/10 hover:[&>th]:bg-foreground/10">
+						<tr
+							class={cn(
+								'hover:[&>td]:bg-foreground/10 hover:[&>th]:bg-foreground/10',
+								i > 0 &&
+									rows[i - 1].season !== season &&
+									'border-t border-dashed border-current/15',
+							)}
+						>
 							<th
 								class={cn(
 									'sticky left-0 z-1 px-[.5ch] text-left tabular-nums',
