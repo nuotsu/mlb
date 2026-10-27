@@ -136,8 +136,11 @@
 								{/if}
 							</td>
 
-							<td class={cn('text-left', i % 2 && 'bg-foreground/5 dark:bg-foreground/8')}
-								>{name}</td
+							<td
+								class={cn(
+									'text-left leading-tight',
+									i % 2 && 'bg-foreground/5 dark:bg-foreground/8',
+								)}>{name}</td
 							>
 						</tr>
 					{/each}
