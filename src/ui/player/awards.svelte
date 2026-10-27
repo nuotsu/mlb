@@ -75,6 +75,12 @@
 
 		<article class="overflow-x-auto has-[table]:flex">
 			<table class="mx-auto table-fixed">
+				<!-- Sized like the season stats table's header cells, so the year and team columns match -->
+				<colgroup class="text-sm">
+					<col class="w-[5ch] min-w-[5ch]" />
+					<col class="w-lh min-w-lh" />
+				</colgroup>
+
 				<tbody>
 					{#each rows as { key, name, season, team, count, nth, total } (key)}
 						{@const bg = team
@@ -84,7 +90,7 @@
 						<tr class="hover:[&>td]:bg-foreground/10 hover:[&>th]:bg-foreground/10">
 							<th
 								class={cn(
-									'sticky left-0 z-1 w-[5ch] min-w-[5ch] px-[.5ch] text-left tabular-nums',
+									'sticky left-0 z-1 px-[.5ch] text-left tabular-nums',
 									!team && 'bg-background',
 									team && {
 										'dark:text-dark': isDarkOnLightTeam(team),
