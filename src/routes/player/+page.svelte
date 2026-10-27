@@ -23,10 +23,10 @@
 		>
 			{#each data.players.people as person (person.id)}
 				<a
-					class="flex w-[2.5lh] min-w-[5.5ch] shrink-0 flex-col items-center hover-link"
+					class="flex w-[3lh] min-w-[5.5ch] shrink-0 flex-col items-center hover-link"
 					href="/player/{person.id}"
 				>
-					<Headshot {person} class="size-[2.5lh]" />
+					<Headshot {person} size={216} class="size-[3lh]" />
 					<span class="line-clamp-1 leading-tight break-all" title={person.lastName}>
 						{person.lastName}
 					</span>
