@@ -74,6 +74,19 @@
 		</dd>
 	{/if}
 
+	{#if person.lastPlayedDate}
+		<dt>Last Played</dt>
+		<dd>
+			<a class="link" href="/schedule/day/{person.lastPlayedDate}">
+				{formatDate(slash(person.lastPlayedDate), {
+					month: 'long',
+					day: 'numeric',
+					year: 'numeric',
+				})}
+			</a>
+		</dd>
+	{/if}
+
 	{#if person.relatives}
 		<div class="contents">
 			<dt>Relatives</dt>

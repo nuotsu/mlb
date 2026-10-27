@@ -396,6 +396,7 @@ declare global {
 			isVerified?: boolean
 			draftYear?: number
 			mlbDebutDate?: string
+			lastPlayedDate?: string
 			batSide?: BatSide
 			pitchHand?: PitchHand
 			nameFirstLast?: string
