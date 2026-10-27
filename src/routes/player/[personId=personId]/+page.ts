@@ -12,7 +12,7 @@ export const load: PageLoad = async ({ params, fetch, setHeaders }) => {
 			`/api/v1/people/${personId}`,
 			{
 				hydrate: [
-					'team,currentTeam,preferredTeam,rosterEntries,draft,relatives,awards',
+					'team,currentTeam,preferredTeam,rosterEntries,draft,relatives,awards(team)',
 					'stats(group=[pitching,hitting],type=[yearByYear,career])',
 				],
 			},

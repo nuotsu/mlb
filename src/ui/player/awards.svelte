@@ -29,13 +29,7 @@
 				key,
 				name,
 				season,
-				// Award teams carry `teamName` rather than `name`
-				team:
-					team &&
-					({
-						...team,
-						name: team.name ?? (team as MLB.Team & { teamName?: string }).teamName,
-					} as MLB.Team),
+				team,
 				count: 0,
 			}
 			row.count++
@@ -73,7 +67,13 @@
 								{season}
 							</th>
 
-							<td class="relative w-lh min-w-lh" style:--team-bg={bg}>
+							<td
+								class={cn('relative w-lh min-w-lh', {
+									'dark:text-dark': team && isDarkOnLightTeam(team),
+									'dark:text-light': team && isLightOnDarkTeam(team),
+								})}
+								style:--team-bg={bg}
+							>
 								{#if team}
 									<a class="block" href="/teams/{team.id}" aria-label={team.name}>
 										<Logo class="mx-auto size-lh object-contain" {team} />
@@ -81,7 +81,7 @@
 								{/if}
 							</td>
 
-							<td class="px-ch">
+							<td class="text-left">
 								{name}
 
 								{#if count > 1}
@@ -95,3 +95,10 @@
 		</article>
 	</section>
 {/if}
+
+<style>
+	td {
+		padding-inline: 1ch;
+		min-width: 4ch;
+	}
+</style>
