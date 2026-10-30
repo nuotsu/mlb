@@ -7,7 +7,8 @@
  *   bun scripts/fetch-payroll.ts [--season 2026] [--dry-run]
  *
  * Both sites turn away requests that don't come from a real browser, so the page can instead be
- * saved from one (in Chrome, Save Page As → "Webpage, Complete", which keeps what the page rendered) and read from disk:
+ * saved from one and read from disk. In Chrome, use Save Page As → "Webpage, Complete", which keeps
+ * what the page rendered:
  *
  *   bun scripts/fetch-payroll.ts --html spotrac-payroll.html [--tax-html spotrac-tax.html]
  *
