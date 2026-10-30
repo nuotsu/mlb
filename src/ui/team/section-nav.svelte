@@ -1,7 +1,7 @@
 <script lang="ts">
 	import {
-		BallIcon,
 		BatIcon,
+		BreakingBallIcon,
 		CalendarIcon,
 		ClipboardIcon,
 		HomePlateIcon,
@@ -14,7 +14,7 @@
 		{ id: 'top', label: 'Back to top', icon: HomePlateIcon },
 		{ id: 'series-calendar', label: 'Series calendar', icon: CalendarIcon },
 		{ id: 'batters', label: 'Batters', icon: BatIcon },
-		{ id: 'pitchers', label: 'Pitchers', icon: BallIcon },
+		{ id: 'pitchers', label: 'Pitchers', icon: BreakingBallIcon },
 		{ id: 'coaches', label: 'Coaches', icon: ClipboardIcon },
 		{ id: 'injured-list', label: 'Injured list', icon: InjuredListIcon },
 	]
