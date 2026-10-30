@@ -7,6 +7,7 @@ import {
 	readFanGraphs,
 	readSpotracTable,
 	scrapeSpotrac,
+	spotracSeason,
 	toPayrollData,
 	validate,
 } from './fetch-payroll'
@@ -108,6 +109,42 @@ test('scrapeSpotrac reads payroll and luxury tax pages through `load`', async ()
 		luxuryTaxPayroll: 315_000_000,
 	})
 	expect(result.teams.find(({ teamId }) => teamId === 145)?.luxuryTaxPayroll).toBe(84_000_000)
+})
+
+/** Shaped like Spotrac's real payroll page: abbreviations twice over, links that don't name the team */
+const SPOTRAC_SAVED = (season: number) => `
+<title>${season} MLB Team Salary Payroll Tracker</title>
+<table><thead><tr><th>Rank</th><th>Team</th><th>Avg Age Team</th><th>Total Payroll Allocations</th><th>Active 26-Man</th></tr></thead></table>
+<table>
+	<thead><tr><th>Rank</th><th>Team</th><th>Avg Age Team</th><th>Total Payroll Allocations</th><th>Active 26-Man</th></tr></thead>
+	<tbody>
+		<tr><td>1</td><td><a href="https://www.spotrac.com/redirect/team/59/cap/${season}"><span class="d-none d-md-inline">NYY</span> <span class="d-md-none">NYY</span></a></td><td>29.4</td><td>$301,234,567</td><td>$290,000,000</td></tr>
+		<tr><td>2</td><td><a href="https://www.spotrac.com/redirect/team/12/cap/${season}">BOS BOS</a></td><td>28.1</td><td>$205,000,000</td><td>$200,000,000</td></tr>
+		<tr><td>3</td><td><a href="https://www.spotrac.com/redirect/team/31/cap/${season}">CHW CHW</a></td><td>27.0</td><td>$80,500,000</td><td>$80,500,000</td></tr>
+		<tr><td></td><td>League Average</td><td>28.2</td><td>$195,578,189</td><td>$190,166,666</td></tr>
+	</tbody>
+</table>`
+
+test('scrapeSpotrac reads the real page layout', async () => {
+	const result = await scrapeSpotrac(2026, TEAMS, async (url) => {
+		if (url.includes('/tax/')) throw new Error('no tax page')
+		return SPOTRAC_SAVED(2026)
+	})
+	expect(result.teams.find(({ teamId }) => teamId === 147)).toEqual({
+		teamId: 147,
+		payroll: 301_234_567,
+		luxuryTaxPayroll: null,
+		sourceUrl: 'https://www.spotrac.com/redirect/team/59/cap/2026',
+	})
+	expect(result.teams.find(({ teamId }) => teamId === 145)?.payroll).toBe(80_500_000)
+	expect(result.teams).toHaveLength(3)
+})
+
+test("scrapeSpotrac rejects another season's page", async () => {
+	expect(spotracSeason(SPOTRAC_SAVED(2027))).toBe(2027)
+	await expect(scrapeSpotrac(2026, TEAMS, async () => SPOTRAC_SAVED(2027))).rejects.toThrow(
+		/for 2027, not 2026/,
+	)
 })
 
 test('readFanGraphs finds the team table in __NEXT_DATA__', () => {

@@ -12,9 +12,10 @@
  *
  *   bun scripts/fetch-payroll.ts --html spotrac-payroll.html [--tax-html spotrac-tax.html]
  *
- * `--html` takes Spotrac's payroll page (https://www.spotrac.com/mlb/payroll/) or FanGraphs'
- * (https://www.fangraphs.com/roster-resource/payroll); `--tax-html` adds the luxury tax payrolls
- * from Spotrac's https://www.spotrac.com/mlb/tax/.
+ * `--html` takes Spotrac's payroll page for the season, e.g.
+ * https://www.spotrac.com/mlb/payroll/_/year/2026/ (the undated page moves on to next season once
+ * this one ends), or FanGraphs' https://www.fangraphs.com/roster-resource/payroll. `--tax-html`
+ * adds the luxury tax payrolls from https://www.spotrac.com/mlb/tax/_/year/2026/.
  *
  * Exits non-zero, leaving the file alone, unless all 30 teams come back with a plausible payroll.
  */
@@ -247,20 +248,45 @@ export function describePage(html: string) {
 
 const SPOTRAC = 'https://www.spotrac.com'
 
-/** The team a Spotrac row belongs to, from its link to the team's page or else its text. */
-function spotracRowTeam(row: Cell[], teams: StatsTeam[]) {
-	for (const cell of row) {
-		for (const [, href] of cell.html.matchAll(/href\s*=\s*["']([^"']+)["']/gi)) {
+/**
+ * The team a Spotrac row belongs to, from its "Team" cell when there is one, else any cell: a link
+ * to the team's page by name, or the cell's text. That text can repeat itself ("LAD LAD", one
+ * label for wide screens and one for narrow), so each word gets a try as an abbreviation.
+ */
+function spotracRowTeam(
+	row: Cell[],
+	teams: StatsTeam[],
+	teamColumn = -1,
+): { team: StatsTeam; href?: string } | undefined {
+	const cells = teamColumn >= 0 && row[teamColumn] ? [row[teamColumn]] : row
+
+	for (const cell of cells) {
+		const hrefs = [...cell.html.matchAll(/href\s*=\s*["']([^"']+)["']/gi)].map(([, href]) =>
+			new URL(href, SPOTRAC).toString(),
+		)
+		for (const href of hrefs) {
 			const slug = href.match(/\/mlb\/([a-z0-9-]+)\//i)?.[1]
 			const team = slug && matchTeam(slug.replace(/-/g, ' '), teams)
-			if (team) return { team, href: new URL(href, SPOTRAC).toString() }
+			if (team) return { team, href }
 		}
+
+		const team =
+			(cell.text && matchTeam(cell.text, teams)) ||
+			cell.text
+				.split(/\s+/)
+				.map((word) => matchTeam(word, teams))
+				.find(Boolean)
+		if (team) return { team, href: hrefs[0] }
 	}
-	for (const cell of row) {
-		const team = cell.text && matchTeam(cell.text, teams)
-		if (team) return { team, href: undefined }
-	}
-	return undefined
+
+	return teamColumn >= 0 ? spotracRowTeam(row, teams) : undefined
+}
+
+/** The season a Spotrac page covers, from its title, e.g. "2027 MLB Team Salary Payroll Tracker". */
+export function spotracSeason(html: string) {
+	const title = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? ''
+	const year = title.match(/\b(?:19|20)\d{2}\b/)?.[0]
+	return year ? Number(year) : undefined
 }
 
 /** Reads the one table on a Spotrac page that has a team on every row and the wanted column. */
@@ -272,10 +298,11 @@ export function readSpotracTable(
 	for (const table of parseTables(html)) {
 		const index = findColumn(table.headers, column.include, column.exclude)
 		if (index < 0) continue
+		const teamColumn = findColumn(table.headers, /^team$/i)
 
 		const values = new Map<number, { value: number; href?: string }>()
 		for (const row of table.rows) {
-			const match = spotracRowTeam(row, teams)
+			const match = spotracRowTeam(row, teams, teamColumn)
 			const value = parseDollars(row[index])
 			if (match && value) values.set(match.team.id, { value, href: match.href })
 		}
@@ -294,6 +321,13 @@ export async function scrapeSpotrac(
 	const taxUrl = `${SPOTRAC}/mlb/tax/_/year/${season}/`
 
 	const html = await load(payrollUrl)
+	// Spotrac's undated pages move on to next season's commitments once the season ends
+	const pageSeason = spotracSeason(html)
+	if (pageSeason && pageSeason !== season) {
+		throw new Error(
+			`Spotrac: the payroll page is for ${pageSeason}, not ${season}; use ${payrollUrl}`,
+		)
+	}
 	const payroll = readSpotracTable(html, teams, {
 		include: [/total.*payroll|payroll.*total/i, /payroll/i],
 		exclude: /tax|cbt|rank|%/i,
@@ -307,6 +341,10 @@ export async function scrapeSpotrac(
 	let luxuryTaxThreshold: number | null = null
 	try {
 		const html = await load(taxUrl)
+		const taxSeason = spotracSeason(html)
+		if (taxSeason && taxSeason !== season) {
+			throw new Error(`the tax page is for ${taxSeason}, not ${season}; use ${taxUrl}`)
+		}
 		tax = readSpotracTable(html, teams, {
 			include: [/(tax|cbt).*payroll|payroll.*(tax|cbt)/i, /cbt|tax total/i, /total.*payroll/i],
 			exclude: /space|bill|threshold|room|rank|over|under|%/i,
