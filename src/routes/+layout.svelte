@@ -57,7 +57,7 @@
 
 <main
 	class="
-		isolate no-scrollbar max-h-dvh overflow-x-clip overflow-y-auto bg-background transition-[margin,border-radius,max-height]
+		relative isolate no-scrollbar max-h-dvh overflow-x-clip overflow-y-auto bg-background transition-[margin,border-radius,max-height]
 		sm:sidebar-open:m-[.5ch] sm:sidebar-open:ml-0 sm:sidebar-open:max-h-[calc(100dvh-1ch)] sm:sidebar-open:rounded-md
 	"
 >
@@ -71,6 +71,11 @@
 		min-height: 100dvh;
 	}
 
+	/*
+		`main` is `relative` so absolutely positioned content (e.g. `sr-only` inputs) stays inside its
+		scroller; resolved against the page instead, it stretches the document past the viewport,
+		which iOS then scrolls on rotation, shifting the whole app up for good
+	*/
 	main {
 		grid-area: main;
 	}
