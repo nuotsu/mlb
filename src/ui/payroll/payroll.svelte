@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { payroll, payrollRank } from '#lib/payroll.js'
-	import { leagueSide } from '#lib/postseason/bracket.js'
 	import { formatDate } from '#lib/temporal.js'
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
 	import Empty from '#ui/empty.svelte'
@@ -24,7 +23,7 @@
 	)
 
 	const teams = $derived(
-		records.flatMap(({ league, division, teamRecords }) =>
+		records.flatMap(({ teamRecords }) =>
 			teamRecords.flatMap(({ team, wins, losses, winningPercentage }): PayrollTeam[] => {
 				const entry = payrollRank(team.id)
 				if (!entry) return []
@@ -35,8 +34,6 @@
 						wins,
 						losses,
 						winningPercentage,
-						league: leagueSide(league?.id),
-						region: (division?.nameShort ?? division?.name)?.match(/East|Central|West/)?.[0],
 						payroll: entry.payroll,
 						luxuryTaxPayroll: entry.luxuryTaxPayroll,
 						rank: entry.rank,

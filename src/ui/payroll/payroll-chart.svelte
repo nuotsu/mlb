@@ -11,10 +11,6 @@
 		wins: number
 		losses: number
 		winningPercentage: string
-		/** `AL`/`NL` */
-		league?: string
-		/** `East`/`Central`/`West` */
-		region?: string
 		payroll: number
 		luxuryTaxPayroll: number | null
 		rank: number
@@ -23,6 +19,7 @@
 
 <script lang="ts">
 	import { formatPayroll, linearRegression, ticks } from '#lib/payroll.js'
+	import { teamColor } from '#lib/team-colors.js'
 	import { cn, ordinal } from '#lib/utils.js'
 
 	let {
@@ -40,17 +37,6 @@
 
 	const uid = $props.id()
 
-	const REGIONS = ['East', 'Central', 'West'] as const
-	const LEAGUES = ['AL', 'NL'] as const
-
-	/** Fill for a division: hue by region, with stripes marking the NL so no two divisions match. */
-	const divisionFill = (league?: string, region?: string) =>
-		!region
-			? 'currentColor'
-			: league === 'NL'
-				? `url(#${uid}-nl-${region.toLowerCase()})`
-				: `var(--${region.toLowerCase()})`
-
 	/** Pixels; the SVG draws at 1:1 so text and logos keep their size as the chart widens. */
 	let width = $state(640)
 
@@ -62,8 +48,8 @@
 	const scatter = $derived.by(() => {
 		const margin = { top: 24, right: 16, bottom: 40, left: 44 }
 		const height = Math.round(Math.min(Math.max(width * 0.62, 320), 560))
-		/** Logos shrink with the chart so 30 of them stay legible on a phone. */
-		const logo = Math.round(Math.min(Math.max(width / 24, 18), 34))
+		/** Avatars shrink with the chart so 30 of them stay legible on a phone. */
+		const avatar = Math.round(Math.min(Math.max(width / 22, 20), 36))
 
 		const payrolls = teams.map(({ payroll }) => payroll / M)
 		const pcts = teams.map(({ winningPercentage }) => Number(winningPercentage))
@@ -89,7 +75,7 @@
 			y2: y(fit.slope * x1 + fit.intercept),
 		}
 
-		return { margin, height, logo, xs, ys, x, y, trend, top: y(y1), bottom: y(y0) }
+		return { margin, height, avatar, xs, ys, x, y, trend, top: y(y1), bottom: y(y0) }
 	})
 
 	// --- Bars ---
@@ -117,15 +103,15 @@
 		threshold === null ? null : chart === 'scatter' ? scatter.x(threshold / M) : bars.x(threshold),
 	)
 
-	/** Where each team's logo sits, centered, and how big it's drawn. */
+	/** Where each team's avatar sits, centered, and its diameter. */
 	function position({ team, payroll, winningPercentage }: PayrollTeam) {
 		return chart === 'scatter'
 			? {
 					x: scatter.x(payroll / M),
 					y: scatter.y(Number(winningPercentage)),
-					size: scatter.logo,
+					size: scatter.avatar,
 				}
-			: { x: bars.margin.left - 56, y: bars.y(team.id), size: 22 }
+			: { x: bars.margin.left - 56, y: bars.y(team.id), size: 24 }
 	}
 
 	/** A bar with only its data end rounded, so it reads as growing from the baseline. */
@@ -144,9 +130,12 @@
 	let tooltipWidth = $state(0)
 	let tooltipHeight = $state(0)
 
-	/** `true` once a logo loads, `false` if it fails; until it loads, a dot stands in. */
-	let loaded = $state<Record<number, boolean>>({})
-	/** Logos wait for the browser, so none can finish loading before its `onload` is listening. */
+	/**
+	 * Like `TeamAvatar`: the cap logo on the team's color, then the team's "spots" artwork if the
+	 * cap fails, then the bare color.
+	 */
+	let logos = $state<Record<number, 'fallback' | 'failed'>>({})
+	/** Logos wait for the browser, so none can fail before its `onerror` is listening. */
 	let mounted = $state(false)
 
 	$effect(() => {
@@ -187,31 +176,7 @@
 
 <svelte:window onpointerdown={dismiss} />
 
-<div
-	class={cn(
-		'relative [--central:#eb6834] [--east:#2a78d6] [--west:#1baf7a] dark:[--central:#d95926] dark:[--east:#3987e5] dark:[--west:#199e70]',
-		className,
-	)}
-	bind:clientWidth={width}
->
-	{#if chart === 'bars'}
-		<ul
-			class="mb-ch flex flex-wrap justify-center gap-x-[2ch] gap-y-[.5ch] text-xs text-current/70"
-		>
-			{#each LEAGUES as league (league)}
-				{#each REGIONS as region (region)}
-					<li class="flex items-center gap-[.5ch]">
-						<svg class="size-[1.25em]" viewBox="0 0 12 12" aria-hidden="true">
-							<rect width="12" height="12" rx="2" fill={divisionFill(league, region)} />
-						</svg>
-						{league}
-						{region}
-					</li>
-				{/each}
-			{/each}
-		</ul>
-	{/if}
-
+<div class={cn('relative', className)} bind:clientWidth={width}>
 	<svg
 		class="block w-full overflow-visible transition-[height] duration-500 ease-out select-none motion-reduce:transition-none"
 		style:height="{height}px"
@@ -220,18 +185,10 @@
 		onpointerdown={(e) => (lastPointer = e.pointerType)}
 	>
 		<defs>
-			{#each REGIONS as region (region)}
-				<pattern
-					id="{uid}-nl-{region.toLowerCase()}"
-					patternUnits="userSpaceOnUse"
-					width="6"
-					height="6"
-					patternTransform="rotate(45)"
-				>
-					<rect width="6" height="6" fill="var(--{region.toLowerCase()})" />
-					<rect width="2" height="6" class="fill-background" opacity=".55" />
-				</pattern>
-			{/each}
+			<!-- In each avatar's own units, where it's a circle of diameter 1 -->
+			<clipPath id="{uid}-avatar">
+				<circle r=".5" />
+			</clipPath>
 		</defs>
 
 		<!-- Scatter axes -->
@@ -338,7 +295,7 @@
 		{/if}
 
 		{#each teams as t (t.team.id)}
-			{@const { team, payroll, league, region } = t}
+			{@const { team, payroll } = t}
 			{@const { x, y, size } = position(t)}
 			{@const isBars = chart === 'bars'}
 			<a
@@ -380,8 +337,11 @@
 					/>
 					<path
 						d={barPath(bars.margin.left, bars.x(payroll), bars.y(team.id), bars.thickness)}
-						fill={divisionFill(league, region)}
+						fill={teamColor(team.id)}
+						stroke-width="1"
 						class={cn(
+							// The darkest team colors need an edge to stand off a black background
+							'stroke-transparent dark:stroke-white/25',
 							'origin-left transition-[scale,opacity] duration-500 ease-out [transform-box:fill-box] motion-reduce:transition-none',
 							!isBars && 'scale-x-0 opacity-0',
 						)}
@@ -393,7 +353,7 @@
 							isBars ? 'delay-300' : 'opacity-0',
 						)}
 					>
-						<text x={bars.margin.left - 40} y={bars.y(team.id) + 4} class="fill-current">
+						<text x={bars.margin.left - 38} y={bars.y(team.id) + 4} class="fill-current">
 							{team.abbreviation}
 						</text>
 						<text
@@ -404,31 +364,42 @@
 						>
 					</g>
 
-					<!-- The logo, which moves between the two charts -->
+					<!-- The avatar, which moves between the two charts. Drawn at diameter 1, then scaled. -->
 					<g
 						class="transition-transform duration-500 ease-out motion-reduce:transition-none"
 						style:transform="translate({x}px, {y}px) scale({size})"
 					>
 						<circle r=".7" class="fill-transparent" />
+						<!-- A ring of background keeps overlapping avatars apart -->
+						<circle r={0.5 + 2 / size} class="fill-background" />
+						<!-- The team's color doubles as the placeholder until a logo loads -->
+						<circle r=".5" fill={teamColor(team.id)} />
+						{#if mounted && logos[team.id] === 'fallback'}
+							<image
+								href="https://midfield.mlbstatic.com/v1/team/{team.id}/spots/72"
+								x="-.5"
+								y="-.5"
+								width="1"
+								height="1"
+								preserveAspectRatio="xMidYMid slice"
+								clip-path="url(#{uid}-avatar)"
+								onerror={() => (logos[team.id] = 'failed')}
+							/>
+						{:else if mounted && !logos[team.id]}
+							<image
+								href="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{team.id}.svg"
+								x="-.32"
+								y="-.32"
+								width=".64"
+								height=".64"
+								onerror={() => (logos[team.id] = 'fallback')}
+							/>
+						{/if}
 						<circle
-							r=".5"
+							r={0.5 + 1 / size}
 							class={cn('fill-none stroke-accent opacity-0', active === team.id && 'opacity-100')}
 							stroke-width={2 / size}
 						/>
-						{#if !loaded[team.id]}
-							<circle r=".18" class="fill-current" fill-opacity=".6" />
-						{/if}
-						{#if mounted && loaded[team.id] !== false}
-							<image
-								href="https://www.mlbstatic.com/team-logos/team-cap-on-dark/{team.id}.svg"
-								x="-.4"
-								y="-.4"
-								width=".8"
-								height=".8"
-								onload={() => (loaded[team.id] = true)}
-								onerror={() => (loaded[team.id] = false)}
-							/>
-						{/if}
 					</g>
 				</g>
 			</a>
