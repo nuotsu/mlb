@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { cn } from '#lib/utils.js'
+	import { formatPayroll, payroll, payrollRank } from '#lib/payroll.js'
+	import { cn, ordinal } from '#lib/utils.js'
 	import Divider from '#ui/divider.svelte'
 	import Empty from '#ui/empty.svelte'
 	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
@@ -20,6 +21,8 @@
 	let { data }: PageProps = $props()
 
 	const team = $derived(data.team as MLB.TeamDetailed)
+
+	const teamPayroll = $derived(payrollRank(team.id))
 
 	/** Single source of truth: the roster, calendars, and IL all follow it */
 	const date = $derived(getSelectedDate(page.url))
@@ -94,6 +97,18 @@
 			<strong class="text-3xl">{team.clubName}</strong>
 		</h1>
 	</div>
+
+	{#if teamPayroll}
+		<a
+			class="mt-[.5ch] inline-block text-sm text-current/60 tabular-nums hover-link hover:text-current"
+			href="/standings/{payroll.season}?view=payroll"
+			title="{payroll.season} payroll, {ordinal(teamPayroll.rank)} of {teamPayroll.of} in MLB"
+		>
+			{payroll.season} payroll
+			<strong class="text-current">{formatPayroll(teamPayroll.payroll)}</strong>
+			· {ordinal(teamPayroll.rank)} in MLB
+		</a>
+	{/if}
 
 	{#snippet after()}
 		<div class="mx-auto flex items-center justify-center gap-ch">

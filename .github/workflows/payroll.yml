@@ -1,0 +1,46 @@
+# Refreshes src/lib/data/payroll.json from Spotrac (or FanGraphs) once a week, committing
+# only when the numbers changed. Run it by hand from the Actions tab to refresh sooner.
+name: Update payroll
+
+on:
+  schedule:
+    # Mondays, 14:17 UTC
+    - cron: '17 14 * * 1'
+  workflow_dispatch:
+    inputs:
+      season:
+        description: Season to fetch (defaults to the current year)
+        required: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: payroll
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      # The script only needs Bun's built-ins, so there's nothing to install.
+      - name: Fetch payrolls
+        env:
+          SEASON: ${{ inputs.season }}
+        run: bun scripts/fetch-payroll.ts ${SEASON:+--season "$SEASON"}
+
+      - name: Commit changes
+        run: |
+          if git diff --quiet -- src/lib/data/payroll.json; then
+            echo "Payroll unchanged"
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add src/lib/data/payroll.json
+          git commit -m "Update payroll data"
+          git push
