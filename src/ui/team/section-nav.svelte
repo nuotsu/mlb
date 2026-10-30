@@ -1,6 +1,6 @@
 <script lang="ts">
 	import {
-		BatIcon,
+		BatterIcon,
 		BreakingBallIcon,
 		CalendarIcon,
 		ClipboardIcon,
@@ -13,7 +13,7 @@
 	const SECTIONS: Section[] = [
 		{ id: 'top', label: 'Back to top', icon: HomePlateIcon },
 		{ id: 'series-calendar', label: 'Series calendar', icon: CalendarIcon },
-		{ id: 'batters', label: 'Batters', icon: BatIcon },
+		{ id: 'batters', label: 'Batters', icon: BatterIcon },
 		{ id: 'pitchers', label: 'Pitchers', icon: BreakingBallIcon },
 		{ id: 'coaches', label: 'Coaches', icon: ClipboardIcon },
 		{ id: 'injured-list', label: 'Injured list', icon: InjuredListIcon },
