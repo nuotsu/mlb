@@ -1,11 +1,17 @@
 # Refreshes src/lib/data/payroll.json from Spotrac (or FanGraphs) once a week, committing
-# only when the numbers changed. Run it by hand from the Actions tab to refresh sooner.
+# only when the numbers changed, and again whenever the scraper changes. Run it by hand from the
+# Actions tab to refresh sooner.
 name: Update payroll
 
 on:
   schedule:
     # Mondays, 14:17 UTC
     - cron: '17 14 * * 1'
+  # A change to the scraper refreshes the data right away, on whichever branch it lands
+  push:
+    paths:
+      - scripts/fetch-payroll.ts
+      - .github/workflows/payroll.yml
   workflow_dispatch:
     inputs:
       season:

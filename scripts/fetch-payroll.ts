@@ -213,8 +213,25 @@ async function fetchTeams(season: number): Promise<StatsTeam[]> {
 
 async function fetchHtml(url: string) {
 	const response = await fetch(url, { headers: HEADERS, signal: AbortSignal.timeout(30_000) })
-	if (!response.ok) throw new Error(`${response.status} ${response.statusText}: ${url}`)
+	if (!response.ok) {
+		// A bot challenge page says so in its first few lines
+		const body = textContent(await response.text().catch(() => '')).slice(0, 300)
+		throw new Error(`${response.status} ${response.statusText}: ${url}\n  ${body}`)
+	}
 	return response.text()
+}
+
+/**
+ * What a page that couldn't be read looks like, for the run's log: there's no way to see the page
+ * from where the scraper is fixed, so the error has to describe it.
+ */
+export function describePage(html: string) {
+	const title = textContent(html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] ?? '')
+	const tables = parseTables(html).map(
+		({ headers, rows }, i) =>
+			`  table ${i}: ${rows.length} rows; headers: ${JSON.stringify(headers)}; first row: ${JSON.stringify(rows[0]?.map(({ text }) => text.slice(0, 40)))}; first row links: ${JSON.stringify(rows[0]?.flatMap(({ html }) => [...html.matchAll(/href\s*=\s*["']([^"']+)["']/gi)].map((m) => m[1])))}`,
+	)
+	return [`  "${title}", ${html.length} chars, ${tables.length} tables`, ...tables].join('\n')
 }
 
 // --- Spotrac ---
@@ -262,11 +279,14 @@ export async function scrapeSpotrac(season: number, teams: StatsTeam[]): Promise
 	const payrollUrl = `${SPOTRAC}/mlb/payroll/_/year/${season}/`
 	const taxUrl = `${SPOTRAC}/mlb/tax/_/year/${season}/`
 
-	const payroll = readSpotracTable(await fetchHtml(payrollUrl), teams, {
+	const html = await fetchHtml(payrollUrl)
+	const payroll = readSpotracTable(html, teams, {
 		include: [/total.*payroll|payroll.*total/i, /payroll/i],
 		exclude: /tax|cbt|rank|%/i,
 	})
-	if (!payroll) throw new Error(`Spotrac: no payroll table found at ${payrollUrl}`)
+	if (!payroll) {
+		throw new Error(`Spotrac: no payroll table found at ${payrollUrl}\n${describePage(html)}`)
+	}
 
 	// The luxury tax figures live on their own page; the payroll is still worth having without them.
 	let tax: ReturnType<typeof readSpotracTable>
@@ -326,9 +346,12 @@ function* objectArrays(value: unknown): Generator<Record<string, unknown>[]> {
  */
 export function readFanGraphs(html: string, season: number, teams: StatsTeam[]): Scraped {
 	const json = html.match(/<script[^>]*id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i)?.[1]
-	if (!json) throw new Error('FanGraphs: no __NEXT_DATA__ on the page')
+	if (!json) throw new Error(`FanGraphs: no __NEXT_DATA__ on the page\n${describePage(html)}`)
 
+	const candidates: string[] = []
 	for (const rows of objectArrays(JSON.parse(json))) {
+		if (rows.length >= 20)
+			candidates.push(`  ${rows.length} rows: ${JSON.stringify(rows[0])}`.slice(0, 600))
 		if (rows.length < teams.length) continue
 
 		const keys = Object.keys(rows[0])
@@ -384,7 +407,9 @@ export function readFanGraphs(html: string, season: number, teams: StatsTeam[]):
 		}
 	}
 
-	throw new Error(`FanGraphs: no table with a payroll for every team in ${season}`)
+	throw new Error(
+		`FanGraphs: no table with a payroll for every team in ${season}\n${candidates.join('\n') || '  no arrays of 20+ objects'}`,
+	)
 }
 
 async function scrapeFanGraphs(season: number, teams: StatsTeam[]) {
