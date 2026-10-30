@@ -6,6 +6,7 @@ import {
 	parseTables,
 	readFanGraphs,
 	readSpotracTable,
+	scrapeSpotrac,
 	toPayrollData,
 	validate,
 } from './fetch-payroll'
@@ -87,6 +88,26 @@ test('readSpotracTable', () => {
 	expect(result?.values.get(145)?.href).toBe(
 		'https://www.spotrac.com/mlb/chicago-white-sox/payroll/_/year/2026/',
 	)
+})
+
+const TAX = `
+<table>
+	<tr><th>Team</th><th>Active Payroll</th><th>CBT Payroll</th><th>Tax Threshold</th><th>Tax Space</th></tr>
+	<tr><td><a href="/mlb/new-york-yankees/tax/">NYY</a></td><td>$250,000,000</td><td>$315,000,000</td><td>$244,000,000</td><td>-$71,000,000</td></tr>
+	<tr><td><a href="/mlb/boston-red-sox/tax/">BOS</a></td><td>$190,000,000</td><td>$212,000,000</td><td>$244,000,000</td><td>$32,000,000</td></tr>
+	<tr><td><a href="/mlb/chicago-white-sox/tax/">CHW</a></td><td>$70,000,000</td><td>$84,000,000</td><td>$244,000,000</td><td>$160,000,000</td></tr>
+</table>`
+
+test('scrapeSpotrac reads payroll and luxury tax pages through `load`', async () => {
+	const result = await scrapeSpotrac(2026, TEAMS, async (url) =>
+		url.includes('/tax/') ? TAX : SPOTRAC,
+	)
+	expect(result.luxuryTaxThreshold).toBe(244_000_000)
+	expect(result.teams.find(({ teamId }) => teamId === 147)).toMatchObject({
+		payroll: 301_234_567,
+		luxuryTaxPayroll: 315_000_000,
+	})
+	expect(result.teams.find(({ teamId }) => teamId === 145)?.luxuryTaxPayroll).toBe(84_000_000)
 })
 
 test('readFanGraphs finds the team table in __NEXT_DATA__', () => {

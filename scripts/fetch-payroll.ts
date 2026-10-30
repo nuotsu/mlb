@@ -6,8 +6,16 @@
  *
  *   bun scripts/fetch-payroll.ts [--season 2026] [--dry-run]
  *
- * Runs weekly in `.github/workflows/payroll.yml`. Exits non-zero, leaving the file alone, unless
- * all 30 teams come back with a plausible payroll.
+ * Both sites turn away requests that don't come from a real browser, so the page can instead be
+ * saved from one (File → Save Page As, "Webpage, HTML only") and read from disk:
+ *
+ *   bun scripts/fetch-payroll.ts --html spotrac-payroll.html [--tax-html spotrac-tax.html]
+ *
+ * `--html` takes Spotrac's payroll page (https://www.spotrac.com/mlb/payroll/) or FanGraphs'
+ * (https://www.fangraphs.com/roster-resource/payroll); `--tax-html` adds the luxury tax payrolls
+ * from Spotrac's https://www.spotrac.com/mlb/tax/.
+ *
+ * Exits non-zero, leaving the file alone, unless all 30 teams come back with a plausible payroll.
  */
 
 import { readFile, writeFile } from 'node:fs/promises'
@@ -275,11 +283,16 @@ export function readSpotracTable(
 	return undefined
 }
 
-export async function scrapeSpotrac(season: number, teams: StatsTeam[]): Promise<Scraped> {
+/** `load` fetches each page by default; reading saved pages, it maps the URL to a file instead. */
+export async function scrapeSpotrac(
+	season: number,
+	teams: StatsTeam[],
+	load: (url: string) => Promise<string> = fetchHtml,
+): Promise<Scraped> {
 	const payrollUrl = `${SPOTRAC}/mlb/payroll/_/year/${season}/`
 	const taxUrl = `${SPOTRAC}/mlb/tax/_/year/${season}/`
 
-	const html = await fetchHtml(payrollUrl)
+	const html = await load(payrollUrl)
 	const payroll = readSpotracTable(html, teams, {
 		include: [/total.*payroll|payroll.*total/i, /payroll/i],
 		exclude: /tax|cbt|rank|%/i,
@@ -292,7 +305,7 @@ export async function scrapeSpotrac(season: number, teams: StatsTeam[]): Promise
 	let tax: ReturnType<typeof readSpotracTable>
 	let luxuryTaxThreshold: number | null = null
 	try {
-		const html = await fetchHtml(taxUrl)
+		const html = await load(taxUrl)
 		tax = readSpotracTable(html, teams, {
 			include: [/(tax|cbt).*payroll|payroll.*(tax|cbt)/i, /cbt|tax total/i, /total.*payroll/i],
 			exclude: /space|bill|threshold|room|rank|over|under|%/i,
@@ -475,10 +488,30 @@ export function toPayrollData(
 	}
 }
 
+/** Payrolls from pages saved out of a browser, rather than fetched. */
+async function readSavedPages(
+	season: number,
+	teams: StatsTeam[],
+	{ html: path, 'tax-html': taxPath }: { html?: string; 'tax-html'?: string },
+) {
+	const html = await readFile(path!, 'utf8')
+	if (/fangraphs/i.test(html) && html.includes('__NEXT_DATA__')) {
+		return readFanGraphs(html, season, teams)
+	}
+
+	return scrapeSpotrac(season, teams, async (url) => {
+		if (!url.includes('/tax/')) return html
+		if (!taxPath) throw new Error('no --tax-html given')
+		return readFile(taxPath, 'utf8')
+	})
+}
+
 async function main() {
 	const { values } = parseArgs({
 		options: {
 			season: { type: 'string' },
+			html: { type: 'string' },
+			'tax-html': { type: 'string' },
 			'dry-run': { type: 'boolean', default: false },
 		},
 	})
@@ -490,10 +523,13 @@ async function main() {
 	const teams = await fetchTeams(season)
 
 	let scraped: Scraped | undefined
-	for (const [name, scrape] of [
-		['Spotrac', scrapeSpotrac],
-		['FanGraphs', scrapeFanGraphs],
-	] as const) {
+	const sources: [string, (season: number, teams: StatsTeam[]) => Promise<Scraped>][] = values.html
+		? [[values.html, (season, teams) => readSavedPages(season, teams, values)]]
+		: [
+				['Spotrac', scrapeSpotrac],
+				['FanGraphs', scrapeFanGraphs],
+			]
+	for (const [name, scrape] of sources) {
 		try {
 			const result = await scrape(season, teams)
 			validate(result, teams)
