@@ -239,6 +239,7 @@
 					fill-opacity=".5">Win %</text
 				>
 
+				<!-- Longer dashes than the CBT line's, so the two don't read as one kind of line -->
 				{#if scatter.trend}
 					{@const { x1, y1, x2, y2 } = scatter.trend}
 					<line
@@ -246,9 +247,9 @@
 						{y1}
 						{x2}
 						{y2}
-						class="stroke-current"
-						stroke-opacity=".3"
+						class="stroke-green-600 dark:stroke-accent"
 						stroke-width="1.5"
+						stroke-dasharray="8 5"
 						stroke-linecap="round"
 					/>
 					<text
