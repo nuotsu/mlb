@@ -10,6 +10,7 @@
 	import InjuredList from '#ui/team/injured-list.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import Roster from '#ui/team/roster.svelte'
+	import SectionNav from '#ui/team/section-nav.svelte'
 	import { DATE_PARAM, getDateForMonth, getSelectedDate } from '#ui/team/selected-date.js'
 	import SeriesCalendar from '#ui/team/series-calendar.svelte'
 	import TeamCalendar from '#ui/team/team-calendar.svelte'
@@ -103,16 +104,16 @@
 	{/snippet}
 </Header>
 
-<section class="grid gap-lh pt-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
+<section class="team-page grid gap-lh pt-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
 	<div class="px-ch">
 		<TeamCalendar {team} bind:value={() => pendingMonth ?? date.slice(0, 7), selectMonth} />
 	</div>
 
-	<div class="space-y-ch">
+	<div id="series-calendar" class="space-y-ch">
 		<SeriesCalendar {team} {date} />
 	</div>
 
-	<div class="space-y-ch">
+	<div id="roster" class="space-y-ch">
 		<Divider>Roster</Divider>
 
 		{#if data.roster.roster}
@@ -124,7 +125,7 @@
 		{/if}
 	</div>
 
-	<div class="space-y-ch">
+	<div id="injured-list" class="space-y-ch">
 		<Divider>Injured List</Divider>
 
 		{#await data.injuredList}
@@ -138,3 +139,12 @@
 		{/await}
 	</div>
 </section>
+
+<SectionNav />
+
+<style>
+	/* Land section titles below the sticky header when jumping to them */
+	.team-page :global([id]) {
+		scroll-margin-top: calc(var(--header-height, 0px) + 1ch);
+	}
+</style>
