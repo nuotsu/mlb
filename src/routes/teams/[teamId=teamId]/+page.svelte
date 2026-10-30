@@ -101,7 +101,7 @@
 	{#if teamPayroll}
 		<a
 			class="mt-[.5ch] inline-block text-sm text-current/60 tabular-nums hover-link hover:text-current"
-			href="/standings/{payroll.season}?view=payroll"
+			href="/standings/{payroll.season}#payroll"
 			title="{payroll.season} payroll, {ordinal(teamPayroll.rank)} of {teamPayroll.of} in MLB"
 		>
 			{payroll.season} payroll

@@ -1,11 +1,4 @@
 <script lang="ts" module>
-	export const CHARTS = [
-		{ id: 'scatter', label: 'Scatter' },
-		{ id: 'bars', label: 'Bars' },
-	] as const
-
-	export type Chart = (typeof CHARTS)[number]['id']
-
 	export type PayrollTeam = {
 		team: MLB.Team
 		wins: number
@@ -29,7 +22,8 @@
 		class: className,
 	}: {
 		teams: PayrollTeam[]
-		chart: Chart
+		/** Payroll against win percentage, or a bar per team sorted by payroll */
+		chart: 'scatter' | 'bars'
 		/** Luxury tax threshold, in dollars */
 		threshold: number | null
 		class?: string
@@ -37,7 +31,7 @@
 
 	const uid = $props.id()
 
-	/** Pixels; the SVG draws at 1:1 so text and logos keep their size as the chart widens. */
+	/** Pixels; the SVG draws at 1:1 so text and avatars keep their size as the chart widens. */
 	let width = $state(640)
 
 	const narrow = $derived(width < 480)
@@ -83,6 +77,7 @@
 	const bars = $derived.by(() => {
 		const row = 30
 		const thickness = 18
+		const avatar = 24
 		const margin = { top: 28, right: 56, bottom: 8, left: 72 }
 		const height = margin.top + teams.length * row + margin.bottom
 		const max = Math.max(...teams.map(({ payroll }) => payroll), threshold ?? 0)
@@ -95,13 +90,10 @@
 		)
 		const y = (teamId: number) => margin.top + (order.get(teamId) ?? 0) * row + row / 2
 
-		return { row, thickness, margin, height, x, y }
+		return { row, thickness, avatar, margin, height, x, y }
 	})
 
 	const height = $derived(chart === 'scatter' ? scatter.height : bars.height)
-	const thresholdX = $derived(
-		threshold === null ? null : chart === 'scatter' ? scatter.x(threshold / M) : bars.x(threshold),
-	)
 
 	/** Where each team's avatar sits, centered, and its diameter. */
 	function position({ team, payroll, winningPercentage }: PayrollTeam) {
@@ -111,7 +103,7 @@
 					y: scatter.y(Number(winningPercentage)),
 					size: scatter.avatar,
 				}
-			: { x: bars.margin.left - 56, y: bars.y(team.id), size: 24 }
+			: { x: bars.margin.left - 56, y: bars.y(team.id), size: bars.avatar }
 	}
 
 	/** A bar with only its data end rounded, so it reads as growing from the baseline. */
@@ -123,6 +115,7 @@
 
 	// --- Tooltip ---
 
+	let root: HTMLDivElement
 	let active = $state<number | null>(null)
 	/** Opened by a tap, so it stays until the next tap elsewhere and its link can be followed. */
 	let pinned = $state(false)
@@ -163,10 +156,13 @@
 	}
 
 	function dismiss(e: PointerEvent) {
-		if (pinned && !(e.target as Element).closest?.('[data-payroll-team], [data-payroll-tooltip]')) {
-			pinned = false
-			active = null
-		}
+		if (!pinned) return
+		const target = e.target as Element
+		// Taps on this chart's own teams and tooltip are handled there
+		if (root.contains(target) && target.closest('[data-payroll-team], [data-payroll-tooltip]'))
+			return
+		pinned = false
+		active = null
 	}
 
 	function label({ team, payroll, wins, losses, winningPercentage, rank }: PayrollTeam) {
@@ -176,9 +172,9 @@
 
 <svelte:window onpointerdown={dismiss} />
 
-<div class={cn('relative', className)} bind:clientWidth={width}>
+<div bind:this={root} class={cn('relative', className)} bind:clientWidth={width}>
 	<svg
-		class="block w-full overflow-visible transition-[height] duration-500 ease-out select-none motion-reduce:transition-none"
+		class="block w-full overflow-visible select-none"
 		style:height="{height}px"
 		role="group"
 		aria-label={chart === 'scatter' ? 'Payroll vs. win percentage' : 'Payroll by team'}
@@ -191,102 +187,98 @@
 			</clipPath>
 		</defs>
 
-		<!-- Scatter axes -->
-		<g
-			class={cn(
-				'transition-opacity duration-500 motion-reduce:transition-none',
-				chart !== 'scatter' && 'opacity-0',
-			)}
-			aria-hidden="true"
-		>
-			{#each scatter.xs as tick (tick)}
-				{@const x = scatter.x(tick)}
+		{#if chart === 'scatter'}
+			<g aria-hidden="true">
+				{#each scatter.xs as tick (tick)}
+					{@const x = scatter.x(tick)}
+					<line
+						x1={x}
+						x2={x}
+						y1={scatter.top}
+						y2={scatter.bottom}
+						class="stroke-current"
+						stroke-opacity=".08"
+					/>
+					<text
+						{x}
+						y={scatter.bottom + 16}
+						text-anchor="middle"
+						class="fill-current text-[11px] tabular-nums"
+						fill-opacity=".5">${tick}M</text
+					>
+				{/each}
+				{#each scatter.ys as tick (tick)}
+					{@const y = scatter.y(tick)}
+					<line
+						x1={scatter.margin.left}
+						x2={width - scatter.margin.right}
+						y1={y}
+						y2={y}
+						class="stroke-current"
+						stroke-opacity={tick === 0.5 ? 0.35 : 0.08}
+					/>
+					<text
+						x={scatter.margin.left - 6}
+						y={y + 4}
+						text-anchor="end"
+						class="fill-current text-[11px] tabular-nums"
+						fill-opacity=".5">{tick.toFixed(3).replace(/^0/, '')}</text
+					>
+				{/each}
+				<text
+					x={(scatter.margin.left + width - scatter.margin.right) / 2}
+					y={scatter.height - 4}
+					text-anchor="middle"
+					class="fill-current text-[11px]"
+					fill-opacity=".5">Payroll</text
+				>
+				<text
+					transform="translate(10 {(scatter.top + scatter.bottom) / 2}) rotate(-90)"
+					text-anchor="middle"
+					class="fill-current text-[11px]"
+					fill-opacity=".5">Win %</text
+				>
+
+				{#if scatter.trend}
+					{@const { x1, y1, x2, y2 } = scatter.trend}
+					<line
+						{x1}
+						{y1}
+						{x2}
+						{y2}
+						class="stroke-current"
+						stroke-opacity=".3"
+						stroke-width="1.5"
+						stroke-linecap="round"
+					/>
+					<text
+						x={x2 - 4}
+						y={y2 + (y2 > y1 ? 14 : -6)}
+						text-anchor="end"
+						class="fill-current text-[11px]"
+						fill-opacity=".5">Trend</text
+					>
+				{/if}
+			</g>
+		{/if}
+
+		<!-- Luxury tax threshold -->
+		{#if threshold !== null}
+			{@const x = chart === 'scatter' ? scatter.x(threshold / M) : bars.x(threshold)}
+			{@const top = chart === 'scatter' ? scatter.top : bars.margin.top}
+			<g aria-hidden="true">
 				<line
 					x1={x}
 					x2={x}
-					y1={scatter.top}
-					y2={scatter.bottom}
-					class="stroke-current"
-					stroke-opacity=".08"
-				/>
-				<text
-					{x}
-					y={scatter.bottom + 16}
-					text-anchor="middle"
-					class="fill-current text-[11px] tabular-nums"
-					fill-opacity=".5">${tick}M</text
-				>
-			{/each}
-			{#each scatter.ys as tick (tick)}
-				{@const y = scatter.y(tick)}
-				<line
-					x1={scatter.margin.left}
-					x2={width - scatter.margin.right}
-					y1={y}
-					y2={y}
-					class="stroke-current"
-					stroke-opacity={tick === 0.5 ? 0.35 : 0.08}
-				/>
-				<text
-					x={scatter.margin.left - 6}
-					y={y + 4}
-					text-anchor="end"
-					class="fill-current text-[11px] tabular-nums"
-					fill-opacity=".5">{tick.toFixed(3).replace(/^0/, '')}</text
-				>
-			{/each}
-			<text
-				x={(scatter.margin.left + width - scatter.margin.right) / 2}
-				y={scatter.height - 4}
-				text-anchor="middle"
-				class="fill-current text-[11px]"
-				fill-opacity=".5">Payroll</text
-			>
-			<text
-				transform="translate(10 {(scatter.top + scatter.bottom) / 2}) rotate(-90)"
-				text-anchor="middle"
-				class="fill-current text-[11px]"
-				fill-opacity=".5">Win %</text
-			>
-
-			{#if scatter.trend}
-				{@const { x1, y1, x2, y2 } = scatter.trend}
-				<line
-					{x1}
-					{y1}
-					{x2}
-					{y2}
-					class="stroke-current"
-					stroke-opacity=".3"
-					stroke-width="1.5"
-					stroke-linecap="round"
-				/>
-				<text
-					x={x2 - 4}
-					y={y2 + (y2 > y1 ? 14 : -6)}
-					text-anchor="end"
-					class="fill-current text-[11px]"
-					fill-opacity=".5">Trend</text
-				>
-			{/if}
-		</g>
-
-		<!-- Luxury tax threshold, shared by both charts -->
-		{#if threshold !== null && thresholdX !== null}
-			<g
-				class="transition-transform duration-500 ease-out motion-reduce:transition-none"
-				style:transform="translateX({thresholdX}px)"
-				aria-hidden="true"
-			>
-				<line
-					y1={chart === 'scatter' ? scatter.top - 8 : bars.margin.top - 8}
+					y1={top - 8}
 					y2={chart === 'scatter' ? scatter.bottom : bars.height - bars.margin.bottom}
 					class="stroke-current"
 					stroke-opacity=".6"
 					stroke-dasharray="4 4"
 				/>
 				<text
-					y={chart === 'scatter' ? scatter.top - 12 : bars.margin.top - 12}
+					{x}
+					y={top - 12}
 					text-anchor="middle"
 					class="fill-current text-[11px] tabular-nums"
 					fill-opacity=".7">CBT {formatPayroll(threshold, 0)}</text
@@ -297,7 +289,6 @@
 		{#each teams as t (t.team.id)}
 			{@const { team, payroll } = t}
 			{@const { x, y, size } = position(t)}
-			{@const isBars = chart === 'bars'}
 			<a
 				href="/teams/{team.id}"
 				class="outline-none"
@@ -323,52 +314,35 @@
 						active !== null && active !== team.id && 'opacity-40',
 					)}
 				>
-					<!-- Bars: the whole row is the hit target -->
-					<rect
-						x="0"
-						y={bars.y(team.id) - bars.row / 2}
-						{width}
-						height={bars.row}
-						class={cn(
-							'fill-current opacity-0',
-							active === team.id && isBars && 'opacity-5',
-							!isBars && 'hidden',
-						)}
-					/>
-					<path
-						d={barPath(bars.margin.left, bars.x(payroll), bars.y(team.id), bars.thickness)}
-						fill={teamColor(team.id)}
-						stroke-width="1"
-						class={cn(
-							// The darkest team colors need an edge to stand off a black background
-							'stroke-transparent dark:stroke-white/25',
-							'origin-left transition-[scale,opacity] duration-500 ease-out [transform-box:fill-box] motion-reduce:transition-none',
-							!isBars && 'scale-x-0 opacity-0',
-						)}
-					/>
-					<g
-						class={cn(
-							'text-[12px] tabular-nums transition-opacity duration-300 motion-reduce:transition-none',
-							// Labels follow the bars in, once they've mostly grown to meet them
-							isBars ? 'delay-300' : 'opacity-0',
-						)}
-					>
-						<text x={bars.margin.left - 38} y={bars.y(team.id) + 4} class="fill-current">
-							{team.abbreviation}
-						</text>
-						<text
-							x={bars.x(payroll) + 6}
-							y={bars.y(team.id) + 4}
-							class="fill-current"
-							fill-opacity=".7">{formatPayroll(payroll, narrow ? 0 : 1)}</text
-						>
-					</g>
+					{#if chart === 'bars'}
+						{@const cy = bars.y(team.id)}
+						<!-- The whole row is the hit target -->
+						<rect
+							x="0"
+							y={cy - bars.row / 2}
+							{width}
+							height={bars.row}
+							class={cn('fill-current opacity-0', active === team.id && 'opacity-5')}
+						/>
+						<!-- The darkest team colors need an edge to stand off a black background -->
+						<path
+							d={barPath(bars.margin.left, bars.x(payroll), cy, bars.thickness)}
+							fill={teamColor(team.id)}
+							stroke-width="1"
+							class="stroke-transparent dark:stroke-white/25"
+						/>
+						<g class="text-[12px] tabular-nums">
+							<text x={bars.margin.left - 38} y={cy + 4} class="fill-current">
+								{team.abbreviation}
+							</text>
+							<text x={bars.x(payroll) + 6} y={cy + 4} class="fill-current" fill-opacity=".7"
+								>{formatPayroll(payroll, narrow ? 0 : 1)}</text
+							>
+						</g>
+					{/if}
 
-					<!-- The avatar, which moves between the two charts. Drawn at diameter 1, then scaled. -->
-					<g
-						class="transition-transform duration-500 ease-out motion-reduce:transition-none"
-						style:transform="translate({x}px, {y}px) scale({size})"
-					>
+					<!-- The avatar, drawn at diameter 1 and scaled -->
+					<g transform="translate({x} {y}) scale({size})">
 						<circle r=".7" class="fill-transparent" />
 						<!-- A ring of background keeps overlapping avatars apart -->
 						<circle r={0.5 + 2 / size} class="fill-background" />
