@@ -4,14 +4,14 @@
 		BreakingBallIcon,
 		CalendarSolidIcon,
 		ClipboardIcon,
-		HomePlateSolidIcon,
+		HomePlateIcon,
 		InjuredListIcon,
 	} from '#ui/icons/index.js'
 	import SectionNav, { type Section } from '#ui/section-nav.svelte'
 
 	/** The month calendar opens the page, so the top button covers it */
 	const SECTIONS: Section[] = [
-		{ id: 'top', label: 'Back to top', icon: HomePlateSolidIcon },
+		{ id: 'top', label: 'Back to top', icon: HomePlateIcon },
 		{ id: 'series-calendar', label: 'Series calendar', icon: CalendarSolidIcon },
 		{ id: 'batters', label: 'Batters', icon: BatterIcon },
 		{ id: 'pitchers', label: 'Pitchers', icon: BreakingBallIcon },
