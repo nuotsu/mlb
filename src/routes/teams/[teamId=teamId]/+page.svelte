@@ -113,7 +113,7 @@
 		<SeriesCalendar {team} {date} />
 	</div>
 
-	<div id="roster" class="space-y-ch">
+	<div class="space-y-ch">
 		<Divider>Roster</Divider>
 
 		{#if data.roster.roster}

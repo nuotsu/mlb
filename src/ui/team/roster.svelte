@@ -14,10 +14,10 @@
 	}
 </script>
 
-{@render list(batters, 'Batters')}
-{@render list(pitchers, 'Pitchers')}
+{@render list(batters, 'Batters', 'batters')}
+{@render list(pitchers, 'Pitchers', 'pitchers')}
 
-<dl class="accordion">
+<dl id="coaches" class="accordion">
 	<dt class="sticky-below-header z-1 mb-ch px-ch text-sm text-current/50 backdrop-blur-xs">
 		Coaches
 	</dt>
@@ -42,8 +42,8 @@
 	</div>
 </dl>
 
-{#snippet list(arr: MLB.Roster[], label: string)}
-	<dl>
+{#snippet list(arr: MLB.Roster[], label: string, id: string)}
+	<dl {id}>
 		<dt class="sticky-below-header z-1 mb-ch px-ch text-sm text-current/50 backdrop-blur-xs">
 			{label}
 		</dt>
