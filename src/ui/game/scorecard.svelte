@@ -248,7 +248,6 @@
 	getRowId={(row) => String(row.playerId)}
 	sortable={false}
 	stickyHeader={false}
-	rowAttrs={(row) => ({ 'data-substituted': isReplaced(row) ? '' : undefined })}
 />
 
 {#snippet batterCell({ row, index }: CellArgs<ScorecardRow>)}

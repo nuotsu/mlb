@@ -54,8 +54,6 @@
 	type Line = {
 		player: MLB.BoxscorePlayer
 		group: 'batting' | 'pitching' | 'roster'
-		/** Taken out of the game */
-		substituted?: boolean
 		/** Came in for the batter above */
 		substitute?: boolean
 	}
@@ -77,7 +75,6 @@
 				{
 					player,
 					group: 'batting' as const,
-					substituted: !isSpoilerPrevented && !team.battingOrder.includes(playerId),
 					substitute:
 						!isSpoilerPrevented && previous !== undefined && !team.battingOrder.includes(previous),
 				},
@@ -109,8 +106,8 @@
 		id: 'player',
 		header: '',
 		title: 'Player',
-		value: (row) => row.player.person.boxscoreName,
-		sortDescFirst: false,
+		// batting order, or the stat being sorted, says more than the alphabet
+		sortable: false,
 		sticky: true,
 		rowHeader: true,
 		cell: playerCell,
@@ -249,7 +246,6 @@
 							sortParam="batting"
 							stickyHeader={false}
 							density="compact"
-							rowAttrs={(row) => ({ 'data-substituted': row.substituted ? '' : undefined })}
 						/>
 					{/if}
 				</div>

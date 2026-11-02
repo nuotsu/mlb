@@ -439,6 +439,8 @@
 							{/if}
 						{:else if label}
 							<span>{label}</span>
+						{:else if column.title}
+							<span class="sr-only">{column.title}</span>
 						{/if}
 					</th>
 				{/each}
