@@ -65,15 +65,24 @@
 
 	/** One column per inning; an inning that batted around holds a box for each time through. */
 	const tableColumns = $derived<DataTableColumn<ScorecardRow>[]>([
+		// Only the headshot stays put while the innings scroll sideways; the name scrolls with them
+		{
+			id: 'avatar',
+			header: '',
+			title: 'Headshot',
+			sticky: true,
+			cell: avatarCell,
+			cellClass: (row) => isFavorite(row) && 'bg-accent',
+			class: 'w-lh min-w-lh px-0',
+		},
 		{
 			id: 'batter',
 			header: '',
 			title: 'Batter',
-			sticky: true,
 			rowHeader: true,
 			cell: batterCell,
 			cellClass: (row) => isFavorite(row) && 'bg-accent! text-dark',
-			class: 'pl-[1rch]',
+			class: 'pl-ch',
 		},
 		...scorecard.innings.map(({ inning, columns }): DataTableColumn<ScorecardRow> => ({
 			id: `inning-${inning}`,
@@ -250,11 +259,25 @@
 	stickyHeader={false}
 />
 
+{#snippet avatarCell({ row, index }: CellArgs<ScorecardRow>)}
+	{@const boxscorePlayer = team.players[`ID${row.playerId}`]}
+	{@const previous = scorecard.rows[index - 1]}
+	{#if boxscorePlayer}
+		<BoxscorePlayer
+			part="avatar"
+			player={boxscorePlayer}
+			{players}
+			substitute={!isSpoilerPrevented && !!previous && isReplaced(previous)}
+		/>
+	{/if}
+{/snippet}
+
 {#snippet batterCell({ row, index }: CellArgs<ScorecardRow>)}
 	{@const boxscorePlayer = team.players[`ID${row.playerId}`]}
 	{@const previous = scorecard.rows[index - 1]}
 	{#if boxscorePlayer}
 		<BoxscorePlayer
+			part="name"
 			player={boxscorePlayer}
 			{players}
 			label={positionLabel(boxscorePlayer)}

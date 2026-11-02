@@ -17,6 +17,7 @@
 		title = person.fullName,
 		class: className,
 		nameClass,
+		headshot = true,
 		children,
 	}: {
 		person: Partial<MLB.Person>
@@ -28,6 +29,8 @@
 		title?: string
 		class?: string
 		nameClass?: string
+		/** Off when the headshot has a (sticky) column of its own */
+		headshot?: boolean
 		/** After the name, e.g. a position */
 		children?: Snippet
 	} = $props()
@@ -43,15 +46,17 @@
 		className,
 	)}
 >
-	<Headshot
-		{person}
-		{type}
-		{size}
-		class="size-lh shrink-0"
-		loading="lazy"
-		decoding="async"
-		alt=""
-	/>
+	{#if headshot}
+		<Headshot
+			{person}
+			{type}
+			{size}
+			class="size-lh shrink-0"
+			loading="lazy"
+			decoding="async"
+			alt=""
+		/>
+	{/if}
 
 	<span class={cn('line-clamp-1 grow break-all group-hover/player:underline', nameClass)}>
 		{name}

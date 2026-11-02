@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { LOWER_IS_BETTER } from '#lib/stats.js'
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
+	import AvatarCell from '#ui/data-table/cells/avatar-cell.svelte'
 	import PlayerCell from '#ui/data-table/cells/player-cell.svelte'
 	import DataTable from '#ui/data-table/data-table.svelte'
 	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
@@ -91,15 +92,25 @@
 				class: 'w-[4ch]',
 			},
 			{
+				id: 'avatar',
+				header: '',
+				title: 'Headshot',
+				sortable: false,
+				sticky: true,
+				cell: avatarCell,
+				team: ({ team, sport }) => ({ team, sport }),
+				class: 'w-lh min-w-lh px-0',
+			},
+			// Only the headshot stays put while scrolling sideways; the name and position menu scroll away
+			{
 				id: 'player',
 				header: group === 'hitting' ? positionSelect : 'Player',
 				title: 'Player',
 				sortable: false,
-				sticky: true,
 				rowHeader: true,
 				cell: playerCell,
 				team: ({ team, sport }) => ({ team, sport }),
-				class: 'min-w-[17ch]',
+				class: 'min-w-[14ch] pl-[.5ch]',
 			},
 			{
 				id: 'league',
@@ -244,9 +255,15 @@
 	<span class="text-xs text-current/50">{row.rank}</span>
 {/snippet}
 
+{#snippet avatarCell({ row: { player } }: CellArgs<MLB.StatSplit>)}
+	{#if player}
+		<AvatarCell person={player} type="silo" />
+	{/if}
+{/snippet}
+
 {#snippet playerCell({ row: { player, position } }: CellArgs<MLB.StatSplit>)}
 	{#if player}
-		<PlayerCell person={player} type="silo" nameClass="w-[10ch]">
+		<PlayerCell person={player} headshot={false} nameClass="w-[10ch]">
 			<small class="w-[3ch] shrink-0 text-center text-xs opacity-50">
 				{position?.abbreviation}
 			</small>

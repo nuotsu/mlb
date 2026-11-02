@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { LongestHomeRun } from '#lib/fetch/savant.js'
 	import { formatDate } from '#lib/temporal.js'
+	import AvatarCell from '#ui/data-table/cells/avatar-cell.svelte'
 	import PlayerCell from '#ui/data-table/cells/player-cell.svelte'
 	import DataTable from '#ui/data-table/data-table.svelte'
 	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
@@ -20,14 +21,23 @@
 			class: 'w-[4ch]',
 		},
 		{
+			id: 'avatar',
+			header: '',
+			title: 'Headshot',
+			sortable: false,
+			sticky: true,
+			cell: avatarCell,
+			team: (hr) => ({ team: hr.team }),
+			class: 'w-lh min-w-lh px-0',
+		},
+		{
 			id: 'batter',
 			header: 'Batter',
 			value: (hr) => hr.batter.lastName ?? hr.batter.fullName,
-			sticky: true,
 			rowHeader: true,
 			cell: batterCell,
 			team: (hr) => ({ team: hr.team }),
-			class: 'min-w-[18ch]',
+			class: 'min-w-[14ch] pl-[.5ch]',
 		},
 		{
 			id: 'dist',
@@ -103,10 +113,14 @@
 	{/snippet}
 </DataTable>
 
+{#snippet avatarCell({ row: { batter } }: CellArgs<LongestHomeRun>)}
+	<AvatarCell person={batter} type="silo" />
+{/snippet}
+
 {#snippet batterCell({ row: { batter, team } }: CellArgs<LongestHomeRun>)}
 	<PlayerCell
 		person={batter}
-		type="silo"
+		headshot={false}
 		name={batter.lastName ?? batter.boxscoreName ?? batter.fullName}
 		nameClass="w-[10ch]"
 	>

@@ -102,18 +102,28 @@
 
 	const isFavorite = (row: Line) => favoritesStore.has(`/player/${row.player.person.id}`)
 
-	const playerColumn: DataTableColumn<Line> = {
+	/** Only the headshot stays put while the stats scroll sideways; the name scrolls with them */
+	const avatarColumn: DataTableColumn<Line> = {
+		id: 'avatar',
+		header: '',
+		title: 'Headshot',
+		sortable: false,
+		sticky: true,
+		cell: avatarCell,
+		cellClass: (row) => isFavorite(row) && 'bg-accent',
+		class: 'w-lh min-w-lh px-0',
+	}
+
+	const nameColumn: DataTableColumn<Line> = {
 		id: 'player',
 		header: '',
 		title: 'Player',
 		// batting order, or the stat being sorted, says more than the alphabet
 		sortable: false,
-		sticky: true,
 		rowHeader: true,
 		cell: playerCell,
 		cellClass: (row) => isFavorite(row) && 'bg-accent! text-dark',
-		// the name alone was 14ch; this cell also holds the headshot and position
-		class: 'min-w-[17ch] pl-[1rch]',
+		class: 'min-w-[14ch] pl-ch',
 	}
 
 	/**
@@ -155,7 +165,8 @@
 	}
 
 	const battingColumns: DataTableColumn<Line>[] = [
-		playerColumn,
+		avatarColumn,
+		nameColumn,
 		statColumn('batting', 'atBats', 'AB', 'At bats'),
 		statColumn('batting', 'hits', 'H', 'Hits'),
 		statColumn('batting', 'runs', 'R', 'Runs'),
@@ -169,7 +180,8 @@
 	]
 
 	const pitchingColumns: DataTableColumn<Line>[] = [
-		playerColumn,
+		avatarColumn,
+		nameColumn,
 		statColumn('pitching', 'inningsPitched', 'IP', 'Innings pitched'),
 		statColumn('pitching', 'numberOfPitches', 'P', 'Pitches'),
 		statColumn('pitching', 'balls', 'B', 'Balls'),
@@ -184,7 +196,7 @@
 		statColumn('pitching', 'era', 'ERA', 'Earned run average', true),
 	]
 
-	const rosterColumns: DataTableColumn<Line>[] = [{ ...playerColumn, sticky: false }]
+	const rosterColumns: DataTableColumn<Line>[] = [{ ...avatarColumn, sticky: false }, nameColumn]
 
 	/** Kept in `?view=` so a shared link opens the same tab. */
 	const view = $derived<View>(
@@ -304,8 +316,18 @@
 	{/if}
 {/snippet}
 
+{#snippet avatarCell({ row }: CellArgs<Line>)}
+	<BoxscorePlayer
+		part="avatar"
+		player={row.player}
+		{players}
+		substitute={row.substitute && !isSorted(row.group)}
+	/>
+{/snippet}
+
 {#snippet playerCell({ row }: CellArgs<Line>)}
 	<BoxscorePlayer
+		part="name"
 		player={row.player}
 		{players}
 		substitute={row.substitute && !isSorted(row.group)}

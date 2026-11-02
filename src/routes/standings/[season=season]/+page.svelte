@@ -195,9 +195,13 @@
 				sticky: true,
 				rowHeader: true,
 				cell: teamCell,
-				// Once there's room for it, the team column is pinned to 24ch: a percentage width keeps
-				// the table's slack away from it, so the stat columns take that space instead
-				class: 'min-w-[16ch] md:w-[1%] md:min-w-[24ch]',
+				// On a phone, just wide enough for the logo and three-letter abbreviation (plus the seed,
+				// where there is one). Once there's room for it, the column is pinned to 24ch: a
+				// percentage width keeps the table's slack away from it, so the stat columns take it.
+				class: [
+					table.firstSeed ? 'w-[14ch] min-w-[14ch]' : 'w-[10ch] min-w-[10ch]',
+					'md:w-[1%] md:min-w-[24ch]',
+				],
 			},
 			{
 				id: 'wl',

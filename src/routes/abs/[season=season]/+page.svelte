@@ -5,6 +5,7 @@
 		type AbsChallengerType,
 	} from '#lib/fetch/savant.js'
 	import { cn } from '#lib/utils.js'
+	import AvatarCell from '#ui/data-table/cells/avatar-cell.svelte'
 	import PlayerCell from '#ui/data-table/cells/player-cell.svelte'
 	import DataTable from '#ui/data-table/data-table.svelte'
 	import type { CellArgs, DataTableColumn, HeaderArgs } from '#ui/data-table/types.js'
@@ -258,43 +259,62 @@
 			cell: rankCell,
 			class: 'w-[4ch]',
 		},
-		...columns.map((column): DataTableColumn<AbsChallenger> => {
+		...columns.flatMap((column): DataTableColumn<AbsChallenger>[] => {
+			// the favorite highlight wins over team colors
+			const teamColors = (row: AbsChallenger) => (isFavorite(row) ? undefined : { team: row.team })
+
+			// Only the headshot stays put while scrolling sideways, so every row still shows who it is
 			if (column.key === 'player')
-				return {
-					id: 'player',
-					header: playerHeader,
-					title: column.full,
-					value: column.value,
-					sortDescFirst: false,
-					sticky: true,
-					rowHeader: true,
-					cell: playerCell,
-					// the favorite highlight wins over team colors
-					team: (row) => (isFavorite(row) ? undefined : { team: row.team }),
-					class: 'w-[22ch] min-w-[22ch]',
-				}
+				return [
+					{
+						id: 'avatar',
+						header: '',
+						title: 'Headshot',
+						sortable: false,
+						sticky: true,
+						cell: avatarCell,
+						team: teamColors,
+						cellClass: (row) => isFavorite(row) && 'bg-accent',
+						class: 'w-lh min-w-lh px-0',
+					},
+					{
+						id: 'player',
+						header: playerHeader,
+						title: column.full,
+						value: column.value,
+						sortDescFirst: false,
+						rowHeader: true,
+						cell: playerCell,
+						team: teamColors,
+						class: 'w-[20ch] min-w-[20ch]',
+					},
+				]
 
 			if (column.key === 'team')
-				return {
-					id: 'team',
-					header: '',
-					title: column.full,
-					sortable: false,
-					align: 'center',
-					cell: teamCell,
-					team: (row) => (isFavorite(row) ? undefined : { team: row.team }),
-				}
+				return [
+					{
+						id: 'team',
+						header: '',
+						title: column.full,
+						sortable: false,
+						align: 'center',
+						cell: teamCell,
+						team: teamColors,
+					},
+				]
 
-			return {
-				id: column.key,
-				header: column.short,
-				title: column.full,
-				value: column.value,
-				numeric: true,
-				sortDescFirst: (column.first ?? 'desc') === 'desc',
-				format: (value) => format(value ?? undefined, column.format),
-				cellClass: (_, value) => tone(column, value ?? undefined),
-			}
+			return [
+				{
+					id: column.key,
+					header: column.short,
+					title: column.full,
+					value: column.value,
+					numeric: true,
+					sortDescFirst: (column.first ?? 'desc') === 'desc',
+					format: (value) => format(value ?? undefined, column.format),
+					cellClass: (_, value) => tone(column, value ?? undefined),
+				},
+			]
 		}),
 	])
 
@@ -486,10 +506,14 @@
 	</div>
 {/snippet}
 
+{#snippet avatarCell({ row }: CellArgs<AbsChallenger>)}
+	<AvatarCell person={row.player} type="silo" />
+{/snippet}
+
 {#snippet playerCell({ row }: CellArgs<AbsChallenger>)}
 	<PlayerCell
 		person={row.player}
-		type="silo"
+		headshot={false}
 		name={row.player.fullName}
 		title={undefined}
 		class={cn(isFavorite(row) && 'text-dark')}

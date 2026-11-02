@@ -146,8 +146,6 @@
 		}),
 	)
 
-	const byId = $derived(new Map(columns.map((column) => [column.id, column])))
-
 	const pinnedIds = $derived(
 		pinnedTop ? data.flatMap((row, i) => (pinnedTop(row) ? [getRowId(row, i)] : [])) : [],
 	)
@@ -181,6 +179,30 @@
 		},
 		keepPinnedRows: true,
 	})
+
+	/**
+	 * TanStack's columns by id. Right after `columns` changes (a stat group switch, say) the table
+	 * can still hold the previous set for a moment, so a lookup may come back empty.
+	 */
+	const leafColumns = $derived(
+		new Map(table.getAllLeafColumns().map((column) => [column.id, column] as const)),
+	)
+
+	/**
+	 * Still on the sort the table opens with, e.g. a roster's A–Z. That's not a choice anyone made,
+	 * so its header isn't highlighted until someone sorts.
+	 */
+	const isDefaultSort = $derived(
+		!controlledSorting &&
+			defaultSorting.length > 0 &&
+			encodeSorting(sorting) === encodeSorting(defaultSorting),
+	)
+
+	/** The column's direction, when it's a sort someone chose */
+	function highlightOf(id: string) {
+		const sorted = leafColumns.get(id)?.getIsSorted() ?? false
+		return isDefaultSort ? false : sorted
+	}
 
 	/* rows */
 
@@ -309,7 +331,6 @@
 	}
 
 	const ALIGN = { left: 'text-left', center: 'text-center', right: 'text-right' } as const
-	const JUSTIFY = { left: 'justify-start', center: 'justify-center', right: 'justify-end' } as const
 
 	const ariaSort = (column: Column<Features, T>) =>
 		column.getIsSorted() === 'asc'
@@ -371,11 +392,11 @@
 	>
 		<thead class={cn(hideHeader && 'sr-only')} bind:offsetHeight={theadHeight}>
 			<tr aria-rowindex={isVirtual ? 1 : undefined}>
-				{#each table.getHeaderGroups()[0]?.headers ?? [] as header (header.id)}
-					{@const column = byId.get(header.column.id)!}
+				{#each columns as column (column.id)}
+					{@const tsColumn = leafColumns.get(column.id)}
 					{@const align = alignOf(column)}
-					{@const sorted = header.column.getIsSorted()}
-					{@const canSort = header.column.getCanSort()}
+					{@const sorted = highlightOf(column.id)}
+					{@const canSort = tsColumn?.getCanSort() ?? false}
 					{@const label = typeof column.header === 'string' ? column.header : ''}
 
 					<th
@@ -394,18 +415,18 @@
 							column.class,
 							column.headerClass,
 						)}
-						aria-sort={canSort ? ariaSort(header.column) : undefined}
+						aria-sort={canSort && tsColumn ? ariaSort(tsColumn) : undefined}
 						title={column.title}
 					>
 						{#if typeof column.header === 'function'}
 							{@render column.header({
 								sorted,
 								title: column.title,
-								toggle: canSort ? header.column.getToggleSortingHandler() : undefined,
+								toggle: canSort ? tsColumn?.getToggleSortingHandler() : undefined,
 							})}
-						{:else if canSort}
+						{:else if canSort && tsColumn}
 							{@const arrow = sorted === 'asc' ? '▲' : '▼'}
-							{@const next = header.column.getNextSortingOrder()}
+							{@const next = tsColumn.getNextSortingOrder()}
 							{@const description = `${column.title ?? label}${
 								sortHref ? '' : next ? `, sort ${next === 'asc' ? 'ascending' : 'descending'}` : ''
 							}`}
@@ -419,16 +440,12 @@
 							}}
 
 							{#if sortHref}
-								<a href={sortHref(header.column.id)} {...contents}>
+								<a href={sortHref(column.id)} {...contents}>
 									{label}
 									{@render indicator(arrow, !!sorted)}
 								</a>
 							{:else}
-								<button
-									type="button"
-									{...contents}
-									onclick={header.column.getToggleSortingHandler()}
-								>
+								<button type="button" {...contents} onclick={tsColumn.getToggleSortingHandler()}>
 									{label}
 									{@render indicator(arrow, !!sorted)}
 								</button>
@@ -471,8 +488,11 @@
 	</table>
 </div>
 
+<!-- Only on the highlighted column: a placeholder would push every other label off center -->
 {#snippet indicator(arrow: string, active: boolean)}
-	<span class={cn('text-[x-small]', !active && 'invisible')} aria-hidden="true">{arrow}</span>
+	{#if active}
+		<span class="text-[x-small]" aria-hidden="true">{arrow}</span>
+	{/if}
 {/snippet}
 
 <!-- `index` is the row's place in the sort (-1 when pinned); `position` its place among the rows shown -->
@@ -491,15 +511,16 @@
 		{#each columns as column (column.id)}
 			{@const value = column.value?.(original)}
 			{@const team = teamCell(original, column)}
-			{@const sorted = table.getColumn(column.id)?.getIsSorted()}
+			{@const sorted = highlightOf(column.id)}
 			{@const cls = cn(
 				'px-[.75ch] align-middle',
 				density === 'comfortable' ? 'h-10' : 'h-lh',
 				ALIGN[alignOf(column)],
 				column.numeric && 'tabular-nums',
 				sorted && column.numeric && 'font-bold',
-				stickyCell(column),
 				team.class,
+				// after the team colors' `relative`, which would otherwise unstick the column
+				stickyCell(column),
 				column.class,
 				typeof column.cellClass === 'function'
 					? column.cellClass(original, value)

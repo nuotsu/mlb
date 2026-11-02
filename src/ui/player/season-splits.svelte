@@ -137,7 +137,8 @@
 			rowHeader: true,
 			cell: seasonCell,
 			team: (row) => ({ team: row.career ? undefined : row.split.team }),
-			class: 'w-[5ch] min-w-[5ch] px-[.5ch]',
+			// wide enough for “Career” too, which the year cell holds on its row
+			class: 'w-[7ch] min-w-[7ch] px-[.5ch]',
 		},
 		{
 			id: 'team',
