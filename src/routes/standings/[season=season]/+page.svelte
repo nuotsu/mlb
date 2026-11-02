@@ -9,6 +9,9 @@
 	import { formatDate } from '#lib/temporal.js'
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
 	import { cn } from '#lib/utils.js'
+	import TeamCell from '#ui/data-table/cells/team-cell.svelte'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn, HeaderArgs } from '#ui/data-table/types.js'
 	import Empty from '#ui/empty.svelte'
 	import Header from '#ui/header.svelte'
 	import { ArrowUpIcon, TrophyIcon } from '#ui/icons/index.js'
@@ -17,7 +20,6 @@
 	import SelectGameType from '#ui/select-game-type.svelte'
 	import SelectSport from '#ui/select-sport.svelte'
 	import SelectSeason from '#ui/stats/select-season.svelte'
-	import StyledTeam from '#ui/team/styled-team.svelte'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import type { PageProps } from './$types'
@@ -140,6 +142,149 @@
 			}))
 		},
 	)
+
+	type Row = {
+		record: MLB.TeamRecord
+		gamesBack: string
+		rank?: string
+		change?: number
+		magic: ReturnType<typeof magicNumber>
+		seed?: number
+		/** The table numbers its seeds, so every row keeps the seed column */
+		hasSeeds: boolean
+		showLeague?: boolean
+	}
+
+	/** Sorting by a column replaces standings order, and with it the cut line and its meaning. */
+	const isSorted = $derived(!!currentUrl().searchParams.get('sort'))
+
+	function rowsFor({ teamRecords, gamesBack, firstSeed, cutAfter, showLeague }: Table): Row[] {
+		return teamRecords.map((record, row) => ({
+			record,
+			gamesBack: record[gamesBack] ?? '-',
+			rank: data.view === 'mlb' ? record.sportRank : record.leagueRank,
+			change: data.rankChanges[record.team.id],
+			magic: magicNumber(record),
+			seed: firstSeed && (cutAfter === undefined || row < cutAfter) ? firstSeed + row : undefined,
+			hasSeeds: !!firstSeed,
+			showLeague,
+		}))
+	}
+
+	/** `'-'` and `'0'` are the leader; a `'+2.0'` wild card is two games clear. */
+	function gamesBackValue(gamesBack: string) {
+		if (gamesBack === '-' || gamesBack === '0') return 0
+		const n = Number(gamesBack)
+		return Number.isFinite(n) ? (gamesBack.startsWith('+') ? -n : n) : undefined
+	}
+
+	/** `W3` is +3, `L2` is −2. */
+	function streakValue(code?: string) {
+		const n = Number(code?.slice(1))
+		if (!code || !Number.isFinite(n)) return undefined
+		return code.startsWith('L') ? -n : n
+	}
+
+	function columnsFor(table: Table): DataTableColumn<Row>[] {
+		return [
+			{
+				id: 'team',
+				header: tableTitle,
+				title: table.title,
+				value: (row) => row.record.team.name,
+				sortable: false,
+				sticky: true,
+				rowHeader: true,
+				cell: teamCell,
+				// Once there's room for it, the team column is pinned to 24ch: a percentage width keeps
+				// the table's slack away from it, so the stat columns take that space instead
+				class: 'min-w-[16ch] md:w-[1%] md:min-w-[24ch]',
+			},
+			{
+				id: 'wl',
+				header: 'W-L',
+				title: 'Wins and losses',
+				value: (row) => row.record.wins,
+				numeric: true,
+				align: 'center',
+				cell: winLoss,
+				class: 'w-[7ch]',
+			},
+			{
+				id: 'pct',
+				header: '%',
+				title: 'Winning percentage',
+				value: (row) => row.record.winningPercentage,
+				numeric: true,
+				cellClass: (row) => (Number(row.record.winningPercentage) >= 0.5 ? 'positive' : 'negative'),
+				class: 'w-[6ch]',
+			},
+			{
+				id: 'gb',
+				header: table.gamesBack === 'wildCardGamesBack' ? 'WCGB' : 'GB',
+				title: table.gamesBack === 'wildCardGamesBack' ? 'Wild card games back' : 'Games back',
+				value: (row) => gamesBackValue(row.gamesBack),
+				numeric: true,
+				sortDescFirst: false,
+				format: (_, row) => (row.gamesBack === '0' ? '-' : row.gamesBack),
+				cellClass: (row) => [
+					(row.gamesBack === '0' || row.gamesBack === '-') && 'text-current/50',
+					row.gamesBack.startsWith('+') && 'positive',
+				],
+				class: 'w-[6ch]',
+			},
+			{
+				id: 'streak',
+				header: 'Strk',
+				title: 'Streak',
+				value: (row) => streakValue(row.record.streak?.streakCode),
+				numeric: true,
+				format: (_, row) => row.record.streak?.streakCode ?? '',
+				cellClass: (row) => [
+					row.record.streak?.streakCode?.startsWith('W') && 'positive',
+					row.record.streak?.streakCode?.startsWith('L') && 'negative',
+				],
+				class: 'w-[6ch]',
+			},
+			...(showMagicNumber
+				? [
+						{
+							id: 'magic',
+							header: 'Magic',
+							title: 'Magic number to clinch, or games from elimination',
+							value: (row) => (row.magic?.text === '✓' ? 0 : row.magic?.text),
+							numeric: true,
+							sortDescFirst: false,
+							cell: magicCell,
+							cellClass: (row) => row.magic?.tone,
+							class: 'w-[7ch]',
+						} satisfies DataTableColumn<Row>,
+					]
+				: []),
+			{
+				id: 'rank',
+				header: 'Rank',
+				title: data.view === 'mlb' ? 'Rank in MLB' : 'Rank in the league',
+				value: (row) => row.rank,
+				numeric: true,
+				sortDescFirst: false,
+				class: 'w-[7ch]',
+			},
+			{
+				id: 'change',
+				header: '↑/↓',
+				title: `Change in rank since ${since}`,
+				value: (row) => row.change,
+				numeric: true,
+				cell: changeCell,
+				cellClass: (row) => [
+					(row.change ?? 0) > 0 && 'positive',
+					(row.change ?? 0) < 0 && 'negative',
+				],
+				class: 'w-[7ch]',
+			},
+		]
+	}
 
 	/** `al`/`nl` for MLB's leagues, the league ID for any other sport's. */
 	const leagueParam = (key: number) => leagueSide(key)?.toLowerCase() ?? String(key)
@@ -305,143 +450,20 @@
 				<h2 class="px-ch text-sm text-current/50">{heading}</h2>
 			{/if}
 			<div class={cn('grid items-start', data.view === 'playoff' ? 'gap-[.5lh]' : 'gap-[2lh]')}>
-				{#each tables as { title, teamRecords, gamesBack: gamesBackKey, firstSeed, cutAfter, showLeague }, i (i)}
-					<div class="overflow-x-auto overflow-y-hidden">
-						<table class="w-max min-w-full text-center">
-							<thead>
-								<tr class="text-sm text-current/50 *:font-normal">
-									<!--
-										Once there's room for it, the team column is pinned to 24ch: a percentage
-										width keeps the table's slack away from it, so the stat columns take that
-										space instead of the name stretching across the row.
-									-->
-									<th
-										class="sticky left-0 z-1 min-w-[10ch] bg-background text-left text-foreground md:w-[1%] md:min-w-[24ch]"
-									>
-										<span class="line-clamp-1 break-all">{title}</span>
-									</th>
-									<th class="w-[8ch]">W-L</th>
-									<th class="w-[5ch]">%</th>
-									<th class="w-[5ch]">{gamesBackKey === 'wildCardGamesBack' ? 'WCGB' : 'GB'}</th>
-									<th class="w-[5ch]">Strk</th>
-									{#if showMagicNumber}
-										<th class="w-[6ch]">Magic</th>
-									{/if}
-									<th class="w-[6ch]">Rank</th>
-									<th class="w-[8ch]">↑/↓</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each teamRecords as record, row (record.team.id)}
-									{@const { team, wins, losses, winningPercentage, streak } = record}
-									{@const gamesBack = record[gamesBackKey] ?? '-'}
-									{@const rank = data.view === 'mlb' ? record.sportRank : record.leagueRank}
-									{@const change = data.rankChanges[team.id]}
-									{@const magic = magicNumber(record)}
-									{@const seed =
-										firstSeed && (cutAfter === undefined || row < cutAfter)
-											? firstSeed + row
-											: undefined}
-									<tr
-										class={cn(
-											'hover:[&>td]:bg-foreground/10',
-											row === (cutAfter ?? 0) - 1 &&
-												row < teamRecords.length - 1 &&
-												'[&>td]:border-b-2 [&>td]:border-dashed [&>td]:border-current/50',
-										)}
-									>
-										<td
-											class={cn(
-												'sticky left-0 z-1 min-w-[10ch] bg-background md:w-[1%] md:min-w-[24ch]',
-												{
-													'dark:text-dark': isDarkOnLightTeam(team),
-													'dark:text-light': isLightOnDarkTeam(team),
-												},
-											)}
-										>
-											<div class="flex items-center gap-ch">
-												{#if firstSeed}
-													<span
-														class="w-[2ch] shrink-0 text-right text-sm text-current/50 tabular-nums"
-														title={seed ? `No. ${seed} seed` : undefined}
-													>
-														{seed ?? ''}
-													</span>
-												{/if}
-												<StyledTeam class="min-w-0 flex-1 text-left" {team} linked>
-													{#if showLeague && teamLeagues.get(team.id)}
-														<small class="ml-auto pe-[.5ch] text-xs text-current/50">
-															{teamLeagues.get(team.id)}
-														</small>
-													{/if}
-												</StyledTeam>
-											</div>
-										</td>
-										<td class="flex justify-center tabular-nums">
-											<span class="positive">{wins}</span>
-											-
-											<span class="negative">{losses}</span>
-										</td>
-										<td
-											class={cn(
-												'tabular-nums',
-												Number(winningPercentage) >= 0.5 ? 'positive' : 'negative',
-											)}
-										>
-											{winningPercentage}
-										</td>
-										<td
-											class={cn(
-												'tabular-nums',
-												(gamesBack === '0' || gamesBack === '-') && 'text-current/50',
-												gamesBack.startsWith('+') && 'positive',
-											)}
-										>
-											{gamesBack === '0' ? '-' : gamesBack}
-										</td>
-										<td
-											class="tabular-nums"
-											class:positive={streak?.streakCode?.startsWith('W')}
-											class:negative={streak?.streakCode?.startsWith('L')}
-										>
-											{streak?.streakCode}
-										</td>
-										{#if showMagicNumber}
-											<td class={cn('tabular-nums', magic?.tone)}>
-												{#if magic}
-													<span title={magic.title}>{magic.text}</span>
-												{:else}
-													<span class="text-current/50">-</span>
-												{/if}
-											</td>
-										{/if}
-										<td class="tabular-nums">{rank}</td>
-										<td
-											class="tabular-nums"
-											class:positive={change > 0}
-											class:negative={change < 0}
-										>
-											{#if change}
-												<span
-													class="inline-flex items-center gap-[.25ch]"
-													title="{change > 0 ? 'Up' : 'Down'} {Math.abs(change)} since {since}"
-												>
-													<ArrowUpIcon
-														class={cn('size-[.85em]', change < 0 && 'rotate-180')}
-														role="img"
-														aria-label={change > 0 ? 'Up' : 'Down'}
-													/>
-													{Math.abs(change)}
-												</span>
-											{:else}
-												<span class="text-current/50">-</span>
-											{/if}
-										</td>
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
+				{#each tables as table, i (i)}
+					<DataTable
+						label={table.title}
+						data={rowsFor(table)}
+						columns={columnsFor(table)}
+						getRowId={(row) => String(row.record.team.id)}
+						sortParam="sort"
+						rowClass={(_, row, rows) =>
+							// the postseason cut line only means something in standings order
+							!isSorted &&
+							row === (table.cutAfter ?? 0) - 1 &&
+							row < rows.length - 1 &&
+							'*:border-b-2 *:border-dashed *:border-b-current/50'}
+					/>
 				{/each}
 			</div>
 		</div>
@@ -449,3 +471,50 @@
 		<Empty>No standings</Empty>
 	{/each}
 </section>
+
+{#snippet tableTitle({ title }: HeaderArgs)}
+	<span class="line-clamp-1 text-left break-all text-foreground">{title}</span>
+{/snippet}
+
+{#snippet teamCell({ row }: CellArgs<Row>)}
+	{@const league = row.showLeague ? teamLeagues.get(row.record.team.id) : undefined}
+	<TeamCell
+		team={row.record.team}
+		lead={row.hasSeeds ? (row.seed ?? '') : undefined}
+		leadTitle={row.seed ? `No. ${row.seed} seed` : undefined}
+	>
+		{#if league}
+			<small class="ml-auto pe-[.5ch] text-xs text-current/50">{league}</small>
+		{/if}
+	</TeamCell>
+{/snippet}
+
+{#snippet winLoss({ row }: CellArgs<Row>)}
+	<span class="positive">{row.record.wins}</span>-<span class="negative">{row.record.losses}</span>
+{/snippet}
+
+{#snippet magicCell({ row }: CellArgs<Row>)}
+	{#if row.magic}
+		<span title={row.magic.title}>{row.magic.text}</span>
+	{:else}
+		<span class="text-current/50">-</span>
+	{/if}
+{/snippet}
+
+{#snippet changeCell({ row: { change } }: CellArgs<Row>)}
+	{#if change}
+		<span
+			class="inline-flex items-center gap-[.25ch]"
+			title="{change > 0 ? 'Up' : 'Down'} {Math.abs(change)} since {since}"
+		>
+			<ArrowUpIcon
+				class={cn('size-[.85em]', change < 0 && 'rotate-180')}
+				role="img"
+				aria-label={change > 0 ? 'Up' : 'Down'}
+			/>
+			{Math.abs(change)}
+		</span>
+	{:else}
+		<span class="text-current/50">-</span>
+	{/if}
+{/snippet}

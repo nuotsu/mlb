@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { colorSchemeStore } from '#ui/store.svelte.js'
-	import type { HTMLAttributes } from 'svelte/elements'
+	import type { HTMLImgAttributes } from 'svelte/elements'
 
 	let {
 		team,
@@ -11,7 +11,7 @@
 		team: MLB.Team
 		srcset?: string
 		class?: string
-	} & HTMLAttributes<HTMLImageElement> = $props()
+	} & HTMLImgAttributes = $props()
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
 

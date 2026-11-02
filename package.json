@@ -2,7 +2,7 @@
 	"name": "mlb",
 	"description": "Track MLB games, explore stats, and query the Stats API, all in one app.",
 	"private": true,
-	"version": "0.4.489",
+	"version": "0.4.490",
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev --host",
@@ -37,6 +37,8 @@
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.32.1",
+		"@tanstack/svelte-table": "^9.3.1",
+		"@tanstack/svelte-virtual": "^3.13.51",
 		"hls.js": "^1.7.3",
 		"posthog-js": "1.436.1",
 		"posthog-node": "5.55.0",

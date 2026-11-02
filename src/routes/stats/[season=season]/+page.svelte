@@ -1,13 +1,14 @@
 <script lang="ts">
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import { LOWER_IS_BETTER } from '#lib/stats.js'
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
-	import { cn } from '#lib/utils.js'
+	import PlayerCell from '#ui/data-table/cells/player-cell.svelte'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import Empty from '#ui/empty.svelte'
 	import Header from '#ui/header.svelte'
 	import Loading from '#ui/loading.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import PillSwitcher from '#ui/pill-switcher.svelte'
-	import Headshot from '#ui/player/headshot.svelte'
 	import SelectGameType from '#ui/select-game-type.svelte'
 	import SelectSport from '#ui/select-sport.svelte'
 	import LongestHomeRuns from '#ui/stats/longest-home-runs.svelte'
@@ -47,6 +48,86 @@
 
 	let hittingSortStat = $derived(page.url.searchParams.get('hittingSortStat') ?? 'homeRuns')
 	let pitchingSortStat = $derived(page.url.searchParams.get('pitchingSortStat') ?? 'era')
+
+	const HITTING_STATS = [
+		'avg',
+		'homeRuns',
+		'rbi',
+		'hits',
+		'doubles',
+		'triples',
+		'stolenBases',
+		'obp',
+		'slg',
+		'ops',
+	]
+	const PITCHING_STATS = ['era', 'wins', 'losses', 'saves', 'strikeOuts', 'whip', 'inningsPitched']
+
+	/** Hairlines after these, grouping related stats */
+	const DIVIDERS = new Set(['rbi', 'triples', 'stolenBases', 'era', 'saves', 'strikeOuts'])
+
+	const SHORT: Record<string, string> = { doubles: '2B', triples: '3B', strikeOuts: 'K' }
+
+	/** Good numbers, the same thresholds the team stats use */
+	function tone(stat: string, value: unknown) {
+		const n = Number(value)
+		return (stat === 'avg' && n >= 0.3) ||
+			(stat === 'ops' && n >= 1) ||
+			(stat === 'era' && n < 3) ||
+			(stat === 'whip' && n < 1)
+			? 'positive'
+			: undefined
+	}
+
+	function leaderColumns(group: 'hitting' | 'pitching', stats: string[]) {
+		return [
+			{
+				id: 'rank',
+				header: '#',
+				title: 'Rank',
+				sortable: false,
+				align: 'center',
+				cell: rankCell,
+				class: 'w-[4ch]',
+			},
+			{
+				id: 'player',
+				header: group === 'hitting' ? positionSelect : 'Player',
+				title: 'Player',
+				sortable: false,
+				sticky: true,
+				rowHeader: true,
+				cell: playerCell,
+				team: ({ team, sport }) => ({ team, sport }),
+				class: 'min-w-[17ch]',
+			},
+			{
+				id: 'league',
+				header: 'Lg',
+				title: 'League',
+				sortable: false,
+				value: (split) => split.league?.name,
+				cellClass: 'text-xs text-current/40',
+			},
+			...stats.map((stat): DataTableColumn<MLB.StatSplit> => {
+				const { label, name, lookupParam } =
+					data.baseballStats.find((s) => [s.name, s.lookupParam].includes(stat)) ?? {}
+
+				return {
+					id: stat,
+					header: (SHORT[stat] ?? lookupParam ?? stat).toUpperCase(),
+					title: label ?? name,
+					value: (split) => split.stat[stat],
+					numeric: true,
+					class: DIVIDERS.has(stat) && 'border-r border-current/25',
+					cellClass: (split) => tone(stat, split.stat[stat]),
+				}
+			}),
+		] satisfies DataTableColumn<MLB.StatSplit>[]
+	}
+
+	const hittingColumns = $derived(leaderColumns('hitting', HITTING_STATS))
+	const pitchingColumns = $derived(leaderColumns('pitching', PITCHING_STATS))
 
 	function withParam(key: string, value: string) {
 		const url = new URL(currentUrl().href)
@@ -134,214 +215,58 @@
 	/>
 
 	<div id="stats-leaders" role="tabpanel" aria-labelledby="stats-group-tab-{group}">
-		{#if group === 'hitting'}
-			<article class="overflow-x-auto has-[table]:flex">
-				<table class="min-w-full table-fixed text-center">
-					<thead class="text-sm">
-						<tr>
-							<th></th>
-
-							<th class="w-[8ch]" colspan="3">
-								<select
-									class="button w-full text-center hover:bg-current/10"
-									value={position ?? ''}
-									onchange={(e) => {
-										const { value } = e.target as HTMLSelectElement
-										goto(withParam('position', value))
-									}}
-								>
-									<option value="">All positions</option>
-									{#each positionPlayers as { abbrev, formalName }}
-										<option value={abbrev}>{abbrev} — {formalName}</option>
-									{/each}
-								</select>
-							</th>
-
-							<th></th>
-
-							{#each ['avg', 'homeRuns', 'rbi', 'hits', 'doubles', 'triples', 'stolenBases', 'obp', 'slg', 'ops'] as stat}
-								{@const { label, name, lookupParam } =
-									data.baseballStats.find((s) => [s.name, s.lookupParam].includes(stat)) ?? {}}
-								<th class="px-[.5ch]">
-									<abbr title={label ?? name}>
-										<a
-											href={withParam('hittingSortStat', stat)}
-											class={cn(
-												'block uppercase',
-												hittingSortStat === stat
-													? 'bg-foreground font-bold text-background'
-													: 'text-current/40',
-											)}
-										>
-											{#if stat === 'doubles'}
-												2B
-											{:else if stat === 'triples'}
-												3B
-											{:else}
-												{lookupParam ?? stat}
-											{/if}
-										</a>
-									</abbr>
-								</th>
-							{/each}
-						</tr>
-					</thead>
-					<tbody>
-						{#if data.hittingLeaders?.stats?.[0]?.splits.length}
-							{#each data.hittingLeaders.stats as { splits }}
-								{#each splits as { player, stat, sport, ...split }}
-									<tr class="hover:[&>td]:bg-foreground/10">
-										{@render p(player as MLB.Person, split as MLB.StatSplit, sport)}
-										<td class="tabular-nums" class:positive={Number(stat.avg) >= 0.3}>
-											{stat.avg}
-										</td>
-										<td class="tabular-nums">{stat.homeRuns}</td>
-										<td class="border-r border-current/25 tabular-nums">{stat.rbi}</td>
-										<td class="tabular-nums">{stat.hits}</td>
-										<td class="tabular-nums">{stat.doubles}</td>
-										<td class="border-r border-current/25 tabular-nums">{stat.triples}</td>
-										<td class="border-r border-current/25 tabular-nums">{stat.stolenBases}</td>
-										<td class="tabular-nums">{stat.obp}</td>
-										<td class="tabular-nums">{stat.slg}</td>
-										<td class="tabular-nums" class:positive={Number(stat.ops) >= 1}>
-											{stat.ops}
-										</td>
-									</tr>
-								{/each}
-							{/each}
-						{:else}
-							<tr>
-								<td colspan="15">
-									<Empty>No hitting stats</Empty>
-								</td>
-							</tr>
-						{/if}
-					</tbody>
-				</table>
-			</article>
-		{:else if group === 'pitching'}
-			<article class="overflow-x-auto has-[table]:flex">
-				<table class="min-w-full table-fixed text-center">
-					<thead class="text-sm">
-						<tr>
-							<th class="min-w-[5ch]" colspan="5"></th>
-
-							{#each ['era', 'wins', 'losses', 'saves', 'strikeOuts', 'whip', 'inningsPitched'] as stat}
-								{@const { label, name, lookupParam } =
-									data.baseballStats.find((s) => [s.name, s.lookupParam].includes(stat)) ?? {}}
-
-								<th class="px-[.5ch]">
-									<abbr title={label ?? name}>
-										<a
-											href={withParam('pitchingSortStat', stat)}
-											class={cn(
-												'block uppercase',
-												pitchingSortStat === stat
-													? 'bg-foreground font-bold text-background'
-													: 'text-current/40',
-											)}
-										>
-											{#if stat === 'strikeOuts'}
-												K
-											{:else}
-												{lookupParam ?? stat}
-											{/if}
-										</a>
-									</abbr>
-								</th>
-							{/each}
-						</tr>
-					</thead>
-
-					<tbody>
-						{#if data.pitchingLeaders?.stats?.[0]?.splits.length}
-							{#each data.pitchingLeaders.stats as { splits }}
-								{#each splits as { player, stat, sport, ...split }}
-									<tr class="hover:[&>td]:bg-foreground/10">
-										{@render p(player as MLB.Person, split as MLB.StatSplit, sport)}
-										<td
-											class="border-r border-current/25 tabular-nums"
-											class:positive={Number(stat.era) < 3}
-										>
-											{stat.era}
-										</td>
-										<td class="tabular-nums">{stat.wins}</td>
-										<td class="tabular-nums">{stat.losses}</td>
-										<td class="border-r border-current/25 tabular-nums">{stat.saves}</td>
-										<td class="border-r border-current/25 tabular-nums">{stat.strikeOuts}</td>
-										<td class="tabular-nums" class:positive={Number(stat.whip) < 1}>
-											{stat.whip}
-										</td>
-										<td class="tabular-nums">{stat.inningsPitched}</td>
-									</tr>
-								{/each}
-							{/each}
-						{:else}
-							<tr>
-								<td colspan="12">
-									<Empty>No pitching stats</Empty>
-								</td>
-							</tr>
-						{/if}
-					</tbody>
-				</table>
-			</article>
+		{#if group === 'hitting' || group === 'pitching'}
+			{@const leaders = group === 'hitting' ? data.hittingLeaders : data.pitchingLeaders}
+			{@const sortStat = group === 'hitting' ? hittingSortStat : pitchingSortStat}
+			<DataTable
+				label="{page.params.season} {group} leaders"
+				data={leaders?.stats?.flatMap(({ splits }) => splits) ?? []}
+				columns={group === 'hitting' ? hittingColumns : pitchingColumns}
+				getRowId={(split, i) => `${split.player?.id ?? i}-${split.team?.id ?? ''}`}
+				sorting={[{ id: sortStat, desc: !LOWER_IS_BETTER[group]?.has(sortStat) }]}
+				sortHref={(stat) => withParam(`${group}SortStat`, stat)}
+			>
+				{#snippet empty()}
+					<Empty>No {group} stats</Empty>
+				{/snippet}
+			</DataTable>
 		{:else}
-			<article class="overflow-x-auto overflow-y-hidden has-[table]:flex">
-				{#await data.longestHomeRuns}
-					<Loading class="w-full justify-center p-lh text-current/40"
-						>Loading longest HRs...</Loading
-					>
-				{:then longestHomeRuns}
-					<LongestHomeRuns homeRuns={longestHomeRuns} />
-				{/await}
-			</article>
+			{#await data.longestHomeRuns}
+				<Loading class="w-full justify-center p-lh text-current/40">Loading longest HRs...</Loading>
+			{:then longestHomeRuns}
+				<LongestHomeRuns homeRuns={longestHomeRuns} />
+			{/await}
 		{/if}
 	</div>
 </section>
 
-{#snippet p(person: MLB.Person, { rank, position, league, team }: MLB.StatSplit, sport?: MLB.Sport)}
-	{@const bg = `url(https://midfield.mlbstatic.com/v1/team/${team?.id}/spots/32)`}
-
-	<td class="w-[3ch] text-center text-xs text-current/50">{rank}</td>
-
-	<th class="sticky left-0 z-1 w-lh min-w-lh" style:--team-bg={bg}>
-		<Headshot {person} class="size-lh" type="silo" />
-	</th>
-
-	<th
-		class={cn('relative px-[.5ch] text-left', {
-			'dark:text-dark': isDarkOnLightTeam(team, sport),
-			'dark:text-light': isLightOnDarkTeam(team),
-		})}
-		style:--team-bg={bg}
-	>
-		<a
-			class="line-clamp-1 w-[10ch] break-all decoration-dashed hover:underline"
-			href="/player/{person.id}"
-		>
-			{person.lastName}
-		</a>
-	</th>
-
-	<th
-		class={cn('relative w-[3ch] min-w-[3ch] text-xs text-current/50', {
-			'dark:text-dark/50': isDarkOnLightTeam(team, sport),
-			'dark:text-light/50': isLightOnDarkTeam(team),
-		})}
-		style:--team-bg={bg}
-	>
-		{position?.abbreviation}
-	</th>
-
-	<td class="w-[3ch] text-xs text-current/40">
-		{league?.name}
-	</td>
+{#snippet rankCell({ row }: CellArgs<MLB.StatSplit>)}
+	<span class="text-xs text-current/50">{row.rank}</span>
 {/snippet}
 
-<style>
-	td {
-		padding-inline: 1ch;
-		min-width: 4ch;
-	}
-</style>
+{#snippet playerCell({ row: { player, position } }: CellArgs<MLB.StatSplit>)}
+	{#if player}
+		<PlayerCell person={player} type="silo" nameClass="w-[10ch]">
+			<small class="w-[3ch] shrink-0 text-center text-xs opacity-50">
+				{position?.abbreviation}
+			</small>
+		</PlayerCell>
+	{/if}
+{/snippet}
+
+{#snippet positionSelect()}
+	<select
+		class="button w-full text-center hover:bg-current/10"
+		aria-label="Position"
+		value={position ?? ''}
+		onchange={(e) => {
+			const { value } = e.target as HTMLSelectElement
+			goto(withParam('position', value))
+		}}
+	>
+		<option value="">All positions</option>
+		{#each positionPlayers as { abbrev, formalName } (abbrev)}
+			<option value={abbrev}>{abbrev} — {formalName}</option>
+		{/each}
+	</select>
+{/snippet}
