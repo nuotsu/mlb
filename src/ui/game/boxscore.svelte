@@ -112,7 +112,8 @@
 		rowHeader: true,
 		cell: playerCell,
 		cellClass: (row) => isFavorite(row) && 'bg-accent! text-dark',
-		class: 'min-w-[16ch] pl-[1rch]',
+		// the name alone was 14ch; this cell also holds the headshot and position
+		class: 'min-w-[17ch] pl-[1rch]',
 	}
 
 	/**
@@ -149,7 +150,7 @@
 					id === 'ops' && Number(value) >= 0.75 && 'positive',
 				]
 			},
-			class: 'w-[4ch] min-w-[3rch] last:pr-[1rch]',
+			class: 'min-w-[3rch] px-[.25ch] text-center last:pr-[1rch]',
 		}
 	}
 
@@ -244,8 +245,8 @@
 							getRowId={(row) => String(row.player.person.id)}
 							sortable={!isSpoilerPrevented}
 							sortParam="batting"
+							tableClass="w-full"
 							stickyHeader={false}
-							density="compact"
 						/>
 					{/if}
 				</div>
@@ -259,8 +260,8 @@
 					getRowId={(row) => String(row.player.person.id)}
 					sortable={!isSpoilerPrevented}
 					sortParam="pitching"
+					tableClass="w-full"
 					stickyHeader={false}
-					density="compact"
 				/>
 
 				{#if gameDate && !isSpoilerPrevented}
@@ -278,7 +279,6 @@
 						sortable={false}
 						stickyHeader={false}
 						hideHeader
-						density="compact"
 					/>
 				{/if}
 
@@ -295,7 +295,6 @@
 						sortable={false}
 						stickyHeader={false}
 						hideHeader
-						density="compact"
 					/>
 				{/if}
 			{:else}

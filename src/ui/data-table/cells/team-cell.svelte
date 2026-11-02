@@ -37,7 +37,7 @@
 		</span>
 	{/if}
 
-	<StyledTeam class="min-h-8 min-w-0 flex-1 text-left" {team} {linked}>
+	<StyledTeam class="min-w-0 flex-1 text-left" {team} {linked}>
 		{@render children?.()}
 	</StyledTeam>
 </div>

@@ -69,7 +69,6 @@
 		columns={coachColumns}
 		getRowId={(row, i) => `${row.person.id}-${i}`}
 		stickyHeader={false}
-		density="compact"
 	/>
 </section>
 
@@ -96,7 +95,6 @@
 			sortParam="roster"
 			defaultSorting={[{ id: 'player', desc: false }]}
 			stickyHeader={false}
-			density="compact"
 		/>
 	</section>
 {/snippet}
@@ -106,10 +104,13 @@
 {/snippet}
 
 {#snippet favoriteCell({ row: { person } }: CellArgs<MLB.Roster>)}
-	<ToggleFavorite
-		class="shrink-0"
-		target={{ href: `/player/${person.id}`, label: (person as MLB.Person).lastName! }}
-	/>
+	<!-- a flex item, so the inline star adds no line-box space under itself -->
+	<div class="flex justify-end">
+		<ToggleFavorite
+			class="shrink-0"
+			target={{ href: `/player/${person.id}`, label: (person as MLB.Person).lastName! }}
+		/>
+	</div>
 {/snippet}
 
 {#snippet coachCell({ row: { person } }: CellArgs<MLB.Coach>)}

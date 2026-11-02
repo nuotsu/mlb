@@ -270,7 +270,6 @@
 				{columns}
 				getRowId={(row) => String(row.person.id)}
 				stickyHeader={false}
-				density="compact"
 				tableClass="min-w-0"
 			/>
 		{/if}

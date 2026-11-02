@@ -72,7 +72,6 @@
 	getRowId={(player) => String(player.person.id)}
 	tableClass="w-full"
 	sortParam="il"
-	density="compact"
 />
 
 {#snippet statusCell({ row }: CellArgs<InjuredPlayer>)}

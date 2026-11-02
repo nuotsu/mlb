@@ -458,7 +458,7 @@
 			<SearchIcon class="pointer-events-none z-1 mx-[.5ch] my-auto size-[1em] text-current/40" />
 
 			<input
-				class="input min-h-8 w-full min-w-0 pr-[.5ch] pl-[calc(1em+1ch)] font-normal"
+				class="input w-full min-w-0 pr-[.5ch] pl-[calc(1em+1ch)] font-normal"
 				type="search"
 				placeholder="Player"
 				aria-label="Search players"

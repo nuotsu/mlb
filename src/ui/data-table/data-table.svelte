@@ -61,7 +61,7 @@
 		stickyHeader = true,
 		virtualize = 'auto',
 		virtualThreshold = 50,
-		density = 'comfortable',
+		density = 'compact',
 		hideHeader = false,
 		class: className,
 		tableClass,
@@ -98,11 +98,8 @@
 		/** `'auto'` virtualizes past `virtualThreshold` rows */
 		virtualize?: boolean | 'auto'
 		virtualThreshold?: number
-		/**
-		 * Comfortable rows are 40px tall, a tap target. Compact ones shrink for a mouse but stay 40px
-		 * for touch. Tight rows are a line tall, for tables with nothing to tap, like a linescore.
-		 */
-		density?: 'comfortable' | 'compact' | 'tight'
+		/** Compact rows are a line tall, as the site's tables always were; comfortable ones are 40px tap targets */
+		density?: 'compact' | 'comfortable'
 		/** For tables whose rows speak for themselves; screen readers still get the headers */
 		hideHeader?: boolean
 		class?: ClassValue
@@ -258,7 +255,7 @@
 	let mounted = $state(false)
 	onMount(() => (mounted = true))
 
-	const rowHeight = $derived(density === 'comfortable' ? 40 : density === 'compact' ? 32 : 24)
+	const rowHeight = $derived(density === 'comfortable' ? 40 : 24)
 
 	const virtualizer = createVirtualizer<HTMLDivElement, HTMLTableRowElement>({
 		count: untrack(() => rows.length),
@@ -384,9 +381,8 @@
 					<th
 						scope="col"
 						class={cn(
-							'h-10 px-[.5ch] text-sm font-normal whitespace-nowrap text-current/50',
-							density === 'compact' && 'pointer-fine:h-8',
-							density === 'tight' && 'h-lh',
+							'px-[.5ch] text-sm font-normal whitespace-nowrap text-current/50',
+							density === 'comfortable' ? 'h-10' : 'h-lh',
 							ALIGN[align],
 							stickyHeader &&
 								!hideHeader && [
@@ -415,7 +411,7 @@
 							}`}
 							{@const contents = {
 								class: cn(
-									'-mx-[.25ch] inline-flex min-h-8 items-center gap-[.25ch] px-[.5ch] outline-offset-[-2px] hover:text-foreground',
+									'-mx-[.25ch] inline-flex items-center gap-[.25ch] px-[.5ch] outline-offset-[-2px] hover:text-foreground',
 									align === 'right' && 'flex-row-reverse',
 									sorted && 'bg-foreground font-bold text-background hover:text-background',
 								),
@@ -497,9 +493,8 @@
 			{@const team = teamCell(original, column)}
 			{@const sorted = table.getColumn(column.id)?.getIsSorted()}
 			{@const cls = cn(
-				'h-10 px-[.75ch] align-middle',
-				density === 'compact' && 'pointer-fine:h-8',
-				density === 'tight' && 'h-lh',
+				'px-[.75ch] align-middle',
+				density === 'comfortable' ? 'h-10' : 'h-lh',
 				ALIGN[alignOf(column)],
 				column.numeric && 'tabular-nums',
 				sorted && column.numeric && 'font-bold',

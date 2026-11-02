@@ -127,7 +127,6 @@
 	getRowId={(row) => row.side}
 	sortable={false}
 	stickyHeader={false}
-	density="tight"
 	tableClass="table-fixed text-center"
 />
 

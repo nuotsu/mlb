@@ -486,10 +486,10 @@
 		}
 	}
 
-	/* A box per plate appearance: a 40px tap target, and a square for the diamond */
+	/* A box per plate appearance */
 	.box {
 		width: 2.5rem;
-		height: 2.5rem;
+		height: 2rem;
 		font-variant-numeric: tabular-nums;
 	}
 

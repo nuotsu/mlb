@@ -38,7 +38,7 @@
 	{href}
 	{title}
 	class={cn(
-		'group/player flex min-h-8 min-w-0 items-center gap-ch text-left',
+		'group/player flex min-w-0 items-center gap-ch text-left',
 		href && 'decoration-dashed',
 		className,
 	)}

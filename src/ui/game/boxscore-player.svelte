@@ -31,7 +31,7 @@
 
 <a
 	href="/player/{person.id}"
-	class="group/player relative flex min-h-8 items-center gap-ch text-left"
+	class="group/player relative flex items-center gap-ch text-left"
 	class:pl-lh={substitute}
 >
 	{#if substitute}
