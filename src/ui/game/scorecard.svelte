@@ -11,7 +11,10 @@
 		type Steal,
 	} from '#lib/scorecard.js'
 	import { cn, ordinal } from '#lib/utils.js'
-	import type { Snippet } from 'svelte'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
+	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import BoxscorePlayer from '#ui/game/boxscore-player.svelte'
 
 	let {
 		team,
@@ -20,7 +23,7 @@
 		scheduledInnings,
 		isFinal,
 		isSpoilerPrevented,
-		player,
+		players,
 		onAtBatSelect,
 	}: {
 		team: MLB.TeamBoxscore
@@ -29,10 +32,8 @@
 		scheduledInnings?: number
 		isFinal?: boolean
 		isSpoilerPrevented?: boolean
-		/** The box score's own headshot and name cells, so both views line up the same way */
-		player: Snippet<
-			[player: MLB.BoxscorePlayer, substituted?: boolean, label?: string, substitute?: boolean]
-		>
+		/** `gameData.players`, for the player cells' throwing hands */
+		players?: Record<string, MLB.Person> | null
 		/** Show this plate appearance in the pitch sequence */
 		onAtBatSelect?: (atBatIndex: number) => void
 	} = $props()
@@ -60,12 +61,41 @@
 		}),
 	)
 
-	/** Each inning's columns, so the header, rows and totals line up. */
-	const columns = $derived(
-		scorecard.innings.flatMap(({ inning, columns }) =>
-			Array.from({ length: columns }, (_, column) => ({ inning, column })),
-		),
+	type ScorecardRow = (typeof scorecard.rows)[number]
+
+	/** One column per inning; an inning that batted around holds a box for each time through. */
+	const tableColumns = $derived<DataTableColumn<ScorecardRow>[]>([
+		{
+			id: 'batter',
+			header: '',
+			title: 'Batter',
+			sticky: true,
+			rowHeader: true,
+			cell: batterCell,
+			cellClass: (row) => isFavorite(row) && 'bg-accent! text-dark',
+			class: 'pl-[1rch]',
+		},
+		...scorecard.innings.map(({ inning, columns }): DataTableColumn<ScorecardRow> => ({
+			id: `inning-${inning}`,
+			header: String(inning),
+			title: `${ordinal(inning)} inning`,
+			align: 'center',
+			cell: inningCell,
+			class: 'inning-start p-0',
+			// a box per time through the order
+			headerClass: columns > 1 && 'text-center',
+		})),
+	])
+
+	const columnCounts = $derived(
+		new Map(scorecard.innings.map(({ inning, columns }) => [inning, columns])),
 	)
+
+	const isFavorite = (row: ScorecardRow) => favoritesStore.has(`/player/${row.playerId}`)
+
+	/** Taken out of the game */
+	const isReplaced = (row: ScorecardRow) =>
+		!isSpoilerPrevented && !team.battingOrder.includes(row.playerId)
 
 	const cellsByRow = $derived(
 		new Map(
@@ -210,140 +240,136 @@
 	}
 </script>
 
-<table class="scorecard w-max border-collapse text-center" aria-label="{team.team.name} scorecard">
-	<thead class="text-xs text-current/40">
-		<tr class="*:pt-[.5ch] *:font-normal">
-			<th colspan="2" scope="col">
-				<span class="sr-only">Batter</span>
-			</th>
-			{#each scorecard.innings as { inning, columns } (inning)}
-				<th scope="col" colspan={columns}>{inning}</th>
-			{/each}
-			<th class="end" aria-hidden="true"></th>
-		</tr>
-	</thead>
+<DataTable
+	class="scorecard"
+	label="{team.team.name} scorecard"
+	data={scorecard.rows}
+	columns={tableColumns}
+	getRowId={(row) => String(row.playerId)}
+	sortable={false}
+	stickyHeader={false}
+	rowAttrs={(row) => ({ 'data-substituted': isReplaced(row) ? '' : undefined })}
+/>
 
-	<tbody>
-		{#each scorecard.rows as row, i (row.playerId)}
-			{@const boxscorePlayer = team.players[`ID${row.playerId}`]}
-			{@const replaced = !isSpoilerPrevented && !team.battingOrder.includes(row.playerId)}
-			{@const previous = scorecard.rows[i - 1]}
-			{@const substitute =
-				!isSpoilerPrevented && !!previous && !team.battingOrder.includes(previous.playerId)}
-			{@const cells = cellsByRow.get(row.playerId)}
+{#snippet batterCell({ row, index }: CellArgs<ScorecardRow>)}
+	{@const boxscorePlayer = team.players[`ID${row.playerId}`]}
+	{@const previous = scorecard.rows[index - 1]}
+	{#if boxscorePlayer}
+		<BoxscorePlayer
+			player={boxscorePlayer}
+			{players}
+			label={positionLabel(boxscorePlayer)}
+			substitute={!isSpoilerPrevented && !!previous && isReplaced(previous)}
+		/>
+	{:else}
+		{row.playerId}
+	{/if}
+{/snippet}
 
-			<tr class="hover:*:not-first:bg-foreground/5" data-substituted={replaced ? '' : undefined}>
-				{#if boxscorePlayer}
-					{@render player(boxscorePlayer, replaced, positionLabel(boxscorePlayer), substitute)}
-				{:else}
-					<th class="sticky left-0 z-1 min-w-lh"></th>
-					<th class="pl-ch text-left">{row.playerId}</th>
-				{/if}
+{#snippet inningCell({ row, columnId }: CellArgs<ScorecardRow>)}
+	{@const inning = Number(columnId.replace('inning-', ''))}
+	{@const cells = cellsByRow.get(row.playerId)}
+	<div class="flex">
+		{#each { length: columnCounts.get(inning) ?? 1 }, col (col)}
+			{@const column = { inning, column: col }}
+			{@const cell = cells?.get(`${inning}-${col}`)}
+			{@const key = cellKey(row.playerId, column)}
+			<div class="box">
+				{#if cell}
+					{@const homeChallenges = (cell.absChallenges ?? []).filter(
+						(c) => challengedBy(c) === 'home',
+					)}
+					{@const awayChallenges = (cell.absChallenges ?? []).filter(
+						(c) => challengedBy(c) !== 'home',
+					)}
+					<button
+						type="button"
+						class={cn(
+							'relative grid size-full place-items-center outline-none focus-visible:bg-foreground/10',
+							cellColor(cell),
+						)}
+						style:anchor-name={tooltip?.key === key ? anchorName : undefined}
+						aria-label={cellLabel(cell)}
+						data-scorecard-cell
+						onpointerenter={(e) =>
+							e.pointerType === 'mouse' && showTooltip(e.currentTarget, key, cell)}
+						onpointerleave={(e) => e.pointerType === 'mouse' && hideTooltip(key)}
+						onfocus={(e) => showTooltip(e.currentTarget, key, cell)}
+						onblur={() => hideTooltip(key)}
+						onpointerdown={(e) => (tapToClose = e.pointerType !== 'mouse' && tooltip?.key === key)}
+						onclick={(e) => {
+							// A tap focuses the cell (which opens it) before the click, so decide on pointerdown
+							if (tapToClose) hideTooltip()
+							else showTooltip(e.currentTarget, key, cell)
+							tapToClose = false
+							if (cell.kind !== 'runner') onAtBatSelect?.(cell.atBatIndex)
+						}}
+					>
+						{@render diamond(cell)}
 
-				{#each columns as column (`${column.inning}-${column.column}`)}
-					{@const cell = cells?.get(`${column.inning}-${column.column}`)}
-					{@const key = cellKey(row.playerId, column)}
-					<td class="p-0" class:inning-start={column.column === 0}>
-						{#if cell}
-							{@const homeChallenges = (cell.absChallenges ?? []).filter(
-								(c) => challengedBy(c) === 'home',
-							)}
-							{@const awayChallenges = (cell.absChallenges ?? []).filter(
-								(c) => challengedBy(c) !== 'home',
-							)}
-							<button
-								type="button"
-								class={cn(
-									'relative grid size-full place-items-center outline-none focus-visible:bg-foreground/10',
-									cellColor(cell),
-								)}
-								style:anchor-name={tooltip?.key === key ? anchorName : undefined}
-								aria-label={cellLabel(cell)}
-								data-scorecard-cell
-								onpointerenter={(e) =>
-									e.pointerType === 'mouse' && showTooltip(e.currentTarget, key, cell)}
-								onpointerleave={(e) => e.pointerType === 'mouse' && hideTooltip(key)}
-								onfocus={(e) => showTooltip(e.currentTarget, key, cell)}
-								onblur={() => hideTooltip(key)}
-								onpointerdown={(e) =>
-									(tapToClose = e.pointerType !== 'mouse' && tooltip?.key === key)}
-								onclick={(e) => {
-									// A tap focuses the cell (which opens it) before the click, so decide on pointerdown
-									if (tapToClose) hideTooltip()
-									else showTooltip(e.currentTarget, key, cell)
-									tapToClose = false
-									if (cell.kind !== 'runner') onAtBatSelect?.(cell.atBatIndex)
-								}}
-							>
-								{@render diamond(cell)}
+						<span class="relative text-[0.6875rem] leading-none" aria-hidden="true">
+							{#if cell.mirrored}
+								<span class="inline-block -scale-x-100">{cell.label}</span>
+							{:else}
+								{cell.label}
+							{/if}
+						</span>
 
-								<span class="relative text-[0.6875rem] leading-none" aria-hidden="true">
-									{#if cell.mirrored}
-										<span class="inline-block -scale-x-100">{cell.label}</span>
-									{:else}
-										{cell.label}
-									{/if}
-								</span>
-
-								{#if cell.out}
-									<span
-										class="absolute top-0.5 left-1 text-[0.625rem] leading-none font-semibold text-red-600 dark:text-red-400"
-										aria-hidden="true"
-									>
-										{cell.out}
-									</span>
-								{/if}
-
-								<!-- ABS challenges: the away team's top right, the home team's bottom right -->
-								{#if awayChallenges.length}
-									{@render absChallengeMarks(awayChallenges, 'top-[2px]')}
-								{/if}
-								{#if homeChallenges.length}
-									{@render absChallengeMarks(homeChallenges, 'bottom-[2px]')}
-								{/if}
-
-								{#if cell.rbi > 0}
-									<span
-										class={cn(
-											'absolute bottom-0 text-[0.5625rem] leading-tight font-bold',
-											homeChallenges.length ? 'right-2' : 'right-0.5',
-										)}
-										aria-hidden="true"
-										title="{cell.rbi} RBI"
-									>
-										{cell.rbi}
-									</span>
-								{/if}
-
-								{#if cell.badge}
-									<span
-										class="absolute bottom-0 left-0.5 text-[0.5rem] leading-tight font-bold tracking-tight"
-										aria-hidden="true"
-									>
-										{cell.badge}
-									</span>
-								{/if}
-							</button>
-						{:else}
-							<!-- Fainter before a substitute came in, and after a player was replaced -->
-							<div
-								class={cn(
-									'relative grid size-full place-items-center',
-									isInGame(row, column.inning, side) ? 'text-current/40' : 'text-current/15',
-								)}
+						{#if cell.out}
+							<span
+								class="absolute top-0.5 left-1 text-[0.625rem] leading-none font-semibold text-red-600 dark:text-red-400"
 								aria-hidden="true"
 							>
-								{@render diamond()}
-							</div>
+								{cell.out}
+							</span>
 						{/if}
-					</td>
-				{/each}
 
-				<td class="end" aria-hidden="true"></td>
-			</tr>
+						<!-- ABS challenges: the away team's top right, the home team's bottom right -->
+						{#if awayChallenges.length}
+							{@render absChallengeMarks(awayChallenges, 'top-[2px]')}
+						{/if}
+						{#if homeChallenges.length}
+							{@render absChallengeMarks(homeChallenges, 'bottom-[2px]')}
+						{/if}
+
+						{#if cell.rbi > 0}
+							<span
+								class={cn(
+									'absolute bottom-0 text-[0.5625rem] leading-tight font-bold',
+									homeChallenges.length ? 'right-2' : 'right-0.5',
+								)}
+								aria-hidden="true"
+								title="{cell.rbi} RBI"
+							>
+								{cell.rbi}
+							</span>
+						{/if}
+
+						{#if cell.badge}
+							<span
+								class="absolute bottom-0 left-0.5 text-[0.5rem] leading-tight font-bold tracking-tight"
+								aria-hidden="true"
+							>
+								{cell.badge}
+							</span>
+						{/if}
+					</button>
+				{:else}
+					<!-- Fainter before a substitute came in, and after a player was replaced -->
+					<div
+						class={cn(
+							'relative grid size-full place-items-center',
+							isInGame(row, column.inning, side) ? 'text-current/40' : 'text-current/15',
+						)}
+						aria-hidden="true"
+					>
+						{@render diamond()}
+					</div>
+				{/if}
+			</div>
 		{/each}
-	</tbody>
-</table>
+	</div>
+{/snippet}
 
 <!-- Only in the page while open, so a closed tooltip can never take up room -->
 {#if tooltip}
@@ -461,37 +487,15 @@
 		}
 	}
 
-	.scorecard {
-		td,
-		th {
-			font-variant-numeric: tabular-nums;
-		}
+	/* A box per plate appearance: a 40px tap target, and a square for the diamond */
+	.box {
+		width: 2.5rem;
+		height: 2.5rem;
+		font-variant-numeric: tabular-nums;
+	}
 
-		tbody td:not(.end) {
-			width: 2.5rem;
-			min-width: 2.5rem;
-			height: 2rem;
-		}
-
-		/* The box score's name cell: the table is as wide as its content, so names never truncate,
-		   and the position sits right after the name */
-		tbody tr > :global(th:nth-child(2)) {
-			width: auto;
-			padding-right: 1ch;
-
-			:global(a > span) {
-				flex-grow: 0;
-			}
-		}
-
-		/* Room past the last inning, under the scroll container's fade */
-		.end {
-			min-width: 1.5ch;
-		}
-
-		/* A hairline between innings, but not between an inning's own columns */
-		.inning-start {
-			border-left: 1px solid color-mix(in srgb, currentColor 10%, transparent);
-		}
+	/* A hairline between innings, but not between an inning's own boxes */
+	:global(.scorecard .inning-start) {
+		border-left: 1px solid color-mix(in srgb, currentColor 10%, transparent);
 	}
 </style>

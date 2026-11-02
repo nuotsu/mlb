@@ -19,6 +19,8 @@ export type CellArgs<T> = {
 	value: SortValue
 	/** Position in the sorted table, before `filter` hides any rows: a rank that searching doesn't renumber */
 	index: number
+	/** The column being rendered, for a snippet shared by several */
+	columnId: string
 }
 
 export type HeaderArgs = {

@@ -98,8 +98,11 @@
 		/** `'auto'` virtualizes past `virtualThreshold` rows */
 		virtualize?: boolean | 'auto'
 		virtualThreshold?: number
-		/** Compact rows shrink for a mouse, but stay 40px tall for touch */
-		density?: 'comfortable' | 'compact'
+		/**
+		 * Comfortable rows are 40px tall, a tap target. Compact ones shrink for a mouse but stay 40px
+		 * for touch. Tight rows are a line tall, for tables with nothing to tap, like a linescore.
+		 */
+		density?: 'comfortable' | 'compact' | 'tight'
 		/** For tables whose rows speak for themselves; screen readers still get the headers */
 		hideHeader?: boolean
 		class?: ClassValue
@@ -255,7 +258,7 @@
 	let mounted = $state(false)
 	onMount(() => (mounted = true))
 
-	const rowHeight = $derived(density === 'compact' ? 32 : 40)
+	const rowHeight = $derived(density === 'comfortable' ? 40 : density === 'compact' ? 32 : 24)
 
 	const virtualizer = createVirtualizer<HTMLDivElement, HTMLTableRowElement>({
 		count: untrack(() => rows.length),
@@ -381,6 +384,7 @@
 						class={cn(
 							'h-10 px-[.5ch] text-sm font-normal whitespace-nowrap text-current/50',
 							density === 'compact' && 'pointer-fine:h-8',
+							density === 'tight' && 'h-lh',
 							ALIGN[align],
 							stickyHeader &&
 								!hideHeader && [
@@ -491,6 +495,7 @@
 			{@const cls = cn(
 				'h-10 px-[.75ch] align-middle',
 				density === 'compact' && 'pointer-fine:h-8',
+				density === 'tight' && 'h-lh',
 				ALIGN[alignOf(column)],
 				column.numeric && 'tabular-nums',
 				sorted && column.numeric && 'font-bold',
@@ -517,7 +522,7 @@
 
 {#snippet content(column: DataTableColumn<T>, row: T, value: SortValue, index: number)}
 	{#if column.cell}
-		{@render column.cell({ row, value, index })}
+		{@render column.cell({ row, value, index, columnId: column.id })}
 	{:else}
 		{cellText(column, row, value)}
 	{/if}

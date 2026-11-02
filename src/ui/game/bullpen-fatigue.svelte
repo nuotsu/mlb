@@ -2,9 +2,11 @@
 	import { fetchPitchingGameLogs } from '#lib/fetch/presets.js'
 	import { daysBetween, formatDate, slash } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
+	import PlayerCell from '#ui/data-table/cells/player-cell.svelte'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import Empty from '#ui/empty.svelte'
 	import Loading from '#ui/loading.svelte'
-	import Headshot from '#ui/player/headshot.svelte'
 	import { browser } from '$app/env'
 
 	let {
@@ -32,6 +34,46 @@
 		fatigue: number
 		hp: number
 	}
+
+	const columns: DataTableColumn<BullpenRow>[] = [
+		{
+			id: 'pitcher',
+			header: 'Pitcher',
+			value: (row) => row.person.lastInitName,
+			sticky: true,
+			rowHeader: true,
+			cell: pitcherCell,
+			class: 'min-w-[12ch] pl-0',
+		},
+		{
+			id: 'throws',
+			header: 'T',
+			title: 'Throws',
+			value: (row) => row.throwSide,
+			align: 'center',
+			cellClass: 'text-xs text-current/40',
+		},
+		{
+			id: 'fatigue',
+			header: 'Rest',
+			title: 'Bullpen health: full when rested, empty when worn out',
+			value: (row) => row.hp,
+			numeric: true,
+			align: 'left',
+			cell: meterCell,
+			class: 'w-[8ch] min-w-[6ch] sm:w-[16ch]',
+		},
+		{
+			id: 'pitches',
+			header: 'IP · P',
+			title: 'Innings and pitches thrown over the last 14 days',
+			value: (row) => row.pitches,
+			numeric: true,
+			format: (_, row) => `${row.inningsPitched} IP · ${row.pitches}`,
+			cellClass: 'text-xs whitespace-nowrap text-current/60',
+			class: 'pr-0',
+		},
+	]
 
 	function toDateKey(date: string) {
 		return date.includes('T') ? date.slice(0, 10) : formatDate(date, { locale: 'en-CA' })
@@ -179,6 +221,29 @@
 	}
 </script>
 
+{#snippet pitcherCell({ row }: CellArgs<BullpenRow>)}
+	<PlayerCell
+		person={row.person}
+		name={row.person.lastInitName}
+		nameClass="text-sm"
+		class="pr-ch"
+	/>
+{/snippet}
+
+{#snippet meterCell({ row }: CellArgs<BullpenRow>)}
+	<div
+		class="hp-bar relative h-[.5lh] rounded-sm"
+		style:--hp="calc({row.hp} * 100%)"
+		style:--hp-fill={fatigueColor(row.hp)}
+		title="Fatigue {Math.round(row.fatigue)}"
+		role="meter"
+		aria-valuemin={0}
+		aria-valuemax={100}
+		aria-valuenow={Math.round(row.hp * 100)}
+		aria-label="{row.person.lastInitName} bullpen health"
+	></div>
+{/snippet}
+
 {#snippet heading()}
 	<h3 {id} class="flex min-h-rlh items-center px-rch text-xs text-current/40 max-sm:px-ch">
 		Bullpen Fatigue (Last 14 days)
@@ -198,49 +263,16 @@
 				<Empty>No bullpen usage</Empty>
 			</div>
 		{:else}
-			<!-- Column tracks are shared across rows via subgrid so the gauge and pitch
-			     counts line up. `justify-start` keeps the auto tracks from stretching into
-			     the free space, which is what left a dead gap after short names. -->
-			<ul
-				class={cn(
-					'grid grid-cols-[minmax(10ch,auto)_auto_minmax(4ch,16ch)_auto] justify-start gap-px px-rch max-sm:px-ch',
-					className,
-				)}
-			>
-				{#each rows as row (row.person.id)}
-					<li
-						class="col-span-full grid grid-cols-subgrid items-center gap-x-ch hover:bg-current/10"
-					>
-						<a
-							href="/player/{row.person.id}"
-							class="group/player flex min-w-0 items-center gap-x-ch"
-						>
-							<Headshot person={row.person} size={72} class="size-lh shrink-0" />
-							<span class="truncate text-sm decoration-dashed group-hover/player:underline">
-								{row.person.lastInitName}
-							</span>
-						</a>
-
-						<small class="text-xs text-current/40 no-underline">{row.throwSide ?? ''}</small>
-
-						<div
-							class="hp-bar relative h-[.5lh] rounded-sm"
-							style:--hp="calc({row.hp} * 100%)"
-							style:--hp-fill={fatigueColor(row.hp)}
-							title="Fatigue {Math.round(row.fatigue)}"
-							role="meter"
-							aria-valuemin={0}
-							aria-valuemax={100}
-							aria-valuenow={Math.round(row.hp * 100)}
-							aria-label="{row.person.lastInitName} bullpen health"
-						></div>
-
-						<span class="text-right text-xs whitespace-nowrap text-current/60 tabular-nums">
-							{row.inningsPitched} IP · {row.pitches}
-						</span>
-					</li>
-				{/each}
-			</ul>
+			<DataTable
+				class={cn('px-rch max-sm:px-ch', className)}
+				label="{team.team.name} bullpen fatigue"
+				data={rows}
+				{columns}
+				getRowId={(row) => String(row.person.id)}
+				stickyHeader={false}
+				density="compact"
+				tableClass="min-w-0"
+			/>
 		{/if}
 	{:catch}
 		{@render heading()}
