@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { pitchSpeedColor } from '#lib/colors.js'
 	import type { PitchArsenalPitch } from '#lib/fetch/savant.js'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import Empty from '#ui/empty.svelte'
 	import Loading from '#ui/loading.svelte'
 	import { browser } from '$app/env'
@@ -44,6 +46,50 @@
 	const mph = (n: number) => n.toFixed(1)
 	const inches = (n: number) => Math.round(n).toString().replace('-', '−')
 
+	const columns: DataTableColumn<PitchArsenalPitch>[] = [
+		{
+			id: 'pitch',
+			header: 'Pitch',
+			value: (pitch) => pitch.name,
+			sticky: true,
+			rowHeader: true,
+			cell: pitchCell,
+			cellClass: 'whitespace-nowrap',
+		},
+		{
+			id: 'usage',
+			header: 'Usage',
+			title: 'Share of tracked pitches',
+			value: (pitch) => pitch.usage,
+			numeric: true,
+			cell: usageCell,
+		},
+		{
+			id: 'velo',
+			header: 'Velo',
+			title: 'Release speed (mph): average, then min–max',
+			value: (pitch) => pitch.speed.avg,
+			numeric: true,
+			cell: veloCell,
+		},
+		{
+			id: 'ivb',
+			header: 'IVB',
+			title: 'Induced vertical break (in): average, then 10th–90th percentile. Positive is rise.',
+			value: (pitch) => pitch.verticalBreak?.avg,
+			numeric: true,
+			cell: movementCell,
+		},
+		{
+			id: 'hb',
+			header: 'HB',
+			title: 'Horizontal break (in): average, then 10th–90th percentile. Positive is arm side.',
+			value: (pitch) => pitch.horizontalBreak?.avg,
+			numeric: true,
+			cell: movementCell,
+		},
+	]
+
 	function range(low: number, high: number, format: (n: number) => string) {
 		const [a, b] = [format(low), format(high)]
 		if (a === b) return a
@@ -74,74 +120,15 @@
 				<Loading class="justify-center">Loading pitch arsenal...</Loading>
 			{:then arsenal}
 				{#if arsenal.length}
-					<div class="overflow-x-auto">
-						<table class="mx-auto text-center">
-							<thead class="text-sm">
-								<tr class="text-current/40">
-									<th class="px-[.5ch] text-left font-normal">Pitch</th>
-									<th class="px-[.5ch] font-normal"
-										><abbr title="Share of tracked pitches">Usage</abbr></th
-									>
-									<th class="px-[.5ch] font-normal"
-										><abbr title="Release speed (mph): average, then min–max">Velo</abbr></th
-									>
-
-									<th class="px-[.5ch] font-normal">
-										<abbr
-											title="Induced vertical break (in): average, then 10th–90th percentile. Positive is rise."
-										>
-											IVB
-										</abbr>
-									</th>
-									<th class="px-[.5ch] font-normal">
-										<abbr
-											title="Horizontal break (in): average, then 10th–90th percentile. Positive is arm side."
-										>
-											HB
-										</abbr>
-									</th>
-								</tr>
-							</thead>
-
-							<tbody>
-								{#each arsenal as pitch (pitch.code)}
-									<tr class="border-t border-dashed border-stroke hover:bg-foreground/10">
-										<th class="px-[.5ch] text-left font-normal whitespace-nowrap">
-											{pitch.name}
-											<small class="text-current/40">{pitch.code}</small>
-										</th>
-
-										<td class="tabular-nums">
-											{percent(pitch.usage)}
-											<small class="block text-current/40">{pitch.count}</small>
-										</td>
-
-										<td class="tabular-nums">
-											<span style:color={pitchSpeedColor(pitch.speed.avg)}>
-												{mph(pitch.speed.avg)}
-											</span>
-											<small class="block whitespace-nowrap text-current/40">
-												{range(pitch.speed.min, pitch.speed.max, mph)}
-											</small>
-										</td>
-
-										{#each [pitch.verticalBreak, pitch.horizontalBreak] as movement, i (i)}
-											<td class="tabular-nums">
-												{#if movement}
-													{inches(movement.avg)}″
-													<small class="block whitespace-nowrap text-current/40">
-														{range(movement.low, movement.high, inches)}
-													</small>
-												{:else}
-													—
-												{/if}
-											</td>
-										{/each}
-									</tr>
-								{/each}
-							</tbody>
-						</table>
-					</div>
+					<DataTable
+						tableClass="mx-auto min-w-0"
+						label="Pitch arsenal, {season}"
+						data={arsenal}
+						{columns}
+						getRowId={(pitch) => pitch.code}
+						sortParam="arsenal"
+						rowClass={(_, i) => i > 0 && '*:border-t *:border-dashed *:border-t-(--color-stroke)'}
+					/>
 				{:else}
 					<Empty>No tracked pitches in {season}</Empty>
 				{/if}
@@ -155,9 +142,31 @@
 	</article>
 {/if}
 
-<style>
-	td {
-		padding-inline: 1ch;
-		padding-block: 0.25lh;
-	}
-</style>
+{#snippet pitchCell({ row: pitch }: CellArgs<PitchArsenalPitch>)}
+	{pitch.name}
+	<small class="text-current/40">{pitch.code}</small>
+{/snippet}
+
+{#snippet usageCell({ row: pitch }: CellArgs<PitchArsenalPitch>)}
+	{percent(pitch.usage)}
+	<small class="block text-current/40">{pitch.count}</small>
+{/snippet}
+
+{#snippet veloCell({ row: pitch }: CellArgs<PitchArsenalPitch>)}
+	<span style:color={pitchSpeedColor(pitch.speed.avg)}>{mph(pitch.speed.avg)}</span>
+	<small class="block whitespace-nowrap text-current/40">
+		{range(pitch.speed.min, pitch.speed.max, mph)}
+	</small>
+{/snippet}
+
+{#snippet movementCell({ row: pitch, columnId }: CellArgs<PitchArsenalPitch>)}
+	{@const movement = columnId === 'ivb' ? pitch.verticalBreak : pitch.horizontalBreak}
+	{#if movement}
+		{inches(movement.avg)}″
+		<small class="block whitespace-nowrap text-current/40">
+			{range(movement.low, movement.high, inches)}
+		</small>
+	{:else}
+		—
+	{/if}
+{/snippet}

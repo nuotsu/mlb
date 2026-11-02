@@ -1,83 +1,118 @@
 <script lang="ts">
+	import PlayerCell from '#ui/data-table/cells/player-cell.svelte'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
-	import Headshot from '#ui/player/headshot.svelte'
 
 	let { roster, coaches }: { roster: MLB.Roster[]; coaches: MLB.Coach[] } = $props()
 
 	const batters = $derived(roster.filter(({ position }) => position.abbreviation !== 'P'))
 	const pitchers = $derived(roster.filter(({ position }) => position.abbreviation === 'P'))
 
-	function sort(arr: (MLB.Roster & { person: MLB.Person })[]) {
-		return arr.sort(
-			(a, b) => a.person.lastFirstName?.localeCompare(b.person.lastFirstName ?? '') ?? 0,
-		)
-	}
+	const name = (person: MLB.Person) => person.lastFirstName ?? person.fullName
+
+	const playerColumns: DataTableColumn<MLB.Roster>[] = [
+		{
+			id: 'position',
+			header: 'Pos',
+			title: 'Position',
+			value: (row) => row.position.abbreviation,
+			align: 'center',
+			cellClass: 'text-sm',
+			class: 'w-[5ch]',
+		},
+		{
+			id: 'player',
+			header: 'Player',
+			value: (row) => name(row.person as MLB.Person),
+			rowHeader: true,
+			cell: playerCell,
+		},
+		{
+			id: 'favorite',
+			header: '',
+			title: 'Favorite',
+			sortable: false,
+			align: 'right',
+			cell: favoriteCell,
+			class: 'w-[4ch]',
+		},
+	]
+
+	const coachColumns: DataTableColumn<MLB.Coach>[] = [
+		{
+			id: 'coach',
+			header: 'Coach',
+			value: (row) => name(row.person as MLB.Person),
+			rowHeader: true,
+			cell: coachCell,
+		},
+		{
+			id: 'job',
+			header: 'Job',
+			value: (row) => row.job,
+			cellClass: 'text-sm',
+		},
+	]
 </script>
 
 {@render list(batters, 'Batters', 'batters')}
 {@render list(pitchers, 'Pitchers', 'pitchers')}
 
-<dl id="coaches" class="accordion">
-	<dt class="sticky-below-header z-1 mb-ch px-ch text-sm text-current/50 backdrop-blur-xs">
-		Coaches
-	</dt>
+<section id="coaches" class="min-w-0" aria-labelledby="coaches-heading">
+	{@render heading('Coaches', 'coaches')}
 
-	<div class="grid px-rch max-sm:px-ch">
-		{#each coaches as { person, job }}
-			<dd class="col-span-full grid grid-cols-subgrid items-center gap-x-ch hover:bg-current/10">
-				<a
-					class="flex grow items-center gap-x-ch decoration-dashed hover:underline"
-					href="/player/{person.id}"
-				>
-					<Headshot {person} size={72} class="size-lh shrink-0" />
+	<DataTable
+		class="sm:px-rch"
+		label="Coaches"
+		data={coaches}
+		columns={coachColumns}
+		getRowId={(row, i) => `${row.person.id}-${i}`}
+		stickyHeader={false}
+	/>
+</section>
 
-					<span class="line-clamp-1 break-all">
-						{(person as MLB.Person).lastFirstName}
-					</span>
-				</a>
-
-				<small class="line-clamp-1 break-all">{job}</small>
-			</dd>
-		{/each}
-	</div>
-</dl>
-
-{#snippet list(arr: MLB.Roster[], label: string, id: string)}
-	<dl {id}>
-		<dt class="sticky-below-header z-1 mb-ch px-ch text-sm text-current/50 backdrop-blur-xs">
-			{label}
-		</dt>
-
-		<div class="grid px-rch max-sm:px-ch">
-			{#each sort(arr) as { person, position }}
-				<dd
-					class="group/person col-span-full grid grid-cols-subgrid items-center gap-x-ch hover:bg-current/10"
-				>
-					<span class="w-[3rch] text-center text-sm">{position.abbreviation}</span>
-
-					<a
-						class="flex grow items-center gap-x-ch decoration-dashed hover:underline"
-						href="/player/{person.id}"
-					>
-						<Headshot {person} size={72} class="size-lh shrink-0" />
-
-						<span class="line-clamp-1 break-all">
-							{(person as MLB.Person).lastFirstName}
-						</span>
-					</a>
-
-					<ToggleFavorite
-						class="shrink-0"
-						target={{ href: `/player/${person.id}`, label: person.lastName! }}
-					/>
-				</dd>
-			{/each}
-		</div>
-	</dl>
+{#snippet heading(label: string, id: string)}
+	<h3
+		id="{id}-heading"
+		class="sticky-below-header z-3 mb-ch px-ch text-sm text-current/50 backdrop-blur-xs"
+	>
+		{label}
+	</h3>
 {/snippet}
 
-<style>
-	dl > div {
-		grid-template-columns: auto 1fr auto;
-	}
-</style>
+{#snippet list(players: MLB.Roster[], label: string, id: string)}
+	<section {id} class="min-w-0" aria-labelledby="{id}-heading">
+		{@render heading(label, id)}
+
+		<!-- A–Z by default; both lists share the sort -->
+		<DataTable
+			class="sm:px-rch"
+			{label}
+			data={players}
+			columns={playerColumns}
+			getRowId={(row) => String(row.person.id)}
+			sortParam="roster"
+			defaultSorting={[{ id: 'player', desc: false }]}
+			stickyHeader={false}
+		/>
+	</section>
+{/snippet}
+
+{#snippet playerCell({ row: { person } }: CellArgs<MLB.Roster>)}
+	<PlayerCell {person} name={name(person as MLB.Person)} />
+{/snippet}
+
+{#snippet favoriteCell({ row: { person } }: CellArgs<MLB.Roster>)}
+	<!-- a flex item, so the inline star adds no line-box space under itself -->
+	<div class="flex justify-end">
+		<ToggleFavorite
+			class="shrink-0"
+			target={{ href: `/player/${person.id}`, label: (person as MLB.Person).lastName! }}
+		/>
+	</div>
+{/snippet}
+
+{#snippet coachCell({ row: { person } }: CellArgs<MLB.Coach>)}
+	<PlayerCell {person} name={name(person as MLB.Person)} />
+{/snippet}

@@ -1,7 +1,10 @@
 <script lang="ts">
+	import { LOWER_IS_BETTER } from '#lib/stats.js'
 	import { monthName } from '#lib/temporal.js'
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
-	import { cn, ordinal } from '#lib/utils.js'
+	import { ordinal } from '#lib/utils.js'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import Empty from '#ui/empty.svelte'
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
@@ -10,6 +13,7 @@
 	import SelectSport from '#ui/select-sport.svelte'
 	import SelectMonth from '#ui/stats/select-month.svelte'
 	import SelectSeason from '#ui/stats/select-season.svelte'
+	import Logo from '#ui/team/logo.svelte'
 	import StyledTeam from '#ui/team/styled-team.svelte'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
@@ -19,6 +23,66 @@
 	let { data }: PageProps = $props()
 
 	type StatTable = PageData['hitting']
+	type StatRow = StatTable['rows'][number]
+
+	/** Sorting reloads the page (ranks are worked out in `load`), so each header links to its sort. */
+	function columnsFor({ group, sortStat, stats }: StatTable): DataTableColumn<StatRow>[] {
+		return [
+			{
+				id: 'rank',
+				header: '#',
+				title: 'Rank by the sorted stat',
+				sortable: false,
+				align: 'right',
+				value: (row) => row.rank,
+				cellClass: 'text-xs text-current/50',
+				class: 'w-[4ch]',
+			},
+			// Only the logo stays put while scrolling sideways; the name scrolls with the stats
+			{
+				id: 'logo',
+				header: '',
+				title: 'Logo',
+				sortable: false,
+				sticky: true,
+				cell: logoCell,
+				team: (row) => ({ team: row.team }),
+				class: 'w-lh min-w-lh px-0',
+			},
+			{
+				id: 'team',
+				header: 'Team',
+				sortable: false,
+				rowHeader: true,
+				cell: teamCell,
+				// the name fills the cell, so its colors meet the logo's
+				class: 'min-w-[12ch] px-0 md:w-[1%] md:min-w-[27ch]',
+			},
+			{
+				id: 'league',
+				header: 'Lg',
+				title: 'Rank within its own league, by the sorted stat',
+				sortable: false,
+				align: 'center',
+				cell: leagueRankCell,
+				cellClass: 'text-xs whitespace-nowrap text-current/50',
+				class: 'w-[6ch]',
+			},
+			...stats.map((stat): DataTableColumn<StatRow> => {
+				const { short, full } = labelFor(stat)
+				const allowed = group === 'pitching' && ['runs', 'homeRuns'].includes(stat)
+
+				return {
+					id: stat,
+					header: short,
+					title: `${full}${allowed ? ' allowed' : ''}`,
+					value: (row) => row.stat[stat],
+					numeric: true,
+					cellClass: (row) => tone(group, stat, row.stat[stat]),
+				}
+			}),
+		]
+	}
 
 	const GROUPS = [
 		{ id: 'hitting', label: 'Hitting' },
@@ -131,107 +195,44 @@
 	{@render statTable(data[group])}
 </section>
 
-{#snippet statTable({ group, param, sortStat, stats, rows, unavailable }: StatTable)}
-	<div id="team-stats-table" role="tabpanel" aria-labelledby="team-stats-group-tab-{group}">
-		<div class="overflow-x-auto overflow-y-hidden">
-			<table class="w-max min-w-full text-center">
-				<thead class="text-sm">
-					<tr>
-						<th
-							class="sticky left-0 z-1 min-w-[16ch] bg-background text-left md:w-[1%] md:min-w-[30ch]"
-							scope="col"
-						>
-							Team
-						</th>
-
-						<th class="w-[6ch] text-current/40" scope="col">
-							<abbr title="Rank within its own league, by the sorted stat">Lg</abbr>
-						</th>
-
-						{#each stats as stat, i (i)}
-							{@const { short, full } = labelFor(stat)}
-							{@const allowed = group === 'pitching' && ['runs', 'homeRuns'].includes(stat)}
-
-							<th class="px-[.5ch]" scope="col">
-								<abbr title="{full}{allowed ? ' allowed' : ''}">
-									<a
-										href={withParam(param, stat)}
-										class={cn(
-											'block uppercase',
-											sortStat === stat
-												? 'bg-foreground font-bold text-background'
-												: 'text-current/40',
-										)}
-									>
-										{short}
-									</a>
-								</abbr>
-							</th>
-						{/each}
-					</tr>
-				</thead>
-
-				<tbody>
-					{#if rows.length}
-						{#each rows as { team, stat, league, rank, leagueRank } (team.id)}
-							<tr class="hover:[&>td]:bg-foreground/10">
-								<th
-									class="sticky left-0 z-1 min-w-[16ch] bg-background text-left md:w-[1%] md:min-w-[30ch]"
-									scope="row"
-								>
-									<div class="flex items-center gap-ch">
-										<span class="w-[3ch] shrink-0 text-right text-xs text-current/50 tabular-nums">
-											{rank}
-										</span>
-
-										<StyledTeam class="grow" {team} linked />
-									</div>
-								</th>
-
-								<td class="text-xs whitespace-nowrap text-current/50">
-									{#if league}
-										<abbr
-											title="{ordinal(leagueRank)} in the {league} by {labelFor(sortStat).full}"
-										>
-											{league}
-											{leagueRank}
-										</abbr>
-									{:else}
-										-
-									{/if}
-								</td>
-
-								{#each stats as name, i (i)}
-									<td
-										class={cn(
-											'tabular-nums',
-											sortStat === name && 'font-bold',
-											tone(group, name, stat[name]),
-										)}
-									>
-										{stat[name] ?? '-'}
-									</td>
-								{/each}
-							</tr>
-						{/each}
-					{:else}
-						<tr>
-							<td colspan={stats.length + 2}>
-								<Empty>
-									{unavailable ? `Couldn't load ${group} stats` : `No ${group} stats`}
-								</Empty>
-							</td>
-						</tr>
-					{/if}
-				</tbody>
-			</table>
-		</div>
-	</div>
+{#snippet statTable(table: StatTable)}
+	{@const { group, param, sortStat, rows, unavailable } = table}
+	<DataTable
+		id="team-stats-table"
+		role="tabpanel"
+		aria-labelledby="team-stats-group-tab-{group}"
+		label="{period} team {group}"
+		data={rows}
+		columns={columnsFor(table)}
+		getRowId={(row) => String(row.team.id)}
+		sorting={[{ id: sortStat, desc: !LOWER_IS_BETTER[group]?.has(sortStat) }]}
+		sortHref={(stat) => withParam(param, stat)}
+	>
+		{#snippet empty()}
+			<Empty>
+				{unavailable ? `Couldn't load ${group} stats` : `No ${group} stats`}
+			</Empty>
+		{/snippet}
+	</DataTable>
 {/snippet}
 
-<style>
-	td {
-		padding-inline: 1ch;
-		min-width: 4ch;
-	}
-</style>
+{#snippet logoCell({ row: { team } }: CellArgs<StatRow>)}
+	<a class="block" href="/teams/{team.id}" tabindex="-1" aria-hidden="true">
+		<Logo class="size-lh object-contain" {team} loading="lazy" decoding="async" alt="" />
+	</a>
+{/snippet}
+
+{#snippet teamCell({ row }: CellArgs<StatRow>)}
+	<StyledTeam class="pl-[.5ch]" team={row.team} logo={false} linked />
+{/snippet}
+
+{#snippet leagueRankCell({ row: { league, leagueRank } }: CellArgs<StatRow>)}
+	{#if league}
+		<abbr title="{ordinal(leagueRank)} in the {league} by {labelFor(data[group].sortStat).full}">
+			{league}
+			{leagueRank}
+		</abbr>
+	{:else}
+		-
+	{/if}
+{/snippet}

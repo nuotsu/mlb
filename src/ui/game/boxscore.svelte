@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
 	import { cn } from '#lib/utils.js'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import Empty from '#ui/empty.svelte'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import BoxscorePlayer from '#ui/game/boxscore-player.svelte'
 	import BullpenFatigue from '#ui/game/bullpen-fatigue.svelte'
 	import Scorecard from '#ui/game/scorecard.svelte'
-	import { ArrowDownRightIcon } from '#ui/icons/index.js'
 	import PillSwitcher from '#ui/pill-switcher.svelte'
-	import Headshot from '#ui/player/headshot.svelte'
 	import ToggleSpoilerPrevention from '#ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
 	import StyledTeam from '#ui/team/styled-team.svelte'
 	import type { HTMLAttributes } from 'svelte/elements'
@@ -49,6 +50,158 @@
 
 	type View = (typeof VIEWS)[number]['id']
 
+	/** One player's line: game and season stats, and where they fit in the batting order */
+	type Line = {
+		player: MLB.BoxscorePlayer
+		group: 'batting' | 'pitching' | 'roster'
+		/** Came in for the batter above */
+		substitute?: boolean
+	}
+
+	/** Sorted away from the batting order, where a substitute's indent would point at the wrong player */
+	const isSorted = (group: Line['group']) =>
+		group !== 'roster' && !!currentUrl().searchParams.get(group)
+
+	function battersOf(team: MLB.TeamBoxscore): Line[] {
+		return team.batters.flatMap((playerId, i) => {
+			const player = team.players[`ID${playerId}`]
+			if (!player || player.position?.abbreviation === 'P') return []
+
+			const previous = team.batters
+				.slice(0, i)
+				.findLast((id) => team.players[`ID${id}`]?.position?.abbreviation !== 'P')
+
+			return [
+				{
+					player,
+					group: 'batting' as const,
+					substitute:
+						!isSpoilerPrevented && previous !== undefined && !team.battingOrder.includes(previous),
+				},
+			]
+		})
+	}
+
+	function pitchersOf(team: MLB.TeamBoxscore): Line[] {
+		return team.pitchers
+			.slice(0, isSpoilerPrevented ? 1 : team.pitchers.length)
+			.flatMap((playerId) => {
+				const player = team.players[`ID${playerId}`]
+				return player && (player.position?.abbreviation === 'P' || !!player.stats?.pitching)
+					? [{ player, group: 'pitching' as const }]
+					: []
+			})
+	}
+
+	function rosterOf(team: MLB.TeamBoxscore, ids: number[]): Line[] {
+		return ids.flatMap((id) => {
+			const player = team.players[`ID${id}`]
+			return player ? [{ player, group: 'roster' as const }] : []
+		})
+	}
+
+	const isFavorite = (row: Line) => favoritesStore.has(`/player/${row.player.person.id}`)
+
+	/** Only the headshot stays put while the stats scroll sideways; the name scrolls with them */
+	const avatarColumn: DataTableColumn<Line> = {
+		id: 'avatar',
+		header: '',
+		title: 'Headshot',
+		sortable: false,
+		sticky: true,
+		cell: avatarCell,
+		cellClass: (row) => [
+			isFavorite(row) && 'bg-accent',
+			// sticks 1lh further left, so once stuck its nudged headshot lines up with the others
+			row.substitute && !isSorted(row.group) && 'left-[-1lh]',
+		],
+		class: 'w-lh min-w-lh px-0',
+	}
+
+	const nameColumn: DataTableColumn<Line> = {
+		id: 'player',
+		header: '',
+		title: 'Player',
+		// batting order, or the stat being sorted, says more than the alphabet
+		sortable: false,
+		rowHeader: true,
+		cell: playerCell,
+		cellClass: (row) => isFavorite(row) && 'bg-accent! text-dark',
+		class: 'min-w-[14ch] pl-ch',
+	}
+
+	/**
+	 * A game stat: blank while spoilers are hidden, faded at zero. `'0.0'` innings still counts as
+	 * an appearance, so it isn't faded.
+	 */
+	function statColumn(
+		group: 'batting' | 'pitching',
+		id: string,
+		header: string,
+		title: string,
+		season?: boolean,
+	): DataTableColumn<Line> {
+		const read = (row: Line) =>
+			(
+				(season ? row.player.seasonStats : row.player.stats)?.[group] as
+					Record<string, string | number | undefined> | undefined
+			)?.[id]
+
+		return {
+			id: `${season ? 'season-' : ''}${id}`,
+			header,
+			title: `${title}${season ? ' (season)' : ''}`,
+			value: (row) => (isSpoilerPrevented ? undefined : read(row)),
+			numeric: true,
+			format: (value) => (isSpoilerPrevented ? '' : String(value ?? '')),
+			cellClass: (row) => {
+				const value = read(row)
+				return [
+					'font-sans',
+					season && 'min-w-[5ch] text-sm',
+					!isSpoilerPrevented && value !== '0.0' && Number(value) === 0 && 'text-current/40',
+					id === 'avg' && Number(value) >= 0.3 && 'positive',
+					id === 'ops' && Number(value) >= 0.75 && 'positive',
+				]
+			},
+			class: 'min-w-[3rch] px-[.25ch] text-center last:pr-[1rch]',
+		}
+	}
+
+	const battingColumns: DataTableColumn<Line>[] = [
+		avatarColumn,
+		nameColumn,
+		statColumn('batting', 'atBats', 'AB', 'At bats'),
+		statColumn('batting', 'hits', 'H', 'Hits'),
+		statColumn('batting', 'runs', 'R', 'Runs'),
+		statColumn('batting', 'rbi', 'RBI', 'Runs batted in'),
+		statColumn('batting', 'homeRuns', 'HR', 'Home runs'),
+		statColumn('batting', 'baseOnBalls', 'BB', 'Walks'),
+		statColumn('batting', 'strikeOuts', 'K', 'Strikeouts'),
+		statColumn('batting', 'stolenBases', 'SB', 'Stolen bases'),
+		statColumn('batting', 'avg', 'AVG', 'Batting average', true),
+		statColumn('batting', 'ops', 'OPS', 'On-base plus slugging', true),
+	]
+
+	const pitchingColumns: DataTableColumn<Line>[] = [
+		avatarColumn,
+		nameColumn,
+		statColumn('pitching', 'inningsPitched', 'IP', 'Innings pitched'),
+		statColumn('pitching', 'numberOfPitches', 'P', 'Pitches'),
+		statColumn('pitching', 'balls', 'B', 'Balls'),
+		statColumn('pitching', 'strikes', 'S', 'Strikes'),
+		statColumn('pitching', 'hits', 'H', 'Hits allowed'),
+		statColumn('pitching', 'runs', 'R', 'Runs allowed'),
+		statColumn('pitching', 'earnedRuns', 'ER', 'Earned runs'),
+		statColumn('pitching', 'homeRuns', 'HR', 'Home runs allowed'),
+		statColumn('pitching', 'baseOnBalls', 'BB', 'Walks'),
+		statColumn('pitching', 'strikeOuts', 'K', 'Strikeouts'),
+		statColumn('pitching', 'hitBatsmen', 'HBP', 'Hit batters'),
+		statColumn('pitching', 'era', 'ERA', 'Earned run average', true),
+	]
+
+	const rosterColumns: DataTableColumn<Line>[] = [{ ...avatarColumn, sticky: false }, nameColumn]
+
 	/** Kept in `?view=` so a shared link opens the same tab. */
 	const view = $derived<View>(
 		currentUrl().searchParams.get('view') === 'scorecard' ? 'scorecard' : 'boxscore',
@@ -87,16 +240,8 @@
 			</StyledTeam>
 
 			{#if team.batters.length}
-				<div
-					id="boxscore-lineup-{side}"
-					role="tabpanel"
-					aria-labelledby="boxscore-tab-{view}"
-					class={cn(
-						'relative overflow-x-auto mask-r-from-[calc(100%-1.5ch)]',
-						// Scroll sideways only; rounding can leave a scorecard a hair taller than its box
-						view === 'scorecard' && 'overflow-y-hidden',
-					)}
-				>
+				{@const batters = battersOf(team)}
+				<div id="boxscore-lineup-{side}" role="tabpanel" aria-labelledby="boxscore-tab-{view}">
 					{#if view === 'scorecard'}
 						<Scorecard
 							{team}
@@ -106,148 +251,34 @@
 							{isFinal}
 							{isSpoilerPrevented}
 							{onAtBatSelect}
-							player={p}
+							{players}
 						/>
 					{:else}
-						<table class="table-fixed text-center">
-							<thead class="text-xs text-current/40">
-								<tr class="*:pt-[.5ch]">
-									<th class="w-full" colspan="2"></th>
-									<th>AB</th>
-									<th>H</th>
-									<th>R</th>
-									<th>RBI</th>
-									<th>HR</th>
-									<th>BB</th>
-									<th>K</th>
-									<th>SB</th>
-									<th>AVG</th>
-									<th>OPS</th>
-								</tr>
-							</thead>
-							<tbody>
-								{#each team.batters as playerId, i}
-									{@const { stats, seasonStats, ...player } = team.players[`ID${playerId}`]}
-									{@const substituted =
-										!isSpoilerPrevented && !team.battingOrder.includes(playerId)}
-									{@const previous = team.batters
-										.slice(0, i)
-										.findLast((id) => team.players[`ID${id}`]?.position?.abbreviation !== 'P')}
-									{@const substitute =
-										!isSpoilerPrevented &&
-										previous !== undefined &&
-										!team.battingOrder.includes(previous)}
-
-									{#if player?.position?.abbreviation !== 'P'}
-										<tr
-											class="hover:*:not-first:bg-foreground/10"
-											data-substituted={substituted ? '' : undefined}
-										>
-											{@render p(player, substituted, undefined, substitute)}
-
-											<!-- game stats -->
-											{#each ['atBats', 'hits', 'runs', 'rbi', 'homeRuns', 'baseOnBalls', 'strikeOuts', 'stolenBases'] as stat}
-												{@const value = stats?.batting?.[stat as keyof MLB.BattingStats]}
-												<td
-													class={cn(
-														!isSpoilerPrevented && Number(value) === 0 && 'text-current/40',
-													)}
-												>
-													{#if !isSpoilerPrevented}
-														{value}
-													{/if}
-												</td>
-											{/each}
-
-											<!-- season stats -->
-											{#each ['avg', 'ops'] as stat}
-												{@const value = seasonStats?.batting?.[stat as keyof MLB.BattingStats]}
-												<td
-													class={cn(
-														'min-w-[5ch]! text-sm',
-														!isSpoilerPrevented && Number(value) === 0 && 'text-current/40',
-														stat === 'avg' && Number(value) >= 0.3 && 'positive',
-														stat === 'ops' && Number(value) >= 0.75 && 'positive',
-													)}
-												>
-													{#if !isSpoilerPrevented}
-														{value}
-													{/if}
-												</td>
-											{/each}
-										</tr>
-									{/if}
-								{/each}
-							</tbody>
-						</table>
+						<DataTable
+							label="{team.team.name} batting"
+							data={batters}
+							columns={battingColumns}
+							getRowId={(row) => String(row.player.person.id)}
+							sortable={!isSpoilerPrevented}
+							sortParam="batting"
+							tableClass="w-full"
+							stickyHeader={false}
+						/>
 					{/if}
 				</div>
 
 				<hr class="my-[.5ch] border-dashed border-current/25" />
 
-				<div class="overflow-x-auto mask-r-from-[calc(100%-1.5ch)]">
-					<table class="table-fixed text-center">
-						<thead class="text-xs text-current/40">
-							<tr>
-								<th class="w-full" colspan="2"></th>
-								<th>IP</th>
-								<th>P</th>
-								<th>B</th>
-								<th>S</th>
-								<th>H</th>
-								<th>R</th>
-								<th>ER</th>
-								<th>HR</th>
-								<th>BB</th>
-								<th>K</th>
-								<th>HBP</th>
-								<th>ERA</th>
-							</tr>
-						</thead>
-						<tbody>
-							{#each team.pitchers.slice(0, isSpoilerPrevented ? 1 : team.pitchers.length) as playerId (playerId)}
-								{@const { stats, seasonStats, ...player } = team.players[`ID${playerId}`]}
-								{#if player?.position?.abbreviation === 'P' || !!stats?.pitching}
-									<tr class="hover:*:bg-foreground/10">
-										{@render p(player)}
-
-										<!-- game stats -->
-										{#each ['inningsPitched', 'numberOfPitches', 'balls', 'strikes', 'hits', 'runs', 'earnedRuns', 'homeRuns', 'baseOnBalls', 'strikeOuts', 'hitBatsmen'] as stat}
-											{@const value = stats?.pitching?.[stat as keyof MLB.PitchingStats]}
-											<td
-												class={cn(
-													!isSpoilerPrevented &&
-														value !== '0.0' &&
-														Number(value) === 0 &&
-														'text-current/40',
-												)}
-											>
-												{#if !isSpoilerPrevented}
-													{value}
-												{/if}
-											</td>
-										{/each}
-
-										<!-- season stats -->
-										{#each ['era'] as stat}
-											{@const value = seasonStats?.pitching?.[stat as keyof MLB.PitchingStats]}
-											<td
-												class={cn(
-													'min-w-[5ch]! text-sm',
-													!isSpoilerPrevented && Number(value) === 0 && 'text-current/40',
-												)}
-											>
-												{#if !isSpoilerPrevented}
-													{value}
-												{/if}
-											</td>
-										{/each}
-									</tr>
-								{/if}
-							{/each}
-						</tbody>
-					</table>
-				</div>
+				<DataTable
+					label="{team.team.name} pitching"
+					data={pitchersOf(team)}
+					columns={pitchingColumns}
+					getRowId={(row) => String(row.player.person.id)}
+					sortable={!isSpoilerPrevented}
+					sortParam="pitching"
+					tableClass="w-full"
+					stickyHeader={false}
+				/>
 
 				{#if gameDate && !isSpoilerPrevented}
 					<hr class="my-[.5ch] border-dashed border-current/25" />
@@ -256,20 +287,15 @@
 				{/if}
 			{:else if team.bench?.length || team.bullpen?.length}
 				{#if team.bench?.length}
-					<div class="overflow-x-auto">
-						<table class="table-fixed text-center">
-							<tbody>
-								{#each team.bench as playerId}
-									{@const player = team.players[`ID${playerId}`]}
-									{#if player}
-										<tr class="hover:*:not-first:bg-foreground/10">
-											{@render p(player)}
-										</tr>
-									{/if}
-								{/each}
-							</tbody>
-						</table>
-					</div>
+					<DataTable
+						label="{team.team.name} bench"
+						data={rosterOf(team, team.bench)}
+						columns={rosterColumns}
+						getRowId={(row) => String(row.player.person.id)}
+						sortable={false}
+						stickyHeader={false}
+						hideHeader
+					/>
 				{/if}
 
 				{#if team.bench?.length && team.bullpen?.length}
@@ -277,20 +303,15 @@
 				{/if}
 
 				{#if team.bullpen?.length}
-					<div class="overflow-x-auto">
-						<table class="table-fixed text-center">
-							<tbody>
-								{#each team.bullpen as playerId}
-									{@const player = team.players[`ID${playerId}`]}
-									{#if player}
-										<tr class="hover:*:bg-foreground/10">
-											{@render p(player)}
-										</tr>
-									{/if}
-								{/each}
-							</tbody>
-						</table>
-					</div>
+					<DataTable
+						label="{team.team.name} bullpen"
+						data={rosterOf(team, team.bullpen)}
+						columns={rosterColumns}
+						getRowId={(row) => String(row.player.person.id)}
+						sortable={false}
+						stickyHeader={false}
+						hideHeader
+					/>
 				{/if}
 			{:else}
 				<Empty>No boxscore data</Empty>
@@ -299,82 +320,20 @@
 	{/if}
 {/snippet}
 
-{#snippet p(
-	{ position, person }: MLB.BoxscorePlayer,
-	substituted?: boolean,
-	label?: string,
-	substitute?: boolean,
-)}
-	{@const isFavorite = favoritesStore.has(`/player/${person.id}`)}
-	{@const throwSide = players?.[`ID${person.id}`]?.pitchHand?.code}
-	{@const sideLabel =
-		position?.abbreviation === 'P' ? (throwSide ?? position.abbreviation) : position?.abbreviation}
-
-	<th class={cn('sticky left-0 z-1 min-w-lh', isFavorite && 'bg-accent')}>
-		<!-- In the substitute's own cell, centered on its row, and before the headshot so it's drawn under it -->
-		{#if substitute}
-			<div class="absolute inset-y-0 left-0 grid w-lh place-content-center" aria-hidden="true">
-				<ArrowDownRightIcon class="size-ch text-current/40" />
-			</div>
-		{/if}
-
-		<a href="/player/{person.id}">
-			<Headshot {person} size={72} class="size-lh" />
-		</a>
-	</th>
-
-	<th
-		class={cn('relative w-full min-w-[14ch] pl-ch text-left', isFavorite && 'bg-accent! text-dark')}
-	>
-		<a
-			href="/player/{person.id}"
-			class="group/player flex items-center gap-[.5ch] before:absolute before:inset-0"
-		>
-			<span class="line-clamp-1 grow break-all decoration-dashed group-hover/player:underline">
-				{person.boxscoreName}
-			</span>
-
-			<small
-				class="min-w-[3ch] shrink-0 text-center text-xs whitespace-nowrap text-current/40 no-underline"
-			>
-				{label ?? sideLabel}
-			</small>
-		</a>
-	</th>
+{#snippet avatarCell({ row }: CellArgs<Line>)}
+	<BoxscorePlayer
+		part="avatar"
+		player={row.player}
+		{players}
+		substitute={row.substitute && !isSorted(row.group)}
+	/>
 {/snippet}
 
-<style>
-	table tr {
-		> :first-child:not(:has(img)) {
-			padding-left: 1rch;
-		}
-		> :last-child {
-			padding-right: 1rch;
-		}
-	}
-
-	td {
-		font-family: var(--font-sans);
-		font-variant-numeric: tabular-nums;
-
-		&:not(:has(img)) {
-			min-width: 3rch;
-		}
-	}
-
-	/* Global so the scorecard's rows, which render this file's player cells, indent the same way */
-	article :global([data-substituted] + tr) {
-		:global(th:has(img)) {
-			left: -1lh;
-
-			/* translate rather than margin, so the indent doesn't widen the column */
-			:global(img) {
-				translate: 1lh;
-			}
-		}
-
-		:global(th:not(:has(img))) {
-			padding-left: calc(1lh + 1ch);
-		}
-	}
-</style>
+{#snippet playerCell({ row }: CellArgs<Line>)}
+	<BoxscorePlayer
+		part="name"
+		player={row.player}
+		{players}
+		substitute={row.substitute && !isSorted(row.group)}
+	/>
+{/snippet}

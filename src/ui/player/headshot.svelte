@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { cn } from '#lib/utils.js'
-	import type { HTMLAttributes } from 'svelte/elements'
+	import type { HTMLImgAttributes } from 'svelte/elements'
 
 	let {
 		person,
@@ -12,7 +12,7 @@
 		person: Partial<MLB.Person>
 		size?: number
 		type?: 'spots' | 'silo'
-	} & HTMLAttributes<HTMLImageElement> = $props()
+	} & HTMLImgAttributes = $props()
 </script>
 
 <img

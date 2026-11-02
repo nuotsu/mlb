@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
-	import { cn } from '#lib/utils.js'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import Logo from '#ui/team/logo.svelte'
 
 	let {
@@ -114,6 +114,57 @@
 		return undefined
 	}
 
+	type SplitRow = { id: string; split: MLB.StatSplit; career?: boolean }
+
+	/** The career line, kept on top whatever the sort, then each season, latest first */
+	const tableRows = $derived<SplitRow[]>([
+		...(careerSplit ? [{ id: 'career', split: careerSplit, career: true }] : []),
+		...seasonRows.map((split) => ({
+			id: `${split.season}-${split.team?.id ?? 'none'}`,
+			split,
+		})),
+	])
+
+	const columns = $derived<DataTableColumn<SplitRow>[]>([
+		{
+			id: 'season',
+			header: 'Year',
+			title: 'Season',
+			value: (row) => row.split.season,
+			numeric: true,
+			align: 'left',
+			sticky: true,
+			rowHeader: true,
+			cell: seasonCell,
+			team: (row) => ({ team: row.career ? undefined : row.split.team }),
+			// wide enough for “Career” too, which the year cell holds on its row
+			class: 'w-[7ch] min-w-[7ch] px-[.5ch]',
+		},
+		{
+			id: 'team',
+			header: '',
+			title: 'Team',
+			value: (row) => row.split.team?.name,
+			sortable: false,
+			cell: logoCell,
+			team: (row) => ({ team: row.career ? undefined : row.split.team }),
+			class: 'w-lh min-w-lh px-0',
+		},
+		...statKeys[group].map((key): DataTableColumn<SplitRow> => {
+			const { abbr, title } = getStatLabel(key)
+			return {
+				id: key,
+				header: abbr.toUpperCase(),
+				title,
+				value: (row) => row.split.stat[key],
+				numeric: true,
+				format: (value) => (value == null ? '—' : String(value)),
+				cellClass: (row) => valueClass(key, row.split.stat[key]),
+				class: borderClass(key),
+			}
+		}),
+	])
+
 	function borderClass(key: string) {
 		return (borderKeys[group] as readonly string[]).includes(key)
 			? 'border-r border-r-current/25'
@@ -122,98 +173,30 @@
 </script>
 
 {#if hasStats}
-	<article class="overflow-x-auto has-[table]:flex">
-		<table class="min-w-full table-fixed text-center">
-			<thead class="text-sm">
-				<tr>
-					<th class="w-[5ch] min-w-[5ch]"></th>
-					<th class="w-lh min-w-lh"></th>
-
-					{#each statKeys[group] as key (key)}
-						{@const { abbr, title } = getStatLabel(key)}
-						<th class="px-[.5ch]">
-							<abbr class="text-current/40 uppercase" {title}>{abbr}</abbr>
-						</th>
-					{/each}
-				</tr>
-			</thead>
-
-			<tbody>
-				{#if careerSplit}
-					<tr class="hover:[&>td]:bg-foreground/10 hover:[&>th]:bg-foreground/10">
-						<th
-							class="border-b [border-bottom-style:dashed] border-stroke bg-background px-[.5ch] text-center align-middle font-normal"
-							colspan="2"
-						>
-							Career
-						</th>
-
-						{#each statKeys[group] as key (key)}
-							{@const value = careerSplit.stat[key]}
-							<td
-								class={cn(
-									'border-b [border-bottom-style:dashed] border-b-stroke tabular-nums',
-									borderClass(key),
-									valueClass(key, value),
-								)}
-							>
-								{value ?? '—'}
-							</td>
-						{/each}
-					</tr>
-				{/if}
-
-				{#each seasonRows as split (split.season + '-' + (split.team?.id ?? 'none'))}
-					{@const team = split.team}
-					{@const bg = team
-						? `url(https://midfield.mlbstatic.com/v1/team/${team.id}/spots/32)`
-						: undefined}
-
-					<tr class="hover:[&>td]:bg-foreground/10 hover:[&>th]:bg-foreground/10">
-						<th
-							class={cn(
-								'sticky left-0 z-1 px-[.5ch] text-left tabular-nums',
-								!team && 'bg-background',
-								team && {
-									'dark:text-dark': isDarkOnLightTeam(team),
-									'dark:text-light': isLightOnDarkTeam(team),
-								},
-							)}
-							style:--team-bg={bg}
-						>
-							{split.season}
-						</th>
-
-						<td
-							class={cn('relative w-lh min-w-lh', {
-								'dark:text-dark': team && isDarkOnLightTeam(team),
-								'dark:text-light': team && isLightOnDarkTeam(team),
-							})}
-							style:--team-bg={bg}
-						>
-							{#if team}
-								<a class="block" href="/teams/{team.id}" aria-label={team.name}>
-									<Logo class="mx-auto size-lh object-contain" {team} />
-								</a>
-							{/if}
-						</td>
-
-						{#each statKeys[group] as key (key)}
-							{@const value = split.stat[key]}
-							<td class={cn('tabular-nums', borderClass(key), valueClass(key, value))}>
-								{value ?? '—'}
-							</td>
-						{/each}
-					</tr>
-				{/each}
-			</tbody>
-		</table>
-	</article>
+	<DataTable
+		label="{group} by season"
+		data={tableRows}
+		{columns}
+		getRowId={(row) => row.id}
+		pinnedTop={(row) => !!row.career}
+		sortParam="splits"
+		rowClass={(row) => row.career && '*:border-b *:border-dashed *:border-b-(--color-stroke)'}
+	/>
 {/if}
 
-<style>
-	td {
-		padding-inline: 1ch;
-		min-width: 4ch;
-	}
-</style>
+{#snippet seasonCell({ row }: CellArgs<SplitRow>)}
+	{row.career ? 'Career' : row.split.season}
+{/snippet}
+
+{#snippet logoCell({ row: { split } }: CellArgs<SplitRow>)}
+	{#if split.team}
+		<a class="block" href="/teams/{split.team.id}" aria-label={split.team.name}>
+			<Logo
+				class="mx-auto size-lh object-contain"
+				team={split.team}
+				loading="lazy"
+				decoding="async"
+			/>
+		</a>
+	{/if}
+{/snippet}
