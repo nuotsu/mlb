@@ -133,6 +133,27 @@ describe('pitchTimeline', () => {
 		expect(timeline).toEqual([])
 	})
 
+	test('lists one pitch per start time, as older games stamp several with one time', () => {
+		const timeline = pitchTimeline(
+			[
+				play(true, smith, [pitch('2026-10-09T00:01:00Z'), pitch('2026-10-09T00:01:00Z')]),
+				play(false, bibee, [pitch('2026-10-09T00:01:00Z')]),
+				play(true, smith, [pitch('2026-10-09T00:09:00Z')]),
+			],
+			players,
+		)
+
+		expect(timeline.map((p) => [p.lastName, p.pitches])).toEqual([
+			[
+				'Smith',
+				[
+					{ startTime: '2026-10-09T00:01:00Z', number: 1 },
+					{ startTime: '2026-10-09T00:09:00Z', number: 3 },
+				],
+			],
+		])
+	})
+
 	test('finds the latest pitch across pitchers', () => {
 		const timeline = pitchTimeline(
 			[

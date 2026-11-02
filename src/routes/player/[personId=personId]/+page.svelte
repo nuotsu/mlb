@@ -142,7 +142,7 @@
 				/>
 			</figure>
 
-			<PlayerInfo {person} />
+			<PlayerInfo {person} debutGamePk={data.debutGamePk} />
 		</header>
 	</section>
 

@@ -3,10 +3,13 @@
 
 	let {
 		person,
+		debutGamePk,
 	}: {
 		person: MLB.Person & {
 			relatives?: MLB.Relative[]
 		}
+		/** Links the debut to its game once known; otherwise to that day's schedule. */
+		debutGamePk?: Promise<number | undefined>
 	} = $props()
 </script>
 
@@ -64,13 +67,21 @@
 	{#if person.mlbDebutDate}
 		<dt>MLB Debut</dt>
 		<dd>
-			<a class="link" href="/schedule/day/{person.mlbDebutDate}">
-				{formatDate(slash(person.mlbDebutDate), {
-					month: 'long',
-					day: 'numeric',
-					year: 'numeric',
-				})}
-			</a>
+			{#snippet debut(gamePk?: number)}
+				<a class="link" href={gamePk ? `/game/${gamePk}` : `/schedule/day/${person.mlbDebutDate}`}>
+					{formatDate(slash(person.mlbDebutDate!), {
+						month: 'long',
+						day: 'numeric',
+						year: 'numeric',
+					})}
+				</a>
+			{/snippet}
+
+			{#await debutGamePk}
+				{@render debut()}
+			{:then gamePk}
+				{@render debut(gamePk)}
+			{/await}
 		</dd>
 	{/if}
 

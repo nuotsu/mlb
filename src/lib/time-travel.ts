@@ -121,6 +121,10 @@ export function pitchTimeline(
 	const pitchers = new Map<number, TimelinePitcher>()
 	/** Who's on the mound for each fielding side, carried across plate appearances */
 	const onMound: Partial<Record<'away' | 'home', number>> = {}
+	/** Older games can stamp several pitches with one time; only the first is a distinct moment */
+	const seen = new Set<string>()
+	/** Each pitcher's running pitch count, the skipped duplicates included */
+	const counts = new Map<number, number>()
 
 	function pitcher(id: number, person?: Partial<MLB.Person>) {
 		let entry = pitchers.get(id)
@@ -155,13 +159,17 @@ export function pitchTimeline(
 			if (!event.isPitch || !event.startTime || current == null) continue
 
 			const entry = pitcher(current, current === matchupPitcher?.id ? matchupPitcher : undefined)
-			entry.pitches.push({ startTime: event.startTime, number: entry.pitches.length + 1 })
+			const number = (counts.get(current) ?? 0) + 1
+			counts.set(current, number)
+			if (seen.has(event.startTime)) continue
+			seen.add(event.startTime)
+			entry.pitches.push({ startTime: event.startTime, number })
 		}
 
 		if (matchupPitcher?.id) onMound[side] = matchupPitcher.id
 	}
 
-	return [...pitchers.values()]
+	return [...pitchers.values()].filter(({ pitches }) => pitches.length)
 }
 
 /** Every pitch's start time, oldest first */
