@@ -9,12 +9,15 @@
 		class: className,
 		linked,
 		record,
+		logo = true,
 		children,
 	}: {
 		team: MLB.Team
 		class?: string
 		linked?: boolean
 		record?: MLB.LeagueRecord
+		/** Off when the logo has a (sticky) column of its own */
+		logo?: boolean
 		children?: Snippet
 	} = $props()
 
@@ -30,7 +33,9 @@
 	)}
 	style:--team-bg="url('{src}/32')"
 >
-	<Logo srcset="{src}/96" class="size-lh shrink-0 object-contain" {team} />
+	{#if logo}
+		<Logo srcset="{src}/96" class="size-lh shrink-0 object-contain" {team} />
+	{/if}
 
 	<div
 		class="line-clamp-1 break-all *:decoration-dashed group-has-[a:hover]/team:*:underline"

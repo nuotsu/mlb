@@ -72,7 +72,11 @@
 			title: 'Headshot',
 			sticky: true,
 			cell: avatarCell,
-			cellClass: (row) => isFavorite(row) && 'bg-accent',
+			cellClass: (row) => [
+				isFavorite(row) && 'bg-accent',
+				// sticks 1lh further left, so once stuck its nudged headshot lines up with the others
+				substitutes.has(row.playerId) && 'left-[-1lh]',
+			],
 			class: 'w-lh min-w-lh px-0',
 		},
 		{
@@ -105,6 +109,16 @@
 	/** Taken out of the game */
 	const isReplaced = (row: ScorecardRow) =>
 		!isSpoilerPrevented && !team.battingOrder.includes(row.playerId)
+
+	/** Players who came in for the batter above them */
+	const substitutes = $derived(
+		new Set(
+			scorecard.rows.flatMap((row, i) => {
+				const previous = scorecard.rows[i - 1]
+				return !isSpoilerPrevented && previous && isReplaced(previous) ? [row.playerId] : []
+			}),
+		),
+	)
 
 	const cellsByRow = $derived(
 		new Map(

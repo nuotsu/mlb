@@ -3,7 +3,6 @@
 	import { monthName } from '#lib/temporal.js'
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
 	import { ordinal } from '#lib/utils.js'
-	import TeamCell from '#ui/data-table/cells/team-cell.svelte'
 	import DataTable from '#ui/data-table/data-table.svelte'
 	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import Empty from '#ui/empty.svelte'
@@ -14,6 +13,8 @@
 	import SelectSport from '#ui/select-sport.svelte'
 	import SelectMonth from '#ui/stats/select-month.svelte'
 	import SelectSeason from '#ui/stats/select-season.svelte'
+	import Logo from '#ui/team/logo.svelte'
+	import StyledTeam from '#ui/team/styled-team.svelte'
 	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import type { PageData, PageProps } from './$types'
@@ -28,13 +29,34 @@
 	function columnsFor({ group, sortStat, stats }: StatTable): DataTableColumn<StatRow>[] {
 		return [
 			{
+				id: 'rank',
+				header: '#',
+				title: 'Rank by the sorted stat',
+				sortable: false,
+				align: 'right',
+				value: (row) => row.rank,
+				cellClass: 'text-xs text-current/50',
+				class: 'w-[4ch]',
+			},
+			// Only the logo stays put while scrolling sideways; the name scrolls with the stats
+			{
+				id: 'logo',
+				header: '',
+				title: 'Logo',
+				sortable: false,
+				sticky: true,
+				cell: logoCell,
+				team: (row) => ({ team: row.team }),
+				class: 'w-lh min-w-lh px-0',
+			},
+			{
 				id: 'team',
 				header: 'Team',
 				sortable: false,
-				sticky: true,
 				rowHeader: true,
 				cell: teamCell,
-				class: 'min-w-[18ch] md:w-[1%] md:min-w-[30ch]',
+				// the name fills the cell, so its colors meet the logo's
+				class: 'min-w-[12ch] px-0 md:w-[1%] md:min-w-[27ch]',
 			},
 			{
 				id: 'league',
@@ -194,8 +216,14 @@
 	</DataTable>
 {/snippet}
 
+{#snippet logoCell({ row: { team } }: CellArgs<StatRow>)}
+	<a class="block" href="/teams/{team.id}" tabindex="-1" aria-hidden="true">
+		<Logo class="size-lh object-contain" {team} loading="lazy" decoding="async" alt="" />
+	</a>
+{/snippet}
+
 {#snippet teamCell({ row }: CellArgs<StatRow>)}
-	<TeamCell team={row.team} lead={row.rank} />
+	<StyledTeam class="pl-[.5ch]" team={row.team} logo={false} linked />
 {/snippet}
 
 {#snippet leagueRankCell({ row: { league, leagueRank } }: CellArgs<StatRow>)}

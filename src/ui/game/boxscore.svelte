@@ -110,7 +110,11 @@
 		sortable: false,
 		sticky: true,
 		cell: avatarCell,
-		cellClass: (row) => isFavorite(row) && 'bg-accent',
+		cellClass: (row) => [
+			isFavorite(row) && 'bg-accent',
+			// sticks 1lh further left, so once stuck its nudged headshot lines up with the others
+			row.substitute && !isSorted(row.group) && 'left-[-1lh]',
+		],
 		class: 'w-lh min-w-lh px-0',
 	}
 
