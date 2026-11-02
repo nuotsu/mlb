@@ -2,7 +2,7 @@
 	import { LOWER_IS_BETTER } from '#lib/stats.js'
 	import { monthName } from '#lib/temporal.js'
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
-	import { cn, ordinal } from '#lib/utils.js'
+	import { ordinal } from '#lib/utils.js'
 	import TeamCell from '#ui/data-table/cells/team-cell.svelte'
 	import DataTable from '#ui/data-table/data-table.svelte'
 	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'

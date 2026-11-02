@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { formatDate, formatRelativeDays, getToday } from '#lib/temporal.js'
-	import Headshot from '#ui/player/headshot.svelte'
+	import PlayerCell from '#ui/data-table/cells/player-cell.svelte'
+	import DataTable from '#ui/data-table/data-table.svelte'
+	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import type { InjuredPlayer } from './injured-list'
 
 	let {
@@ -11,70 +13,99 @@
 		/** What "in 12d" / "12d ago" is relative to: the list's as-of date */
 		today?: Date | string
 	} = $props()
+
+	const columns: DataTableColumn<InjuredPlayer>[] = [
+		{
+			id: 'status',
+			header: 'IL',
+			title: 'Injured list',
+			value: (player) => player.label,
+			align: 'center',
+			cell: statusCell,
+			cellClass: 'text-sm',
+			class: 'w-[6ch]',
+		},
+		{
+			id: 'position',
+			header: 'Pos',
+			title: 'Position',
+			value: (player) => player.position.abbreviation,
+			align: 'center',
+			cellClass: 'text-sm',
+			class: 'w-[5ch]',
+		},
+		{
+			id: 'player',
+			header: 'Player',
+			value: (player) => player.person.lastFirstName,
+			rowHeader: true,
+			cell: playerCell,
+			// names truncate, so the table fits a phone
+			class: 'min-w-[14ch]',
+		},
+		{
+			// Under the name on a phone
+			id: 'reason',
+			header: 'Reason',
+			value: (player) => player.reason,
+			cell: reasonCell,
+			class: 'max-sm:hidden',
+		},
+		{
+			id: 'return',
+			header: 'Exp. Return',
+			title: 'Expected return: eligible date, or days on the injured list',
+			// day-to-day players have no date, and sort last
+			value: (player) => player.eligibleDate,
+			align: 'right',
+			cell: returnCell,
+			cellClass: 'whitespace-nowrap leading-tight',
+		},
+	]
 </script>
 
-<dl class="grid px-rch max-sm:px-ch">
-	<dt class="col-span-full grid grid-cols-subgrid gap-x-ch text-sm text-current/50 max-sm:hidden">
-		<span class="col-start-3">Player</span>
-		<span class="col-start-4">Reason</span>
-		<span class="col-start-5 text-right">Exp. Return</span>
-	</dt>
+<DataTable
+	class="sm:px-rch"
+	label="Injured list"
+	data={players}
+	{columns}
+	getRowId={(player) => String(player.person.id)}
+	tableClass="w-full"
+	sortParam="il"
+	density="compact"
+/>
 
-	{#each players as player (player.person.id)}
-		<dd class="col-span-full grid grid-cols-subgrid items-center gap-x-ch hover:bg-current/10">
-			<span
-				class="col-start-1 row-start-1 w-[5rch] text-center text-sm"
-				title={player.status.description}
+{#snippet statusCell({ row }: CellArgs<InjuredPlayer>)}
+	<span title={row.status.description}>{row.label}</span>
+{/snippet}
+
+{#snippet playerCell({ row }: CellArgs<InjuredPlayer>)}
+	<PlayerCell person={row.person} name={row.person.lastFirstName} />
+	{#if row.reason}
+		<!-- w-0 min-w-full: as wide as the name, never wider -->
+		<small class="line-clamp-1 w-0 min-w-full break-all text-current/70 sm:hidden"
+			>{row.reason}</small
+		>
+	{/if}
+{/snippet}
+
+{#snippet reasonCell({ row }: CellArgs<InjuredPlayer>)}
+	<small class="line-clamp-1 break-all text-current/70">{row.reason ?? ''}</small>
+{/snippet}
+
+{#snippet returnCell({ row }: CellArgs<InjuredPlayer>)}
+	{#if row.eligibleDate}
+		<small>
+			{formatDate(row.eligibleDate, { month: 'short', day: 'numeric' })}
+			<!-- under the date on a phone -->
+			<span class="text-current/50 tabular-nums max-sm:block"
+				>({formatRelativeDays(row.eligibleDate, { from: today })})</span
 			>
-				{player.label}
-			</span>
-
-			<span class="col-start-2 row-start-1 w-[3rch] text-center text-sm">
-				{player.position.abbreviation}
-			</span>
-
-			<a
-				class="col-span-2 col-start-3 row-start-1 flex grow items-center gap-x-ch decoration-dashed hover:underline sm:col-span-1"
-				href="/player/{player.person.id}"
-			>
-				<Headshot person={player.person} size={72} class="size-lh shrink-0" />
-
-				<span class="line-clamp-1 break-all">{player.person.lastFirstName}</span>
-			</a>
-
-			{#if player.reason}
-				<small
-					class="col-start-3 row-start-2 line-clamp-1 break-all text-current/70 sm:col-start-4 sm:row-start-1"
-				>
-					{player.reason}
-				</small>
-			{/if}
-
-			{#if player.eligibleDate}
-				<small class="col-start-4 row-start-2 shrink-0 text-right sm:col-start-5 sm:row-start-1">
-					{formatDate(player.eligibleDate, { month: 'short', day: 'numeric' })}
-					<span class="text-current/50 tabular-nums"
-						>({formatRelativeDays(player.eligibleDate, { from: today })})</span
-					>
-				</small>
-			{:else if player.daysOnIL != null}
-				<small class="col-start-4 row-start-2 shrink-0 text-right sm:col-start-5 sm:row-start-1">
-					{player.label}
-					<span class="text-current/50 tabular-nums">({player.daysOnIL}d)</span>
-				</small>
-			{/if}
-		</dd>
-	{/each}
-</dl>
-
-<style>
-	dl {
-		grid-template-columns: auto auto 1fr auto;
-	}
-
-	@media (width >= 40rem) {
-		dl {
-			grid-template-columns: auto auto 1fr minmax(0, 1fr) auto;
-		}
-	}
-</style>
+		</small>
+	{:else if row.daysOnIL != null}
+		<small>
+			{row.label}
+			<span class="text-current/50 tabular-nums">({row.daysOnIL}d)</span>
+		</small>
+	{/if}
+{/snippet}

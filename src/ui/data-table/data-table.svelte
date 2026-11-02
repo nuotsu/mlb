@@ -296,7 +296,8 @@
 		return {
 			items: virtualItems.flatMap(({ index }) => (rows[index] ? [rows[index]] : [])),
 			before: first ? first.start - margin : 0,
-			after: last ? v.getTotalSize() - (last.end - margin) : 0,
+			// Nothing in view yet still takes up the rows' height, so the scroller has a size to measure
+			after: v.getTotalSize() - (last ? last.end - margin : 0),
 		}
 	})
 
@@ -352,7 +353,8 @@
 <div
 	bind:this={scroller}
 	class={cn(
-		'relative',
+		// Sized by its layout, never by the table: a wide table scrolls rather than stretch the page
+		'relative min-w-0 [contain:inline-size]',
 		mode === 'container' &&
 			'max-h-[calc(100dvh+1px-var(--header-height,0px))] overflow-auto overscroll-x-contain sm:sidebar-open:max-h-[calc(100dvh+1px-1ch-var(--header-height,0px))]',
 		mode === 'x' && 'overflow-x-auto overflow-y-hidden overscroll-x-contain',

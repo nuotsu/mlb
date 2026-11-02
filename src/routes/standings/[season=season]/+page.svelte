@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
 	import {
 		byRecord,
 		byWildCardRank,
