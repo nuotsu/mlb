@@ -1,6 +1,17 @@
 import { CUSTOM_ENDPOINT_KEY, ENDPOINTS } from '#ui/playground/constants.js'
 
+/**
+ * The directory entry for a concrete path, with its path params. Falls back to the other API
+ * version (v1 ↔ v1.1) so e.g. /api/v1/game/849812/feed/live opens the v1.1 live feed.
+ */
 export function matchEndpoint(urlPath: string) {
+	return (
+		matchExact(urlPath) ??
+		matchExact(urlPath.replace(/^\/api\/v1(\.1)?\//, (_, dot) => (dot ? '/api/v1/' : '/api/v1.1/')))
+	)
+}
+
+function matchExact(urlPath: string) {
 	let parameterizedMatch: { key: string; pathParams: Record<string, string> } | null = null
 
 	for (const key of Object.keys(ENDPOINTS)) {

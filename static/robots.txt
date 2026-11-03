@@ -3,5 +3,6 @@ User-agent: *
 Disallow: /game/
 Disallow: /schedule/
 Disallow: /mcp
+Disallow: /api/proxy/
 
 Sitemap: https://mlb.theohtani.com/sitemap.xml

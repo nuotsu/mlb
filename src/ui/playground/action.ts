@@ -1,50 +1,32 @@
-import { getPostHogClient } from '#lib/server/posthog.js'
-import { HOST } from '#ui/playground/constants.js'
+import { redirect } from '@sveltejs/kit'
+import { CUSTOM_ENDPOINT_KEY, ENDPOINTS } from '#ui/playground/constants.js'
+import { initialValues, resolveRequest } from '#ui/playground/request.js'
+import { endpointToUrl } from '#ui/playground/utils.js'
 
+/**
+ * No-JS fallback for the playground form (with JS the form is handled client-side).
+ * Switching endpoints reloads the playground for that endpoint; otherwise the browser is sent to
+ * the proxy, which shows the raw JSON and records the `playground_form_submitted` event.
+ */
 export async function playgroundAction({ request }: { request: Request }) {
 	const formData = await request.formData()
-	const endpointPath = formData.get('endpoint-path') as string
-	const endpoint = decodeURIComponent(formData.get('endpoint') as string) || ''
-	let processedUrl = HOST + endpoint
+	const selected = String(formData.get('endpoint-path') ?? CUSTOM_ENDPOINT_KEY)
+	const endpointKey = selected in ENDPOINTS ? selected : CUSTOM_ENDPOINT_KEY
+	const rendered = formData.get('rendered-endpoint')
 
-	for (const [key, value] of formData.entries()) {
-		if (key !== 'endpoint') {
-			const newValue = key === 'custom' ? value.toString().replace(/^\//, '') : (value as string)
-			processedUrl = processedUrl.replace(`{${key}}`, newValue)
-		}
+	if (rendered !== null && rendered !== endpointKey) {
+		redirect(303, endpointToUrl(endpointKey))
 	}
 
-	const fetchUrl = new URL(processedUrl)
+	const submitted: Record<string, string> = {}
 
-	for (const [key, value] of Array.from(fetchUrl.searchParams.entries())) {
-		if (value === '') {
-			fetchUrl.searchParams.delete(key)
-		}
+	for (const [key, value] of formData) {
+		if (typeof value === 'string') submitted[key] = value
 	}
 
-	let result: unknown
-	try {
-		const results = await fetch(fetchUrl, { signal: AbortSignal.timeout(10_000) })
-		if (!results.ok) throw new Error(`${results.status}`)
-		result = await results.json()
-	} catch (e) {
-		result = { error: e instanceof Error ? e.message : String(e) }
-	}
+	const resolved = resolveRequest(endpointKey, initialValues(endpointKey, submitted))
 
-	getPostHogClient()?.capture({
-		event: 'playground_form_submitted',
-		distinctId: formData.get('distinctId') as string,
-		properties: {
-			fetchUrl: fetchUrl.toString(),
-		},
-	})
+	if (!resolved.valid) redirect(303, endpointToUrl(endpointKey))
 
-	return {
-		entries: Object.fromEntries(formData.entries()),
-		endpointPath,
-		endpoint,
-		fetchUrl: decodeURIComponent(fetchUrl.toString()),
-		truncated: true,
-		result,
-	}
+	redirect(303, resolved.proxyUrl)
 }

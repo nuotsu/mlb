@@ -5,6 +5,8 @@ export const load = async ({ params, url }) => {
 	const { version, path } = params
 	const fullPath = `/api/${version}${path ? `/${path}` : ''}`
 	const match = matchEndpoint(fullPath)
+	// A deep link (e.g. /api/v1/game/849812/feed/live) runs as soon as the page opens
+	const autoRun = Boolean(path)
 
 	if (match) {
 		const queryParams: Record<string, string> = {}
@@ -16,6 +18,7 @@ export const load = async ({ params, url }) => {
 		return {
 			endpointKey: match.key,
 			initialParams: { ...match.pathParams, ...queryParams },
+			autoRun,
 		}
 	}
 
@@ -25,5 +28,6 @@ export const load = async ({ params, url }) => {
 	return {
 		endpointKey: CUSTOM_ENDPOINT_KEY,
 		initialParams: { custom: customPath },
+		autoRun,
 	}
 }
