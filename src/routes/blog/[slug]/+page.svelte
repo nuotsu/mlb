@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate } from '#lib/temporal.js'
 	import Baseball from '#ui/baseball.svelte'
 	import Breadcrumbs from '#ui/breadcrumbs.svelte'
 	import Metadata from '#ui/metadata.svelte'
@@ -9,6 +10,9 @@
 
 	const Component = $derived(data.post.default)
 	const { title, description } = $derived(data.post.metadata)
+
+	/** The front matter's YYYY-MM-DD date, read as a local calendar day */
+	const date = $derived(String(data.post.metadata.date ?? '').split('T')[0])
 </script>
 
 <Metadata {title} {description} />
@@ -18,7 +22,17 @@
 </header>
 
 <article class="grid gap-y-lh">
-	<h1 class="col-span-full px-ch text-center h0! text-balance">{title}</h1>
+	<hgroup class="col-span-full space-y-ch px-ch text-center">
+		<h1 class="h0! text-balance">{title}</h1>
+
+		{#if date}
+			<p class="text-sm text-current/50">
+				<time datetime={date}>
+					{formatDate(date, { locale: 'en-US', month: 'long', day: 'numeric', year: 'numeric' })}
+				</time>
+			</p>
+		{/if}
+	</hgroup>
 
 	<div class="col-[content] px-ch md:col-[3/4] md:row-[2/3]">
 		<TableOfContents
@@ -29,7 +43,7 @@
 	<div class="col-[content] prose px-ch md:row-[2/3]">
 		<Component />
 
-		<Baseball class="mx-auto my-[-2lh] w-[160px] text-[8px]" />
+		<Baseball class="mx-auto mt-[-2lh] mb-[2lh] w-[160px] text-[8px]" />
 	</div>
 </article>
 
