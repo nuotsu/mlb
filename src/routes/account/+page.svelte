@@ -15,6 +15,7 @@
 		DeviceTabletIcon,
 		GoogleIcon,
 	} from '#ui/icons/index.js'
+	import Loading from '#ui/loading.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import { browser } from '$app/env'
@@ -51,7 +52,8 @@
 	async function signIn() {
 		signingIn = true
 		await accountStore.signIn()
-		signingIn = false
+		// On success the page is navigating away (to Google, or the auth origin): keep spinning
+		if (accountStore.signInError) signingIn = false
 	}
 
 	function signOut() {
@@ -70,6 +72,9 @@
 	title="Account | MLB.TheOhtani.com"
 	description="Your account, favorites, and app settings"
 />
+
+<!-- Back from Google restores this page from the bfcache: stop the spinner -->
+<svelte:window onpageshow={(event) => event.persisted && (signingIn = false)} />
 
 <svelte:head>
 	<meta name="robots" content="noindex" />
@@ -120,9 +125,19 @@
 						account.
 					</p>
 				</header>
-				<button class="action-tertiary min-h-11 rounded-full" onclick={signIn} disabled={signingIn}>
+				<button
+					class="relative action-tertiary min-h-11 overflow-clip rounded-full"
+					onclick={signIn}
+					disabled={signingIn}
+					aria-busy={signingIn}
+				>
 					<GoogleIcon />
 					Sign in with Google
+					{#if signingIn}
+						<Loading class="absolute inset-0 justify-center bg-background/50 backdrop-blur-xs">
+							<span class="sr-only">Signing in…</span>
+						</Loading>
+					{/if}
 				</button>
 				{#if accountStore.signInError}
 					<p class="text-xs text-current/60" role="alert">Couldn't start sign-in. Try again.</p>
