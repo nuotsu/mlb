@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { appIconSrc } from '#lib/app-icon.js'
 	import { version } from '#pkg'
+	import { appIconStore } from '#ui/app-icon/store.svelte.js'
 	import {
 		ArrowsDiffIcon,
 		BatIcon,
@@ -17,12 +19,20 @@
 	} from '#ui/icons/index.js'
 	import { page } from '$app/state'
 	import type { Component } from 'svelte'
+	import Account from './account.svelte'
 	import CompareList from './compare-list.svelte'
 	import Drawer from './drawer.svelte'
 	import FavoritesList from './favorites-list.svelte'
 	import GameCount from './game-count.svelte'
 	import SpoilerPreventionList from './spoiler-prevention-list.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
+
+	// The chosen app icon only exists in the browser; swap it in after hydration
+	let mounted = $state(false)
+	$effect(() => {
+		mounted = true
+	})
+	let logoSrc = $derived(appIconSrc(mounted ? appIconStore.icon : 'default', 'favicon-48x48.png'))
 
 	type LinkItem = {
 		href: string
@@ -111,7 +121,7 @@
 				<figure class="relative size-4">
 					<img
 						class="absolute top-1/2 left-1/2 size-lh min-w-max -translate-1/2 rounded object-cover"
-						src="/favicons/favicon-48x48.png"
+						src={logoSrc}
 						alt=""
 						width={48}
 						height={48}
@@ -150,13 +160,18 @@
 			<li><SpoilerPreventionList /></li>
 		</ul>
 
+		<!-- account | theme (centered) | version; stacked in the collapsed rail -->
 		<div
-			class="flex items-center justify-between gap-ch border-t border-stroke/50 pt-ch pr-ch pb-[max(1ch,env(safe-area-inset-bottom))] pl-[max(1ch,env(safe-area-inset-left))]"
+			class="grid grid-cols-[1fr_auto_1fr] items-center gap-ch border-t border-stroke/50 pt-ch pr-ch pb-[max(1ch,env(safe-area-inset-bottom))] pl-[max(1ch,env(safe-area-inset-left))] sidebar-not-open:grid-cols-1 sidebar-not-open:*:col-start-auto"
 		>
-			<ToggleColorScheme />
+			<Account class="col-start-1 justify-self-start" />
+
+			<div class="col-start-2 row-start-1 flex justify-center sidebar-not-open:row-start-auto">
+				<ToggleColorScheme />
+			</div>
 
 			<a
-				class="flex flex-row-reverse items-center gap-[.5ch] sidebar-not-open:hidden"
+				class="col-start-3 row-start-1 flex flex-row-reverse items-center gap-[.5ch] justify-self-end sidebar-not-open:hidden"
 				href="https://github.com/nuotsu/mlb"
 			>
 				<GithubIcon />

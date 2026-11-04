@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { cn } from '#lib/utils.js'
+	import { settingsChanged } from '#ui/account/changes.js'
 	import { MoonIcon, SunIcon } from '#ui/icons/index.js'
 	import { colorSchemeStore } from '#ui/store.svelte.js'
 
@@ -27,6 +28,7 @@
 	data-color-scheme={mode}
 	onclick={() => {
 		colorSchemeStore.colorScheme = mode === 'dark' ? 'light' : 'dark'
+		settingsChanged()
 	}}
 	title="Toggle light/dark mode"
 >

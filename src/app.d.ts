@@ -3,8 +3,17 @@
 declare global {
 	namespace App {
 		// interface Error {}
-		// interface Locals {}
-		// interface PageData {}
+		interface Locals {
+			/** Signed-in user, or `null` when signed out (or accounts aren't configured) */
+			user: import('#lib/server/auth.js').SessionUser | null
+			session: import('#lib/server/auth.js').Session | null
+		}
+		interface PageData {
+			/** Whether sign-in is configured on the server */
+			accounts?: boolean
+			/** Public profile of the signed-in user, from the root `+layout.server.ts` */
+			user?: import('#lib/account.js').AccountUser | null
+		}
 		// interface PageState {}
 		// interface Platform {}
 

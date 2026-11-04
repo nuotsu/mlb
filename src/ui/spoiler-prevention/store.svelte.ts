@@ -1,3 +1,4 @@
+import { settingsChanged } from '#ui/account/changes.js'
 import { browser } from '$app/env'
 
 function load(): App.SpoilerPrevention[] {
@@ -20,12 +21,14 @@ export const spoilerPreventionStore = $state({
 		if (!this.has(team.id)) {
 			this.teams.push(team)
 			this._save()
+			settingsChanged()
 		}
 	},
 
 	remove(teamId: number) {
 		this.teams = this.teams.filter((t) => t.id !== teamId)
 		this._save()
+		settingsChanged()
 	},
 
 	toggle(team: App.SpoilerPrevention) {
@@ -34,6 +37,12 @@ export const spoilerPreventionStore = $state({
 		} else {
 			this.add(team)
 		}
+	},
+
+	/** Replace everything (from the account) without reporting it as a change */
+	_replace(teams: App.SpoilerPrevention[]) {
+		this.teams = teams
+		this._save()
 	},
 
 	_save() {

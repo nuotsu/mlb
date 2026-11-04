@@ -1,3 +1,4 @@
+import { favoriteChanged } from '#ui/account/changes.js'
 import { browser } from '$app/env'
 
 function loadFavorites(): App.Favorite[] {
@@ -20,12 +21,15 @@ export const favoritesStore = $state({
 		if (!this.has(favorite.href)) {
 			this.favorites.push(favorite)
 			this._save()
+			favoriteChanged('add', favorite)
 		}
 	},
 
 	remove({ href }: App.Favorite) {
+		const removed = this.favorites.find((f) => f.href === href)
 		this.favorites = this.favorites.filter((f) => f.href !== href)
 		this._save()
+		if (removed) favoriteChanged('remove', removed)
 	},
 
 	toggle(favorite: App.Favorite) {
@@ -34,6 +38,12 @@ export const favoritesStore = $state({
 		} else {
 			this.add(favorite)
 		}
+	},
+
+	/** Replace everything (from the account) without reporting it as a change */
+	_replace(favorites: App.Favorite[]) {
+		this.favorites = favorites
+		this._save()
 	},
 
 	_save() {

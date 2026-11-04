@@ -7,3 +7,6 @@ bun.lockb
 
 # Trimmed game feeds for tests
 src/lib/fixtures
+
+# drizzle-kit output
+/drizzle/meta
