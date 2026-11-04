@@ -29,6 +29,11 @@ import {
 const SYNCED_USER = 'account-user'
 /** Set before redirecting to Google, so we check the session on return even if the HTML was cached */
 const AUTH_PENDING = 'auth-pending'
+/** URL hash that resumes sign-in after hopping to the auth origin */
+const SIGN_IN_HASH = '#sign-in'
+
+/** Origin Google redirects back to, when fixed; sign-in elsewhere hops there first */
+let authOrigin: string | null = null
 
 export const accountStore = $state({
 	/** Accounts are configured on the server */
@@ -37,6 +42,12 @@ export const accountStore = $state({
 	status: 'idle' as 'idle' | 'syncing' | 'synced' | 'error',
 
 	async signIn() {
+		// Google only knows one callback host: continue on that host, on the same page
+		if (authOrigin && authOrigin !== location.origin) {
+			location.assign(authOrigin + location.pathname + location.search + SIGN_IN_HASH)
+			return
+		}
+
 		localStorage.setItem(AUTH_PENDING, String(Date.now()))
 		const { error } = await authClient.signIn.social({
 			provider: 'google',
@@ -68,14 +79,28 @@ export const accountStore = $state({
 let initialized = false
 
 /** Call once in the browser with the root layout data */
-export function initAccount(data: { accounts?: boolean; user?: AccountUser | null }) {
+export function initAccount(data: {
+	accounts?: boolean
+	authOrigin?: string | null
+	user?: AccountUser | null
+}) {
 	if (!browser || initialized) return
 	initialized = true
 
 	accountStore.enabled = !!data.accounts
+	authOrigin = data.authOrigin ?? null
 	if (!accountStore.enabled) return disconnect()
 
 	if (data.user) return connect(data.user)
+
+	// Arrived from another host to finish starting sign-in
+	if (location.hash === SIGN_IN_HASH) {
+		history.replaceState(history.state, '', location.pathname + location.search)
+		if (location.origin === authOrigin) {
+			accountStore.signIn()
+			return
+		}
+	}
 
 	// The server saw no session, but this page may have come from the CDN cache. Only ask
 	// when there's reason to believe we're signed in, so signed-out visits stay request-free.

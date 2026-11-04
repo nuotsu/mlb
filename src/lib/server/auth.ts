@@ -75,12 +75,16 @@ function createAuth() {
 		telemetry: { enabled: false },
 		plugins: [
 			/*
-				OAuth proxy (Vercel only): a preview sends Google back to the production callback,
-				production exchanges the code and hands the encrypted profile to the preview, which
-				creates the session in its own database. Production and previews must share
-				OAUTH_PROXY_SECRET (or BETTER_AUTH_SECRET). Off locally, where localhost is registered.
+				OAuth proxy: a preview sends Google back to the production callback, production
+				exchanges the code and hands the encrypted profile to the preview, which creates the
+				session in its own database. Production and previews must share OAUTH_PROXY_SECRET
+				(or BETTER_AUTH_SECRET).
+
+				A preview with its own `BETTER_AUTH_URL` (its branch URL, registered as a Google
+				redirect URI) signs in directly instead, so it works before production has this code.
+				Off locally, where localhost is registered.
 			*/
-			...(VERCEL_ENV === 'production' || VERCEL_ENV === 'preview'
+			...(VERCEL_ENV === 'production' || (VERCEL_ENV === 'preview' && !BETTER_AUTH_URL)
 				? [
 						oAuthProxy({
 							productionURL: PRODUCTION_URL,

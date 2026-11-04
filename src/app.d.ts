@@ -11,6 +11,8 @@ declare global {
 		interface PageData {
 			/** Whether sign-in is configured on the server */
 			accounts?: boolean
+			/** Origin sign-in must start from, when fixed by `BETTER_AUTH_URL` */
+			authOrigin?: string | null
 			/** Public profile of the signed-in user, from the root `+layout.server.ts` */
 			user?: import('#lib/account.js').AccountUser | null
 		}
