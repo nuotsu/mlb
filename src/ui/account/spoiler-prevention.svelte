@@ -14,12 +14,7 @@
 </script>
 
 <section class="space-y-ch">
-	<header class="flex items-baseline justify-between gap-ch">
-		<h2 class="h3">Spoiler prevention</h2>
-		{#if protectedTeams.length}
-			<small class="text-xs text-current/60 tabular-nums">{protectedTeams.length}</small>
-		{/if}
-	</header>
+	<h2 class="h3">Spoiler prevention</h2>
 
 	{#if protectedTeams.length}
 		<p class="text-sm text-current/60">

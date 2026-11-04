@@ -25,12 +25,7 @@
 </script>
 
 <section class="space-y-ch">
-	<header class="flex items-baseline justify-between gap-ch">
-		<h2 class="h3">Favorites</h2>
-		{#if favorites.length}
-			<small class="text-xs text-current/60 tabular-nums">{favorites.length}</small>
-		{/if}
-	</header>
+	<h2 class="h3">Favorites</h2>
 
 	{#each groups as group (group.label)}
 		<div class="space-y-[.5ch]">
