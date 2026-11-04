@@ -29,10 +29,15 @@ export const PRESETS = {
 		{ value: '669373', label: 'Tarik Skubal' },
 		{ value: '121314', label: 'Jackie Robinson' },
 	],
-	jobType: [
-		{ value: 'umpires', label: 'Umpires' },
-		{ value: 'officialScorers', label: 'Official scorers' },
-		{ value: 'datacasters', label: 'Datacasters' },
+	awardId: [
+		{ value: 'MLBHOF', label: 'Hall of Fame' },
+		{ value: 'ALMVP', label: 'AL MVP' },
+		{ value: 'NLMVP', label: 'NL MVP' },
+		{ value: 'NLCY', label: 'NL Cy Young' },
+	],
+	orgType: [
+		{ value: 'player', label: 'Player' },
+		{ value: 'team', label: 'Team' },
 	],
 	stats: [
 		{ value: 'season', label: 'Season' },
@@ -65,6 +70,14 @@ export const PRESETS = {
 	gamePk: [
 		{ value: '813024', label: "'25 World Series Game 7" },
 		{ value: '813031', label: "'25 NLCS Game 4" },
+	],
+	sortStat: [
+		{ value: 'homeRuns', label: 'Home Runs' },
+		{ value: 'strikeouts', label: 'Strikeouts' },
+	],
+	leaderCategories: [
+		{ value: 'homeRuns', label: 'Home Runs' },
+		{ value: 'battingAverage', label: 'Batting Average' },
 	],
 	venueId: [
 		{ value: '22', label: 'Dodger Stadium' },
@@ -100,6 +113,18 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 		'/api/v1/sports': {
 			description: 'List all sports with their IDs (MLB=1, AAA=11, etc.) and basic metadata.',
 		},
+		'/api/v1/sports/{sportId}/players': {
+			description:
+				'Every player who appeared in a sport for a season, with IDs, positions, and current team. Large: about 1.6 MB for MLB.',
+			pathParams: {
+				sportId: PRESETS.sportId,
+			},
+			queryParams: {
+				season: PRESETS.season,
+				gameType: PRESETS.gameType.map((g) => ({ ...g, empty: true })),
+				fields: [{ value: '', placeholder: 'people,id,fullName' }],
+			},
+		},
 		'/api/v1/divisions': {
 			description:
 				'Get division info (AL East, NL West, etc.) with standings order; filter by league and season.',
@@ -114,6 +139,10 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				leagueIds: PRESETS.leagueId,
 				fields: [{ value: '' }],
 			},
+		},
+		'/api/v1/conferences': {
+			description:
+				'Conferences used by some leagues (e.g. Spring Training Cactus/Grapefruit leagues).',
 		},
 	},
 
@@ -154,6 +183,37 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				fields: [{ value: '' }],
 			},
 		},
+		'/api/v1/schedule/postseason/series': {
+			description:
+				'Postseason games grouped by series (Wild Card through World Series) with each series’ games and status.',
+			queryParams: {
+				season: PRESETS.season,
+				sportId: PRESETS.sportId,
+				teamId: PRESETS.teamId.map((t) => ({ ...t, empty: true })),
+				gameTypes: [
+					{ value: 'W', label: 'World Series', empty: true },
+					{ value: 'L', label: 'League Series', empty: true },
+					{ value: 'D', label: 'Division Series', empty: true },
+				],
+			},
+		},
+		'/api/v1/schedule/postseason/tuneIn': {
+			description:
+				'Postseason “tune-in” schedule: upcoming games with broadcast info. Empty outside of October.',
+			queryParams: {
+				season: PRESETS.season,
+			},
+		},
+		'/api/v1/schedule/games/tied': {
+			description: 'Games that ended in a tie for a season (common in Spring Training).',
+			queryParams: {
+				season: PRESETS.season,
+				gameTypes: [
+					{ value: 'S', label: 'Spring Training' },
+					{ value: 'R', label: 'Regular Season' },
+				],
+			},
+		},
 	},
 	Game: {
 		'/api/v1.1/game/{gamePk}/feed/live': {
@@ -175,6 +235,17 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 					},
 				],
 				hydrate: [{ value: '', placeholder: 'hydrations' }],
+			},
+		},
+		'/api/v1.1/game/{gamePk}/feed/live/diffPatch': {
+			description:
+				'JSON-patch diffs of the live feed between two timecodes (yyyymmdd_hhmmss, UTC); without endTimecode, diffs up to now. Large for long ranges.',
+			pathParams: {
+				gamePk: [{ value: '849812', label: "'26 LAD @ MIL" }, ...PRESETS.gamePk],
+			},
+			queryParams: {
+				startTimecode: [{ value: '20261012_230000' }],
+				endTimecode: [{ value: '20261012_231000', empty: true }],
 			},
 		},
 		// '/api/v1.1/game/{gamePk}/feed/live/timestamps': {
@@ -266,6 +337,38 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				hydrate: [{ value: '', placeholder: 'hydrations' }],
 			},
 		},
+		'/api/v1/teams/stats': {
+			description:
+				'Team stat lines for every club in a season, sortable by any stat (e.g. most home runs).',
+			queryParams: {
+				season: PRESETS.season,
+				group: PRESETS.group,
+				stats: PRESETS.stats,
+				sportIds: [PRESETS.sportId[0]],
+				gameType: PRESETS.gameType,
+				sortStat: PRESETS.sortStat,
+				order: [
+					{ value: 'desc', label: 'Descending' },
+					{ value: 'asc', label: 'Ascending' },
+				],
+			},
+		},
+		'/api/v1/teams/history': {
+			description:
+				'Franchise history for one or more teams: every name, city, and league a club has had.',
+			queryParams: {
+				teamIds: PRESETS.teamId,
+			},
+		},
+		'/api/v1/teams/affiliates': {
+			description:
+				'Minor league affiliates for one or more parent clubs, by season and sport level.',
+			queryParams: {
+				teamIds: PRESETS.teamId,
+				sportId: PRESETS.sportId.map((s) => ({ ...s, empty: true })),
+				season: PRESETS.season,
+			},
+		},
 		'/api/v1/teams/{teamId}': {
 			description:
 				'Detailed team info: full name, venue, league, division, first year, and social media links.',
@@ -297,6 +400,48 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				hydrate: [{ value: 'person', empty: true }],
 			},
 		},
+		'/api/v1/teams/{teamId}/personnel': {
+			description:
+				'Non-coaching club personnel (trainers, staff) on a given date; empty for dates without data.',
+			pathParams: {
+				teamId: PRESETS.teamId,
+			},
+			queryParams: {
+				date: [{ value: '2025-07-01', label: "'25 midseason" }, ...PRESETS.date],
+			},
+		},
+		'/api/v1/teams/{teamId}/stats': {
+			description: "A team's season or career stat line for hitting, pitching, or fielding.",
+			pathParams: {
+				teamId: PRESETS.teamId,
+			},
+			queryParams: {
+				season: PRESETS.season,
+				group: PRESETS.group,
+				stats: PRESETS.stats,
+			},
+		},
+		'/api/v1/teams/{teamId}/leaders': {
+			description: "A team's leaders in one or more stat categories for a season.",
+			pathParams: {
+				teamId: PRESETS.teamId,
+			},
+			queryParams: {
+				leaderCategories: PRESETS.leaderCategories,
+				season: PRESETS.season,
+				limit: [{ value: '5' }],
+			},
+		},
+		'/api/v1/teams/{teamId}/alumni': {
+			description: 'Former players of a team with their stats for the given season and group.',
+			pathParams: {
+				teamId: PRESETS.teamId,
+			},
+			queryParams: {
+				season: PRESETS.season,
+				group: PRESETS.group,
+			},
+		},
 		'/api/v1/teams/{teamId}/history': {
 			description:
 				'Franchise history including former names, cities, leagues, and championship seasons.',
@@ -313,6 +458,17 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 		},
 	},
 	People: {
+		'/api/v1/people': {
+			description:
+				'Bios for several players at once by comma-separated personIds; add hydrate for teams or stats.',
+			queryParams: {
+				personIds: [
+					{ value: '660271,592450', label: 'Ohtani + Judge' },
+					{ value: '669373', label: 'Tarik Skubal' },
+				],
+				hydrate: [{ value: 'currentTeam', empty: true }],
+			},
+		},
 		'/api/v1/people/{personId}': {
 			description:
 				'Player bio: birthDate, birthCity, height, weight, position, bats/throws, draft info, MLB debut date.',
@@ -401,15 +557,71 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			description:
 				'League leaders in specific categories (HR, AVG, ERA, etc.); regular season or playoffs.',
 			queryParams: {
-				leaderCategories: [
-					{ value: 'homeRuns', label: 'Home Runs' },
-					{ value: 'battingAverage', label: 'Batting Average' },
-				],
+				leaderCategories: PRESETS.leaderCategories,
 				leaderGameTypes: [
 					{ value: 'R', label: 'Regular Season' },
 					{ value: 'P', label: 'Playoffs' },
 				],
 				statGroup: [PRESETS.group[0], PRESETS.group[1]],
+				season: PRESETS.season,
+			},
+		},
+		'/api/v1/highLow/{orgType}': {
+			description:
+				'Single-game highs (and lows) for players or teams in a season, e.g. most home runs in a game.',
+			pathParams: {
+				orgType: PRESETS.orgType,
+			},
+			queryParams: {
+				sortStat: PRESETS.sortStat,
+				season: PRESETS.season,
+				sportId: PRESETS.sportId,
+				gameType: PRESETS.gameType,
+				statGroup: [PRESETS.group[0], PRESETS.group[1]],
+			},
+		},
+	},
+	'Awards & All-Star': {
+		'/api/v1/awards': {
+			description:
+				'Every award MLB tracks (MVP, Cy Young, Gold Glove, Hall of Fame, minor league honors) with its awardId.',
+		},
+		'/api/v1/awards/{awardId}/recipients': {
+			description:
+				'Winners of an award, optionally for one season, sport, or league; leave season empty for all-time.',
+			pathParams: {
+				awardId: PRESETS.awardId,
+			},
+			queryParams: {
+				season: PRESETS.season.map((s) => ({ ...s, empty: true })),
+				sportId: PRESETS.sportId.map((s) => ({ ...s, empty: true })),
+				leagueId: [PRESETS.leagueId[0], PRESETS.leagueId[1]].map((l) => ({ ...l, empty: true })),
+			},
+		},
+		'/api/v1/league/{leagueId}/allStarBallot': {
+			description: 'All-Star ballot candidates for a league and season.',
+			pathParams: {
+				leagueId: [PRESETS.leagueId[0], PRESETS.leagueId[1]],
+			},
+			queryParams: {
+				season: PRESETS.season,
+			},
+		},
+		'/api/v1/league/{leagueId}/allStarWriteIns': {
+			description: 'Players eligible as All-Star write-in candidates for a league and season.',
+			pathParams: {
+				leagueId: [PRESETS.leagueId[0], PRESETS.leagueId[1]],
+			},
+			queryParams: {
+				season: PRESETS.season,
+			},
+		},
+		'/api/v1/league/{leagueId}/allStarFinalVote': {
+			description: 'All-Star Final Vote candidates for a league and season.',
+			pathParams: {
+				leagueId: [PRESETS.leagueId[0], PRESETS.leagueId[1]],
+			},
+			queryParams: {
 				season: PRESETS.season,
 			},
 		},
@@ -421,6 +633,22 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			queryParams: {
 				sportId: PRESETS.sportId,
 				season: PRESETS.season,
+			},
+		},
+		'/api/v1/seasons/all': {
+			description: 'Key dates for every season of a sport, oldest first.',
+			queryParams: {
+				sportId: PRESETS.sportId,
+			},
+		},
+		'/api/v1/seasons/{season}': {
+			description:
+				'Key dates for one season: spring training, regular season, All-Star, postseason.',
+			pathParams: {
+				season: PRESETS.season,
+			},
+			queryParams: {
+				sportId: PRESETS.sportId,
 			},
 		},
 		'/api/v1/venues': {
@@ -442,6 +670,17 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				],
 			},
 		},
+		'/api/v1/draft/prospects/{year}': {
+			description:
+				'Draft-eligible prospects for a year with school, hometown, and scouting rank. Over 4 MB without a limit.',
+			pathParams: {
+				year: PRESETS.year,
+			},
+			queryParams: {
+				limit: [{ value: '50' }],
+				offset: [{ value: '', placeholder: '0' }],
+			},
+		},
 		'/api/v1/transactions': {
 			description:
 				'Roster transactions: trades, signings, DFA, IL moves, call-ups; filter by team, player, or date range.',
@@ -458,14 +697,28 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				],
 			},
 		},
-		'/api/v1/jobs/{jobType}': {
-			description:
-				'Game officials by type: umpire crews, official scorers, and datacasters assigned to games.',
-			pathParams: {
-				jobType: PRESETS.jobType,
-			},
+		'/api/v1/jobs/umpires': {
+			description: 'Umpires with their jersey numbers; filter by sport, date, or season.',
 			queryParams: {
-				date: PRESETS.date,
+				sportId: PRESETS.sportId,
+				date: PRESETS.date.map((d) => ({ ...d, empty: true })),
+				season: PRESETS.season.map((s) => ({ ...s, empty: true })),
+			},
+		},
+		'/api/v1/jobs/officialScorers': {
+			description: 'Official scorers; filter by sport, date, or season.',
+			queryParams: {
+				sportId: PRESETS.sportId,
+				date: PRESETS.date.map((d) => ({ ...d, empty: true })),
+				season: PRESETS.season.map((s) => ({ ...s, empty: true })),
+			},
+		},
+		'/api/v1/jobs/datacasters': {
+			description: 'Datacasters (in-park stringers); filter by sport, date, or season.',
+			queryParams: {
+				sportId: PRESETS.sportId,
+				date: PRESETS.date.map((d) => ({ ...d, empty: true })),
+				season: PRESETS.season.map((s) => ({ ...s, empty: true })),
 			},
 		},
 		'/api/v1/uniforms/game': {
@@ -473,6 +726,13 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 				'Uniform details for specific games: jersey style, cap, pants, and special event gear.',
 			queryParams: {
 				gamePks: PRESETS.gamePk,
+			},
+		},
+		'/api/v1/uniforms/team': {
+			description: "Every uniform in a team's closet for a season: jerseys, caps, and pants.",
+			queryParams: {
+				teamIds: PRESETS.teamId,
+				season: PRESETS.season,
 			},
 		},
 		'/api/v1/attendance': {
@@ -497,16 +757,28 @@ export const DIRECTORY: Record<string, Docs.EndpointSchema> = {
 			description:
 				'Game type codes: R=Regular Season, S=Spring Training, P=Playoffs, W=World Series, etc.',
 		},
+		'/api/v1/pitchTypes': {
+			description: 'Pitch type codes (FF=Four-Seam Fastball, SL=Slider, ST=Sweeper, etc.).',
+		},
+		'/api/v1/statTypes': {
+			description:
+				'Values accepted by the stats param (season, career, gameLog, byDateRange, vsPlayer, etc.).',
+		},
+		'/api/v1/situationCodes': {
+			description:
+				'Split codes for stats by situation (h=home, a=away, risp, vl=vs. left, etc.) used with sitCodes.',
+		},
+		'/api/v1/eventTypes': {
+			description: 'Play event codes (single, home_run, strikeout, stolen_base_2b, etc.).',
+		},
+		'/api/v1/positions': {
+			description: 'Position codes and abbreviations (1=P, 2=C, ... 10=DH) with their groups.',
+		},
 	},
 } as const
 
-export const ENDPOINTS: Record<string, Docs.EndpointSchema[string]> = Object.assign(
-	CUSTOM_ENDPOINT,
-	DIRECTORY,
-)
+export const ENDPOINTS: Record<string, Docs.EndpointSchema[string]> = { ...CUSTOM_ENDPOINT }
 
-for (const [label, endpoints] of Object.entries(DIRECTORY)) {
-	for (const [endpoint, params] of Object.entries(endpoints)) {
-		ENDPOINTS[endpoint] = params
-	}
+for (const endpoints of Object.values(DIRECTORY)) {
+	Object.assign(ENDPOINTS, endpoints)
 }
