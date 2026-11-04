@@ -90,7 +90,7 @@
 
 <!-- Desktop: fit the viewport so the response scrolls on its own; `main` loses 1ch to the open sidebar's frame -->
 <section
-	class="flex flex-col gap-y-ch pt-lh sm:max-h-[calc(100dvh-var(--header-height))] sm:sidebar-open:max-h-[calc(100dvh-1ch-var(--header-height))]"
+	class="playground flex flex-col gap-y-ch pt-lh sm:max-h-[calc(100dvh-var(--header-height))] sm:sidebar-open:max-h-[calc(100dvh-1ch-var(--header-height))]"
 >
 	<article class="bg-background">
 		<form id="playground-form" class="grid gap-ch px-ch" method="POST" {onsubmit}>
@@ -175,3 +175,12 @@
 </section>
 
 {@render children()}
+
+<style>
+	/* Accent focus ring for every control in the playground (form, response header, viewer) */
+	/* :where keeps this below the viewer's own inset ring; .outline-none opts a control out */
+	.playground :global(:where(:focus-visible:not(.outline-none))) {
+		outline: 2px solid var(--color-accent);
+		outline-offset: 1px;
+	}
+</style>

@@ -78,7 +78,7 @@
 	let searchTimer: ReturnType<typeof setTimeout> | undefined
 	let searchSeq = 0
 
-	let rowHeight = $state(20)
+	let rowHeight = $state(16)
 	let touch = $state(false)
 	let scroller = $state<HTMLDivElement>()
 	let dialog = $state<HTMLDialogElement>()
@@ -117,7 +117,7 @@
 
 	onMount(() => {
 		touch = matchMedia('(hover: none)').matches
-		rowHeight = matchMedia('(pointer: coarse)').matches ? 28 : 20
+		rowHeight = matchMedia('(pointer: coarse)').matches ? 22 : 16
 
 		let cancelled = false
 		parseJson(text).then(
@@ -552,10 +552,10 @@
 					disabled={!table}
 					onclick={() => setDepth(1)}><CollapseVerticalIcon /></button
 				>
-				<label class="tool flex items-center gap-[.5ch]" title="Expand to depth">
+				<label class="tool depth flex items-center gap-[.5ch]" title="Expand to depth">
 					<span>Depth</span>
 					<select
-						class="bg-transparent"
+						class="bg-transparent outline-none"
 						disabled={!table}
 						value={Number.isFinite(depthLimit) ? String(depthLimit) : ''}
 						onchange={(e) => {
@@ -795,6 +795,14 @@
 		color: var(--fg);
 	}
 
+	/* Focus: accent outline; the Depth box outlines as a whole, not just its <select> */
+	.json-viewer :global(:focus-visible:not(.outline-none)),
+	.inspector :global(:focus-visible:not(.outline-none)),
+	.depth:focus-within {
+		outline: 1px solid var(--key, #72f088);
+		outline-offset: -1px;
+	}
+
 	.tool {
 		display: inline-flex;
 		align-items: center;
@@ -977,7 +985,7 @@
 			display: grid;
 			place-items: center;
 			width: 2.5ch;
-			height: calc(var(--row) - 4px);
+			height: calc(var(--row) - 2px);
 			border: 1px solid rgb(255 255 255 / 0.25);
 			background: var(--bg);
 
