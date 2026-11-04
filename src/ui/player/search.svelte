@@ -4,6 +4,7 @@
 	import { count, debounce } from '#lib/utils.js'
 	import ToggleCompare from '#ui/compare/toggle-compare.svelte'
 	import Empty from '#ui/empty.svelte'
+	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
 	import { SearchIcon } from '#ui/icons/index.js'
 	import Loading from '#ui/loading.svelte'
 	import Headshot from '#ui/player/headshot.svelte'
@@ -26,7 +27,7 @@
 
 		promise = fetchMLB('/api/v1/people/search', {
 			names: query,
-			fields: 'people,id,fullName,primaryNumber,primaryPosition,abbreviation,active',
+			fields: 'people,id,fullName,lastName,primaryNumber,primaryPosition,abbreviation,active',
 		}).then((results) => {
 			if (analyticsEnabled) posthog.capture('player_search_query', { query })
 			return results
@@ -114,6 +115,11 @@
 								<ToggleCompare
 									class="text-sm not-has-checked:not-hover:text-current/50"
 									personId={person.id}
+								/>
+
+								<ToggleFavorite
+									class="shrink-0 text-sm"
+									target={{ href: `/player/${person.id}`, label: person.lastName ?? person.fullName }}
 								/>
 							</li>
 						{/each}
