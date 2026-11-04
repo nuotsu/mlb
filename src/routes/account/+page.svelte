@@ -135,7 +135,7 @@
 					Sign in with Google
 					{#if signingIn}
 						<Loading class="absolute inset-0 justify-center bg-background/50 backdrop-blur-xs">
-							<span class="sr-only">Signing in…</span>
+							Signing in...
 						</Loading>
 					{/if}
 				</button>
