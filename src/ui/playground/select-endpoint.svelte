@@ -37,6 +37,27 @@
 	let active = $state(0)
 	let input = $state<HTMLInputElement>()
 	let list = $state<HTMLUListElement>()
+	let root = $state<HTMLDivElement>()
+
+	/**
+	 * Close when the user taps or focuses anything outside the picker. Not on input blur: iOS
+	 * blurs the input as an option is tapped, and closing then swallowed the tap.
+	 */
+	$effect(() => {
+		if (!open) return
+
+		const outside = (event: Event) => {
+			if (!root?.contains(event.target as Node)) hide()
+		}
+
+		document.addEventListener('pointerdown', outside, true)
+		document.addEventListener('focusin', outside, true)
+
+		return () => {
+			document.removeEventListener('pointerdown', outside, true)
+			document.removeEventListener('focusin', outside, true)
+		}
+	})
 
 	onMount(() => (mounted = true))
 
@@ -205,7 +226,7 @@
 {:else}
 	<input type="hidden" name="endpoint-path" {value} />
 
-	<div class="relative w-full min-w-0 sm:w-auto sm:grow">
+	<div bind:this={root} class="relative w-full min-w-0 sm:w-auto sm:grow">
 		<input
 			bind:this={input}
 			class="input-dev h-11 w-full font-mono text-base sm:h-lh sm:text-sm"
@@ -228,7 +249,6 @@
 			}}
 			onfocus={show}
 			onclick={show}
-			onblur={hide}
 			{onkeydown}
 		/>
 
@@ -261,8 +281,12 @@
 							index === active && 'bg-accent/25',
 							option.key === value && 'font-bold',
 						)}
-						onpointerdown={(e) => e.preventDefault()}
-						onpointermove={() => (active = index)}
+						onpointerdown={(e) => {
+							// Mouse: keep focus (and the typed query) in the input. Touch: leave it alone so
+							// the list can scroll
+							if (e.pointerType === 'mouse') e.preventDefault()
+						}}
+						onpointermove={(e) => e.pointerType === 'mouse' && (active = index)}
 						onclick={() => choose(option)}
 					>
 						<span class="font-mono text-sm break-all">
