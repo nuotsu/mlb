@@ -55,7 +55,7 @@
 	class={cn(
 		'relative z-1 h-dvh whitespace-nowrap backdrop-blur-xs transition-colors [grid-area:nav]',
 		'max-sm:bg-neutral-200/50 max-sm:dark:bg-neutral-800/50',
-		'sm:w-[calc(2ch+1rem)] sm:overflow-clip sm:transition-[width] sm:sidebar-open:overflow-y-auto',
+		'sm:w-[calc(2ch+1rem)] sm:overflow-clip sm:transition-[width]',
 		'max-sm:absolute max-sm:inset-y-0 max-sm:left-0 max-sm:transition-transform max-sm:sidebar-open:translate-x-(--swipe-x) max-sm:sidebar-not-open:-translate-x-full',
 	)}
 	bind:this={nav}

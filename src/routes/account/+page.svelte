@@ -74,25 +74,22 @@
 
 <div class="mx-auto grid max-w-xl gap-[2lh] px-ch py-lh">
 	{#if page.data.accounts}
-		<section class="space-y-ch">
+		<section class={user ? 'space-y-ch' : 'space-y-lh'}>
 			{#if user}
 				<div class="flex items-center gap-lh">
 					<div class="relative shrink-0">
 						<Avatar {user} class="size-16 text-2xl" size={64} />
 
 						{#if favoriteTeam}
+							{@const teamId = Number(favoriteTeam.href.split('/').pop())}
+
 							<a
-								class="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full bg-background ring-1 ring-current/25"
+								class="absolute -right-1 -bottom-1 isolate grid size-7 place-items-center overflow-clip rounded-full bg-background ring-1 ring-current/25"
 								href={favoriteTeam.href}
+								style:--team-bg="url(https://midfield.mlbstatic.com/v1/team/{teamId}/spots/32)"
 								title="Favorite team: {favoriteTeam.label}"
 							>
-								<Logo
-									class="size-5"
-									team={{
-										id: Number(favoriteTeam.href.split('/').pop()),
-										name: favoriteTeam.label,
-									} as MLB.Team}
-								/>
+								<Logo class="size-5" team={{ id: teamId, name: favoriteTeam.label } as MLB.Team} />
 							</a>
 						{/if}
 					</div>
@@ -111,11 +108,13 @@
 					<p class="text-xs text-current/60">Couldn't sync. Changes are saved on this device.</p>
 				{/if}
 			{:else}
-				<h2 class="h3">Sign in</h2>
-				<p class="text-sm text-current/60">
-					Sync your favorites and settings across devices. Everything keeps working without an
-					account.
-				</p>
+				<header class="space-y-[.25ch]">
+					<h2 class="h3">Sign in</h2>
+					<p class="text-sm text-current/60">
+						Sync your favorites and settings across devices. Everything keeps working without an
+						account.
+					</p>
+				</header>
 				<button class="action-tertiary min-h-11 rounded-full" onclick={signIn} disabled={signingIn}>
 					<GoogleIcon />
 					Sign in with Google
@@ -126,10 +125,6 @@
 
 	<section class="space-y-ch">
 		<h2 class="h3">App icon</h2>
-		<p class="text-sm text-current/60">
-			Used for the browser tab and the sidebar{user ? ', and synced to your account' : ''}. On a
-			home screen, re-add the app to pick up a new icon.
-		</p>
 
 		<fieldset class="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-ch">
 			<legend class="sr-only">App icon</legend>

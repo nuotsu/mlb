@@ -130,7 +130,7 @@
 /* utilities */
 
 @utility no-scrollbar {
-	::-webkit-scrollbar {
+	&::-webkit-scrollbar {
 		display: none;
 	}
 

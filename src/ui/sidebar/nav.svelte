@@ -114,7 +114,7 @@
 
 <Drawer>
 	<div
-		class="relative flex h-full flex-col overflow-x-clip overflow-y-auto pt-ch sidebar-open:gap-ch"
+		class="relative no-scrollbar flex h-full flex-col overflow-x-clip overflow-y-auto overscroll-y-contain pt-ch sidebar-open:gap-ch"
 	>
 		<div class="mb-ch sm:sidebar-closed-hidden">
 			<a class="flex items-center gap-ch" href="/">
@@ -162,7 +162,7 @@
 
 		<!-- account | theme (centered) | version; stacked in the collapsed rail -->
 		<div
-			class="grid grid-cols-[1fr_auto_1fr] items-center gap-ch border-t border-stroke/50 pt-ch pr-ch pb-[max(1ch,env(safe-area-inset-bottom))] pl-[max(1ch,env(safe-area-inset-left))] sidebar-not-open:grid-cols-1 sidebar-not-open:*:col-start-auto"
+			class="grid grid-cols-[1fr_auto_1fr] items-center gap-ch overflow-y-clip border-t border-stroke/50 pt-ch pr-ch pb-[max(1ch,env(safe-area-inset-bottom))] pl-[max(1ch,env(safe-area-inset-left))] sidebar-not-open:grid-cols-1 sidebar-not-open:*:col-start-auto"
 		>
 			<Account class="col-start-1 justify-self-start" />
 
