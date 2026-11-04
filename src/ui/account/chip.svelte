@@ -1,8 +1,8 @@
 <script lang="ts">
+	import { teamColor } from '#lib/team-colors.js'
 	import { cn } from '#lib/utils.js'
 	import { CloseIcon } from '#ui/icons/index.js'
 	import Headshot from '#ui/player/headshot.svelte'
-	import Logo from '#ui/team/logo.svelte'
 
 	let {
 		href,
@@ -15,7 +15,7 @@
 	}: {
 		href: string
 		label: string
-		/** Shows the team's logo and a wash of its colors */
+		/** Shows the team's cap logo on its primary color */
 		teamId?: number
 		/** Shows the player's headshot */
 		personId?: number
@@ -23,20 +23,29 @@
 		removeLabel: string
 		onremove: () => void
 	} = $props()
+
+	// Falls back to the team's spot image when there's no on-dark cap logo
+	let fallback = $state(false)
 </script>
 
 <li
-	class={cn(
-		'relative isolate flex anim-fade-to-r items-center overflow-hidden rounded-full border border-current/25 transition-colors has-[a:hover]:border-accent',
-		teamId && 'before:opacity-25 dark:before:opacity-40',
-	)}
-	style:--team-bg={teamId
-		? `url(https://midfield.mlbstatic.com/v1/team/${teamId}/spots/32)`
-		: undefined}
+	class="flex anim-fade-to-r items-center rounded-full border border-current/25 transition-colors has-[a:hover]:border-accent"
 >
 	<a class="flex items-center gap-[.5ch] py-[.25ch] pl-[.25ch] text-sm" {href} {title}>
 		{#if teamId}
-			<Logo class="size-6" team={{ id: teamId, name: label } as MLB.Team} />
+			<span class="block size-6 shrink-0 rounded-full" style:background-color={teamColor(teamId)}>
+				<img
+					class={cn('size-full rounded-full', fallback ? 'object-cover' : 'object-contain p-[18%]')}
+					src={fallback
+						? `https://midfield.mlbstatic.com/v1/team/${teamId}/spots/72`
+						: `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${teamId}.svg`}
+					alt=""
+					width="72"
+					height="72"
+					draggable="false"
+					onerror={() => (fallback = true)}
+				/>
+			</span>
 		{:else if personId}
 			<Headshot class="size-6 shrink-0" person={{ id: personId }} size={72} />
 		{/if}
