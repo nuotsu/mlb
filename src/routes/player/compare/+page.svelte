@@ -3,12 +3,10 @@
 	import { formatDate, getToday } from '#lib/temporal.js'
 	import Controls from '#ui/compare/controls.svelte'
 	import { fetchComparison } from '#ui/compare/fetch.js'
-	import LayoutBars from '#ui/compare/layout-bars.svelte'
-	import LayoutTable from '#ui/compare/layout-table.svelte'
-	import LayoutTiles from '#ui/compare/layout-tiles.svelte'
-	import { LAYOUTS, type CompareQuery, type LayoutId } from '#ui/compare/options.js'
+	import type { CompareQuery } from '#ui/compare/options.js'
 	import { compareStore } from '#ui/compare/store.svelte.js'
 	import Summary from '#ui/compare/summary.svelte'
+	import CompareTable from '#ui/compare/table.svelte'
 	import Empty from '#ui/empty.svelte'
 	import Header from '#ui/header.svelte'
 	import Loading from '#ui/loading.svelte'
@@ -29,15 +27,12 @@
 		endDate: iso(today),
 	})
 	let selected = $state(new Set(standardKeys('hitting')))
-	let layout = $state<LayoutId>(
-		LAYOUTS.find((l) => l.id === page.url.searchParams.get('layout'))?.id ?? 'table',
-	)
 
 	let players = $state<ComparePlayer[]>([])
 	let loading = $state(false)
 	let error = $state<string>()
 
-	// Only players, group, and scope refetch; toggling stats or layouts is instant
+	// Only players, group, and scope refetch; toggling stats is instant
 	$effect(() => {
 		if (!browser) return
 		const q = { ...$state.snapshot(query), ids: [...compareStore.ids] }
@@ -61,7 +56,7 @@
 	let sections = $derived(buildSections(query.group, players, selected))
 	let tally = $derived(tallyLeads(sections, players.length))
 
-	// Keep `ids` and `layout` in the URL
+	// Keep `ids` in the URL
 	$effect(() => {
 		if (!browser) return
 
@@ -70,9 +65,6 @@
 
 		if (ids.length) url.searchParams.set('ids', ids.join(','))
 		else url.searchParams.delete('ids')
-
-		if (layout !== 'table') url.searchParams.set('layout', layout)
-		else url.searchParams.delete('layout')
 
 		if (url.toString() !== page.url.toString()) {
 			goto(url.toString(), { replace: true, reset: false })
@@ -88,7 +80,7 @@
 	]}
 />
 
-<Controls bind:query bind:selected bind:layout />
+<Controls bind:query bind:selected />
 
 <section
 	id="compare-results"
@@ -113,12 +105,8 @@
 
 			{#if !sections.length}
 				<Empty>No {query.group} stats for these players</Empty>
-			{:else if layout === 'bars'}
-				<LayoutBars {players} {sections} />
-			{:else if layout === 'tiles'}
-				<LayoutTiles {players} {sections} />
 			{:else}
-				<LayoutTable {players} {sections} />
+				<CompareTable {players} {sections} />
 			{/if}
 
 			{#if players.length === 1}

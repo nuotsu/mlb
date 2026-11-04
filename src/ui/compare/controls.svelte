@@ -5,16 +5,14 @@
 	import { cn } from '#lib/utils.js'
 	import PillSwitcher from '#ui/pill-switcher.svelte'
 	import SelectSeason from '#ui/stats/select-season.svelte'
-	import { GROUPS, LAYOUTS, SCOPES, type CompareQuery, type LayoutId } from './options'
+	import { GROUPS, SCOPES, type CompareQuery } from './options'
 
 	let {
 		query = $bindable(),
 		selected = $bindable(),
-		layout = $bindable(),
 	}: {
 		query: CompareQuery
 		selected: Set<string>
-		layout: LayoutId
 	} = $props()
 
 	const today = getToday()
@@ -45,7 +43,7 @@
 </script>
 
 <div class="space-y-ch px-ch">
-	<div class="flex flex-wrap items-center justify-between gap-ch">
+	<div class="flex flex-wrap items-center gap-ch">
 		<PillSwitcher
 			class="mx-0"
 			id="compare-group"
@@ -56,18 +54,6 @@
 			onchange={setGroup}
 		/>
 
-		<PillSwitcher
-			class="mx-0"
-			id="compare-layout"
-			aria-label="Layout"
-			options={LAYOUTS}
-			value={layout}
-			controls="compare-results"
-			onchange={(next) => (layout = next)}
-		/>
-	</div>
-
-	<div class="flex flex-wrap items-center gap-ch">
 		<select class="button h-lh" aria-label="Stat scope" bind:value={query.scope}>
 			{#each SCOPES as { id, label } (id)}
 				<option value={id}>{label}</option>

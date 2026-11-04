@@ -21,14 +21,6 @@ export const SCOPES: {
 	{ id: 'vsTeam', label: 'vs Team', types: ['vsTeamTotal'] },
 ]
 
-export type LayoutId = 'table' | 'bars' | 'tiles'
-
-export const LAYOUTS: { id: LayoutId; label: string }[] = [
-	{ id: 'table', label: 'Table' },
-	{ id: 'bars', label: 'Head to head' },
-	{ id: 'tiles', label: 'Tiles' },
-]
-
 export type CompareQuery = {
 	ids: number[]
 	group: CompareGroup

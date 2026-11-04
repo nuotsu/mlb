@@ -361,15 +361,12 @@ export type Cell = {
 	display: string
 	value?: number
 	verdict: Verdict
-	/** 0–1, the value relative to the largest one in the row, for bar lengths */
-	share: number
 }
 
 /** Rank one stat across players: the best gets `best`, the worst `worst`, ties included */
 export function compareRow(def: StatDef, raw: unknown[]): Cell[] {
 	const values = raw.map((v) => toNumber(def.key, v))
 	const nums = values.filter((n): n is number => n != null)
-	const max = Math.max(...nums.map(Math.abs), 0)
 
 	const ranked = !def.neutral && nums.length >= 2 && new Set(nums).size > 1
 	const best = def.lower ? Math.min(...nums) : Math.max(...nums)
@@ -386,7 +383,6 @@ export function compareRow(def: StatDef, raw: unknown[]): Cell[] {
 					: value === worst
 						? 'worst'
 						: undefined,
-		share: value == null || !max ? 0 : Math.abs(value) / max,
 	}))
 }
 
@@ -446,10 +442,4 @@ export function tallyLeads(sections: CompareSection[], count: number) {
 export const VERDICT_CLASS: Record<NonNullable<Verdict>, string> = {
 	best: 'bg-green-500/15 positive',
 	worst: 'bg-red-500/10 negative',
-}
-
-/** Solid fills for bars */
-export const VERDICT_FILL: Record<NonNullable<Verdict>, string> = {
-	best: 'bg-green-500/60',
-	worst: 'bg-red-400/50',
 }
