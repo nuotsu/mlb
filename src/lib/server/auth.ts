@@ -22,13 +22,23 @@ export const authEnabled =
 /** Google only allows exact redirect URIs, so previews sign in through production */
 export const PRODUCTION_URL = 'https://mlb.theohtani.com'
 
+/**
+ * The one fixed origin auth runs on, when there is one. Production is always the production
+ * domain: it's the redirect URI registered with Google, and it must not depend on
+ * `BETTER_AUTH_URL` being set (without it, only the `*.vercel.app` hosts would be trusted and
+ * sign-in from the live domain fails with "Invalid origin"). Elsewhere it's `BETTER_AUTH_URL`.
+ */
+export const AUTH_URL: string | undefined =
+	VERCEL_ENV === 'production' ? PRODUCTION_URL : BETTER_AUTH_URL
+
 /*
-	Base URL: `BETTER_AUTH_URL` when set (production, local). On Vercel previews, leave it unset:
-	the request host is used if it's this deployment's branch or deployment URL (anything else is
-	rejected). Google still only sees the production callback, via the OAuth proxy below.
+	Base URL: `AUTH_URL` when fixed (production, local). On Vercel previews, leave
+	`BETTER_AUTH_URL` unset: the request host is used if it's this deployment's branch or
+	deployment URL (anything else is rejected). Google still only sees the production callback,
+	via the OAuth proxy below.
 */
 function baseURL(): BetterAuthOptions['baseURL'] {
-	if (BETTER_AUTH_URL) return BETTER_AUTH_URL
+	if (AUTH_URL) return AUTH_URL
 
 	const hosts = [VERCEL_BRANCH_URL, VERCEL_URL].filter((h): h is string => !!h)
 	if (!hosts.length) return undefined // dev: inferred from the request
