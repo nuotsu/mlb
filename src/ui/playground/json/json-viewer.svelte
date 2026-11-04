@@ -7,6 +7,16 @@
 
 <script lang="ts">
 	import { createVirtualizer } from '@tanstack/svelte-virtual'
+	import ArrowUpIcon from '#ui/icons/arrow-up.svelte'
+	import CloseIcon from '#ui/icons/close.svelte'
+	import CodeIcon from '#ui/icons/code.svelte'
+	import CollapseVerticalIcon from '#ui/icons/collapse-vertical.svelte'
+	import CopyIcon from '#ui/icons/copy.svelte'
+	import DownloadIcon from '#ui/icons/download.svelte'
+	import ExpandVerticalIcon from '#ui/icons/expand-vertical.svelte'
+	import FilterIcon from '#ui/icons/filter.svelte'
+	import ListUnorderedIcon from '#ui/icons/list-unordered.svelte'
+	import PathIcon from '#ui/icons/path.svelte'
 	import { onMount, tick } from 'svelte'
 	import { get } from 'svelte/store'
 	import JsonSkeleton from './json-skeleton.svelte'
@@ -456,15 +466,19 @@
 		<div class="flex" role="group" aria-label="View">
 			<button
 				type="button"
-				class={['tool', view === 'tree' && 'active']}
+				class={['tool icon', view === 'tree' && 'active']}
 				aria-pressed={view === 'tree'}
-				onclick={() => (view = 'tree')}>Tree</button
+				aria-label="Tree view"
+				title="Tree view"
+				onclick={() => (view = 'tree')}><ListUnorderedIcon /></button
 			>
 			<button
 				type="button"
-				class={['tool', view === 'raw' && 'active']}
+				class={['tool icon', view === 'raw' && 'active']}
 				aria-pressed={view === 'raw'}
-				onclick={showRaw}>Raw</button
+				aria-label="Raw JSON"
+				title="Raw JSON"
+				onclick={showRaw}><CodeIcon /></button
 			>
 		</div>
 
@@ -493,39 +507,52 @@
 			<div class="flex" role="group" aria-label="Matches">
 				<button
 					type="button"
-					class="tool"
+					class="tool icon"
 					aria-label="Previous match"
+					title="Previous match (Shift+Enter)"
 					disabled={!matches.length}
-					onclick={() => goToMatch(current - 1)}>↑</button
+					onclick={() => goToMatch(current - 1)}><ArrowUpIcon /></button
 				>
 				<button
 					type="button"
-					class="tool"
+					class="tool icon"
 					aria-label="Next match"
+					title="Next match (Enter)"
 					disabled={!matches.length}
-					onclick={() => goToMatch(current + 1)}>↓</button
+					onclick={() => goToMatch(current + 1)}><ArrowUpIcon class="rotate-180" /></button
 				>
 				<button
 					type="button"
-					class={['tool', filterMatches && 'active']}
+					class={['tool icon', filterMatches && 'active']}
 					aria-pressed={filterMatches}
+					aria-label="Only matching rows"
+					title="Only matching rows"
 					disabled={!matches.length}
-					title="Show only matching rows"
 					onclick={() => {
 						filterMatches = !filterMatches
 						goToMatch(current)
-					}}>Only matches</button
+					}}><FilterIcon /></button
 				>
 			</div>
 
 			<div class="flex items-center" role="group" aria-label="Folding">
-				<button type="button" class="tool" disabled={!table} onclick={() => setDepth(Infinity)}
-					>Expand all</button
+				<button
+					type="button"
+					class="tool icon"
+					aria-label="Expand all"
+					title="Expand all"
+					disabled={!table}
+					onclick={() => setDepth(Infinity)}><ExpandVerticalIcon /></button
 				>
-				<button type="button" class="tool" disabled={!table} onclick={() => setDepth(1)}
-					>Collapse all</button
+				<button
+					type="button"
+					class="tool icon"
+					aria-label="Collapse all"
+					title="Collapse all"
+					disabled={!table}
+					onclick={() => setDepth(1)}><CollapseVerticalIcon /></button
 				>
-				<label class="tool flex items-center gap-[.5ch]">
+				<label class="tool flex items-center gap-[.5ch]" title="Expand to depth">
 					<span>Depth</span>
 					<select
 						class="bg-transparent"
@@ -548,12 +575,19 @@
 		<div class="ml-auto flex">
 			<button
 				type="button"
-				class="tool"
+				class="tool icon"
+				aria-label="Copy full response"
+				title="Copy full response"
 				disabled={!table && !failed}
-				onclick={() => copy(failed ? text : stringifyJson(0), 'response')}
-				>Copy full response</button
+				onclick={() => copy(failed ? text : stringifyJson(0), 'response')}><CopyIcon /></button
 			>
-			<button type="button" class="tool" onclick={download}>Download .json</button>
+			<button
+				type="button"
+				class="tool icon"
+				aria-label="Download .json"
+				title="Download {fileName}"
+				onclick={download}><DownloadIcon /></button
+			>
 		</div>
 	</div>
 
@@ -568,7 +602,10 @@
 				<p class="mb-ch text-white/70">
 					This response is {(text.length / 1024).toFixed(0)} KB; too big to show as plain text.
 				</p>
-				<button type="button" class="action" onclick={download}>Download {fileName}</button>
+				<button type="button" class="action" onclick={download}>
+					<DownloadIcon />
+					{fileName}
+				</button>
 			{:else if rawPretty === null}
 				<JsonSkeleton lines={8} />
 			{:else}
@@ -638,11 +675,19 @@
 							<span class="p">{m.trailing}</span>
 							{#if !touch}
 								<span class="actions">
-									<button type="button" disabled={m.close} onclick={() => copyValue(m.i)}
-										>Copy value</button
+									<button
+										type="button"
+										aria-label="Copy value"
+										title="Copy value"
+										disabled={m.close}
+										onclick={() => copyValue(m.i)}><CopyIcon /></button
 									>
-									<button type="button" disabled={m.close} onclick={() => copyPath(m.i)}
-										>Copy path</button
+									<button
+										type="button"
+										aria-label="Copy path"
+										title="Copy path"
+										disabled={m.close}
+										onclick={() => copyPath(m.i)}><PathIcon /></button
 									>
 								</span>
 							{/if}
@@ -687,40 +732,50 @@
 			</header>
 			<pre
 				class="max-h-[40svh] overflow-auto bg-white/5 p-ch text-xs break-all whitespace-pre-wrap">{selectedInfo.value}</pre>
-			<menu class="grid grid-cols-2 gap-[.5ch] *:grid">
-				<li>
-					<button type="button" class="sheet-action" onclick={() => copyValue(node)}>
-						Copy {selectedInfo.container ? 'JSON' : 'value'}
-					</button>
-				</li>
-				<li>
-					<button type="button" class="sheet-action" onclick={() => copyPath(node)}
-						>Copy path</button
+			{#if selectedInfo.link}
+				<a class="sheet-action" href={selectedInfo.link} onclick={() => dialog?.close()}
+					>Open {selectedInfo.link}</a
+				>
+			{/if}
+			{#if selectedInfo.container && table && table.size[node]}
+				<button
+					type="button"
+					class="sheet-action"
+					onclick={() => {
+						toggle(node)
+						dialog?.close()
+					}}
+				>
+					{isCollapsed(table, node, folding) ? 'Expand' : 'Collapse'}
+				</button>
+			{/if}
+			<menu class="flex gap-[.5ch]">
+				<li class="grid grow">
+					<button
+						type="button"
+						class="sheet-action"
+						aria-label="Copy {selectedInfo.container ? 'JSON' : 'value'}"
+						title="Copy {selectedInfo.container ? 'JSON' : 'value'}"
+						onclick={() => copyValue(node)}><CopyIcon /></button
 					>
 				</li>
-				{#if selectedInfo.link}
-					<li class="col-span-2">
-						<a class="sheet-action" href={selectedInfo.link} onclick={() => dialog?.close()}
-							>Open {selectedInfo.link}</a
-						>
-					</li>
-				{/if}
-				{#if selectedInfo.container && table && table.size[node]}
-					<li class="col-span-2">
-						<button
-							type="button"
-							class="sheet-action"
-							onclick={() => {
-								toggle(node)
-								dialog?.close()
-							}}
-						>
-							{isCollapsed(table, node, folding) ? 'Expand' : 'Collapse'}
-						</button>
-					</li>
-				{/if}
-				<li class="col-span-2">
-					<button type="button" class="sheet-action" onclick={() => dialog?.close()}>Close</button>
+				<li class="grid grow">
+					<button
+						type="button"
+						class="sheet-action"
+						aria-label="Copy path"
+						title="Copy path"
+						onclick={() => copyPath(node)}><PathIcon /></button
+					>
+				</li>
+				<li class="grid">
+					<button
+						type="button"
+						class="sheet-action aspect-square"
+						aria-label="Close"
+						title="Close"
+						onclick={() => dialog?.close()}><CloseIcon /></button
+					>
 				</li>
 			</menu>
 		</div>
@@ -766,6 +821,21 @@
 
 		& + & {
 			border-left: 0;
+		}
+
+		&.icon {
+			justify-content: center;
+			min-width: 2rem;
+			padding-inline: 0;
+
+			@media (pointer: coarse) {
+				min-width: 2.75rem;
+			}
+		}
+
+		:global(svg) {
+			width: 1.15em;
+			height: 1.15em;
 		}
 
 		@media (pointer: coarse) {
@@ -904,10 +974,17 @@
 		flex-shrink: 0;
 
 		button {
-			padding-inline: 0.5ch;
+			display: grid;
+			place-items: center;
+			width: 2.5ch;
+			height: calc(var(--row) - 4px);
 			border: 1px solid rgb(255 255 255 / 0.25);
 			background: var(--bg);
-			line-height: 1.4;
+
+			:global(svg) {
+				width: 1.1em;
+				height: 1.1em;
+			}
 
 			&:hover {
 				border-color: var(--key);
@@ -962,6 +1039,11 @@
 		border: 1px solid rgb(255 255 255 / 0.25);
 		text-align: center;
 		word-break: break-all;
+
+		:global(svg) {
+			width: 1.25rem;
+			height: 1.25rem;
+		}
 
 		&:hover {
 			border-color: var(--key, #72f088);

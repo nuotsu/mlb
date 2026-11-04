@@ -73,10 +73,10 @@
 			{/if}
 			{#if request}
 				<li>
-					<ClickToCopy value={request.mlbUrl} class="action-tertiary">Copy full URL</ClickToCopy>
+					<ClickToCopy value={request.mlbUrl} class="action-tertiary">Full URL</ClickToCopy>
 				</li>
 				<li>
-					<ClickToCopy value={request.endpoint} class="action-tertiary">Copy endpoint</ClickToCopy>
+					<ClickToCopy value={request.endpoint} class="action-tertiary">Endpoint</ClickToCopy>
 				</li>
 			{/if}
 		</menu>

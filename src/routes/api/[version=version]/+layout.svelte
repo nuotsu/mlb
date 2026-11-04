@@ -88,7 +88,10 @@
 
 <Header title="Stats API Playground" crumbs={[{ name: 'Stats API Playground' }]} />
 
-<section class="flex flex-col gap-y-ch pt-lh sm:max-h-[calc(100dvh-var(--header-height))]">
+<!-- Desktop: fit the viewport so the response scrolls on its own; `main` loses 1ch to the open sidebar's frame -->
+<section
+	class="flex flex-col gap-y-ch pt-lh sm:max-h-[calc(100dvh-var(--header-height))] sm:sidebar-open:max-h-[calc(100dvh-1ch-var(--header-height))]"
+>
 	<article class="bg-background">
 		<form id="playground-form" class="grid gap-ch px-ch" method="POST" {onsubmit}>
 			<input name="rendered-endpoint" value={page.data.endpointKey} type="hidden" />
@@ -121,8 +124,11 @@
 						class={request.valid ? '' : 'text-[red]'}>{request.endpoint}</span
 					>
 				</code>
-				<ClickToCopy value={request.mlbUrl} class="action-tertiary shrink-0 max-sm:min-h-9">
-					Copy
+				<ClickToCopy
+					value={request.mlbUrl}
+					class="shrink-0 p-[.25ch] text-current/60 hover:text-current max-sm:p-ch [&_svg]:size-[1.2em]"
+				>
+					<span class="sr-only">Copy request URL</span>
 				</ClickToCopy>
 			</div>
 
