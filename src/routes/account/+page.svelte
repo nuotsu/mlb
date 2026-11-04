@@ -126,14 +126,8 @@
 		</section>
 	{/if}
 
-	<section class="space-y-lh">
-		<header class="space-y-[.25ch]">
-			<h2 class="h3">App icon</h2>
-			<p class="text-sm text-current/60">
-				Used for the browser tab and the sidebar{user ? ', and synced to your account' : ''}. On a
-				home screen, re-add the app to pick up a new icon.
-			</p>
-		</header>
+	<section class="space-y-ch">
+		<h2 class="h3">App icon</h2>
 
 		<fieldset class="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-ch">
 			<legend class="sr-only">App icon</legend>
