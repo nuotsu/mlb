@@ -1,3 +1,4 @@
+import { settingsChanged } from '#ui/account/changes.js'
 import { browser } from '$app/env'
 
 const KEY = 'compare'
@@ -32,12 +33,15 @@ export const compareStore = $state({
 		if (!this.has(id)) {
 			this.ids.push(id)
 			this._save()
+			settingsChanged()
 		}
 	},
 
 	remove(id: number) {
+		if (!this.has(id)) return
 		this.ids = this.ids.filter((i) => i !== id)
 		this._save()
+		settingsChanged()
 	},
 
 	toggle(id: number) {
@@ -46,6 +50,12 @@ export const compareStore = $state({
 		} else {
 			this.add(id)
 		}
+	},
+
+	/** Replace everything (from the account) without reporting it as a change */
+	_replace(ids: number[]) {
+		this.ids = [...ids]
+		this._save()
 	},
 
 	_save() {

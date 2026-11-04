@@ -20,7 +20,6 @@
 		readStoredDelay,
 		restoreDelayScript,
 		toTimecode,
-		writeStoredDelay,
 		type GameSnapshot,
 	} from '#lib/time-travel.js'
 	import { cn } from '#lib/utils.js'
@@ -35,6 +34,7 @@
 	import HomeRuns from '#ui/game/home-runs.svelte'
 	import Reviews from '#ui/game/reviews.svelte'
 	import SectionNav from '#ui/game/section-nav.svelte'
+	import { saveStoredDelay } from '#ui/game/stored-delay.js'
 	import TimeTravel from '#ui/game/time-travel.svelte'
 	import TopPerformers from '#ui/game/top-performers.svelte'
 	import Umpires from '#ui/game/umpires/umpires.svelte'
@@ -71,7 +71,7 @@
 	// Save the delay for this game and keep it on the address (the address bar, not
 	// `page.url`: shallow updates like `?view=` live only there)
 	$effect(() => {
-		writeStoredDelay(localStorage, params.gamePk, delay)
+		saveStoredDelay(params.gamePk, delay)
 
 		const url = new URL(location.href)
 		const seconds = delay == null ? null : String(Math.round(delay / 1000))
@@ -106,7 +106,7 @@
 				if (next && current === generation) {
 					snapshot = next
 					// Still watching delayed, so keep it saved
-					writeStoredDelay(localStorage, gamePk, ms)
+					saveStoredDelay(gamePk, ms)
 				}
 			} catch {
 				// Keep the last snapshot; the next tick tries again
@@ -125,7 +125,7 @@
 
 	/** Leaving: save the exact moment on screen, to pick up from there on the way back */
 	function saveMoment() {
-		if (delay != null && !goingLive) writeStoredDelay(localStorage, params.gamePk, delay)
+		if (delay != null && !goingLive) saveStoredDelay(params.gamePk, delay)
 	}
 	beforeNavigate(saveMoment)
 
@@ -147,7 +147,7 @@
 		// A page that loaded delayed has no data past the delay; a finished game won't be
 		// polled for it either, so load it (which also clears the delay)
 		if (next == null && !isGameLive && !data.feedLive) {
-			writeStoredDelay(localStorage, params.gamePk, null)
+			saveStoredDelay(params.gamePk, null)
 			const url = new URL(location.href)
 			url.searchParams.delete(DELAY_PARAM)
 			goingLive = true

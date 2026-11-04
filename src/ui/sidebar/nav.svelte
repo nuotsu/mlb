@@ -22,9 +22,7 @@
 	import Account from './account.svelte'
 	import CompareList from './compare-list.svelte'
 	import Drawer from './drawer.svelte'
-	import FavoritesList from './favorites-list.svelte'
 	import GameCount from './game-count.svelte'
-	import SpoilerPreventionList from './spoiler-prevention-list.svelte'
 	import ToggleColorScheme from './toggle-color-scheme.svelte'
 
 	// The chosen app icon only exists in the browser; swap it in after hydration
@@ -156,8 +154,6 @@
 
 		<ul class="mt-auto text-sm *:py-[2px] sidebar-not-open:landscape:max-lg:overflow-clip">
 			<li><CompareList /></li>
-			<li><FavoritesList /></li>
-			<li><SpoilerPreventionList /></li>
 		</ul>
 
 		<!-- account | theme (centered) | version; stacked in the collapsed rail -->

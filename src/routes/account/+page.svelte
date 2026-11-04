@@ -3,6 +3,8 @@
 	import { APP_ICONS } from '#lib/account.js'
 	import { APP_ICON_LABELS, appIconSrc } from '#lib/app-icon.js'
 	import Avatar from '#ui/account/avatar.svelte'
+	import Favorites from '#ui/account/favorites.svelte'
+	import SpoilerPrevention from '#ui/account/spoiler-prevention.svelte'
 	import { accountStore } from '#ui/account/store.svelte.js'
 	import { appIconStore } from '#ui/app-icon/store.svelte.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
@@ -64,7 +66,10 @@
 	}
 </script>
 
-<Metadata title="Account | MLB.TheOhtani.com" description="Your account and app settings" />
+<Metadata
+	title="Account | MLB.TheOhtani.com"
+	description="Your account, favorites, and app settings"
+/>
 
 <svelte:head>
 	<meta name="robots" content="noindex" />
@@ -122,6 +127,10 @@
 			{/if}
 		</section>
 	{/if}
+
+	<Favorites />
+
+	<SpoilerPrevention />
 
 	<section class="space-y-ch">
 		<h2 class="h3">App icon</h2>

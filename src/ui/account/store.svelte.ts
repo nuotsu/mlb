@@ -1,6 +1,17 @@
-import type { AccountSession, AccountState, AccountUser, Settings } from '#lib/account.js'
+import {
+	sanitizeMoment,
+	sanitizeTimeTravel,
+	type AccountSession,
+	type AccountState,
+	type AccountUser,
+	type Settings,
+	type TimeTravel,
+	type TimeTravelMoment,
+} from '#lib/account.js'
 import { authClient } from '#lib/auth-client.js'
+import { delayStorageKey } from '#lib/time-travel.js'
 import { appIconStore } from '#ui/app-icon/store.svelte.js'
+import { compareStore } from '#ui/compare/store.svelte.js'
 import { favoritesStore } from '#ui/favorites/store.svelte.js'
 import { onboardingStore } from '#ui/onboarding/store.svelte.js'
 import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
@@ -21,7 +32,7 @@ import {
 	- On sign-in: local data is merged into the account (union favorites, newest settings win),
 	  and the merged result is written back to the local stores.
 	- Signed in: the account is the source of truth. Each page load pulls it into the cache,
-	  and local changes are pushed as they happen.
+	  and local changes are pushed as they happen (time-travel moments throttled, see below).
 	- On sign-out: local stores keep the last synced data and become the source of truth again.
 */
 
@@ -128,12 +139,36 @@ export function initAccount(data: {
 /* Pushes */
 
 let pendingFavorites: Parameters<AccountListener['favorite']>[] = []
+/** Latest moment per game reported while the initial sync was in flight */
+let pendingMoments = new Map<string, TimeTravelMoment | null>()
 let settingsTimer: ReturnType<typeof setTimeout> | undefined
+
+/*
+	Time travel saves the moment on screen every few seconds while a game plays behind live.
+	The delay stays the same throughout, so a game's moment is pushed when it starts, when its
+	delay changes, when it's forgotten, and otherwise at most once a minute (to keep it fresh).
+*/
+const MOMENT_REFRESH_MS = 60_000
+/** A delay this close to the last pushed one counts as unchanged */
+const MOMENT_TOLERANCE_MS = 5_000
+const pushedMoments = new Map<string, TimeTravelMoment>()
+
+function shouldPushMoment(gamePk: string, moment: TimeTravelMoment) {
+	const last = pushedMoments.get(gamePk)
+	if (!last) return true
+	const delay = moment.savedAt - moment.at
+	const lastDelay = last.savedAt - last.at
+	return (
+		Math.abs(delay - lastDelay) > MOMENT_TOLERANCE_MS ||
+		moment.savedAt - last.savedAt >= MOMENT_REFRESH_MS
+	)
+}
 
 const queueListener: AccountListener = {
 	// Changes made while the initial sync is in flight are replayed once it lands
 	favorite: (...args) => pendingFavorites.push(args),
 	settings: () => {},
+	moment: (gamePk, moment) => pendingMoments.set(gamePk, moment),
 }
 
 const pushListener: AccountListener = {
@@ -150,6 +185,16 @@ const pushListener: AccountListener = {
 			// Another device saved newer settings: take them
 			if (state && state.settingsUpdatedAt > getSettingsUpdatedAt()) applySettings(state)
 		}, 300)
+	},
+	moment(gamePk, moment) {
+		if (moment == null) {
+			pushedMoments.delete(gamePk)
+			send('/api/account/time-travel', 'DELETE', { gamePk })
+			return
+		}
+		if (!shouldPushMoment(gamePk, moment)) return
+		pushedMoments.set(gamePk, moment)
+		send('/api/account/time-travel', 'PUT', { gamePk, ...moment })
 	},
 }
 
@@ -176,6 +221,7 @@ async function connect(user: AccountUser) {
 
 	favoritesStore._replace(state.favorites)
 	applySettings(state)
+	applyTimeTravel(state.timeTravel)
 	localStorage.setItem(SYNCED_USER, user.id)
 	accountStore.status = 'synced'
 
@@ -184,12 +230,16 @@ async function connect(user: AccountUser) {
 		if (action === 'add') favoritesStore.add(favorite)
 		else favoritesStore.remove(favorite)
 	}
+	for (const [gamePk, moment] of pendingMoments) pushListener.moment(gamePk, moment)
+	pendingMoments.clear()
 }
 
 function disconnect() {
 	setAccountListener(null)
 	clearTimeout(settingsTimer)
 	pendingFavorites = []
+	pendingMoments = new Map()
+	pushedMoments.clear()
 	accountStore.status = 'idle'
 	if (browser) {
 		localStorage.removeItem(SYNCED_USER)
@@ -206,6 +256,7 @@ function localSettings(): Settings {
 		spoilerPrevention: $state.snapshot(spoilerPreventionStore.teams),
 		onboardingDismissed: $state.snapshot(onboardingStore.dismissed),
 		appIcon: appIconStore.icon,
+		compare: $state.snapshot(compareStore.ids),
 	}
 }
 
@@ -214,6 +265,51 @@ function localState(): AccountState {
 		favorites: $state.snapshot(favoritesStore.favorites),
 		settings: localSettings(),
 		settingsUpdatedAt: getSettingsUpdatedAt(),
+		timeTravel: localTimeTravel(),
+	}
+}
+
+const MOMENT_PREFIX = delayStorageKey('')
+
+/** Every saved, unexpired time-travel moment in localStorage */
+function localTimeTravel(): TimeTravel {
+	const raw: Record<string, unknown> = {}
+	try {
+		for (let i = 0; i < localStorage.length; i++) {
+			const key = localStorage.key(i) ?? ''
+			if (!key.startsWith(MOMENT_PREFIX)) continue
+			try {
+				raw[key.slice(MOMENT_PREFIX.length)] = JSON.parse(localStorage.getItem(key) ?? 'null')
+			} catch {
+				// Skip unreadable entries
+			}
+		}
+	} catch {
+		return {}
+	}
+	return sanitizeTimeTravel(raw)
+}
+
+/**
+ * Take the account's moments: newer ones replace local ones, and local ones the account no
+ * longer has (that game went live on another device) are forgotten. Open pages pick them up
+ * on their next load.
+ */
+function applyTimeTravel(timeTravel: TimeTravel) {
+	try {
+		const local = localTimeTravel()
+		for (const gamePk of Object.keys(local)) {
+			if (!timeTravel[gamePk]) localStorage.removeItem(delayStorageKey(gamePk))
+		}
+		for (const [gamePk, moment] of Object.entries(timeTravel)) {
+			const current = sanitizeMoment(local[gamePk])
+			if (current && current.savedAt >= moment.savedAt) continue
+			localStorage.setItem(delayStorageKey(gamePk), JSON.stringify(moment))
+		}
+		pushedMoments.clear()
+		for (const [gamePk, moment] of Object.entries(timeTravel)) pushedMoments.set(gamePk, moment)
+	} catch {
+		// Storage can be full or blocked
 	}
 }
 
@@ -225,6 +321,7 @@ function applySettings({ settings, settingsUpdatedAt }: AccountState) {
 	if (settings.spoilerPrevention) spoilerPreventionStore._replace(settings.spoilerPrevention)
 	if (settings.onboardingDismissed) onboardingStore._replace(settings.onboardingDismissed)
 	if (settings.appIcon) appIconStore._replace(settings.appIcon)
+	if (settings.compare) compareStore._replace(settings.compare)
 	setSettingsUpdatedAt(settingsUpdatedAt)
 }
 
