@@ -59,9 +59,9 @@ The menu on the left (or the sidebar button on mobile) is the map:
 - **Schedule** — day view for live games, week view for the calendar
 - **League** — standings, stats leaders, transactions
 - **Browse** — teams and player search
-- **Favorites** — whatever you've starred, always one click away
-- **Spoiler Prevention** — teams whose scores you want hidden
 - **Compare** — put two players side by side
+
+Your **Favorites** (whatever you've starred) and **Spoiler Prevention** teams (scores you want hidden) live on the [Account](/account) page, behind the person icon at the bottom of the sidebar.
 
 There's also a light/dark toggle at the bottom of the sidebar.
 

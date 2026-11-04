@@ -15,9 +15,9 @@
 <a
 	class={['tap', className, { active }]}
 	href="/account"
-	aria-label={user ? `Account: ${user.name}` : 'Account and settings'}
+	aria-label={user ? `Account: ${user.name}` : 'Account, favorites, and settings'}
 	aria-current={active ? 'page' : undefined}
-	title={user ? user.name : 'Account and settings'}
+	title={user ? user.name : 'Account, favorites, and settings'}
 >
 	{#if user}
 		<Avatar {user} class="avatar text-xs" size={28} />
