@@ -1,3 +1,5 @@
+import { DELAY_TTL_MS } from './time-travel.js'
+
 /*
 	Shared (client + server) shapes for account data. These mirror what the app keeps in
 	localStorage, so the account copy and the local cache can be swapped freely.
@@ -60,8 +62,8 @@ export function unionFavorites(...lists: App.Favorite[][]): App.Favorite[] {
 }
 
 /*
-	Settings: device-independent preferences. Device-specific or short-lived keys
-	(`sidebar-open`, `compare`, time-travel delays) intentionally stay local only.
+	Settings: device-independent preferences. Device-specific keys (`sidebar-open`) stay local
+	only. Time-travel moments sync too, but separately (see `TimeTravel` below).
 */
 
 export const COLOR_SCHEMES = ['light', 'dark', 'auto'] as const
@@ -83,6 +85,67 @@ export type Settings = {
 	onboardingDismissed?: string[]
 	/** localStorage `app-icon` */
 	appIcon?: AppIcon
+	/** localStorage `compare`: player ids, in order */
+	compare?: number[]
+}
+
+export const MAX_COMPARE = 20
+
+/*
+	Time travel: the moment on screen per game (localStorage `time-travel:<gamePk>`), so a game
+	watched behind live on one device resumes at the same pitch on another. Moments are short-lived
+	and refreshed every few seconds while watching, so they don't go through the settings'
+	"newest wins" stamp (that would overwrite settings changed on other devices); each game's
+	moment is merged on its own, newest `savedAt` wins.
+*/
+
+export type TimeTravelMoment = {
+	/** Epoch ms of the moment on screen */
+	at: number
+	/** Epoch ms it was saved */
+	savedAt: number
+}
+
+/** Moments by gamePk */
+export type TimeTravel = Record<string, TimeTravelMoment>
+
+export const MAX_TIME_TRAVEL = 50
+
+/** Validate an untrusted moment, or `null` if it's unusable or expired */
+export function sanitizeMoment(input: unknown, now = Date.now()): TimeTravelMoment | null {
+	if (!input || typeof input !== 'object') return null
+	const { at, savedAt } = input as Record<string, unknown>
+	if (typeof at !== 'number' || typeof savedAt !== 'number') return null
+	if (!Number.isFinite(at) || !Number.isFinite(savedAt) || at <= 0 || at > savedAt) return null
+	if (!(now - savedAt < DELAY_TTL_MS)) return null
+	// Clamp client clocks: never in the future
+	const clamped = Math.min(savedAt, now)
+	return { at: Math.min(at, clamped), savedAt: clamped }
+}
+
+export function isGamePk(input: unknown): input is string {
+	return typeof input === 'string' && /^[1-9]\d{0,9}$/.test(input)
+}
+
+/** Validate untrusted moments, dropping expired ones and keeping the newest few */
+export function sanitizeTimeTravel(input: unknown, now = Date.now()): TimeTravel {
+	if (!input || typeof input !== 'object') return {}
+	const entries = Object.entries(input as Record<string, unknown>).flatMap(([gamePk, raw]) => {
+		const moment = isGamePk(gamePk) ? sanitizeMoment(raw, now) : null
+		return moment ? [[gamePk, moment] as const] : []
+	})
+	return Object.fromEntries(
+		entries.sort(([, a], [, b]) => b.savedAt - a.savedAt).slice(0, MAX_TIME_TRAVEL),
+	)
+}
+
+/** Per game, the newest moment wins */
+export function mergeTimeTravel(a: TimeTravel, b: TimeTravel): TimeTravel {
+	const out: TimeTravel = { ...a }
+	for (const [gamePk, moment] of Object.entries(b)) {
+		if (!out[gamePk] || moment.savedAt > out[gamePk].savedAt) out[gamePk] = moment
+	}
+	return out
 }
 
 export type AccountState = {
@@ -90,6 +153,7 @@ export type AccountState = {
 	settings: Settings
 	/** Epoch ms of the last settings change, 0 if never saved */
 	settingsUpdatedAt: number
+	timeTravel: TimeTravel
 }
 
 /** Validate untrusted settings, dropping anything unexpected */
@@ -122,6 +186,16 @@ export function sanitizeSettings(input: unknown): Settings {
 			.map(({ id, abbreviation }) => ({ id, abbreviation: abbreviation.slice(0, 8) }))
 	}
 
+	if (Array.isArray(raw.compare)) {
+		settings.compare = [
+			...new Set(
+				raw.compare.filter(
+					(id): id is number => Number.isInteger(id) && id > 0 && id <= 2_147_483_647,
+				),
+			),
+		].slice(0, MAX_COMPARE)
+	}
+
 	if (Array.isArray(raw.onboardingDismissed)) {
 		settings.onboardingDismissed = [
 			...new Set(
@@ -139,7 +213,7 @@ export function sanitizeSettings(input: unknown): Settings {
  * Merge local data into the account on sign-in:
  * favorites are unioned, settings come from whichever side changed last (newest wins), with
  * keys the winner never set filled in from the other side. An account that has never saved
- * settings always takes the local ones.
+ * settings always takes the local ones. Time-travel moments merge per game, newest wins.
  */
 export function mergeAccountState(
 	account: AccountState,
@@ -155,6 +229,7 @@ export function mergeAccountState(
 			? { ...account.settings, ...local.settings }
 			: { ...local.settings, ...account.settings },
 		settingsUpdatedAt: localNewer ? local.settingsUpdatedAt || now : account.settingsUpdatedAt,
+		timeTravel: sanitizeTimeTravel(mergeTimeTravel(account.timeTravel, local.timeTravel), now),
 	}
 }
 
