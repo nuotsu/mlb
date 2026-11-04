@@ -53,7 +53,7 @@
 	</a>
 
 	<button
-		class="tap mx-[.25ch] grid size-6 shrink-0 place-items-center rounded-full text-current/60 transition-colors hover:bg-current/10 hover:text-current"
+		class="tap mx-[.25ch] grid size-6 shrink-0 place-items-center rounded-full text-current/60 transition-colors hover:bg-current/10 hover:text-green-700 dark:hover:text-accent"
 		onclick={onremove}
 		aria-label={removeLabel}
 		title={removeLabel}

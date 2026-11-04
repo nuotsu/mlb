@@ -11,16 +11,6 @@
 	let protectedTeams = $derived(mounted ? spoilerPreventionStore.teams : [])
 	let teams = $derived(mounted ? mlbTeams() : undefined)
 	let names = $derived(new Map(teams?.map((t) => [t.id, t.name])))
-	let unprotected = $derived(teams?.filter((t) => !spoilerPreventionStore.has(t.id)) ?? [])
-
-	function add(id: number) {
-		const team = teams?.find((t) => t.id === id)
-		if (!team) return
-		spoilerPreventionStore.add({
-			id: team.id,
-			abbreviation: team.abbreviation ?? team.teamName ?? team.name,
-		})
-	}
 </script>
 
 <section class="space-y-ch">
@@ -31,11 +21,11 @@
 		{/if}
 	</header>
 
-	<p class="text-sm text-current/60">
-		Scores and results for these teams stay hidden until you reveal them.
-	</p>
-
 	{#if protectedTeams.length}
+		<p class="text-sm text-current/60">
+			Scores and results for these teams stay hidden until you reveal them.
+		</p>
+
 		<ul class="flex flex-wrap gap-[.5ch]">
 			{#each protectedTeams as team (team.id)}
 				{@const name = names.get(team.id)}
@@ -48,28 +38,10 @@
 				/>
 			{/each}
 		</ul>
+	{:else}
+		<p class="text-sm text-current/60">
+			Tap the eye on a <a class="link" href="/teams">team</a> to hide its scores and results until you
+			reveal them.
+		</p>
 	{/if}
-
-	<label class="block text-sm">
-		<span class="sr-only">Hide scores for a team</span>
-		<select
-			class="input min-h-11 w-full rounded px-ch"
-			disabled={!unprotected.length}
-			onchange={(e) => {
-				add(Number(e.currentTarget.value))
-				e.currentTarget.value = ''
-			}}
-		>
-			<option value="" selected>
-				{teams
-					? unprotected.length
-						? 'Hide scores for a team…'
-						: 'All teams hidden'
-					: 'Loading teams…'}
-			</option>
-			{#each unprotected as team (team.id)}
-				<option value={team.id}>{team.name}</option>
-			{/each}
-		</select>
-	</label>
 </section>
