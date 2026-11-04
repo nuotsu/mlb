@@ -74,7 +74,7 @@
 <style>
 	:global(body) {
 		display: grid;
-		grid-template: 'nav main' / auto 1fr;
+		grid-template: 'nav main' / auto minmax(0, 1fr);
 		min-height: 100dvh;
 	}
 

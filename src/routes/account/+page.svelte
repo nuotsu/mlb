@@ -74,7 +74,7 @@
 
 <div class="mx-auto grid max-w-xl gap-[2lh] px-ch py-lh">
 	{#if page.data.accounts}
-		<section class="space-y-ch">
+		<section class={user ? 'space-y-ch' : 'space-y-lh'}>
 			{#if user}
 				<div class="flex items-center gap-lh">
 					<div class="relative shrink-0">
@@ -111,11 +111,13 @@
 					<p class="text-xs text-current/60">Couldn't sync. Changes are saved on this device.</p>
 				{/if}
 			{:else}
-				<h2 class="h3">Sign in</h2>
-				<p class="text-sm text-current/60">
-					Sync your favorites and settings across devices. Everything keeps working without an
-					account.
-				</p>
+				<header class="space-y-[.25ch]">
+					<h2 class="h3">Sign in</h2>
+					<p class="text-sm text-current/60">
+						Sync your favorites and settings across devices. Everything keeps working without an
+						account.
+					</p>
+				</header>
 				<button class="action-tertiary min-h-11 rounded-full" onclick={signIn} disabled={signingIn}>
 					<GoogleIcon />
 					Sign in with Google
@@ -124,12 +126,14 @@
 		</section>
 	{/if}
 
-	<section class="space-y-ch">
-		<h2 class="h3">App icon</h2>
-		<p class="text-sm text-current/60">
-			Used for the browser tab and the sidebar{user ? ', and synced to your account' : ''}. On a
-			home screen, re-add the app to pick up a new icon.
-		</p>
+	<section class="space-y-lh">
+		<header class="space-y-[.25ch]">
+			<h2 class="h3">App icon</h2>
+			<p class="text-sm text-current/60">
+				Used for the browser tab and the sidebar{user ? ', and synced to your account' : ''}. On a
+				home screen, re-add the app to pick up a new icon.
+			</p>
+		</header>
 
 		<fieldset class="grid grid-cols-[repeat(auto-fill,minmax(4.5rem,1fr))] gap-ch">
 			<legend class="sr-only">App icon</legend>
