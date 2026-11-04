@@ -52,7 +52,14 @@
 		signingIn = false
 	}
 
-	function revokeOthers() {
+	function signOut() {
+		if (!confirm('Sign out? Your favorites and settings stay on this device.')) return
+		accountStore.signOut()
+	}
+
+	function revokeOthers(others: number) {
+		const devices = others === 1 ? '1 other device' : `${others} other devices`
+		if (!confirm(`Sign out of ${devices}? This device stays signed in.`)) return
 		sessions = accountStore.revokeOtherSessions()
 	}
 </script>
@@ -96,9 +103,7 @@
 						<p class="text-xs text-current/60">
 							Since {formatDate(user.createdAt, { month: 'long', day: 'numeric', year: 'numeric' })}
 						</p>
-						<button class="tap text-xs link" onclick={() => accountStore.signOut()}>
-							Sign out
-						</button>
+						<button class="tap text-xs link" onclick={signOut}> Sign out </button>
 					</div>
 				</div>
 
@@ -185,7 +190,7 @@
 					</ul>
 
 					{#if list.length > 1}
-						<button class="tap text-xs link" onclick={revokeOthers}
+						<button class="tap text-xs link" onclick={() => revokeOthers(list.length - 1)}
 							>Sign out all other devices</button
 						>
 					{/if}

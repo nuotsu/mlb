@@ -67,8 +67,11 @@ export function unionFavorites(...lists: App.Favorite[][]): App.Favorite[] {
 export const COLOR_SCHEMES = ['light', 'dark', 'auto'] as const
 export type ColorScheme = (typeof COLOR_SCHEMES)[number]
 
-/** App icon / favicon choices: `default` is the original, the rest live in /static/app-icons */
-export const APP_ICONS = ['default', 'blue', 'green', 'red', 'black'] as const
+/**
+ * App icon / favicon choices, in picker order. `default` is the original (listed last); the rest
+ * live in /static/app-icons
+ */
+export const APP_ICONS = ['blue', 'green', 'red', 'black', 'default'] as const
 export type AppIcon = (typeof APP_ICONS)[number]
 
 export type Settings = {
