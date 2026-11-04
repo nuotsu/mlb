@@ -7,10 +7,11 @@
 		fetchScorebugAt,
 		SCOREBUG_FIELDS,
 	} from '#lib/fetch/presets.js'
-	import { gameAsOf, readStoredDelay, toTimecode, writeStoredDelay } from '#lib/time-travel.js'
+	import { gameAsOf, readStoredDelay, toTimecode } from '#lib/time-travel.js'
 	import { cn } from '#lib/utils.js'
 	import Linescore from '#ui/game/linescore.svelte'
 	import ProbablePitchers from '#ui/game/probable-pitchers.svelte'
+	import { saveStoredDelay } from '#ui/game/stored-delay.js'
 	import TeamScores from '#ui/game/team-scores.svelte'
 	import { AppleTVIcon, ChevronRightIcon, HistoryIcon } from '#ui/icons/index.js'
 	import Loading from '#ui/loading.svelte'
@@ -82,7 +83,7 @@
 				const next = await fetchScorebugAt(gamePk, toTimecode(Date.now() - ms))
 				if (stopped) return
 				// Still watching delayed, so the saved moment moves along with this card
-				writeStoredDelay(localStorage, gamePk, ms)
+				saveStoredDelay(gamePk, ms)
 				if (next.metaData?.timeStamp !== untrack(() => delayedFeed?.metaData?.timeStamp)) {
 					delayedFeed = next
 				}
@@ -99,7 +100,7 @@
 			stopped = true
 			clearInterval(timer)
 			// Leaving: the game's page picks up from exactly here
-			writeStoredDelay(localStorage, gamePk, ms)
+			saveStoredDelay(gamePk, ms)
 		}
 	})
 

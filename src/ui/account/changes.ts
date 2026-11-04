@@ -1,3 +1,4 @@
+import type { TimeTravelMoment } from '#lib/account.js'
 import { browser } from '$app/env'
 
 /*
@@ -10,6 +11,8 @@ const SETTINGS_UPDATED_AT = 'settings-updated-at'
 export type AccountListener = {
 	favorite(action: 'add' | 'remove', favorite: App.Favorite): void
 	settings(): void
+	/** A game's time-travel moment was saved, or forgotten with `null` */
+	moment(gamePk: string, moment: TimeTravelMoment | null): void
 }
 
 let listener: AccountListener | null = null
@@ -20,6 +23,10 @@ export function setAccountListener(next: AccountListener | null) {
 
 export function favoriteChanged(action: 'add' | 'remove', favorite: App.Favorite) {
 	listener?.favorite(action, favorite)
+}
+
+export function momentChanged(gamePk: string | number, moment: TimeTravelMoment | null) {
+	listener?.moment(String(gamePk), moment)
 }
 
 /** Call after any synced setting changes locally (stamps it for "newest wins") */

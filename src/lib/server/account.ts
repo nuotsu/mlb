@@ -4,12 +4,16 @@ import {
 	mergeAccountState,
 	parseFavoriteHref,
 	sanitizeSettings,
+	sanitizeTimeTravel,
 	type AccountSession,
 	type AccountState,
 	type Settings,
+	type TimeTravel,
+	type TimeTravelMoment,
 } from '#lib/account.js'
+import { DELAY_TTL_MS } from '#lib/time-travel.js'
 import { describeUserAgent } from '#lib/user-agent.js'
-import { and, asc, desc, eq, gt, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, gt, ne, sql, type SQL } from 'drizzle-orm'
 import { getDb } from './db/index.js'
 import { session, userFavorites, userPreferences } from './db/schema.js'
 
@@ -42,6 +46,9 @@ export async function getAccountState(userId: string): Promise<AccountState> {
 		favorites: favorites.map((f) => ({ href: favoriteHref(f), label: f.label })),
 		settings: sanitizeSettings(preferences?.settings),
 		settingsUpdatedAt: preferences?.updatedAt.getTime() ?? 0,
+		timeTravel: sanitizeTimeTravel(
+			(preferences?.settings as { timeTravel?: unknown } | undefined)?.timeTravel,
+		),
 	}
 }
 
@@ -76,6 +83,10 @@ export async function syncAccountState(userId: string, local: AccountState) {
 
 	if (merged.settingsUpdatedAt !== account.settingsUpdatedAt) {
 		writes.push(upsertSettings(userId, merged.settings, merged.settingsUpdatedAt))
+	}
+
+	if (JSON.stringify(merged.timeTravel) !== JSON.stringify(account.timeTravel)) {
+		writes.push(replaceTimeTravel(userId, merged.timeTravel))
 	}
 
 	if (writes.length) await db.batch(writes as [(typeof writes)[number]])
@@ -124,6 +135,15 @@ export async function saveSettings(userId: string, settings: Settings, updatedAt
 	return getAccountState(userId)
 }
 
+/*
+	Time-travel moments live in the same JSON column, under `timeTravel`, but are written on
+	their own: settings writes keep the stored moments, and moment writes leave `updated_at`
+	(the settings' "newest wins" stamp) alone. A row created by a moment gets `updated_at` = 0,
+	so the account still counts as never having saved settings.
+*/
+
+const storedTimeTravel = sql`coalesce(${userPreferences.settings} -> 'timeTravel', '{}'::jsonb)`
+
 function upsertSettings(userId: string, settings: Settings, updatedAt: number) {
 	// Clamp client clocks: never in the future
 	const at = new Date(Math.min(updatedAt || Date.now(), Date.now()))
@@ -133,10 +153,53 @@ function upsertSettings(userId: string, settings: Settings, updatedAt: number) {
 		.values({ userId, settings, updatedAt: at })
 		.onConflictDoUpdate({
 			target: userPreferences.userId,
-			set: { settings, updatedAt: at },
+			set: {
+				settings: sql`excluded.settings || jsonb_build_object('timeTravel', ${storedTimeTravel})`,
+				updatedAt: at,
+			},
 			// Newest wins
 			setWhere: sql`${userPreferences.updatedAt} < ${at}`,
 		})
+}
+
+/** Write the stored moments with `next` (SQL over the current ones), dropping expired ones */
+function writeTimeTravel(userId: string, initial: TimeTravel, next: SQL) {
+	const cutoff = Date.now() - DELAY_TTL_MS
+	return getDb()
+		.insert(userPreferences)
+		.values({ userId, settings: { timeTravel: initial } as Settings, updatedAt: new Date(0) })
+		.onConflictDoUpdate({
+			target: userPreferences.userId,
+			set: {
+				settings: sql`${userPreferences.settings} || jsonb_build_object('timeTravel', (
+					select coalesce(jsonb_object_agg(key, value), '{}'::jsonb)
+					from jsonb_each(${next})
+					where (value ->> 'savedAt')::bigint > ${cutoff}
+				))`,
+			},
+		})
+}
+
+function replaceTimeTravel(userId: string, timeTravel: TimeTravel) {
+	return writeTimeTravel(userId, timeTravel, sql`${JSON.stringify(timeTravel)}::jsonb`)
+}
+
+/** Save one game's moment, unless the account already has a newer one */
+export async function saveMoment(userId: string, gamePk: string, moment: TimeTravelMoment) {
+	const value = JSON.stringify(moment)
+	const storedSavedAt = sql`coalesce((${storedTimeTravel} -> ${gamePk}::text ->> 'savedAt')::bigint, 0)`
+	await writeTimeTravel(
+		userId,
+		{ [gamePk]: moment },
+		sql`case when ${storedSavedAt} < ${moment.savedAt}
+			then ${storedTimeTravel} || jsonb_build_object(${gamePk}::text, ${value}::jsonb)
+			else ${storedTimeTravel} end`,
+	)
+}
+
+/** Forget one game's moment (it went live) */
+export async function forgetMoment(userId: string, gamePk: string) {
+	await writeTimeTravel(userId, {}, sql`${storedTimeTravel} - ${gamePk}::text`)
 }
 
 /** The user's active sessions, current one first */

@@ -3,16 +3,20 @@
 import { describe, expect, test } from 'bun:test'
 import {
 	mergeAccountState,
+	mergeTimeTravel,
 	parseFavoriteHref,
 	sanitizeFavorite,
 	sanitizeSettings,
+	sanitizeTimeTravel,
 	type AccountState,
 } from './account'
+import { DELAY_TTL_MS } from './time-travel'
 
 const state = (partial: Partial<AccountState>): AccountState => ({
 	favorites: [],
 	settings: {},
 	settingsUpdatedAt: 0,
+	timeTravel: {},
 	...partial,
 })
 
@@ -52,11 +56,51 @@ describe('sanitizeSettings', () => {
 					'x',
 				],
 				onboardingDismissed: ['install-pwa', '<script>'],
+				compare: [660271, 660271, -1, 1.5, '592450', 592450],
+				timeTravel: { 776543: { at: 1, savedAt: 2 } },
 				evil: true,
 			}),
 		).toEqual({
 			spoilerPrevention: [{ id: 147, abbreviation: 'NYY' }],
 			onboardingDismissed: ['install-pwa'],
+			compare: [660271, 592450],
+		})
+	})
+})
+
+describe('sanitizeTimeTravel', () => {
+	const now = 1_800_000_000_000
+
+	test('keeps valid, unexpired moments by gamePk', () => {
+		expect(
+			sanitizeTimeTravel(
+				{
+					776543: { at: now - 90_000, savedAt: now - 1_000 },
+					'not-a-game': { at: now - 90_000, savedAt: now },
+					776544: { at: now - 90_000, savedAt: now - DELAY_TTL_MS },
+					776545: { at: now, savedAt: now - 1_000 },
+					776546: { at: '1', savedAt: now },
+				},
+				now,
+			),
+		).toEqual({ 776543: { at: now - 90_000, savedAt: now - 1_000 } })
+	})
+
+	test('clamps moments saved in the future', () => {
+		expect(sanitizeTimeTravel({ 1: { at: now - 5_000, savedAt: now + 60_000 } }, now)).toEqual({
+			1: { at: now - 5_000, savedAt: now },
+		})
+	})
+})
+
+describe('mergeTimeTravel', () => {
+	test('the newest moment per game wins', () => {
+		const old = { at: 100, savedAt: 200 }
+		const fresh = { at: 150, savedAt: 300 }
+		expect(mergeTimeTravel({ 1: old, 2: fresh }, { 1: fresh, 2: old, 3: old })).toEqual({
+			1: fresh,
+			2: fresh,
+			3: old,
 		})
 	})
 })
