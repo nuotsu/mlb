@@ -1,3 +1,4 @@
+import { settingsChanged } from '#ui/account/changes.js'
 import { browser } from '$app/env'
 
 export const HINTS = {
@@ -28,6 +29,15 @@ export const onboardingStore = $state({
 	dismiss(id: HintId) {
 		if (this.isDismissed(id)) return
 		this.dismissed = [...this.dismissed, id]
+		this._save()
+		settingsChanged()
+	},
+
+	/** Replace everything (from the account) without reporting it as a change */
+	_replace(dismissed: string[]) {
+		this.dismissed = dismissed.filter((id): id is HintId =>
+			(Object.values(HINTS) as string[]).includes(id),
+		)
 		this._save()
 	},
 

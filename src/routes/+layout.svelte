@@ -1,16 +1,21 @@
 <script lang="ts">
 	import { analyticsEnabled } from '#lib/analytics.js'
+	import { appIconScript } from '#lib/app-icon.js'
 	import { hideDelayedGamesScript } from '#lib/time-travel.js'
+	import { initAccount } from '#ui/account/store.svelte.js'
 	import Offline from '#ui/offline.svelte'
 	import Sidebar from '#ui/sidebar/nav.svelte'
 	import { browser } from '$app/env'
 	import { afterNavigate, beforeNavigate } from '$app/navigation'
+	import { page } from '$app/state'
 	import posthog from 'posthog-js'
 	import './app.css'
 
 	let { children } = $props()
 
 	if (browser) {
+		initAccount(page.data)
+
 		beforeNavigate(({ shallow }) => {
 			if (shallow || !analyticsEnabled) return
 
@@ -32,6 +37,8 @@
 <svelte:head>
 	<!-- Game cards running behind live stay hidden until the browser shows the delayed moment -->
 	{@html `<script>${hideDelayedGamesScript()}<\/script>`}
+	<!-- The chosen app icon replaces the favicon before first paint -->
+	{@html `<script>${appIconScript()}<\/script>`}
 
 	<link rel="sitemap" type="application/xml" href="/sitemap.xml" />
 

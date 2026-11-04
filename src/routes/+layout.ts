@@ -5,7 +5,7 @@ import posthog from 'posthog-js'
 import type { LayoutLoad } from './$types'
 import '#lib/console.js'
 
-export const load: LayoutLoad = async () => {
+export const load: LayoutLoad = async ({ data }) => {
 	if (browser && analyticsEnabled) {
 		posthog.init(PUBLIC_POSTHOG_KEY, {
 			api_host: '/ph',
@@ -16,5 +16,5 @@ export const load: LayoutLoad = async () => {
 		})
 	}
 
-	return
+	return data
 }
