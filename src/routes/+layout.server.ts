@@ -1,5 +1,4 @@
-import { authEnabled } from '#lib/server/auth.js'
-import { BETTER_AUTH_URL } from '$app/env/private'
+import { AUTH_URL, authEnabled } from '#lib/server/auth.js'
 import type { LayoutServerLoad } from './$types'
 
 export const load: LayoutServerLoad = ({ locals }) => {
@@ -9,10 +8,10 @@ export const load: LayoutServerLoad = ({ locals }) => {
 		/** Whether sign-in is available (same for every visitor, so safe in cached HTML) */
 		accounts: authEnabled,
 		/**
-		 * The one origin Google redirects back to, when it's fixed (`BETTER_AUTH_URL`). Sign-in
+		 * The one origin Google redirects back to, when it's fixed (`AUTH_URL`). Sign-in
 		 * started on another host (a per-commit preview URL, 127.0.0.1) hops here first.
 		 */
-		authOrigin: authEnabled && BETTER_AUTH_URL ? new URL(BETTER_AUTH_URL).origin : null,
+		authOrigin: authEnabled && AUTH_URL ? new URL(AUTH_URL).origin : null,
 		user: user
 			? {
 					id: user.id,

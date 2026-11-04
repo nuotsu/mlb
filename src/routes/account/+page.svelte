@@ -124,6 +124,9 @@
 					<GoogleIcon />
 					Sign in with Google
 				</button>
+				{#if accountStore.signInError}
+					<p class="text-xs text-current/60" role="alert">Couldn't start sign-in. Try again.</p>
+				{/if}
 			{/if}
 		</section>
 	{/if}
