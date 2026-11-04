@@ -81,18 +81,15 @@
 						<Avatar {user} class="size-16 text-2xl" size={64} />
 
 						{#if favoriteTeam}
+							{@const teamId = Number(favoriteTeam.href.split('/').pop())}
+
 							<a
-								class="absolute -right-1 -bottom-1 grid size-7 place-items-center rounded-full bg-background ring-1 ring-current/25"
+								class="absolute -right-1 -bottom-1 isolate grid size-7 place-items-center overflow-clip rounded-full bg-background ring-1 ring-current/25"
 								href={favoriteTeam.href}
+								style:--team-bg="url(https://midfield.mlbstatic.com/v1/team/{teamId}/spots/32)"
 								title="Favorite team: {favoriteTeam.label}"
 							>
-								<Logo
-									class="size-5"
-									team={{
-										id: Number(favoriteTeam.href.split('/').pop()),
-										name: favoriteTeam.label,
-									} as MLB.Team}
-								/>
+								<Logo class="size-5" team={{ id: teamId, name: favoriteTeam.label } as MLB.Team} />
 							</a>
 						{/if}
 					</div>
