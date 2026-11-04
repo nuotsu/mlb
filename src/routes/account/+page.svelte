@@ -3,8 +3,8 @@
 	import { APP_ICONS } from '#lib/account.js'
 	import { APP_ICON_LABELS, appIconSrc } from '#lib/app-icon.js'
 	import Avatar from '#ui/account/avatar.svelte'
-	import Favorites, { FAVORITES_LAYOUTS } from '#ui/account/favorites.svelte'
-	import SpoilerPrevention, { SPOILER_LAYOUTS } from '#ui/account/spoiler-prevention.svelte'
+	import Favorites from '#ui/account/favorites.svelte'
+	import SpoilerPrevention from '#ui/account/spoiler-prevention.svelte'
 	import { accountStore } from '#ui/account/store.svelte.js'
 	import { appIconStore } from '#ui/app-icon/store.svelte.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
@@ -16,10 +16,8 @@
 		GoogleIcon,
 	} from '#ui/icons/index.js'
 	import Metadata from '#ui/metadata.svelte'
-	import PillSwitcher from '#ui/pill-switcher.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import { browser } from '$app/env'
-	import { goto } from '$app/navigation'
 	import { page } from '$app/state'
 	import { onMount } from 'svelte'
 
@@ -39,24 +37,6 @@
 	// Connected devices (browser only); reassigned after "sign out all other devices"
 	let sessions = $derived(browser && user ? accountStore.listSessions() : null)
 	let signingIn = $state(false)
-
-	// Layout preview (temporary): ?favorites=tiles|list|chips&spoilers=tiles|picker|list
-	function layoutParam<T extends string>(key: string, options: readonly T[]): T {
-		const value = page.url.searchParams.get(key) as T
-		return options.includes(value) ? value : options[0]
-	}
-	let favoritesLayout = $derived(layoutParam('favorites', FAVORITES_LAYOUTS))
-	let spoilersLayout = $derived(layoutParam('spoilers', SPOILER_LAYOUTS))
-
-	function setLayout(key: string, value: string) {
-		const url = new URL(page.url.href)
-		url.searchParams.set(key, value)
-		goto(url, { replace: true, reset: false })
-	}
-
-	function options<T extends string>(layouts: readonly T[]) {
-		return layouts.map((id, i) => ({ id, label: `${'ABC'[i]}: ${id}` }))
-	}
 
 	const DEVICE_ICONS = {
 		mobile: DeviceMobileIcon,
@@ -149,36 +129,9 @@
 		</section>
 	{/if}
 
-	<aside
-		class="grid gap-[.5ch] rounded border border-dashed border-accent p-ch text-xs"
-		aria-label="Layout preview"
-	>
-		<p class="text-current/60">Layout preview (temporary)</p>
-		<div class="flex flex-wrap items-center justify-between gap-ch">
-			<span>Favorites</span>
-			<PillSwitcher
-				class="mx-0"
-				id="favorites-layout"
-				options={options(FAVORITES_LAYOUTS)}
-				value={favoritesLayout}
-				onchange={(v) => setLayout('favorites', v)}
-			/>
-		</div>
-		<div class="flex flex-wrap items-center justify-between gap-ch">
-			<span>Spoiler prevention</span>
-			<PillSwitcher
-				class="mx-0"
-				id="spoilers-layout"
-				options={options(SPOILER_LAYOUTS)}
-				value={spoilersLayout}
-				onchange={(v) => setLayout('spoilers', v)}
-			/>
-		</div>
-	</aside>
+	<Favorites />
 
-	<Favorites layout={favoritesLayout} />
-
-	<SpoilerPrevention layout={spoilersLayout} />
+	<SpoilerPrevention />
 
 	<section class="space-y-ch">
 		<h2 class="h3">App icon</h2>
