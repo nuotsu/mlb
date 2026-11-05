@@ -1,4 +1,5 @@
 import type { Handle } from '@sveltejs/kit/hooks'
+import appleTouchIcon from '#lib/assets/apple-touch-icon.jpg?inline'
 import { authEnabled, getAuth } from '#lib/server/auth.js'
 import { shouldBlockCrawler } from '#lib/server/traffic.js'
 import { building } from '$app/env'
@@ -6,8 +7,20 @@ import { getSessionCookie } from 'better-auth/cookies'
 import { isAuthPath, svelteKitHandler } from 'better-auth/svelte-kit'
 
 const PRIVATE_CACHE = 'private, no-store'
+const APPLE_TOUCH_ICON_PLACEHOLDER = '%app.apple_touch_icon%'
 
-export const handle: Handle = async ({ event, resolve }) => {
+export const handle: Handle = async ({ event, resolve: baseResolve }) => {
+	// iOS 27's Add to Home Screen sheet can't load a network apple-touch-icon (or manifest
+	// icons) and falls back to a letter tile; a data: URI is the only form that loads
+	const resolve: typeof baseResolve = (event, opts) =>
+		baseResolve(event, {
+			...opts,
+			transformPageChunk: async (input) => {
+				const html = (await opts?.transformPageChunk?.(input)) ?? input.html
+				return html.replace(APPLE_TOUCH_ICON_PLACEHOLDER, appleTouchIcon)
+			},
+		})
+
 	if (shouldBlockCrawler(event.url.pathname, event.request.headers.get('user-agent'))) {
 		return new Response('Crawler access to this route is not permitted.', {
 			status: 403,
