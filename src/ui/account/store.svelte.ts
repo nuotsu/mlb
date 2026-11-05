@@ -52,7 +52,12 @@ export const accountStore = $state({
 	user: null as AccountUser | null,
 	status: 'idle' as 'idle' | 'syncing' | 'synced' | 'error',
 
+	/** Sign-in couldn't start (e.g. the server rejected it); cleared on the next attempt */
+	signInError: false,
+
 	async signIn() {
+		this.signInError = false
+
 		// Google only knows one callback host: continue on that host, on the same page
 		if (authOrigin && authOrigin !== location.origin) {
 			location.assign(authOrigin + location.pathname + location.search + SIGN_IN_HASH)
@@ -60,12 +65,15 @@ export const accountStore = $state({
 		}
 
 		localStorage.setItem(AUTH_PENDING, String(Date.now()))
-		const { error } = await authClient.signIn.social({
-			provider: 'google',
-			callbackURL: location.pathname + location.search,
-		})
+		const { error } = await authClient.signIn
+			.social({
+				provider: 'google',
+				callbackURL: location.pathname + location.search,
+			})
+			.catch((error: unknown) => ({ error }))
 		if (error) {
 			localStorage.removeItem(AUTH_PENDING)
+			this.signInError = true
 			console.error('[account] sign-in failed', error)
 		}
 	},
