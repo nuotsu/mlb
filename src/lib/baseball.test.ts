@@ -2,29 +2,26 @@
 
 import { describe, expect, test } from 'bun:test'
 import {
-	advance,
-	decaySpin,
-	dot,
-	GROOVE,
-	IDLE_SPIN,
-	LEATHER,
+	blurMatrices,
 	length,
-	MAX_SPIN,
-	nearestSeam,
-	quatFromRotation,
+	lightingAt,
 	randomOrientation,
+	renderFrame,
+	SUBSAMPLES,
+	type Mat3,
+	type Vec3,
+} from './ascii-3d'
+import {
+	BASEBALL,
+	GROOVE,
+	LEATHER,
+	nearestSeam,
 	REGULATION_STITCHES,
-	releaseSpin,
-	rotationBetween,
-	rotationMatrix,
 	SEAM_LENGTH,
 	seamPoint,
 	seamStyle,
-	sphereAt,
 	surfaceAt,
 	THREAD,
-	type Mat3,
-	type Vec3,
 } from './baseball'
 
 const apply = (m: Mat3, v: Vec3): Vec3 => [
@@ -124,82 +121,94 @@ describe('surfaceAt', () => {
 	})
 })
 
-describe('spin', () => {
-	test('drag slows a fast spin toward the idle rate', () => {
-		const after = [0.25, 1, 4].map((t) => decaySpin(40, t))
-		expect(after[0]).toBeLessThan(40)
-		expect(after[1]).toBeLessThan(after[0])
-		expect(after[2]).toBeLessThan(after[1])
-		expect(after[2]).toBeGreaterThan(IDLE_SPIN)
-		expect(decaySpin(40, 60)).toBeCloseTo(IDLE_SPIN, 6)
+describe('BASEBALL', () => {
+	/*
+	 * The renderer before it was shared between objects, condensed: per-sample sphere normals and
+	 * lighting, the seam looked up per blur step, and thread shaded as leather unless the cell's
+	 * mostly thread. The shared renderer must draw the ball the same way.
+	 */
+	const ALBEDO = [0.8, 0.4, 0.35]
+	const SHEEN = [0.16, 0, 0.05]
+	function original(
+		cols: number,
+		rows: number,
+		cw: number,
+		ch: number,
+		radius: number,
+		m: Mat3[],
+		dark: boolean,
+	) {
+		const style = seamStyle(Math.max(cw, ch) / radius)
+		const ink: number[] = []
+		const stitch: number[] = []
+		for (let row = 0; row < rows; row++) {
+			for (let col = 0; col < cols; col++) {
+				const cell: number[] = []
+				const thread: number[] = []
+				const diffuse: number[] = []
+				let threads = 0
+				SUBSAMPLES.forEach(([sx, sy], k) => {
+					cell[k] = thread[k] = diffuse[k] = 0
+					const x = ((col + sx - cols / 2) * cw) / radius
+					const y = ((rows / 2 - row - sy) * ch) / radius
+					if (x * x + y * y > 1) return
+					const n: Vec3 = [x, y, Math.sqrt(1 - x * x - y * y)]
+					const light = lightingAt(n)
+					diffuse[k] = light.diffuse
+					const shade = (s: number) =>
+						Math.min(1, ALBEDO[s] * light.diffuse + SHEEN[s] * light.specular)
+					let brightness = 0
+					for (const r of m) {
+						const s = surfaceAt(
+							r[0] * n[0] + r[3] * n[1] + r[6] * n[2],
+							r[1] * n[0] + r[4] * n[1] + r[7] * n[2],
+							r[2] * n[0] + r[5] * n[1] + r[8] * n[2],
+							style,
+						)
+						if (s === THREAD) thread[k]++
+						else brightness += shade(s)
+					}
+					brightness = (brightness + thread[k] * shade(LEATHER)) / m.length
+					thread[k] /= m.length
+					threads += thread[k]
+					cell[k] = dark ? brightness : 0.1 + 0.8 * (1 - brightness)
+				})
+				const isStitch = threads / SUBSAMPLES.length > 0.12
+				if (isStitch)
+					cell.forEach((_, k) => {
+						const lit = Math.min(1, diffuse[k])
+						cell[k] = thread[k] * (dark ? 0.3 + 0.45 * lit : 0.55 + 0.25 * (1 - lit))
+					})
+				ink.push(...cell)
+				stitch.push(isStitch ? 1 : 0)
+			}
+		}
+		return { ink, stitch }
+	}
+
+	test('draws exactly what the ball drew before', () => {
+		const random = seeded(9)
+		const [cols, rows, cw, ch] = [54, 30, 4.4, 8]
+		const radius = (Math.min(cols * cw, rows * ch) / 2) * 0.94
+		const grid = { cols, rows, cellWidth: cw / radius, cellHeight: ch / radius }
+		for (const blur of [
+			[0, 0, 0],
+			[0.02, 0.06, 0],
+		] as Vec3[]) {
+			for (const dark of [true, false]) {
+				const orientation = randomOrientation(random)
+				const m = blurMatrices(orientation, blur, grid.cellWidth)
+				const before = original(cols, rows, cw, ch, radius, m, dark)
+				const after = renderFrame(BASEBALL, grid, m, dark)
+				expect(Array.from(after.stitch)).toEqual(before.stitch)
+				after.ink.forEach((v, i) => expect(v).toBeCloseTo(before.ink[i], 12))
+			}
+		}
 	})
 
-	test('a slower ball just coasts', () => {
-		expect(decaySpin(IDLE_SPIN / 2, 1)).toBe(IDLE_SPIN / 2)
-	})
-
-	test("doesn't depend on the frame rate", () => {
-		let speed = 30
-		for (let i = 0; i < 120; i++) speed = decaySpin(speed, 1 / 120)
-		expect(speed).toBeCloseTo(decaySpin(30, 1), 9)
-	})
-
-	test('keeps the spin axis fixed in space', () => {
-		const start = randomOrientation(seeded(5))
-		let state = { orientation: start, spin: [0, 3, 4] as Vec3 }
-		for (let i = 0; i < 60; i++) state = advance(state.orientation, state.spin, 1 / 60)
-		const axis: Vec3 = [0, 0.6, 0.8]
-		state.spin.forEach((v, i) => expect(v / length(state.spin)).toBeCloseTo(axis[i], 12))
-		// The leather on the axis hasn't moved
-		const leather = apply(transpose(rotationMatrix(start)), axis)
-		apply(rotationMatrix(state.orientation), leather).forEach((v, i) =>
-			expect(v).toBeCloseTo(axis[i], 9),
-		)
-	})
-
-	test('turns by the integrated angle', () => {
-		// Below the idle rate there's no drag, so it turns exactly ω·t
-		const { orientation } = advance([1, 0, 0, 0], [0, 0, IDLE_SPIN], 1)
-		const [x, y] = apply(rotationMatrix(orientation), [1, 0, 0])
-		expect(Math.atan2(y, x)).toBeCloseTo(IDLE_SPIN, 9)
-	})
-})
-
-function transpose(m: Mat3): Mat3 {
-	return [m[0], m[3], m[6], m[1], m[4], m[7], m[2], m[5], m[8]]
-}
-
-describe('dragging', () => {
-	test('the point under the pointer stays under it', () => {
-		const from = sphereAt(0.2, -0.1)
-		const to = sphereAt(-0.3, 0.4)
-		const moved = apply(rotationMatrix(quatFromRotation(rotationBetween(from, to))), from)
-		moved.forEach((v, i) => expect(v).toBeCloseTo(to[i], 12))
-	})
-
-	test('rolls smoothly past the edge of the ball', () => {
-		const inside = sphereAt(0.7071, 0)
-		const outside = sphereAt(0.7072, 0)
-		expect(dot(inside, outside)).toBeCloseTo(1, 3)
-		expect(length(sphereAt(3, 4))).toBeCloseTo(1, 12)
-	})
-
-	test('a fling keeps the drag’s angular velocity', () => {
-		// 0.05 rad about y every 10ms → 5 rad/s
-		const samples = Array.from({ length: 20 }, (_, i) => ({
-			time: i * 10,
-			rotation: [0, 0.05, 0] as Vec3,
-		}))
-		const spin = releaseSpin(samples, 190)
-		expect(spin[0]).toBeCloseTo(0, 9)
-		expect(spin[1]).toBeCloseTo(5, 6)
-	})
-
-	test('holding still before letting go leaves it still', () => {
-		expect(releaseSpin([{ time: 0, rotation: [0, 1, 0] }], 500)).toEqual([0, 0, 0])
-	})
-
-	test('caps the spin a fling can impart', () => {
-		expect(length(releaseSpin([{ time: 0, rotation: [0, 10, 0] }], 1))).toBeCloseTo(MAX_SPIN, 9)
+	test('starts at a random orientation, spinning at the idle rate', () => {
+		const { orientation, spin } = BASEBALL.start(seeded(4))
+		expect(Math.hypot(...orientation)).toBeCloseTo(1, 12)
+		expect(length(spin)).toBeCloseTo(0.5, 12)
 	})
 })

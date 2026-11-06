@@ -1,99 +1,20 @@
 /**
- * Geometry, shading and spin physics for the homepage's ASCII baseball (`#ui/baseball.svelte`).
+ * The homepage's ASCII baseball (`#ui/ascii-object.svelte`): its seam, stitching and leather.
  *
- * Coordinates are in ball radii. World space is the viewer's: +x right, +y up, +z toward the
- * viewer. The ball's orientation is a unit quaternion taking ball-local coordinates to world.
+ * Coordinates are in ball radii, in the ball's own frame (see `#lib/ascii-3d.js`).
  */
 
-export type Vec3 = [number, number, number]
-
-/** Unit quaternion `[w, x, y, z]`. */
-export type Quat = [number, number, number, number]
-
-/** Row-major 3×3 matrix. */
-export type Mat3 = [number, number, number, number, number, number, number, number, number]
-
-// --- Vectors & quaternions ---
-
-export function dot(a: Vec3, b: Vec3) {
-	return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-}
-
-export function cross(a: Vec3, b: Vec3): Vec3 {
-	return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
-}
-
-export function scale(v: Vec3, s: number): Vec3 {
-	return [v[0] * s, v[1] * s, v[2] * s]
-}
-
-export function length(v: Vec3) {
-	return Math.sqrt(dot(v, v))
-}
-
-export function normalize(v: Vec3): Vec3 {
-	const len = length(v)
-	return len > 0 ? scale(v, 1 / len) : [0, 0, 0]
-}
-
-/** Quaternion for a rotation vector (axis × angle in radians). */
-export function quatFromRotation(v: Vec3): Quat {
-	const angle = length(v)
-	if (angle < 1e-12) return [1, 0, 0, 0]
-	const s = Math.sin(angle / 2) / angle
-	return [Math.cos(angle / 2), v[0] * s, v[1] * s, v[2] * s]
-}
-
-/** Hamilton product: the rotation `b` followed by `a`. */
-export function quatMul(a: Quat, b: Quat): Quat {
-	return [
-		a[0] * b[0] - a[1] * b[1] - a[2] * b[2] - a[3] * b[3],
-		a[0] * b[1] + a[1] * b[0] + a[2] * b[3] - a[3] * b[2],
-		a[0] * b[2] - a[1] * b[3] + a[2] * b[0] + a[3] * b[1],
-		a[0] * b[3] + a[1] * b[2] - a[2] * b[1] + a[3] * b[0],
-	]
-}
-
-export function quatNormalize(q: Quat): Quat {
-	const len = Math.hypot(q[0], q[1], q[2], q[3])
-	return [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
-}
-
-/** Rotation matrix for `q`; its transpose takes world coordinates back to ball-local ones. */
-export function rotationMatrix([w, x, y, z]: Quat): Mat3 {
-	return [
-		1 - 2 * (y * y + z * z),
-		2 * (x * y - w * z),
-		2 * (x * z + w * y),
-		2 * (x * y + w * z),
-		1 - 2 * (x * x + z * z),
-		2 * (y * z - w * x),
-		2 * (x * z - w * y),
-		2 * (y * z + w * x),
-		1 - 2 * (x * x + y * y),
-	]
-}
-
-/** Uniformly random orientation (Shoemake's method). */
-export function randomOrientation(random = Math.random): Quat {
-	const [u1, u2, u3] = [random(), random(), random()]
-	const a = Math.sqrt(1 - u1)
-	const b = Math.sqrt(u1)
-	return [
-		a * Math.sin(2 * Math.PI * u2),
-		a * Math.cos(2 * Math.PI * u2),
-		b * Math.sin(2 * Math.PI * u3),
-		b * Math.cos(2 * Math.PI * u3),
-	]
-}
-
-/** Rotation vector of the shortest rotation taking unit vector `from` onto unit vector `to`. */
-export function rotationBetween(from: Vec3, to: Vec3): Vec3 {
-	const axis = cross(from, to)
-	const sin = length(axis)
-	if (sin < 1e-12) return [0, 0, 0]
-	return scale(axis, Math.atan2(sin, dot(from, to)) / sin)
-}
+import {
+	IDLE_SPIN,
+	normalize,
+	randomOrientation,
+	scale,
+	sphereAt,
+	type Mat3,
+	type Material,
+	type Shape,
+	type Vec3,
+} from './ascii-3d.js'
 
 // --- Seam ---
 
@@ -320,112 +241,44 @@ export function surfaceAt(x: number, y: number, z: number, style: SeamStyle): Su
 	return phase < style.thread ? THREAD : LEATHER
 }
 
-// --- Shading ---
+// --- Shape ---
 
-/** Key light from the upper left, slightly in front. */
-export const LIGHT = normalize([-0.5, 0.6, 0.62])
+/** Indexed by `Surface`. Thread is shaded as the leather it's sewn into unless it's drawn red. */
+const MATERIALS: Material[] = [
+	{ albedo: 0.8, sheen: 0.16 },
+	{ albedo: 0.4, sheen: 0 },
+	{ albedo: 0.35, sheen: 0.05, sewnInto: LEATHER },
+]
 
-const HALFWAY = normalize([LIGHT[0], LIGHT[1], LIGHT[2] + 1])
+export const BASEBALL: Shape = {
+	name: 'baseball',
+	materials: MATERIALS,
 
-export interface Lighting {
-	/** Ambient plus diffuse irradiance. */
-	diffuse: number
-	/** Blinn–Phong highlight. */
-	specular: number
-}
+	start(random = Math.random) {
+		return {
+			orientation: randomOrientation(random),
+			spin: scale(sphereAt(random() * 2 - 1, random() * 2 - 1), IDLE_SPIN),
+		}
+	},
 
-/** Lighting at world-space unit normal `n`, which stays put while the ball spins under it. */
-export function lightingAt(n: Vec3): Lighting {
-	// Wrapped Lambert softens the terminator the way leather's fuzz scatters light
-	const lambert = Math.max(0, (dot(n, LIGHT) + 0.25) / 1.25)
-	// Sky-ish ambient: a little brighter on the upper half
-	const ambient = 0.12 + 0.06 * n[1]
-	return {
-		diffuse: ambient + 0.88 * lambert,
-		specular: Math.pow(Math.max(0, dot(n, HALFWAY)), 18),
-	}
-}
-
-const ALBEDO = [0.8, 0.4, 0.35] as const
-const SHEEN = [0.16, 0, 0.05] as const
-
-/** Brightness in `[0, 1]` of `surface` under `light`. */
-export function shade(surface: Surface, { diffuse, specular }: Lighting) {
-	return Math.min(1, ALBEDO[surface] * diffuse + SHEEN[surface] * specular)
-}
-
-// --- Spin physics ---
-
-/** Spin (rad/s) the ball settles into on its own, about a turn every 12 seconds. */
-export const IDLE_SPIN = 0.5
-
-/** Fastest spin a fling can impart (rad/s). */
-export const MAX_SPIN = 60
-
-/** Air drag on the spin: dω/dt = −(k₁ω + k₂ω²) */
-const LINEAR_DRAG = 0.5
-const QUADRATIC_DRAG = 0.04
-
-/**
- * Spin rate after `dt` seconds of air drag. Drag only bleeds off spin above `idle`; below it the
- * ball coasts. Uses the closed-form solution, so the result doesn't depend on the frame rate.
- */
-export function decaySpin(speed: number, dt: number, idle = IDLE_SPIN) {
-	const excess = speed - idle
-	if (excess <= 0 || dt <= 0) return speed
-	const k1 = LINEAR_DRAG,
-		k2 = QUADRATIC_DRAG
-	return idle + (k1 * excess) / ((k1 + k2 * excess) * Math.exp(k1 * dt) - k2 * excess)
-}
-
-/**
- * Advances a freely spinning ball by `dt` seconds. A sphere's inertia is the same about every
- * axis, so with no torque but drag its spin axis stays fixed in space and only the rate decays.
- */
-export function advance(orientation: Quat, spin: Vec3, dt: number, idle = IDLE_SPIN) {
-	const speed = length(spin)
-	if (speed < 1e-9 || dt <= 0) return { orientation, spin }
-	const next = decaySpin(speed, dt, idle)
-	// Integrate the decaying rate exactly enough by rotating at the step's mean speed
-	const angle = ((speed + next) / 2) * dt
-	return {
-		orientation: quatNormalize(quatMul(quatFromRotation(scale(spin, angle / speed)), orientation)),
-		spin: scale(spin, next / speed),
-	}
-}
-
-/**
- * Point on the ball under a pointer at `(x, y)` ball radii from its center (+y up). Off the
- * ball it continues onto a hyperbolic sheet (Bell's trackball), so dragging past the edge
- * keeps rolling the ball smoothly instead of jumping.
- */
-export function sphereAt(x: number, y: number): Vec3 {
-	const r2 = x * x + y * y
-	const z = r2 <= 0.5 ? Math.sqrt(1 - r2) : 0.5 / Math.sqrt(r2)
-	return normalize([x, y, z])
-}
-
-export interface RotationSample {
-	/** Milliseconds. */
-	time: number
-	/** Rotation vector applied at `time`. */
-	rotation: Vec3
-}
-
-/**
- * Angular velocity (rad/s) of a drag at its release: the rotation over the last `window` ms
- * divided by the time it took. Held still before letting go, the ball doesn't spin.
- */
-export function releaseSpin(samples: RotationSample[], now: number, window = 100): Vec3 {
-	const recent = samples.filter((s) => now - s.time <= window)
-	if (!recent.length) return [0, 0, 0]
-	const before = samples[samples.length - recent.length - 1]
-	const start = before && now - before.time <= 2 * window ? before.time : recent[0].time - 16
-	const total = recent.reduce<Vec3>(
-		(sum, { rotation: r }) => [sum[0] + r[0], sum[1] + r[1], sum[2] + r[2]],
-		[0, 0, 0],
-	)
-	const spin = scale(total, 1000 / Math.max(16, now - start))
-	const speed = length(spin)
-	return speed > MAX_SPIN ? scale(spin, MAX_SPIN / speed) : spin
+	view(m: Mat3, cell: number) {
+		const style = seamStyle(cell)
+		// A sphere's silhouette and normals don't depend on how it's turned, only what's on it
+		return (x, y, hit) => {
+			const r2 = x * x + y * y
+			if (r2 > 1) return false
+			const z = Math.sqrt(1 - r2)
+			hit.nx = x
+			hit.ny = y
+			hit.nz = z
+			// World → ball-local is the transpose of the orientation matrix
+			hit.material = surfaceAt(
+				m[0] * x + m[3] * y + m[6] * z,
+				m[1] * x + m[4] * y + m[7] * z,
+				m[2] * x + m[5] * y + m[8] * z,
+				style,
+			)
+			return true
+		}
+	},
 }

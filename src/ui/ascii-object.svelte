@@ -3,50 +3,37 @@
 
 	import {
 		advance,
+		blurMatrices,
 		IDLE_SPIN,
-		LEATHER,
 		length,
-		lightingAt,
 		quatFromRotation,
 		quatMul,
 		quatNormalize,
-		randomOrientation,
 		releaseSpin,
+		renderFrame,
 		rotationBetween,
-		rotationMatrix,
 		scale,
-		seamStyle,
-		shade,
 		sphereAt,
-		surfaceAt,
-		THREAD,
+		SUBSAMPLES,
 		type Quat,
 		type RotationSample,
+		type Shape,
 		type Vec3,
-	} from '#lib/baseball.js'
+	} from '#lib/ascii-3d.js'
+	import { BASEBALL } from '#lib/baseball.js'
 	import { colorSchemeStore } from '#ui/store.svelte.js'
+	import type { Attachment } from 'svelte/attachments'
 	import type { HTMLAttributes } from 'svelte/elements'
 
-	let { ...props }: HTMLAttributes<HTMLElement> = $props()
+	let { shape = BASEBALL, ...props }: { shape?: Shape } & HTMLAttributes<HTMLElement> = $props()
 
 	/** Caps the grid so huge containers stay cheap to render. */
 	const MAX_COLS = 120
-	/** Fraction of the grid's shorter side the ball spans. */
+	/** Fraction of the grid's shorter side the object's bounding sphere spans. */
 	const FILL = 0.94
-	/** Sub-cell samples, matching where each glyph's shape is sampled below. */
-	const SUBSAMPLES: [number, number][] = [
-		[0.25, 0.17],
-		[0.75, 0.17],
-		[0.25, 0.5],
-		[0.75, 0.5],
-		[0.25, 0.83],
-		[0.75, 0.83],
-	]
-	/** Most orientations blended per frame for motion blur. */
-	const MAX_BLUR_STEPS = 5
+	/** Longest a frame spends on a shape's one-time setup before trying again next frame. */
+	const PREPARE_MS = 6
 
-	let pre = $state<HTMLPreElement>()
-	let probe = $state<HTMLSpanElement>()
 	let width = $state(0)
 	let height = $state(0)
 	let cell = $state({ width: 0, height: 0 })
@@ -54,46 +41,26 @@
 	const isDark = $derived(colorSchemeStore.mode !== 'light')
 	const cols = $derived(cell.width ? Math.min(MAX_COLS, Math.floor(width / cell.width)) : 0)
 	const rows = $derived(cell.height ? Math.floor(height / cell.height) : 0)
-	/** Ball radius in pixels; cells aren't square, so this keeps it round. */
+	/** Bounding-sphere radius in pixels; cells aren't square, so this keeps it round. */
 	const radius = $derived((Math.min(cols * cell.width, rows * cell.height) / 2) * FILL)
-	const style = $derived(seamStyle(Math.max(cell.width, cell.height) / radius))
 
-	/** Per-sample world-space normals and lighting, fixed until the grid changes. */
-	const samples = $derived.by(() => {
-		const count = cols * rows * SUBSAMPLES.length
-		const normals = new Float32Array(count * 3)
-		const diffuse = new Float32Array(count)
-		const specular = new Float32Array(count)
-		const inside = new Uint8Array(count)
-
-		for (let row = 0; row < rows; row++) {
-			for (let col = 0; col < cols; col++) {
-				SUBSAMPLES.forEach(([sx, sy], k) => {
-					const i = (row * cols + col) * SUBSAMPLES.length + k
-					const x = ((col + sx - cols / 2) * cell.width) / radius
-					const y = ((rows / 2 - row - sy) * cell.height) / radius
-					const r2 = x * x + y * y
-					if (r2 > 1) return
-					const n: Vec3 = [x, y, Math.sqrt(1 - r2)]
-					const light = lightingAt(n)
-					normals.set(n, i * 3)
-					diffuse[i] = light.diffuse
-					specular[i] = light.specular
-					inside[i] = 1
-				})
-			}
-		}
-
-		return { normals, diffuse, specular, inside }
-	})
-
-	let orientation: Quat = randomOrientation()
+	/** The shape being shown: it takes over from `shape` on the next frame, with a fresh spin. */
+	let current: Shape | undefined
+	let orientation: Quat = [1, 0, 0, 0]
 	/** Angular velocity in world space (rad/s). */
-	let spin: Vec3 = scale(sphereAt(Math.random() * 2 - 1, Math.random() * 2 - 1), IDLE_SPIN)
+	let spin: Vec3 = [0, 0, 0]
 	let idle = IDLE_SPIN
 
 	let frame = $state.raw<{ text: string; stitch: boolean }[]>([])
 	let dirty = true
+
+	function sync() {
+		if (current === shape) return
+		current = shape
+		;({ orientation, spin } = shape.start())
+		if (!idle) spin = [0, 0, 0]
+		dirty = true
+	}
 
 	// --- Glyphs ---
 
@@ -144,16 +111,17 @@
 	}
 
 	/** Glyph whose shape best matches a cell's sampled ink, sharpened a little at edges. */
-	function glyphFor(ink: number[]) {
+	function glyphFor(ink: ArrayLike<number>) {
 		let key = 0
-		for (const v of ink) key = key * 32 + Math.round(Math.min(1, Math.max(0, v)) * 31)
+		for (let i = 0; i < ink.length; i++)
+			key = key * 32 + Math.round(Math.min(1, Math.max(0, ink[i])) * 31)
 		const cached = glyphCache.get(key)
 		if (cached !== undefined) return cached
 
-		const max = Math.max(...ink)
+		const max = Math.max(...Array.from(ink))
 		let best = ' '
 		if (max > 0.02) {
-			const sharpened = ink.map((v) => Math.pow(v / max, 1.3) * max)
+			const sharpened = Array.from(ink, (v) => Math.pow(v / max, 1.3) * max)
 			let bestDist = Infinity
 			for (const { char, shape } of glyphs) {
 				let dist = 0
@@ -171,89 +139,39 @@
 
 	// --- Rendering ---
 
-	/** Renders the ball, blending orientations across `blur` (the rotation during the exposure). */
-	function render(blur: Vec3) {
-		if (!glyphs.length || !cols || !rows) return
+	/** Renders the shape, blending orientations across `blur` (the rotation during the exposure). */
+	function render(shown: Shape, blur: Vec3) {
+		const grid = { cols, rows, cellWidth: cell.width / radius, cellHeight: cell.height / radius }
+		const matrices = blurMatrices(orientation, blur, grid.cellWidth, shown.blurSteps)
+		const { ink, stitch } = renderFrame(shown, grid, matrices, isDark)
 
-		const blurAngle = length(blur)
-		const steps = Math.min(
-			MAX_BLUR_STEPS,
-			Math.max(1, Math.ceil(blurAngle / ((0.5 * cell.width) / radius))),
-		)
-		const matrices = Array.from({ length: steps }, (_, k) =>
-			rotationMatrix(quatMul(quatFromRotation(scale(blur, (k + 1) / steps - 1)), orientation)),
-		)
-
-		const { normals, diffuse, specular, inside } = samples
-		const light = { diffuse: 0, specular: 0 }
-		const ink = new Array<number>(SUBSAMPLES.length)
-		const thread = new Array<number>(SUBSAMPLES.length)
+		const n = SUBSAMPLES.length
 		const segments: { text: string; stitch: boolean }[] = []
 		let text = ''
-		let stitch = false
+		let stitched = false
 
 		for (let row = 0; row < rows; row++) {
 			for (let col = 0; col < cols; col++) {
-				let threads = 0
-				for (let k = 0; k < SUBSAMPLES.length; k++) {
-					const i = (row * cols + col) * SUBSAMPLES.length + k
-					ink[k] = thread[k] = 0
-					if (!inside[i]) continue
-					const nx = normals[i * 3],
-						ny = normals[i * 3 + 1],
-						nz = normals[i * 3 + 2]
-					light.diffuse = diffuse[i]
-					light.specular = specular[i]
-
-					let brightness = 0
-					for (const m of matrices) {
-						// World → ball-local is the transpose of the orientation matrix
-						const surface = surfaceAt(
-							m[0] * nx + m[3] * ny + m[6] * nz,
-							m[1] * nx + m[4] * ny + m[7] * nz,
-							m[2] * nx + m[5] * ny + m[8] * nz,
-							style,
-						)
-						// Count thread here; shade it as leather unless enough of the cell is stitched
-						if (surface === THREAD) thread[k]++
-						else brightness += shade(surface, light)
-					}
-					brightness = (brightness + thread[k] * shade(LEATHER, light)) / steps
-					thread[k] /= steps
-					threads += thread[k]
-
-					// Light text on dark draws light as ink; dark text on light draws shadow as ink,
-					// with a floor so the lit side of a white ball doesn't vanish into the page
-					ink[k] = isDark ? brightness : 0.1 + 0.8 * (1 - brightness)
-				}
-
-				// Stitched cells draw just the thread, in red, so its shape picks the glyph. Red thread
-				// is darker than leather, so on a light page it stays inky even in shadow
-				const isStitch = threads / SUBSAMPLES.length > 0.12
-				if (isStitch) {
-					for (let k = 0; k < SUBSAMPLES.length; k++) {
-						const lit = Math.min(1, diffuse[(row * cols + col) * SUBSAMPLES.length + k])
-						ink[k] = thread[k] * (isDark ? 0.3 + 0.45 * lit : 0.55 + 0.25 * (1 - lit))
-					}
-				}
-				if (isStitch !== stitch && text) {
-					segments.push({ text, stitch })
+				const i = row * cols + col
+				// Stitched cells draw just the thread, in red
+				const isStitch = stitch[i] === 1
+				if (isStitch !== stitched && text) {
+					segments.push({ text, stitch: stitched })
 					text = ''
 				}
-				stitch = isStitch
-				text += glyphFor(ink)
+				stitched = isStitch
+				text += glyphFor(ink.subarray(i * n, i * n + n))
 			}
 			if (row < rows - 1) text += '\n'
 		}
-		if (text) segments.push({ text, stitch })
+		if (text) segments.push({ text, stitch: stitched })
 
 		frame = segments
 	}
 
 	// --- Lifecycle ---
 
-	function measureCell() {
-		if (!probe) return
+	function measureCell(probe: HTMLElement) {
 		const rect = probe.getBoundingClientRect()
 		if (!rect.width || !rect.height) return
 		const next = { width: rect.width / 10, height: rect.height / 2 }
@@ -264,17 +182,15 @@
 		})
 	}
 
-	$effect(() => {
-		if (!probe) return
-		// Font loads and font-size changes both resize the probe
-		const observer = new ResizeObserver(measureCell)
+	/** Font loads and font-size changes both resize the probe. */
+	const watchCell: Attachment<HTMLElement> = (probe) => {
+		const observer = new ResizeObserver(() => measureCell(probe))
 		observer.observe(probe)
 		return () => observer.disconnect()
-	})
+	}
 
 	$effect(() => {
-		samples
-		style
+		radius
 		isDark
 		dirty = true
 	})
@@ -292,12 +208,12 @@
 
 	let visible = true
 
-	$effect(() => {
-		if (!pre) return
+	/** Pauses rendering while offscreen. */
+	const watchVisibility: Attachment<HTMLElement> = (node) => {
 		const observer = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting))
-		observer.observe(pre)
+		observer.observe(node)
 		return () => observer.disconnect()
-	})
+	}
 
 	$effect(() => {
 		let raf = 0
@@ -309,6 +225,7 @@
 			const dt = last ? Math.min(0.05, (time - last) / 1000) : 0
 			last = time
 			if (!visible) return
+			sync()
 
 			let blur: Vec3 = [0, 0, 0]
 			if (!dragging && length(spin) > 1e-6) {
@@ -320,9 +237,11 @@
 				dirty = true
 			}
 
-			if (!dirty) return
+			if (!dirty || !current || !glyphs.length || !cols || !rows || !radius) return
+			// Some shapes need setup too slow for one frame; spread it out before the first render
+			if (current.prepare && !current.prepare(performance.now() + PREPARE_MS)) return
 			dirty = false
-			render(blur)
+			render(current, blur)
 		}
 
 		raf = requestAnimationFrame(tick)
@@ -336,9 +255,9 @@
 	let grabbed: Vec3 = [0, 0, 1]
 	let history: RotationSample[] = []
 
-	/** Point on the ball (world space) under the pointer. */
-	function pointOnBall(e: PointerEvent) {
-		const rect = pre!.getBoundingClientRect()
+	/** Point on the bounding sphere (world space) under the pointer. */
+	function pointOnSphere(e: PointerEvent) {
+		const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
 		return sphereAt(
 			(e.clientX - rect.left - rect.width / 2) / radius,
 			(rect.top + rect.height / 2 - e.clientY) / radius,
@@ -347,9 +266,10 @@
 
 	function onpointerdown(e: PointerEvent) {
 		if (pointerId !== -1 || !radius) return
+		sync()
 		pointerId = e.pointerId
 		dragging = true
-		grabbed = pointOnBall(e)
+		grabbed = pointOnSphere(e)
 		history = []
 		spin = [0, 0, 0]
 		;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
@@ -357,8 +277,8 @@
 
 	function onpointermove(e: PointerEvent) {
 		if (e.pointerId !== pointerId) return
-		// Roll the ball so the leather under the pointer stays under it
-		const point = pointOnBall(e)
+		// Roll the object so the point under the pointer stays under it
+		const point = pointOnSphere(e)
 		const rotation = rotationBetween(grabbed, point)
 		grabbed = point
 		orientation = quatNormalize(quatMul(quatFromRotation(rotation), orientation))
@@ -378,17 +298,17 @@
 
 <figure {...props}>
 	<pre
-		bind:this={pre}
+		{@attach watchVisibility}
 		bind:clientWidth={width}
 		bind:clientHeight={height}
-		class="relative grid aspect-square cursor-grab touch-none [overflow-anchor:none] place-content-center font-mono leading-none tracking-tighter select-none active:cursor-grabbing"
+		class="relative grid aspect-square cursor-grab touch-none place-content-center font-mono leading-none tracking-tighter select-none [overflow-anchor:none] active:cursor-grabbing"
 		{onpointerdown}
 		{onpointermove}
 		{onpointerup}
 		onpointercancel={onpointerup}
 		role="img"
-		aria-label="Interactive 3D baseball rendered in ASCII art"><span
-			bind:this={probe}
+		aria-label="Interactive 3D {shape.name} rendered in ASCII art"><span
+			{@attach watchCell}
 			class="invisible absolute top-0 left-0"
 			aria-hidden="true">{'0000000000\n0'}</span
 		><span

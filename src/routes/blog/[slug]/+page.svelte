@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { formatDate } from '#lib/temporal.js'
-	import Baseball from '#ui/baseball.svelte'
+	import AsciiObject from '#ui/ascii-object.svelte'
 	import Breadcrumbs from '#ui/breadcrumbs.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import TableOfContents from '#ui/table-of-contents.svelte'
@@ -43,7 +43,7 @@
 	<div class="col-[content] prose px-ch md:row-[2/3]">
 		<Component />
 
-		<Baseball class="mx-auto mt-[-2lh] mb-[2lh] w-[160px] text-[8px]" />
+		<AsciiObject class="mx-auto mt-[-2lh] mb-[2lh] w-[160px] text-[8px]" />
 	</div>
 </article>
 
