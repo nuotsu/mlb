@@ -36,7 +36,8 @@ import {
 	localStorage is always the cache they read from.
 
 	- Signed out: localStorage is the source of truth. Nothing here runs network requests.
-	- On sign-in: local data is merged into the account (union favorites, newest settings win),
+	- On sign-in: local data is merged into the account (union favorites, the account's
+	  saved settings win),
 	  and the merged result is written back to the local stores.
 	- Signed in: the account is the source of truth. Each page load pulls it into the cache,
 	  and local changes are pushed as they happen (time-travel moments throttled, see below).

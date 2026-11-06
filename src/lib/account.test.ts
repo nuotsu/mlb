@@ -118,15 +118,39 @@ describe('mergeAccountState', () => {
 		expect(merged.favorites).toEqual([nyy, lad, ohtani])
 	})
 
-	test('newest settings win', () => {
-		const account = state({ settings: { colorScheme: 'dark' }, settingsUpdatedAt: 200 })
-		const older = state({ settings: { colorScheme: 'light' }, settingsUpdatedAt: 100 })
-		const newer = state({ settings: { colorScheme: 'light' }, settingsUpdatedAt: 300 })
-
-		expect(mergeAccountState(account, older).settings.colorScheme).toBe('dark')
-		expect(mergeAccountState(account, newer)).toMatchObject({
-			settings: { colorScheme: 'light' },
+	test("the account's saved settings win, even over newer local ones", () => {
+		const account = state({
+			settings: { colorScheme: 'dark', appIcon: 'blue', compare: [1, 2] },
+			settingsUpdatedAt: 200,
+		})
+		const older = state({
+			settings: { colorScheme: 'light', appIcon: 'red' },
+			settingsUpdatedAt: 100,
+		})
+		const newer = state({
+			settings: { colorScheme: 'light', appIcon: 'default', compare: [3] },
 			settingsUpdatedAt: 300,
+		})
+
+		expect(mergeAccountState(account, older)).toMatchObject({
+			settings: { colorScheme: 'dark', appIcon: 'blue' },
+			settingsUpdatedAt: 200,
+		})
+		expect(mergeAccountState(account, newer)).toMatchObject({
+			settings: { colorScheme: 'dark', appIcon: 'blue', compare: [1, 2] },
+			settingsUpdatedAt: 200,
+		})
+	})
+
+	test('dismissed hints are unioned', () => {
+		const merged = mergeAccountState(
+			state({ settings: { onboardingDismissed: ['install-pwa'] }, settingsUpdatedAt: 100 }),
+			state({ settings: { onboardingDismissed: ['favorite-team'] }, settingsUpdatedAt: 300 }),
+			500,
+		)
+		expect(merged).toMatchObject({
+			settings: { onboardingDismissed: ['install-pwa', 'favorite-team'] },
+			settingsUpdatedAt: 500,
 		})
 	})
 
@@ -135,11 +159,13 @@ describe('mergeAccountState', () => {
 		expect(merged).toMatchObject({ settings: { colorScheme: 'light' }, settingsUpdatedAt: 42 })
 	})
 
-	test('keys the winner never set are filled from the other side', () => {
+	test('keys the account never set are filled from local, and stamped to be saved', () => {
 		const merged = mergeAccountState(
 			state({ settings: { onboardingDismissed: ['install-pwa'] }, settingsUpdatedAt: 100 }),
-			state({ settings: { colorScheme: 'dark' }, settingsUpdatedAt: 200 }),
+			state({ settings: { colorScheme: 'dark' }, settingsUpdatedAt: 50 }),
+			500,
 		)
 		expect(merged.settings).toEqual({ colorScheme: 'dark', onboardingDismissed: ['install-pwa'] })
+		expect(merged.settingsUpdatedAt).toBe(500)
 	})
 })
