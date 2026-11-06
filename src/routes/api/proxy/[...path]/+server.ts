@@ -18,7 +18,7 @@ function error(status: number, message: string) {
  * Same-origin pass-through to the MLB Stats API for the playground.
  * The body is streamed through untouched (no JSON parse/re-serialize) and cached at the CDN.
  */
-export const GET: RequestHandler = async ({ params, url, request }) => {
+export const GET: RequestHandler = async ({ params, url, request, locals }) => {
 	const upstream = toUpstreamUrl(params.path, url.search)
 
 	if (!upstream) return error(400, 'Only statsapi.mlb.com /api/v1 and /api/v1.1 paths are allowed.')
@@ -26,7 +26,11 @@ export const GET: RequestHandler = async ({ params, url, request }) => {
 	getPostHogClient()?.capture({
 		event: 'playground_form_submitted',
 		distinctId: request.headers.get(DISTINCT_ID_HEADER) || 'anonymous',
-		properties: { fetchUrl: upstream.toString() },
+		properties: {
+			fetchUrl: upstream.toString(),
+			// Anonymous visitors stay profile-less (cheaper events), matching the browser SDK
+			$process_person_profile: !!locals.user,
+		},
 	})
 
 	let response: Response

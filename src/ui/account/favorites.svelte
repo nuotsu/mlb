@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { trackFavorite } from '#ui/analytics.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import { onMount } from 'svelte'
 	import Chip from './chip.svelte'
@@ -17,6 +18,11 @@
 
 	function isTeam(favorite: App.Favorite) {
 		return favorite.href.startsWith('/teams/')
+	}
+
+	function remove(favorite: App.Favorite) {
+		favoritesStore.remove(favorite)
+		trackFavorite('remove', favorite, 'account', favoritesStore.favorites)
 	}
 
 	function idOf(favorite: App.Favorite) {
@@ -39,7 +45,7 @@
 						teamId={team ? idOf(favorite) : undefined}
 						personId={team ? undefined : idOf(favorite)}
 						removeLabel="Remove {favorite.label} from favorites"
-						onremove={() => favoritesStore.remove(favorite)}
+						onremove={() => remove(favorite)}
 					/>
 				{/each}
 			</ul>

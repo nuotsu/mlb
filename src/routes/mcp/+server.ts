@@ -68,6 +68,8 @@ async function handle(request: Request): Promise<Response> {
 				method,
 				tool: method === 'tools/call' ? body?.params?.name : undefined,
 				client: request.headers.get('user-agent'),
+				// The distinct id is an IP, not a person: don't create a profile per IP
+				$process_person_profile: false,
 			},
 		})
 	}

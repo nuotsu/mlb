@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { analyticsEnabled } from '#lib/analytics.js'
+	import { trackFavorite } from '#ui/analytics.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import { StarEmptyIcon, StarIcon } from '#ui/icons/index.js'
-	import posthog from 'posthog-js'
+	import { page } from '$app/state'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {
@@ -13,11 +13,9 @@
 	let checked = $derived(favoritesStore.has(target.href))
 
 	function toggle() {
+		const action = checked ? 'remove' : 'add'
 		favoritesStore.toggle(target)
-
-		if (!checked && analyticsEnabled) {
-			posthog.capture('favorite_added', { href: target.href })
-		}
+		trackFavorite(action, target, page.route.id ?? 'unknown', favoritesStore.favorites)
 	}
 </script>
 

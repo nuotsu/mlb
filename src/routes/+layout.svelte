@@ -2,9 +2,11 @@
 	import { analyticsEnabled } from '#lib/analytics.js'
 	import { appIconScript } from '#lib/app-icon.js'
 	import { hideDelayedGamesScript } from '#lib/time-travel.js'
-	import { initAccount } from '#ui/account/store.svelte.js'
+	import { accountStore, initAccount } from '#ui/account/store.svelte.js'
+	import { setAnalyticsContext } from '#ui/analytics.js'
 	import Offline from '#ui/offline.svelte'
 	import Sidebar from '#ui/sidebar/nav.svelte'
+	import { colorSchemeStore } from '#ui/store.svelte.js'
 	import { browser } from '$app/env'
 	import { afterNavigate, beforeNavigate } from '$app/navigation'
 	import { page } from '$app/state'
@@ -15,6 +17,15 @@
 
 	if (browser) {
 		initAccount(page.data)
+
+		// Before the first `$pageview` (afterNavigate runs on mount), and again on any change
+		$effect.pre(() => {
+			setAnalyticsContext({
+				signed_in: !!accountStore.user,
+				color_scheme: colorSchemeStore.mode === 'dark' ? 'dark' : 'light',
+				system_color_scheme: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light',
+			})
+		})
 
 		beforeNavigate(({ shallow }) => {
 			if (shallow || !analyticsEnabled) return
