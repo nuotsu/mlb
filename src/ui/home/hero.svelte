@@ -7,7 +7,6 @@
 	import QuickSearch from '#ui/quick-search.svelte'
 	import { browser } from '$app/env'
 	import { page } from '$app/state'
-	import AsciiField from './ascii-field.svelte'
 	import SetupChecklist from './setup-checklist.svelte'
 
 	// Server: from the layout data. Browser: the account store (seeded from the same data)
@@ -32,9 +31,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 	}
 </script>
 
-<header class="hero relative isolate overflow-clip border-b border-stroke">
-	<AsciiField />
-
+<header class="hero border-b border-stroke">
 	<div class="layout mx-auto grid max-w-5xl gap-x-[2lh] gap-y-lh px-ch py-[2lh]">
 		<div class="title [grid-area:title]">
 			{#if user}
@@ -132,15 +129,5 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 				justify-content: start;
 			}
 		}
-	}
-
-	/* Keep the field from showing through the ball's blank cells */
-	.ball {
-		border-radius: 50%;
-		background: radial-gradient(
-			closest-side,
-			var(--color-background) 72%,
-			color-mix(in srgb, var(--color-background) 0%, transparent)
-		);
 	}
 </style>

@@ -1,4 +1,14 @@
 import type { HomeWidgetId, SeasonPhase } from '#lib/home.js'
+import {
+	ArrowsDiffIcon,
+	CalendarIcon,
+	CalendarTodayIcon,
+	HelmetIcon,
+	JerseyIcon,
+	MegaphoneIcon,
+	RankIcon,
+	SplitIcon,
+} from '#ui/icons/index.js'
 import type { Component } from 'svelte'
 import Blog from './blog.svelte'
 import Compare from './compare.svelte'
@@ -20,16 +30,21 @@ export type WidgetData = {
 	posts: Blog.Post[]
 }
 
+/** `icon` is the widget's button in the section nav, matching the sidebar's where there is one */
 export const WIDGETS: Record<
 	HomeWidgetId,
-	{ label: string; component: Component<{ data: WidgetData }> }
+	{
+		label: string
+		icon: Component<Record<string, unknown>>
+		component: Component<{ data: WidgetData }>
+	}
 > = {
-	today: { label: "Today's games", component: Today },
-	team: { label: 'Team schedule', component: Team },
-	transactions: { label: 'Transactions', component: Transactions },
-	blog: { label: 'Blog', component: Blog },
-	standings: { label: 'Standings', component: Standings },
-	players: { label: 'Your players', component: Players },
-	compare: { label: 'Compare', component: Compare },
-	season: { label: 'Season schedule', component: Season },
+	today: { label: "Today's games", icon: CalendarTodayIcon, component: Today },
+	team: { label: 'Team schedule', icon: JerseyIcon, component: Team },
+	transactions: { label: 'Transactions', icon: ArrowsDiffIcon, component: Transactions },
+	blog: { label: 'Blog', icon: MegaphoneIcon, component: Blog },
+	standings: { label: 'Standings', icon: RankIcon, component: Standings },
+	players: { label: 'Your players', icon: HelmetIcon, component: Players },
+	compare: { label: 'Compare', icon: SplitIcon, component: Compare },
+	season: { label: 'Season schedule', icon: CalendarIcon, component: Season },
 }

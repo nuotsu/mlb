@@ -1,5 +1,11 @@
 <script lang="ts">
-	import { moveId, resolveWidgets, SIZE_SPANS, type HomeWidgetId } from '#lib/home.js'
+	import {
+		moveId,
+		resolveWidgets,
+		SIZE_SPANS,
+		widgetElementId,
+		type HomeWidgetId,
+	} from '#lib/home.js'
 	import { PencilLineIcon } from '#ui/icons/index.js'
 	import { flushSync, onMount } from 'svelte'
 	import { flip } from 'svelte/animate'
@@ -39,6 +45,7 @@
 	/** The dragged (or settling) widget's offset from its slot */
 	let offset = $state({ x: 0, y: 0 })
 	let announcement = $state('')
+	let editBarHeight = $state(0)
 
 	let grid = $state<HTMLElement>()
 	const cells = new Map<HomeWidgetId, HTMLElement>()
@@ -203,9 +210,11 @@
 <div class="home space-y-lh">
 	{#if editing}
 		<div
+			bind:clientHeight={editBarHeight}
 			class="sticky top-0 z-20 flex flex-wrap items-center gap-x-ch gap-y-[.5ch] bg-accent px-ch py-[.5ch] text-sm text-black"
 		>
-			<p class="mr-auto">Drag widgets to rearrange. Changes save as you go.</p>
+			<!-- Clears the sidebar toggle on phones, like the breadcrumbs -->
+			<p class="mr-auto max-sm:ml-[1.25rlh]">Drag widgets to rearrange. Changes save as you go.</p>
 			<button class="action-tertiary border-black/30" onclick={() => homeStore.reset()}>
 				Reset
 			</button>
@@ -227,6 +236,7 @@
 		class={['widgets', dragging && 'select-none']}
 		data-home-grid
 		data-editing={editing || undefined}
+		style:--edit-bar-height={editing ? `${editBarHeight}px` : undefined}
 	>
 		{#each shown as widget (widget.id)}
 			{@const span = SIZE_SPANS[widget.size]}
@@ -234,6 +244,7 @@
 
 			<div
 				class={['cell', widget.id === dragging && 'dragging', widget.id === settling && 'settling']}
+				id={widgetElementId(widget.id)}
 				data-home-widget={widget.id}
 				style:--w={span.cols}
 				style:--h={span.rows}
@@ -303,6 +314,12 @@
 	.cell {
 		min-width: 0;
 		grid-column: span min(var(--w, 1), var(--cols));
+		scroll-margin-top: 1ch;
+	}
+
+	/* Land below the sticky edit bar */
+	[data-editing] .cell {
+		scroll-margin-top: calc(var(--edit-bar-height, 0px) + 1ch);
 	}
 
 	.dragging,

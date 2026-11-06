@@ -59,6 +59,11 @@ export type HomeWidget = { id: HomeWidgetId; size: WidgetSize; hidden: boolean }
 
 export const HOME_STORAGE_KEY = 'home'
 
+/** A widget's element id, which the section nav jumps to (and the URL hash names) */
+export function widgetElementId(id: HomeWidgetId) {
+	return `widget-${id}`
+}
+
 function isWidgetId(id: unknown): id is HomeWidgetId {
 	return HOME_WIDGETS.includes(id as HomeWidgetId)
 }

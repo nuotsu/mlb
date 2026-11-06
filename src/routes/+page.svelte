@@ -3,6 +3,7 @@
 	import Awards from '#ui/banner/awards.svelte'
 	import Grid from '#ui/home/grid.svelte'
 	import Hero from '#ui/home/hero.svelte'
+	import SectionNav from '#ui/home/section-nav.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import type { PageProps } from './$types'
 
@@ -38,3 +39,5 @@
 
 	<Awards />
 </div>
+
+<SectionNav />
