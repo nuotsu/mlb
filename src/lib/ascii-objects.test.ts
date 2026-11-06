@@ -1,6 +1,6 @@
 /// <reference types="bun" />
 
-import { describe, expect, test } from 'bun:test'
+import { beforeAll, describe, expect, test } from 'bun:test'
 import { IDLE_SPIN, length, randomOrientation, rotationMatrix, type Hit } from './ascii-3d'
 import { ASCII_OBJECT_IDS, ASCII_OBJECTS, isAsciiObjectId, pickAsciiObject } from './ascii-objects'
 
@@ -36,8 +36,12 @@ describe('pickAsciiObject', () => {
 
 describe.each(ASCII_OBJECT_IDS)('%s', (id) => {
 	const shape = ASCII_OBJECTS[id]
-	shape.prepare?.(Infinity)
 	const hit: Hit = { nx: 0, ny: 0, nz: 0, material: -1 }
+
+	// Setup can wait on loading, as the glove's does
+	beforeAll(async () => {
+		while (shape.prepare && !shape.prepare(Infinity)) await new Promise((r) => setTimeout(r, 1))
+	})
 
 	test('names itself for screen readers', () => {
 		expect(shape.name).toMatch(/^(baseball|home plate)/)

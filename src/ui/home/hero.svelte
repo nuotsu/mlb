@@ -18,6 +18,7 @@
 	// The page is cached for everyone, so pick in the browser: the server (and hydration) draw an
 	// empty box, and the pick lands before the first frame does. `?object=glove` forces one in dev
 	let object = $state<AsciiObjectId>('ball')
+	let shape = $derived(ASCII_OBJECTS[object])
 	onMount(() => {
 		object = pickAsciiObject(
 			Math.random,
@@ -80,8 +81,18 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 			{/if}
 		</div>
 
-		<div class="ball [grid-area:ball]">
-			<AsciiObject shape={ASCII_OBJECTS[object]} class="w-60 text-[8px]" />
+		<div class="ball relative [grid-area:ball]">
+			<AsciiObject {shape} class="w-60 text-[8px]" />
+			{#if shape.credit}
+				{@const { title, source, author, authorUrl, license, licenseUrl } = shape.credit}
+				<!-- Hangs below the object, in the gap, so it shifts nothing when it shows up -->
+				<p
+					class="absolute top-full left-1/2 -translate-x-1/2 text-[10px] whitespace-nowrap text-current/50 [&_a:hover]:underline"
+				>
+					<a href={source}>“{title}”</a> by <a href={authorUrl}>{author}</a>,
+					<a href={licenseUrl}>{license}</a>
+				</p>
+			{/if}
 		</div>
 
 		<QuickSearch class="w-full max-w-md [grid-area:search]" />

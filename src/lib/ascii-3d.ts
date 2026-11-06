@@ -178,10 +178,23 @@ export interface Hit {
  */
 export type Cast = (x: number, y: number, hit: Hit) => boolean
 
+/** A model someone else made, and the license it's shared under. */
+export interface Credit {
+	title: string
+	/** Where it's published. */
+	source: string
+	author: string
+	authorUrl: string
+	license: string
+	licenseUrl: string
+}
+
 export interface Shape {
 	/** What it is, for screen readers ("baseball"). */
 	name: string
 	materials: readonly Material[]
+	/** For a shape built from someone else's model: who to credit alongside it. */
+	credit?: Credit
 	/** Most orientations to blend for motion blur, when casting is costly. */
 	blurSteps?: number
 	/**
@@ -199,7 +212,7 @@ export interface Shape {
 }
 
 /** World z the view rays start from: in front of anything inside the unit sphere. */
-const RAY_START = 2
+export const RAY_START = 2
 
 /**
  * Intersects a ray `o + t·d` (object-local, `|d| = 1`) with a shape, writing the object-local

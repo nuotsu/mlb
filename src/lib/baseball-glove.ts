@@ -1,24 +1,28 @@
 /**
- * The homepage's ASCII baseball glove (`#ui/ascii-object.svelte`): an 11¼" second baseman's glove
- * for a left hand, as a signed distance field that's sampled into a grid and sphere-traced.
+ * The homepage's ASCII baseball glove (`#ui/ascii-object.svelte`), from a 3D scan of a Rawlings
+ * Players Series youth glove in black and maroon leather with white laces: "Baseball Glove" by
+ * Lead Black Tech (https://sketchfab.com/drebond), licensed CC BY 4.0
+ * (https://sketchfab.com/3d-models/baseball-glove-35b2e174e07047f4a7d3442b5ed921c0).
  *
- * It's laid out flat first, in inches, seen from the pocket side: `u` runs across toward the
- * thumb, `v` up the fingers, and `w` out of the pocket. Four finger stalls side by side, a padded
- * palm, a heel roll, the thumb, an I-web between the thumb and the index finger, and an open back
- * with a hole for the hand. Then it's shaped like a broken-in glove: wrapped around a vertical
- * cylinder in front of it, so the thumb and pinky sides fold toward each other, with the fingers
- * curling forward over the pocket. That fold is what makes it read as a glove.
+ * `scripts/bake-glove.ts` samples the scan's signed distance into a grid, with the kind of surface
+ * nearest each sample, into `./baseball-glove-data.ts`. That's loaded the first time the glove is
+ * shown, and the grid is sphere-traced with trilinear lookups.
  *
- * In object space +y runs up the fingers, +x toward the thumb, and +z out of the pocket.
+ * In object space +y runs up the fingers, −x toward the thumb, and +z out of the pocket: a glove
+ * for a left hand, seen from the front.
  */
 
 import {
-	castLocal,
 	IDLE_SPIN,
+	MAX_BLUR_STEPS,
 	normalize,
 	quatFromRotation,
 	quatMul,
+	RAY_START,
 	scale,
+	type Cast,
+	type Credit,
+	type Hit,
 	type Intersect,
 	type Mat3,
 	type Material,
@@ -26,490 +30,105 @@ import {
 	type Vec3,
 } from './ascii-3d.js'
 
-export const LEATHER = 0
-export const POCKET = 1
+/** Kinds of surface, as the bake numbers them. */
+export const BLACK = 0
+export const MAROON = 1
 export const LACE = 2
-export const LINING = 3
-export const WEB_GAP = 4
-export const SEAM = 5
+export const PRINT = 3
+export const OPENING = 4
 
 const MATERIALS: Material[] = [
-	// Oiled leather, light enough that its lit side reads pale beside the seams
-	{ albedo: 0.86, sheen: 0.25 },
-	// The pocket, darkened by years of catches
-	{ albedo: 0.5, sheen: 0.12 },
+	// Black leather: the palm, the web and the back of the hand. Lighter than it is, so it reads
+	// on a dark page, but a step down from the maroon so the panels show
+	{ albedo: 0.62, sheen: 0.3 },
+	// Maroon leather: the finger stalls and the thumb
+	{ albedo: 0.95, sheen: 0.2 },
 	// Rawhide laces: drawn red where they cover enough of a cell
-	{ albedo: 0.42, sheen: 0.1, sewnInto: LEATHER },
-	// Inside the hand opening
+	{ albedo: 0.9, sheen: 0.1, sewnInto: MAROON },
+	// The silver logos, though the bake gives them the leather's kind: they're too small to make
+	// out in type
+	{ albedo: 1, sheen: 0.3 },
+	// The hand opening (the stand the glove was scanned on shows in it)
 	{ albedo: 0.1, sheen: 0 },
-	// The open gaps between the web's laces
-	{ albedo: 0.2, sheen: 0.02 },
-	// Welted seams down the creases between the stalls
-	{ albedo: 0.18, sheen: 0.02 },
 ]
 
-// --- Parts, laid out flat in inches ---
+export const GLOVE_CREDIT: Credit = {
+	title: 'Baseball Glove',
+	source: 'https://sketchfab.com/3d-models/baseball-glove-35b2e174e07047f4a7d3442b5ed921c0',
+	author: 'Lead Black Tech',
+	authorUrl: 'https://sketchfab.com/drebond',
+	license: 'CC BY 4.0',
+	licenseUrl: 'https://creativecommons.org/licenses/by/4.0/',
+}
+
+// --- The grid ---
 
 /**
- * A finger stall or thumb: a capsule along `a → b` in the `uv` plane, flattened through the
- * glove. Its half-width tapers from `r0` to `r1`, and its half-depth is `depth` times that.
+ * The grid, once loaded: its size, where its first sample sits, and the signed distance and kind
+ * of surface at each sample. Held in one object: hot loops read an object's fields faster than
+ * module-level bindings.
  */
-interface Stall {
-	au: number
-	av: number
-	/** `b − a`, and `1 / |b − a|²`. */
-	du: number
-	dv: number
-	inv: number
-	r0: number
-	r1: number
-	depth: number
-	/** Where its middle sits through the glove. */
-	w: number
-	/** The top of its tip, for laces. */
-	top: number
+const GRID = {
+	x0: 0,
+	y0: 0,
+	z0: 0,
+	nx: 0,
+	ny: 0,
+	nz: 0,
+	scale: 1,
+	values: new Float32Array(0),
+	surfaces: new Uint8Array(0),
 }
 
-function stall(a: [number, number], b: [number, number], r0: number, r1: number, w = -0.1): Stall {
-	const [du, dv] = [b[0] - a[0], b[1] - a[1]]
-	return {
-		au: a[0],
-		av: a[1],
-		du,
-		dv,
-		inv: 1 / (du * du + dv * dv),
-		r0,
-		r1,
-		depth: 0.72,
-		w,
-		top: b[1] + r1,
-	}
-}
+/** Where the grid's samples reach, a voxel in from its edges (where the empty padding starts). */
+export const GLOVE_BOX = { min: [0, 0, 0] as Vec3, max: [0, 0, 0] as Vec3 }
 
-/** A stall from `base`, leaning `angle` radians toward the thumb, `length` to its tip's center. */
-function lean(
-	base: [number, number],
-	angle: number,
-	length: number,
-	r0: number,
-	r1: number,
-	w?: number,
-) {
-	const tip: [number, number] = [
-		base[0] + length * Math.sin(angle),
-		base[1] + length * Math.cos(angle),
-	]
-	return stall(base, tip, r0, r1, w)
-}
+let loading: Promise<void> | undefined
+let ready = false
 
 /**
- * Pinky to index finger: fat, padded stalls pressed side by side, nearly parallel, the middle one
- * longest. The pinky's runs down the outer edge toward the heel.
+ * Fetches and unpacks the grid (a separate chunk, so it only loads for the glove). Resolves once
+ * it's ready.
  */
-const FINGERS = [
-	lean([-2.0, -1.4], -0.07, 5.1, 0.84, 0.76),
-	lean([-0.66, 0.4], -0.025, 4.9, 0.8, 0.76),
-	lean([0.66, 0.4], 0.02, 5.2, 0.8, 0.76),
-	lean([1.97, 0.3], 0.07, 4.6, 0.78, 0.73),
-]
-/** The thumb stall angles well out from the heel, ending about halfway up the index finger. */
-const THUMB = lean([2.6, -3.4], 0.56, 6.1, 0.86, 0.66, -0.05)
-
-/** The heel roll across the bottom. */
-const HEEL = { u0: -1.55, u1: 2.25, v: -4.55, r: 0.75, w: -0.1 }
-
-/** The padded palm: a rounded rectangle, `half` thick, under the fingers and over the heel. */
-const PALM = { u0: -2.75, u1: 3.0, v0: -4.7, v1: 1.2, corner: 1.7, half: 0.32, w: 0 }
-
-/**
- * The I-web: a panel filling the gap between the index finger and the thumb, as a convex outline
- * (counterclockwise), with a post up its middle and laces across to either side.
- */
-const WEB_OUTLINE: [number, number][] = [
-	[2.3, 0.0],
-	[3.7, -0.9],
-	[5.75, 2.2],
-	[5.4, 3.05],
-	[3.0, 4.85],
-]
-const WEB = { half: 0.17, w: 0.12, post: [3.75, 0.0, 4.1, 3.9] as const, rung: 0.8, bar: 0.5 }
-
-/** The slot the hand goes in, across the back above the heel. */
-const OPENING = { u: 0.3, v: -3.45, w: -0.62, ru: 2.3, rv: 0.55, rw: 0.5 }
-
-/** How far either side of a crease its seam shows. */
-const SEAM_WIDTH = 0.16
-
-/** Where the pocket's darkened leather is, on the palm's face. */
-const POCKET_AREA = { u: 0.7, v: -1.5, ru: 2.1, rv: 2.3 }
-
-/** Smooth-union blend radii: the finger stalls keep a crease between them, the rest flows. */
-const BLEND = 0.35
-const FINGER_BLEND = 0.1
-const OPENING_BLEND = 0.15
-
-// --- Shaping ---
-
-/** The fold: the flat glove wraps around a vertical axis at `u = FOLD_U`, this far in front. */
-const FOLD_U = 1.6
-const FOLD_RADIUS = 3.8
-/** The fingers curl forward above this line, around a circle of this radius… */
-const CURL_V = 0.8
-const CURL_RADIUS = 6.2
-/** …and the heel below this one, so the palm between them is a bowl. */
-const HEEL_V = -1.6
-const HEEL_RADIUS = 5.2
-
-/** Inches → object radii: the shaped glove's enclosing sphere (the test checks it). */
-const CENTER: Vec3 = [0.85, 0.2, 1.58]
-const SIZE = 5.9
-
-/** A point of the shaped glove, in inches, in object radii. */
-export function toObject([x, y, z]: Vec3): Vec3 {
-	return [(x - CENTER[0]) / SIZE, (y - CENTER[1]) / SIZE, (z - CENTER[2]) / SIZE]
-}
-
-// --- Distance ---
-
-/** Polynomial smooth minimum. */
-function smin(a: number, b: number, k: number) {
-	const h = k - Math.abs(a - b)
-	return h > 0 ? Math.min(a, b) - (h * h) / (4 * k) : Math.min(a, b)
-}
-
-/** Polynomial smooth maximum. */
-function smax(a: number, b: number, k: number) {
-	const h = k - Math.abs(a - b)
-	return h > 0 ? Math.max(a, b) + (h * h) / (4 * k) : Math.max(a, b)
-}
-
-/** Where along a stall's axis `(u, v)` is nearest, from 0 at its base to 1 at its tip. */
-function along(s: Stall, u: number, v: number) {
-	const h = ((u - s.au) * s.du + (v - s.av) * s.dv) * s.inv
-	return h < 0 ? 0 : h > 1 ? 1 : h
-}
-
-/**
- * Distance to a stall. Its cross-section is an ellipse, so this stretches depth into a circle and
- * scales the result back down: never more than the true distance.
- */
-function stallDistance(s: Stall, u: number, v: number, w: number) {
-	const h = along(s, u, v)
-	const du = u - s.au - s.du * h,
-		dv = v - s.av - s.dv * h,
-		dw = (w - s.w) / s.depth
-	return (Math.sqrt(du * du + dv * dv + dw * dw) - (s.r0 + (s.r1 - s.r0) * h)) * s.depth
-}
-
-/**
- * A flat 2D shape (signed distance `d2` from its outline, negative inside) given thickness: a
- * slab `half` thick with fully rounded edges, centered on `w = center`.
- */
-function slab(d2: number, w: number, half: number, center: number) {
-	const a = d2 + half,
-		b = Math.abs(w - center)
-	const ox = a > 0 ? a : 0,
-		oy = b > 0 ? b : 0
-	return Math.sqrt(ox * ox + oy * oy) + Math.min(Math.max(a, b), 0) - half
-}
-
-function palmDistance(u: number, v: number, w: number) {
-	// Rounded rectangle
-	const cu = (PALM.u0 + PALM.u1) / 2,
-		cv = (PALM.v0 + PALM.v1) / 2
-	const qu = Math.abs(u - cu) - (PALM.u1 - PALM.u0) / 2 + PALM.corner,
-		qv = Math.abs(v - cv) - (PALM.v1 - PALM.v0) / 2 + PALM.corner
-	const ou = qu > 0 ? qu : 0,
-		ov = qv > 0 ? qv : 0
-	const d2 = Math.sqrt(ou * ou + ov * ov) + Math.min(Math.max(qu, qv), 0) - PALM.corner
-	return slab(d2, w, PALM.half, PALM.w)
-}
-
-function heelDistance(u: number, v: number, w: number) {
-	const cu = u < HEEL.u0 ? HEEL.u0 : u > HEEL.u1 ? HEEL.u1 : u
-	const du = u - cu,
-		dv = v - HEEL.v,
-		dw = w - HEEL.w
-	return Math.sqrt(du * du + dv * dv + dw * dw) - HEEL.r
-}
-
-/** The web outline's edges as `[nu, nv, d]`: outward unit normal and offset, `n·p ≤ d` inside. */
-const WEB_EDGES = WEB_OUTLINE.map(([u0, v0], i) => {
-	const [u1, v1] = WEB_OUTLINE[(i + 1) % WEB_OUTLINE.length]
-	const len = Math.hypot(u1 - u0, v1 - v0)
-	// Counterclockwise, so outward is the edge turned clockwise
-	const nu = (v1 - v0) / len,
-		nv = -(u1 - u0) / len
-	return [nu, nv, nu * u0 + nv * v0] as const
-})
-
-/** Signed distance from `(u, v)` to the web's outline, negative inside (exact inside, a bound outside). */
-function webOutline(u: number, v: number) {
-	let d = -Infinity
-	for (const [nu, nv, offset] of WEB_EDGES) {
-		const e = nu * u + nv * v - offset
-		if (e > d) d = e
-	}
-	return d
-}
-
-function webDistance(u: number, v: number, w: number) {
-	return slab(webOutline(u, v), w, WEB.half, WEB.w)
-}
-
-/** Smallest of the opening's radii. */
-const OPENING_MIN = Math.min(OPENING.ru, OPENING.rv, OPENING.rw)
-
-function openingDistance(u: number, v: number, w: number) {
-	// Approximate ellipsoid distance, good near its surface
-	const pu = (u - OPENING.u) / OPENING.ru,
-		pv = (v - OPENING.v) / OPENING.rv,
-		pw = (w - OPENING.w) / OPENING.rw
-	const k0 = Math.sqrt(pu * pu + pv * pv + pw * pw)
-	const k1 = Math.sqrt((pu / OPENING.ru) ** 2 + (pv / OPENING.rv) ** 2 + (pw / OPENING.rw) ** 2)
-	const d = k1 > 1e-9 ? (k0 * (k0 - 1)) / k1 : -OPENING_MIN
-	// Deep inside, that can claim far more room than there is (the opening is the empty slot, so
-	// that's room rays step through). A ball of `(1 − k0) × smallest radius` always fits
-	return k0 < 1 ? Math.max(d, (k0 - 1) * OPENING_MIN) : d
-}
-
-/** Signed distance to the flat glove, in inches. */
-export function flatDistance(u: number, v: number, w: number) {
-	let d = smin(palmDistance(u, v, w), heelDistance(u, v, w), BLEND)
-	d = smin(d, stallDistance(THUMB, u, v, w), BLEND)
-	let fingers = stallDistance(FINGERS[0], u, v, w)
-	for (let i = 1; i < FINGERS.length; i++)
-		fingers = smin(fingers, stallDistance(FINGERS[i], u, v, w), FINGER_BLEND)
-	d = smin(d, fingers, BLEND)
-	d = smin(d, webDistance(u, v, w), BLEND / 2)
-	return smax(d, -openingDistance(u, v, w), OPENING_BLEND)
-}
-
-/** A point of the shaped glove, in inches, taken back to where it lies on the flat one. */
-interface Flat {
-	u: number
-	v: number
-	w: number
-	/** Distance from the fold's axis. */
-	fold: number
-	/** `stretchAt(fold)`. */
-	stretch: number
-}
-
-const flat: Flat = { u: 0, v: 0, w: 0, fold: 0, stretch: 1 }
-
-/**
- * Bends of the flat glove's `vw` plane past the line `v = at`, toward `dir` (+1 up, −1 down),
- * curving forward around a circle of `radius` in front of it.
- */
-const BENDS = [
-	{ at: CURL_V, radius: CURL_RADIUS, dir: 1 },
-	{ at: HEEL_V, radius: HEEL_RADIUS, dir: -1 },
-] as const
-
-const TIGHTEST_BEND = Math.min(...BENDS.map((b) => b.radius))
-
-/**
- * The stretch correction `fold` from the fold's axis. Unfolding stretches space across by
- * `FOLD_RADIUS / fold` inside the fold, and in front of a bend by `radius / (radius − w)` at
- * most (most for the tightest bend), so this is the reciprocal of both. It depends on nothing but
- * `fold`, and only grows with it.
- */
-function stretchAt(fold: number) {
-	if (fold >= FOLD_RADIUS) return 1
-	const w = FOLD_RADIUS - fold
-	return (fold / FOLD_RADIUS) * ((TIGHTEST_BEND - w) / TIGHTEST_BEND)
-}
-
-/** Undoes the shaping at `(x, y, z)` (inches, shaped), into `out`. */
-export function unfold(x: number, y: number, z: number, out: Flat = flat) {
-	// The fold around a vertical cylinder: arc length around it is distance across
-	const fx = x - FOLD_U,
-		fz = FOLD_RADIUS - z
-	const fold = Math.sqrt(fx * fx + fz * fz)
-	const wc = FOLD_RADIUS - fold
-	out.u = FOLD_U + FOLD_RADIUS * Math.atan2(fx, fz)
-	out.v = y
-	out.w = wc
-	out.fold = fold
-	out.stretch = stretchAt(fold)
-
-	// The fingers' curl and the heel's, around horizontal axes
-	for (const { at, radius, dir } of BENDS) {
-		const cv = (y - at) * dir,
-			cw = radius - wc
-		const angle = Math.atan2(cv, cw)
-		if (angle <= 0) continue
-		out.v = at + dir * radius * angle
-		out.w = radius - Math.sqrt(cv * cv + cw * cw)
-		break
-	}
-	return out
-}
-
-/** Shapes the flat point `(u, v, w)` into the glove (the inverse of `unfold`), in inches. */
-export function fold(u: number, v: number, w: number): Vec3 {
-	let y = v,
-		wc = w
-	for (const { at, radius, dir } of BENDS) {
-		if ((v - at) * dir <= 0) continue
-		const angle = ((v - at) * dir) / radius,
-			bend = radius - w
-		y = at + dir * bend * Math.sin(angle)
-		wc = radius - bend * Math.cos(angle)
-		break
-	}
-	const angle = (u - FOLD_U) / FOLD_RADIUS,
-		radius = FOLD_RADIUS - wc
-	return [FOLD_U + radius * Math.sin(angle), y, FOLD_RADIUS - radius * Math.cos(angle)]
-}
-
-/**
- * Signed distance from `(x, y, z)`, in object radii, to the glove: never more than the true
- * distance, so sphere tracing can't step through it. Meant for points in its box (far outside it,
- * the unfolding wraps around).
- *
- * A flat distance `f` overstates the room by the most the shaping stretches space along the way
- * there. That's most nearest the fold's axis, and the way there gets no nearer than `f·stretch`,
- * nor nearer than any point of the box gets, so scaling by the stretch correction there is safe.
- */
-export function gloveDistance(x: number, y: number, z: number) {
-	const p = unfold(x * SIZE + CENTER[0], y * SIZE + CENTER[1], z * SIZE + CENTER[2])
-	const f = flatDistance(p.u, p.v, p.w)
-	if (f <= 0) return (f * p.stretch) / SIZE
-	return (f * stretchAt(Math.max(p.fold - f * p.stretch, NEAREST_FOLD))) / SIZE
-}
-
-// --- Materials ---
-
-const fract = (t: number) => t - Math.floor(t)
-
-/** Left of these, and below the last, a part can't be the nearest to a point on the surface. */
-const THUMB_FROM = THUMB.au - THUMB.r0 - 0.5
-const WEB_FROM = Math.min(...WEB_OUTLINE.map(([u]) => u)) - 0.5
-const FINGERS_FROM = Math.min(...FINGERS.map((f) => f.av - f.r0)) - 0.5
-
-/** What the flat glove's surface is made of at `(u, v, w)`. */
-export function flatMaterial(u: number, v: number, w: number) {
-	// Whichever part is nearest owns the point. The web and thumb are only on the thumb side, and
-	// the stalls only above the heel, so skip them elsewhere
-	const palm = Math.min(palmDistance(u, v, w), heelDistance(u, v, w))
-	const thumb = u > THUMB_FROM ? stallDistance(THUMB, u, v, w) : Infinity
-	const web = u > WEB_FROM ? webDistance(u, v, w) : Infinity
-	let finger = Infinity,
-		next = Infinity,
-		which = 0
-	for (let i = 0; i < FINGERS.length && v > FINGERS_FROM; i++) {
-		const d = stallDistance(FINGERS[i], u, v, w)
-		if (d < finger) {
-			next = finger
-			finger = d
-			which = i
-		} else if (d < next) next = d
-	}
-	const nearest = Math.min(palm, thumb, web, finger)
-
-	// The hand opening, lined inside (it's cut into the back)
-	if (w < PALM.w && openingDistance(u, v, w) < 0.12) return LINING
-
-	// Welted seams down the creases between the stalls
-	if (nearest === finger && next - finger < SEAM_WIDTH && v > 0.6) return SEAM
-
-	if (nearest === web) {
-		// The I-web: a top bar and a post up the middle, laced across to either side
-		const [pu0, pv0, pu1, pv1] = WEB.post
-		const t = (v - pv0) / (pv1 - pv0)
-		const post = pu0 + (pu1 - pu0) * t
-		if (webOutline(u, v) > -WEB.bar && v > 2.6) return LEATHER
-		if (Math.abs(u - post) < 0.32) return LEATHER
-		return fract(v / WEB.rung) < 0.36 ? LACE : WEB_GAP
-	}
-
-	if (nearest === finger || nearest === thumb) {
-		const s = nearest === thumb ? THUMB : FINGERS[which]
-		const h = along(s, u, v)
-		const axis = s.au + s.du * h
-		// A lace loops over each fingertip, front to back
-		if (v > s.top - 0.85 && Math.abs(u - axis) < 0.17) return LACE
-	}
-
-	// The heel's bottom edge is bound with lacing wound around the roll
-	if (v < HEEL.v - 0.25)
-		return fract(u / 0.5 + Math.atan2(w - HEEL.w, v - HEEL.v) / Math.PI) < 0.32 ? LACE : LEATHER
-	// The pocket, on the palm's face
-	if (nearest === palm && w > PALM.w + 0.1) {
-		const pu = (u - POCKET_AREA.u) / POCKET_AREA.ru,
-			pv = (v - POCKET_AREA.v) / POCKET_AREA.rv
-		if (pu * pu + pv * pv < 1) return POCKET
-	}
-	return LEATHER
-}
-
-/** What the glove's surface is made of at `(x, y, z)` (object radii), a point on it. */
-export function gloveMaterial(x: number, y: number, z: number) {
-	const p = unfold(x * SIZE + CENTER[0], y * SIZE + CENTER[1], z * SIZE + CENTER[2])
-	return flatMaterial(p.u, p.v, p.w)
-}
-
-// --- Intersection ---
-
-/** The glove's bounding box in inches, a little padded (the test checks it holds it). */
-const BOX_MIN: Vec3 = [-2.55, -5.45, -0.8]
-const BOX_MAX: Vec3 = [5.7, 6.05, 3.1]
-/** Nearest the fold's axis any point of the box (and the grid padding it) comes. */
-const NEAREST_FOLD = FOLD_RADIUS - BOX_MAX[2] - 0.3
-/** …and in object radii. */
-export const GLOVE_BOX = {
-	min: BOX_MIN.map((v, i) => (v - CENTER[i]) / SIZE) as Vec3,
-	max: BOX_MAX.map((v, i) => (v - CENTER[i]) / SIZE) as Vec3,
-}
-
-/*
- * Evaluating every part costs too much to do several times per sample per frame, and the glove
- * never changes, so its distance field is sampled once into a grid over its box and traced with
- * trilinear lookups. Materials, which need detail finer than the grid, come from the exact parts.
- */
-const VOXEL = 0.025
-
-/**
- * The grid, padded a voxel past the box on every side so lookups near its faces stay inside.
- * Held in one object: hot loops read an object's fields faster than module-level bindings.
- */
-const GRID = (() => {
-	const [x0, y0, z0] = GLOVE_BOX.min.map((v) => v - VOXEL)
-	const [nx, ny, nz] = GLOVE_BOX.min.map((v, i) => Math.ceil((GLOVE_BOX.max[i] - v) / VOXEL) + 3)
-	// Allocated on first use, so loading the module costs nothing unless the glove is shown
-	return { x0, y0, z0, nx, ny, nz, scale: 1 / VOXEL, values: new Float32Array(0) }
-})()
-/** Slices of constant z filled so far. */
-let filled = 0
-/** Whether the far field has been tightened since. */
-let tightened = false
-
-/**
- * Fills the distance grid, a slice at a time until `deadline` (a `performance.now()` time), so
- * the one-time cost (about 75k samples) can be spread over a few frames, then tightens it. True
- * once it's ready.
- */
-export function prepareGlove(deadline = Infinity) {
-	if (!GRID.values.length) GRID.values = new Float32Array(GRID.nx * GRID.ny * GRID.nz)
-	const { x0, y0, z0, nx, ny, nz, values } = GRID
-	for (; filled < nz && performance.now() < deadline; filled++) {
-		const k = filled
-		for (let j = 0; j < ny; j++)
-			for (let i = 0; i < nx; i++)
-				values[(k * ny + j) * nx + i] = gloveDistance(
-					x0 + i * VOXEL,
-					y0 + j * VOXEL,
-					z0 + k * VOXEL,
-				)
-	}
-	if (filled < nz || performance.now() >= deadline) return false
-	if (!tightened) {
-		tighten(values, nx, ny, nz)
-		tightened = true
-	}
-	return true
+export function loadGlove(): Promise<void> {
+	loading ??= import('./baseball-glove-data.js')
+		.then(async ({ SIZE, ORIGIN, VOXEL, STEP, LIMIT, DATA }) => {
+			const packed = Uint8Array.from(atob(DATA), (c) => c.charCodeAt(0))
+			const stream = new Blob([packed]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
+			const bytes = new Uint8Array(await new Response(stream).arrayBuffer())
+			const [nx, ny, nz] = SIZE
+			const count = nx * ny * nz
+			const values = new Float32Array(count)
+			// Each distance is stored as the change from the sample before it along x
+			for (let n = 0, last = 0; n < count; n++) {
+				const delta = (bytes[n] << 24) >> 24
+				last = n % nx ? last + delta : delta
+				values[n] = last * STEP
+			}
+			reachFarther(values, nx, ny, nz, VOXEL, LIMIT * STEP, STEP)
+			Object.assign(GRID, {
+				x0: ORIGIN[0],
+				y0: ORIGIN[1],
+				z0: ORIGIN[2],
+				nx,
+				ny,
+				nz,
+				scale: 1 / VOXEL,
+				values,
+				surfaces: bytes.slice(count, count * 2),
+			})
+			for (let i = 0; i < 3; i++) {
+				GLOVE_BOX.min[i] = ORIGIN[i] + VOXEL
+				GLOVE_BOX.max[i] = ORIGIN[i] + (SIZE[i] - 2) * VOXEL
+			}
+			ready = true
+		})
+		.catch((error) => {
+			// Try again later (say, back online)
+			setTimeout(() => (loading = undefined), 5000)
+			throw error
+		})
+	return loading
 }
 
 /** Stands in for "infinitely far" in squared voxel distances, finite so the arithmetic holds. */
@@ -556,14 +175,24 @@ function transformLine(
 }
 
 /**
- * The shaping makes the exact distances cautious, most in front of the pocket, which slows
- * tracing there. The straight-line distance to the nearest sample inside the glove, less the
- * most that can be off by (a thin wall between samples, and trilinear lookups between them), is
- * also never more than the true distance, and far tighter away from the surface. Keep the larger.
+ * Distances are only stored out to `limit`, which would keep sphere tracing to short steps. Every
+ * point of the surface is within half a cell's diagonal of a sample that's that close to it, so
+ * the straight-line distance to the nearest such sample, less that, never overstates the distance
+ * to the glove. Fill in that, past the limit, less another half voxel for trilinear lookups
+ * between samples (the tests check how far those can overstate it).
  */
-function tighten(values: Float32Array, nx: number, ny: number, nz: number) {
+function reachFarther(
+	values: Float32Array,
+	nx: number,
+	ny: number,
+	nz: number,
+	voxel: number,
+	limit: number,
+	step: number,
+) {
+	const near = (Math.sqrt(3) / 2) * voxel + step / 2
 	const squared = new Float64Array(values.length)
-	for (let i = 0; i < values.length; i++) squared[i] = values[i] < 0 ? 0 : FAR
+	for (let i = 0; i < values.length; i++) squared[i] = Math.abs(values[i]) <= near ? 0 : FAR
 	const longest = Math.max(nx, ny, nz)
 	const line = new Float64Array(longest),
 		v = new Int32Array(longest),
@@ -574,12 +203,18 @@ function tighten(values: Float32Array, nx: number, ny: number, nz: number) {
 		for (let i = 0; i < nx; i++) transformLine(squared, k * ny * nx + i, nx, ny, line, v, z)
 	for (let j = 0; j < ny; j++)
 		for (let i = 0; i < nx; i++) transformLine(squared, j * nx + i, nx * ny, nz, line, v, z)
-	const slack = (Math.sqrt(3) * 1.5 + 0.2) * VOXEL
+	const slack = near + voxel / 2
 	for (let i = 0; i < values.length; i++) {
-		if (values[i] <= 0) continue
-		const far = Math.sqrt(squared[i]) * VOXEL - slack
+		if (values[i] < limit) continue
+		const far = Math.sqrt(squared[i]) * voxel - slack
 		if (far > values[i]) values[i] = far
 	}
+}
+
+/** True once the grid is loaded; until then, starts loading it. */
+export function prepareGlove() {
+	if (!ready && !loading) loadGlove().catch(() => {})
+	return ready
 }
 
 /** Gradient of the grid's distance where `fieldDistance` was last called `withGradient`. */
@@ -629,9 +264,20 @@ export function fieldDistance(x: number, y: number, z: number, withGradient = fa
 	return c0 + (c1 - c0) * tz
 }
 
+/** The kind of surface at `(x, y, z)`, on or near the glove: the nearest sample's. */
+export function surfaceAt(x: number, y: number, z: number) {
+	const { x0, y0, z0, nx, ny, scale, surfaces } = GRID
+	const i = Math.round((x - x0) * scale),
+		j = Math.round((y - y0) * scale),
+		k = Math.round((z - z0) * scale)
+	return surfaces[(k * ny + j) * nx + i]
+}
+
+// --- Tracing ---
+
 const MAX_STEPS = 64
 /** Close enough to call a hit: a fraction of the spacing between sub-samples. */
-const EPSILON = 0.005
+const EPSILON = 0.004
 /** Trilinear lookups of a distance only approximate one, so trust it this much. */
 const SAFE = 0.9
 /** Over-relaxed stepping: strides past the safe distance, backing off when that overshoots. */
@@ -655,18 +301,87 @@ function clip(o: number, d: number, lo: number, hi: number) {
 	return span.near <= span.far
 }
 
-export const intersectGlove: Intersect = (ox, oy, oz, dx, dy, dz, hit) => {
-	// March only through the bounding box: most rays that miss the glove never take a step
+/**
+ * Clips the ray `o + t·d` to the box, grown by `margin` on every side, into `span`. False if it
+ * misses.
+ */
+function enter(
+	ox: number,
+	oy: number,
+	oz: number,
+	dx: number,
+	dy: number,
+	dz: number,
+	margin: number,
+) {
 	const { min, max } = GLOVE_BOX
 	span.near = 0
 	span.far = Infinity
-	if (
-		!clip(ox, dx, min[0], max[0]) ||
-		!clip(oy, dy, min[1], max[1]) ||
-		!clip(oz, dz, min[2], max[2])
+	return (
+		clip(ox, dx, min[0] - margin, max[0] + margin) &&
+		clip(oy, dy, min[1] - margin, max[1] + margin) &&
+		clip(oz, dz, min[2] - margin, max[2] + margin)
 	)
-		return false
+}
+
+/** `fieldDistance`, kept a lower bound past the edges of the grid too. */
+function boundedDistance(x: number, y: number, z: number) {
+	const { x0, y0, z0, nx, ny, nz, scale } = GRID
+	const x1 = x0 + (nx - 1) / scale,
+		y1 = y0 + (ny - 1) / scale,
+		z1 = z0 + (nz - 1) / scale
+	const cx = x < x0 ? x0 : x > x1 ? x1 : x,
+		cy = y < y0 ? y0 : y > y1 ? y1 : y,
+		cz = z < z0 ? z0 : z > z1 ? z1 : z
+	return (
+		fieldDistance(cx, cy, cz) -
+		Math.sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy) + (z - cz) * (z - cz))
+	)
+}
+
+/** How close a cone gets before handing over to the rays inside it. */
+const CONE_EPSILON = 0.01
+
+/**
+ * Sphere-traces a cylinder of radius `r` around the ray `o + t·d` (Amanatides' cone tracing, with
+ * parallel rays): how far along it all of it stays clear of the glove, so any ray inside it can
+ * start there. Infinity if it misses the glove altogether.
+ */
+export function clearance(
+	ox: number,
+	oy: number,
+	oz: number,
+	dx: number,
+	dy: number,
+	dz: number,
+	r: number,
+) {
+	if (!ready || !enter(ox, oy, oz, dx, dy, dz, r)) return Infinity
 	let t = span.near
+	const end = span.far
+	for (let i = 0; i < MAX_STEPS && t < end; i++) {
+		// A ball this big around the axis holds the cylinder this far along
+		const step = boundedDistance(ox + t * dx, oy + t * dy, oz + t * dz) * SAFE - r
+		if (step < CONE_EPSILON) return t
+		t += step
+	}
+	return t < end ? t : Infinity
+}
+
+/** Like `intersectGlove`, but knowing the ray is clear of the glove before `from`. */
+function trace(
+	ox: number,
+	oy: number,
+	oz: number,
+	dx: number,
+	dy: number,
+	dz: number,
+	hit: Hit,
+	from: number,
+) {
+	// March only through the box: most rays that miss the glove never take a step
+	if (!enter(ox, oy, oz, dx, dy, dz, 0)) return false
+	let t = Math.max(span.near, from)
 	const end = span.far
 
 	// Sphere tracing, over-relaxed (Keinert et al., "Enhanced Sphere Tracing")
@@ -688,15 +403,8 @@ export const intersectGlove: Intersect = (ox, oy, oz, dx, dy, dz, hit) => {
 			continue
 		}
 		if (d < EPSILON) {
-			// The normal is the field's gradient, from the same samples as the distance
 			fieldDistance(x, y, z, true)
-			const [nx, ny, nz] = gradient
-			const len = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1
-			hit.nx = nx / len
-			hit.ny = ny / len
-			hit.nz = nz / len
-			hit.material = gloveMaterial(x, y, z)
-			return true
+			return land(x, y, z, dx, dy, dz, hit)
 		}
 		stride = radius * relax
 		previous = radius
@@ -705,36 +413,137 @@ export const intersectGlove: Intersect = (ox, oy, oz, dx, dy, dz, hit) => {
 	return false
 }
 
+/** Fills `hit` at `(x, y, z)` on the surface, where `gradient` was just found. */
+function land(x: number, y: number, z: number, dx: number, dy: number, dz: number, hit: Hit) {
+	// The normal is the field's gradient, from the same samples as the distance
+	let [nx, ny, nz] = gradient
+	// Grazing an edge thinner than the grid, it can lean away from the ray, but a ray only sees
+	// surfaces that face it: take it as the edge of the silhouette
+	const along = nx * dx + ny * dy + nz * dz
+	if (along > 0) {
+		nx -= along * dx
+		ny -= along * dy
+		nz -= along * dz
+	}
+	const len = Math.sqrt(nx * nx + ny * ny + nz * nz)
+	hit.nx = len > 1e-9 ? nx / len : -dx
+	hit.ny = len > 1e-9 ? ny / len : -dy
+	hit.nz = len > 1e-9 ? nz / len : -dz
+	hit.material = surfaceAt(x, y, z)
+	return true
+}
+
+export const intersectGlove: Intersect = (ox, oy, oz, dx, dy, dz, hit) =>
+	ready && trace(ox, oy, oz, dx, dy, dz, hit, 0)
+
+/**
+ * Cones traced for one view: how far each stays clear, by patch of the screen. Each view takes
+ * the next of a few, so the views of one frame (one per step of motion blur) don't share one.
+ */
+const CONES = Array.from({ length: 2 * MAX_BLUR_STEPS }, () => ({
+	/** Bumped for each view; a patch stamped with it has been cast in this one. */
+	view: 0,
+	stamps: new Int32Array(0),
+	clear: new Float64Array(0),
+}))
+let nextCones = 0
+
+/**
+ * Casts rays at the glove turned by `m`, a patch `patch` across at a time: one cone around each
+ * patch first, which most rays that miss never get past, and which carries the rest most of
+ * the way in.
+ */
+export function viewGlove(m: Mat3, patch: number): Cast {
+	// As in `castLocal`: world → local is mᵀ
+	const dx = -m[6],
+		dy = -m[7],
+		dz = -m[8]
+	const zx = RAY_START * m[6],
+		zy = RAY_START * m[7],
+		zz = RAY_START * m[8]
+	// Patches tile the unit square with a patch to spare around it
+	const n = Math.ceil(2 / patch) + 3
+	const cones = CONES[nextCones++ % CONES.length]
+	if (cones.stamps.length < n * n) {
+		cones.stamps = new Int32Array(n * n)
+		cones.clear = new Float64Array(n * n)
+	}
+	const view = ++cones.view
+	const { stamps, clear } = cones
+	const radius = patch * Math.SQRT1_2
+
+	return (x, y, hit) => {
+		const i = Math.floor((x + 1) / patch) + 1,
+			j = Math.floor((y + 1) / patch) + 1
+		let from = 0
+		if (i >= 0 && i < n && j >= 0 && j < n) {
+			const k = j * n + i
+			if (stamps[k] !== view) {
+				const cx = (i - 0.5) * patch - 1,
+					cy = (j - 0.5) * patch - 1
+				clear[k] = clearance(
+					cx * m[0] + cy * m[3] + zx,
+					cx * m[1] + cy * m[4] + zy,
+					cx * m[2] + cy * m[5] + zz,
+					dx,
+					dy,
+					dz,
+					radius,
+				)
+				stamps[k] = view
+			}
+			from = clear[k]
+			if (from === Infinity) return false
+		}
+		if (
+			!trace(
+				x * m[0] + y * m[3] + zx,
+				x * m[1] + y * m[4] + zy,
+				x * m[2] + y * m[5] + zz,
+				dx,
+				dy,
+				dz,
+				hit,
+				from,
+			)
+		)
+			return false
+		const { nx, ny, nz } = hit
+		hit.nx = m[0] * nx + m[1] * ny + m[2] * nz
+		hit.ny = m[3] * nx + m[4] * ny + m[5] * nz
+		hit.nz = m[6] * nx + m[7] * ny + m[8] * nz
+		return true
+	}
+}
+
 // --- Shape ---
 
 /** Turning about the vertical, tipped back a little. */
 const SPIN_AXIS: Vec3 = normalize([0.05, 1, 0.1])
-/** Starts turned this far toward its thumb side, where the web and the pocket show best. */
-const HEADING = 0.55
+/**
+ * Starts turned this far toward its thumb side, with the pocket in view. The spin brings it
+ * around face-on, then shows the pinky side, the back of the finger stalls and the web.
+ */
+const HEADING = 0.3
 
 export const GLOVE: Shape = {
 	name: 'baseball glove',
 	materials: MATERIALS,
+	credit: GLOVE_CREDIT,
 	// Sphere tracing costs more per sample than the others, so blur a fast spin over fewer steps
 	blurSteps: 3,
 
 	start(random = Math.random) {
 		const tilt = quatFromRotation([-0.22, 0, 0])
-		const heading = quatFromRotation(scale(SPIN_AXIS, HEADING + (random() - 0.5) * 0.5))
-		return {
-			orientation: quatMul(heading, tilt),
-			// Turning toward the front, so the pocket comes around before the back does
-			spin: scale(SPIN_AXIS, -IDLE_SPIN),
-		}
+		const heading = quatFromRotation(scale(SPIN_AXIS, HEADING + (random() - 0.5) * 0.4))
+		return { orientation: quatMul(heading, tilt), spin: scale(SPIN_AXIS, -IDLE_SPIN) }
 	},
 
-	prepare(deadline) {
-		return prepareGlove(deadline)
+	prepare() {
+		return prepareGlove()
 	},
 
-	view(m: Mat3) {
-		// Without a `prepare` first, finish the grid now
-		prepareGlove()
-		return castLocal(m, intersectGlove)
+	view(m: Mat3, cell: number) {
+		return viewGlove(m, cell)
 	},
 }
