@@ -99,7 +99,10 @@
 	{#snippet after()}
 		<div class="mx-auto flex items-center justify-center gap-ch">
 			<ToggleSpoilerPrevention team={{ id: team.id, abbreviation: team.abbreviation! }} />
-			<ToggleFavorite target={{ href: `/teams/${team.id}`, label: team.abbreviation! }} />
+			<ToggleFavorite
+				target={{ href: `/teams/${team.id}`, label: team.abbreviation! }}
+				fullName={team.name}
+			/>
 		</div>
 	{/snippet}
 </Header>

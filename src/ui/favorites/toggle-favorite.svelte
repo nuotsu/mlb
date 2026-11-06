@@ -7,15 +7,20 @@
 
 	let {
 		target,
+		fullName,
 		class: className,
 		children,
-	}: { target: App.Favorite } & HTMLAttributes<HTMLInputElement> = $props()
+	}: {
+		target: App.Favorite
+		/** Full team/player name for analytics; `target.label` is often an abbreviation or last name */
+		fullName?: string
+	} & HTMLAttributes<HTMLInputElement> = $props()
 	let checked = $derived(favoritesStore.has(target.href))
 
 	function toggle() {
 		const action = checked ? 'remove' : 'add'
 		favoritesStore.toggle(target)
-		trackFavorite(action, target, page.route.id ?? 'unknown', favoritesStore.favorites)
+		trackFavorite(action, target, page.route.id ?? 'unknown', favoritesStore.favorites, fullName)
 	}
 </script>
 
