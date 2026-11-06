@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { cn } from '#lib/utils.js'
 	import { settingsChanged } from '#ui/account/changes.js'
+	import { capture } from '#ui/analytics.js'
 	import { MoonIcon, SunIcon } from '#ui/icons/index.js'
 	import { colorSchemeStore } from '#ui/store.svelte.js'
 
@@ -27,8 +28,10 @@
 	class="flex items-center gap-[.5ch]"
 	data-color-scheme={mode}
 	onclick={() => {
-		colorSchemeStore.colorScheme = mode === 'dark' ? 'light' : 'dark'
+		const next = mode === 'dark' ? 'light' : 'dark'
+		colorSchemeStore.colorScheme = next
 		settingsChanged()
+		capture('color_scheme_changed', { color_scheme: next })
 	}}
 	title="Toggle light/dark mode"
 >

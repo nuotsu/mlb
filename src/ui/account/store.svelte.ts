@@ -10,6 +10,13 @@ import {
 } from '#lib/account.js'
 import { authClient } from '#lib/auth-client.js'
 import { delayStorageKey } from '#lib/time-travel.js'
+import {
+	capture,
+	identify,
+	isNewUser,
+	resetIdentity,
+	setFavoriteProperties,
+} from '#ui/analytics.js'
 import { appIconStore } from '#ui/app-icon/store.svelte.js'
 import { compareStore } from '#ui/compare/store.svelte.js'
 import { favoritesStore } from '#ui/favorites/store.svelte.js'
@@ -60,18 +67,25 @@ export const accountStore = $state({
 		}
 
 		localStorage.setItem(AUTH_PENDING, String(Date.now()))
+		capture('sign_in_started', { provider: 'google' })
 		const { error } = await authClient.signIn.social({
 			provider: 'google',
 			callbackURL: location.pathname + location.search,
 		})
 		if (error) {
 			localStorage.removeItem(AUTH_PENDING)
+			capture('sign_in_failed', {
+				provider: 'google',
+				error: error.code ?? error.message ?? String(error.status),
+			})
 			console.error('[account] sign-in failed', error)
 		}
 	},
 
 	async signOut() {
+		capture('signed_out', {})
 		disconnect()
+		resetIdentity()
 		this.user = null
 		await authClient.signOut().catch((error) => console.error('[account] sign-out failed', error))
 	},
@@ -201,8 +215,12 @@ const pushListener: AccountListener = {
 async function connect(user: AccountUser) {
 	accountStore.user = user
 	accountStore.status = 'syncing'
+	// Back from Google (not just a page load with an existing session)
+	const signingIn = Number(localStorage.getItem(AUTH_PENDING)) > Date.now() - 10 * 60_000
 	localStorage.removeItem(AUTH_PENDING)
 	setAccountListener(queueListener)
+	identify(user, colorSchemeStore.mode === 'dark' ? 'dark' : 'light')
+	const localFavorites = favoritesStore.favorites.length
 
 	// Same user as last time: the account is the truth. New sign-in: merge local data in.
 	const state =
@@ -224,6 +242,15 @@ async function connect(user: AccountUser) {
 	applyTimeTravel(state.timeTravel)
 	localStorage.setItem(SYNCED_USER, user.id)
 	accountStore.status = 'synced'
+
+	if (signingIn) {
+		capture('signed_in', {
+			provider: 'google',
+			is_new_user: isNewUser(user),
+			local_favorites: localFavorites,
+		})
+	}
+	setFavoriteProperties(state.favorites)
 
 	setAccountListener(pushListener)
 	for (const [action, favorite] of pendingFavorites.splice(0)) {
@@ -336,6 +363,7 @@ async function send<T>(url: string, method: string, body?: unknown): Promise<T |
 		if (response.status === 401) {
 			// Session ended elsewhere: fall back to local
 			disconnect()
+			resetIdentity()
 			accountStore.user = null
 			return null
 		}
