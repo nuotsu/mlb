@@ -119,7 +119,11 @@
 
 								<ToggleFavorite
 									class="shrink-0 text-sm"
-									target={{ href: `/player/${person.id}`, label: person.lastName ?? person.fullName }}
+									target={{
+										href: `/player/${person.id}`,
+										label: person.lastName ?? person.fullName,
+									}}
+									fullName={person.fullName}
 								/>
 							</li>
 						{/each}
