@@ -13,8 +13,8 @@ describe('pickAsciiObject', () => {
 	test('picks each object about equally often', () => {
 		const random = seeded(5)
 		const counts = Object.fromEntries(ASCII_OBJECT_IDS.map((id) => [id, 0]))
-		for (let i = 0; i < 8000; i++) counts[pickAsciiObject(random)]++
-		for (const id of ASCII_OBJECT_IDS) expect(counts[id] / 8000).toBeCloseTo(0.25, 1)
+		for (let i = 0; i < 9000; i++) counts[pickAsciiObject(random)]++
+		for (const id of ASCII_OBJECT_IDS) expect(counts[id] / 9000).toBeCloseTo(1 / 3, 1)
 	})
 
 	test('maps the whole range of random numbers onto the objects', () => {
@@ -28,7 +28,8 @@ describe('pickAsciiObject', () => {
 		expect(pickAsciiObject(() => 0, 'glove')).toBe('glove')
 		expect(pickAsciiObject(() => 0, 'catcher')).toBe('ball')
 		expect(pickAsciiObject(() => 0, null)).toBe('ball')
-		expect(isAsciiObjectId('bat')).toBe(true)
+		expect(isAsciiObjectId('plate')).toBe(true)
+		expect(isAsciiObjectId('bat')).toBe(false)
 		expect(isAsciiObjectId('toString')).toBe(false)
 	})
 })
@@ -72,7 +73,6 @@ describe.each(ASCII_OBJECT_IDS)('%s', (id) => {
 					expect(shape.materials[hit.material]).toBeDefined()
 				}
 			}
-		// Even the slender bat covers a tenth of it
-		expect(hits / total).toBeGreaterThan(0.08)
+		expect(hits / total).toBeGreaterThan(0.15)
 	})
 })

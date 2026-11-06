@@ -16,7 +16,7 @@
 	let firstName = $derived(user?.name.split(' ')[0] || 'there')
 
 	// The page is cached for everyone, so pick in the browser: the server (and hydration) draw an
-	// empty box, and the pick lands before the first frame does. `?object=bat` forces one in dev
+	// empty box, and the pick lands before the first frame does. `?object=glove` forces one in dev
 	let object = $state<AsciiObjectId>('ball')
 	onMount(() => {
 		object = pickAsciiObject(

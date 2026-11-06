@@ -4,14 +4,12 @@
  */
 
 import type { Shape } from './ascii-3d.js'
-import { BAT } from './baseball-bat.js'
 import { GLOVE } from './baseball-glove.js'
 import { BASEBALL } from './baseball.js'
 import { HOME_PLATE } from './home-plate.js'
 
 export const ASCII_OBJECTS = {
 	ball: BASEBALL,
-	bat: BAT,
 	glove: GLOVE,
 	plate: HOME_PLATE,
 } satisfies Record<string, Shape>
