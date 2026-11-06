@@ -30,7 +30,7 @@ export const variables = defineEnvVars({
 	BETTER_AUTH_URL: {
 		schema: optional,
 		description:
-			'Public origin of the app, e.g. `https://mlb.theohtani.com`. Falls back to the Vercel branch URL',
+			'Public origin of the app, e.g. `http://localhost:5173`. Ignored in production (always `https://mlb.theohtani.com`). Falls back to the Vercel branch URL',
 	},
 	GOOGLE_CLIENT_ID: { schema: optional },
 	GOOGLE_CLIENT_SECRET: { schema: optional },

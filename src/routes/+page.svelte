@@ -14,6 +14,7 @@
 	import Calendar from '#ui/schedule/calendar.svelte'
 	import CountdownList from '#ui/season/countdown-list.svelte'
 	import SeasonInfo from '#ui/season/season-info.svelte'
+	import TeamAvatar from '#ui/team/avatar.svelte'
 	import TeamCalendar from '#ui/team/team-calendar.svelte'
 	import TransactionByTeam from '#ui/transactions/by-team.svelte'
 	import type { PageProps } from './$types'
@@ -42,7 +43,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 		const {
 			teams: [team],
 		} = await fetchMLB<MLB.TeamsResponse>(`/api/v1/teams/${favoriteTeam}`, {
-			fields: ['teams,id,name,abbreviation,sport'],
+			fields: ['teams,id,name,teamName,abbreviation,sport'],
 		})
 
 		return team
@@ -96,7 +97,10 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 			<section class="space-y-ch">
 				{#if favoriteTeam}
 					{#await fetchFavoriteTeam() then team}
-						<h2 class="text-center h1">{team.name} Schedule</h2>
+						<h2 class="flex items-center justify-center gap-ch h1">
+							<TeamAvatar class="size-lh" teamId={team.id} />
+							{team.teamName ?? team.name} Schedule
+						</h2>
 						<TeamCalendar class="border-t border-stroke" {team} />
 						<div class="text-center text-sm">
 							{@render link({ href: `/teams/${favoriteTeam}`, label: 'View team' })}
@@ -128,7 +132,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 				<Rollup
 					posts={data.posts}
 					class="h-[calc(var(--height)+1.5lh+3px)] overflow-y-auto border border-stroke p-ch [&_time]:text-sm"
-					limit={10}
+					limit={8}
 				/>
 				<div class="text-center text-sm">
 					{@render link({ href: `/blog`, label: 'View all posts' })}

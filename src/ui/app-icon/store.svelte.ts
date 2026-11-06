@@ -1,5 +1,5 @@
 import type { AppIcon } from '#lib/account.js'
-import { APP_ICON_KEY, applyAppIcon, isAppIcon } from '#lib/app-icon.js'
+import { APP_ICON_KEY, applyAppIcon, cacheTouchIcon, isAppIcon } from '#lib/app-icon.js'
 import { settingsChanged } from '#ui/account/changes.js'
 import { browser } from '$app/env'
 
@@ -27,3 +27,7 @@ export const appIconStore = $state({
 		applyAppIcon(icon)
 	},
 })
+
+// An icon chosen before its home-screen image was cached (or with the cache cleared) still needs
+// its data: URI, or iOS 27's Add to Home Screen sheet shows a letter tile
+if (browser) void cacheTouchIcon(appIconStore.icon)
