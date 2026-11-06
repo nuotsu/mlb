@@ -211,25 +211,48 @@ export function sanitizeSettings(input: unknown): Settings {
 
 /**
  * Merge local data into the account on sign-in:
- * favorites are unioned, settings come from whichever side changed last (newest wins), with
- * keys the winner never set filled in from the other side. An account that has never saved
- * settings always takes the local ones. Time-travel moments merge per game, newest wins.
+ * favorites are unioned, and the account's saved settings win, so signing in always loads what
+ * the account has (app icon, color scheme, etc.) rather than whatever this device last used.
+ * Local settings only fill keys the account never set, and dismissed hints are unioned. An
+ * account that has never saved settings takes the local ones. Time-travel moments merge per
+ * game, newest wins.
  */
 export function mergeAccountState(
 	account: AccountState,
 	local: AccountState,
 	now = Date.now(),
 ): AccountState {
-	const localNewer =
-		account.settingsUpdatedAt === 0 || local.settingsUpdatedAt > account.settingsUpdatedAt
+	const favorites = unionFavorites(account.favorites, local.favorites).slice(0, MAX_FAVORITES)
+	const timeTravel = sanitizeTimeTravel(mergeTimeTravel(account.timeTravel, local.timeTravel), now)
 
+	if (account.settingsUpdatedAt === 0) {
+		return {
+			favorites,
+			settings: { ...account.settings, ...local.settings },
+			settingsUpdatedAt: local.settingsUpdatedAt || now,
+			timeTravel,
+		}
+	}
+
+	const settings: Settings = { ...local.settings, ...account.settings }
+	if (account.settings.onboardingDismissed || local.settings.onboardingDismissed) {
+		settings.onboardingDismissed = [
+			...new Set([
+				...(account.settings.onboardingDismissed ?? []),
+				...(local.settings.onboardingDismissed ?? []),
+			]),
+		].slice(0, 50)
+	}
+
+	// Stamp anything local added so it's saved, otherwise keep the account's stamp
+	const changed = (Object.keys(settings) as (keyof Settings)[]).some(
+		(key) => JSON.stringify(settings[key]) !== JSON.stringify(account.settings[key]),
+	)
 	return {
-		favorites: unionFavorites(account.favorites, local.favorites).slice(0, MAX_FAVORITES),
-		settings: localNewer
-			? { ...account.settings, ...local.settings }
-			: { ...local.settings, ...account.settings },
-		settingsUpdatedAt: localNewer ? local.settingsUpdatedAt || now : account.settingsUpdatedAt,
-		timeTravel: sanitizeTimeTravel(mergeTimeTravel(account.timeTravel, local.timeTravel), now),
+		favorites,
+		settings,
+		settingsUpdatedAt: changed ? now : account.settingsUpdatedAt,
+		timeTravel,
 	}
 }
 
