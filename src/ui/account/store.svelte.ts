@@ -59,7 +59,12 @@ export const accountStore = $state({
 	user: null as AccountUser | null,
 	status: 'idle' as 'idle' | 'syncing' | 'synced' | 'error',
 
+	/** Sign-in couldn't start (e.g. the server rejected it); cleared on the next attempt */
+	signInError: false,
+
 	async signIn() {
+		this.signInError = false
+
 		// Google only knows one callback host: continue on that host, on the same page
 		if (authOrigin && authOrigin !== location.origin) {
 			location.assign(authOrigin + location.pathname + location.search + SIGN_IN_HASH)
@@ -68,16 +73,16 @@ export const accountStore = $state({
 
 		localStorage.setItem(AUTH_PENDING, String(Date.now()))
 		capture('sign_in_started', { provider: 'google' })
-		const { error } = await authClient.signIn.social({
-			provider: 'google',
-			callbackURL: location.pathname + location.search,
-		})
+		const { error } = await authClient.signIn
+			.social({
+				provider: 'google',
+				callbackURL: location.pathname + location.search,
+			})
+			.catch((error: unknown) => ({ error }))
 		if (error) {
 			localStorage.removeItem(AUTH_PENDING)
-			capture('sign_in_failed', {
-				provider: 'google',
-				error: error.code ?? error.message ?? String(error.status),
-			})
+			this.signInError = true
+			capture('sign_in_failed', { provider: 'google', error: describeError(error) })
 			console.error('[account] sign-in failed', error)
 		}
 	},
@@ -350,6 +355,13 @@ function applySettings({ settings, settingsUpdatedAt }: AccountState) {
 	if (settings.appIcon) appIconStore._replace(settings.appIcon)
 	if (settings.compare) compareStore._replace(settings.compare)
 	setSettingsUpdatedAt(settingsUpdatedAt)
+}
+
+/** Short, stable label for a sign-in error: Better Auth's code, else the message or status */
+function describeError(error: unknown): string {
+	if (!error || typeof error !== 'object') return String(error)
+	const { code, message, status } = error as Record<string, unknown>
+	return String(code || message || status || 'unknown')
 }
 
 async function send<T>(url: string, method: string, body?: unknown): Promise<T | null> {
