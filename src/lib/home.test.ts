@@ -26,7 +26,7 @@ describe('sanitizeHome', () => {
 					{ id: 'blog', size: 'L', hidden: true, extra: 1 },
 					{ id: 'blog', size: 'S' },
 					{ id: 'nope' },
-					{ id: 'team', size: 'XL', hidden: 'yes' },
+					{ id: 'team', size: 'XXL', hidden: 'yes' },
 					null,
 				],
 			}),
@@ -60,7 +60,7 @@ describe('resolveWidgets', () => {
 		])
 		expect(widgets.slice(0, 2)).toEqual([
 			{ id: 'season', size: 'M', hidden: false },
-			{ id: 'today', size: 'W', hidden: true },
+			{ id: 'today', size: 'XL', hidden: true },
 		])
 		expect(widgets.map((w) => w.id).sort()).toEqual([...HOME_WIDGETS].sort())
 	})
@@ -107,8 +107,8 @@ describe('reorderVisible', () => {
 })
 
 describe('nextSize', () => {
-	test('cycles S → M → L → W → S', () => {
-		expect(['S', 'M', 'L', 'W'].map((s) => nextSize(s as 'S'))).toEqual(['M', 'L', 'W', 'S'])
+	test('cycles S → M → L → XL → S', () => {
+		expect(['S', 'M', 'L', 'XL'].map((s) => nextSize(s as 'S'))).toEqual(['M', 'L', 'XL', 'S'])
 	})
 })
 

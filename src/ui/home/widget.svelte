@@ -72,7 +72,7 @@
 
 		{#if editing}
 			<button
-				class="button min-w-[3ch] font-mono text-xs"
+				class="box-content button w-[2ch] font-mono text-xs"
 				onclick={cell.resize}
 				aria-label="Resize {title}, now {WIDGET_SIZE_LABELS[cell.widget.size]}"
 				title="Resize"

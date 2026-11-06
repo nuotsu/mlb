@@ -69,6 +69,15 @@
 			}
 		}
 
+	// The grabbing cursor everywhere while dragging (from the press): the pointer can be over
+	// anything, and the grab cursors on the widgets underneath would win otherwise
+	$effect(() => {
+		if (!dragging) return
+		const root = document.documentElement
+		root.dataset.homeDragging = ''
+		return () => delete root.dataset.homeDragging
+	})
+
 	function label(id: HomeWidgetId) {
 		return WIDGETS[id].label
 	}
@@ -268,11 +277,13 @@
 		<div class="flex flex-wrap items-center gap-[.5ch] text-sm">
 			<span class="text-current/60">Hidden:</span>
 			{#each hidden as widget (widget.id)}
+				{@const Icon = WIDGETS[widget.id].icon}
 				<button
-					class="rounded-full border border-dashed border-accent px-ch py-[.25ch] hover:bg-accent/25"
+					class="inline-flex items-center gap-[.5ch] rounded-full border border-dashed border-accent px-ch py-[.25ch] hover:bg-accent/25"
 					onclick={() => show(widget.id)}
 				>
-					+ {label(widget.id)}
+					+ <Icon class="size-[1.125em]" aria-hidden="true" />
+					{label(widget.id)}
 				</button>
 			{/each}
 		</div>
@@ -329,7 +340,6 @@
 	}
 
 	.dragging {
-		cursor: grabbing;
 		scale: 1.02;
 		box-shadow: 0 1ch 3ch rgb(0 0 0 / 0.35);
 		transition: scale 150ms;
@@ -339,6 +349,11 @@
 		transition:
 			translate 200ms cubic-bezier(0.2, 0.8, 0.2, 1),
 			scale 200ms;
+	}
+
+	:global(html[data-home-dragging]),
+	:global(html[data-home-dragging] *) {
+		cursor: grabbing !important;
 	}
 
 	[data-editing] .cell:not(.dragging) {

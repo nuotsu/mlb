@@ -20,15 +20,15 @@ export const HOME_WIDGETS = [
 
 export type HomeWidgetId = (typeof HOME_WIDGETS)[number]
 
-/** S: 1 column · M: 2 columns · L: 2 columns, 2 rows · W: the whole row */
-export const WIDGET_SIZES = ['S', 'M', 'L', 'W'] as const
+/** S: 1 column · M: 2 columns · L: 2 columns, 2 rows · XL: the whole row */
+export const WIDGET_SIZES = ['S', 'M', 'L', 'XL'] as const
 export type WidgetSize = (typeof WIDGET_SIZES)[number]
 
 export const WIDGET_SIZE_LABELS: Record<WidgetSize, string> = {
 	S: 'small',
 	M: 'medium',
 	L: 'large',
-	W: 'full width',
+	XL: 'full width',
 }
 
 /** Columns and rows a size spans on the widest (4-column) grid */
@@ -36,11 +36,11 @@ export const SIZE_SPANS: Record<WidgetSize, { cols: number; rows: number }> = {
 	S: { cols: 1, rows: 1 },
 	M: { cols: 2, rows: 1 },
 	L: { cols: 2, rows: 2 },
-	W: { cols: 4, rows: 1 },
+	XL: { cols: 4, rows: 1 },
 }
 
 export const DEFAULT_SIZES: Record<HomeWidgetId, WidgetSize> = {
-	today: 'W',
+	today: 'XL',
 	team: 'M',
 	transactions: 'M',
 	blog: 'S',
