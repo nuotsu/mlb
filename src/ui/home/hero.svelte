@@ -57,7 +57,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 					<div class="mb-1">Welcome to</div>
 					<AsciiReveal
 						text={ascii}
-						class="-mt-ch overflow-x-auto overflow-y-clip text-[x-small] leading-none"
+						class="-mt-ch overflow-x-auto overflow-y-clip text-left text-[x-small] leading-none"
 					/>
 					<p class="ml-auto">.TheOhtani.com</p>
 				</h1>
