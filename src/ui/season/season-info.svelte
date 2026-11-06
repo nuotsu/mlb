@@ -7,10 +7,13 @@
 	let {
 		season,
 		bordered,
+		heading = true,
 		showFavoriteTeams,
 	}: {
 		season: MLB.SeasonDateInfo
 		bordered?: boolean
+		/** Off when something around it already names the season */
+		heading?: boolean
 		/** Adds a row per favorited team with today's game — homepage only */
 		showFavoriteTeams?: boolean
 	} = $props()
@@ -18,7 +21,9 @@
 
 {#if season}
 	<article class="space-y-ch">
-		<h2 class="text-center h1">{season?.seasonId} Season Schedule</h2>
+		{#if heading}
+			<h2 class="text-center h1">{season?.seasonId} Season Schedule</h2>
+		{/if}
 
 		<div class={cn(bordered && 'border border-stroke p-ch')}>
 			<dl class="mx-auto description-list max-w-max tabular-nums">

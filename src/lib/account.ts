@@ -1,3 +1,4 @@
+import { sanitizeHome, type HomeSettings } from './home.js'
 import { DELAY_TTL_MS } from './time-travel.js'
 
 /*
@@ -87,6 +88,8 @@ export type Settings = {
 	appIcon?: AppIcon
 	/** localStorage `compare`: player ids, in order */
 	compare?: number[]
+	/** localStorage `home`: the home page's widget layout */
+	home?: HomeSettings
 }
 
 export const MAX_COMPARE = 20
@@ -195,6 +198,9 @@ export function sanitizeSettings(input: unknown): Settings {
 			),
 		].slice(0, MAX_COMPARE)
 	}
+
+	const home = sanitizeHome(raw.home)
+	if (home) settings.home = home
 
 	if (Array.isArray(raw.onboardingDismissed)) {
 		settings.onboardingDismissed = [

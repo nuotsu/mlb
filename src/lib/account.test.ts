@@ -66,6 +66,14 @@ describe('sanitizeSettings', () => {
 			compare: [660271, 592450],
 		})
 	})
+
+	test('keeps a valid home layout, including an empty (reset) one', () => {
+		expect(
+			sanitizeSettings({ home: { widgets: [{ id: 'blog', size: 'L' }, { id: 'x' }] } }),
+		).toEqual({ home: { widgets: [{ id: 'blog', size: 'L' }] } })
+		expect(sanitizeSettings({ home: { widgets: [] } })).toEqual({ home: { widgets: [] } })
+		expect(sanitizeSettings({ home: 'grid' })).toEqual({})
+	})
 })
 
 describe('sanitizeTimeTravel', () => {

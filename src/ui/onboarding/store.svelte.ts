@@ -5,6 +5,7 @@ export const HINTS = {
 	INSTALL_PWA: 'install-pwa',
 	FAVORITE_TEAM: 'favorite-team',
 	FAVORITE_BENEFITS: 'favorite-benefits',
+	HOME_SETUP: 'home-setup',
 } as const
 
 export type HintId = (typeof HINTS)[keyof typeof HINTS]
