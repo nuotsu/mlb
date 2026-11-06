@@ -98,7 +98,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 				{#if favoriteTeam}
 					{#await fetchFavoriteTeam() then team}
 						<h2 class="flex items-center justify-center gap-ch h1">
-							<TeamAvatar class="size-[1.5lh]" teamId={team.id} />
+							<TeamAvatar class="size-lh" teamId={team.id} />
 							{team.teamName ?? team.name} Schedule
 						</h2>
 						<TeamCalendar class="border-t border-stroke" {team} />
