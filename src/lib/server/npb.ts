@@ -13,6 +13,7 @@ import {
 import {
 	buildNpbRoster,
 	isNpbTeam,
+	NPB_TEAM_INFO,
 	npbFieldingUrl,
 	npbRosterUrl,
 	parseNpbFielding,
@@ -187,9 +188,9 @@ export function clearNpbRosterCache() {
 	rosterCache.clear()
 }
 
-/** Regular season and interleague games; the postseason and exhibitions aren't covered yet */
+/** Regular season, interleague, postseason and All-Star games; exhibitions aren't covered */
 const isCoveredCompetition = (competitionJa: string | null) =>
-	!competitionJa || /公式戦|交流戦/.test(competitionJa)
+	!competitionJa || /公式戦|交流戦|CS|クライマックス|日本シリーズ|オールスター/.test(competitionJa)
 
 /** English names for the players on a team's current roster, if it's the game's season */
 function rosterNames(roster: NpbRoster | null, season: number) {
@@ -242,12 +243,15 @@ export async function fetchNpbGame(
 					.then(parseNpbPlays)
 					.catch(optional<NpbGame['plays']>('play-by-play'))
 			: null,
-		...(['away', 'home'] as const).map((side) => {
-			const id = game.teams[side].id
-			return id && isNpbTeam(id)
-				? getNpbRoster(id, { fetcher }).catch(optional<NpbRoster>(`roster ${id}`))
-				: null
-		}),
+		// An All-Star side's players come from every team in its league, so read every roster
+		...[
+			...new Set(
+				(['away', 'home'] as const).flatMap((side) => {
+					const id = game.teams[side].id
+					return id && isNpbTeam(id) ? [id] : Object.keys(NPB_TEAM_INFO).map(Number)
+				}),
+			),
+		].map((id) => getNpbRoster(id, { fetcher }).catch(optional<NpbRoster>(`roster ${id}`))),
 	])
 
 	return {
@@ -337,8 +341,9 @@ export async function fetchNpbSchedule(
 		months: found,
 		postseason: {
 			start: calendars.find((calendar) => calendar?.start)?.start ?? null,
-			games: new Set(calendars.flatMap((calendar) => [...(calendar?.games ?? [])])),
+			games: new Map(calendars.flatMap((calendar) => [...(calendar?.games ?? [])])),
 		},
+		today: japanToday(),
 	})
 }
 

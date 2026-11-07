@@ -211,11 +211,17 @@ describe('getNpbGame', () => {
 		expect(fetcher.calls).toBe(calls)
 	})
 
-	test('treats games outside the regular season as not found', async () => {
-		const fetcher = gameFetch(
-			game('index').replace('JERA セ・リーグ公式戦', 'セ・リーグ クライマックスシリーズ'),
-		)
+	test('treats exhibition games as not found', async () => {
+		const fetcher = gameFetch(game('index').replace('JERA セ・リーグ公式戦', 'オープン戦'))
 		expect(getNpbGame(ref, { fetcher })).rejects.toBeInstanceOf(NpbNotFoundError)
+	})
+
+	test('covers the postseason and the All-Star Game', async () => {
+		for (const competition of ['CS ファイナルステージ', 'SMBC日本シリーズ', 'オールスターゲーム']) {
+			clearNpbGameCache()
+			const fetcher = gameFetch(game('index').replace('JERA セ・リーグ公式戦', competition))
+			expect((await getNpbGame(ref, { fetcher })).competitionJa).toBe(competition)
+		}
 	})
 
 	test('is not found when npb.jp has no such game', async () => {
@@ -264,8 +270,9 @@ describe('getNpbSchedule', () => {
 
 		expect(schedule.allStarDates).toEqual(['2026-07-28', '2026-07-29'])
 		expect(schedule.games.at(0)!.date).toBe('2026-07-01')
-		// The Climax Series and Nippon Series are left out, the unplayed game 6 too
-		expect(schedule.games.at(-1)!.ref.code).toBe('t-s-25')
+		// Through the Japan Series, without the game 6 it didn't need
+		expect(schedule.games.at(-1)!.ref.code).toBe('h-db-04')
+		expect(schedule.games.filter((game) => game.competition === 'all-star')).toHaveLength(2)
 	})
 
 	test('throws NpbNotFoundError when no month has a page, or before 2019', async () => {

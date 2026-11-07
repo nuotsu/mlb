@@ -6,8 +6,13 @@
 import type { NpbGame, NpbGameRef, NpbGameTeam, NpbLang, NpbSide } from '#lib/npb-game.js'
 import { npbGamePath, translateCancelReason, translateStatus } from '#lib/npb-game.js'
 import { NPB_TEAM_INFO } from '#lib/npb-roster.js'
-import type { NpbScheduleGame, NpbScheduleLinescore, NpbScheduleTeam } from '#lib/npb-schedule.js'
-import { NPB_TEAMS } from '#lib/npb.js'
+import type {
+	NpbCompetition,
+	NpbScheduleGame,
+	NpbScheduleLinescore,
+	NpbScheduleTeam,
+} from '#lib/npb-schedule.js'
+import { NPB_TEAMS, npbAllStarTeam } from '#lib/npb.js'
 
 /** NPB plays nine innings, and up to twelve before a tie */
 const SCHEDULED_INNINGS = 9
@@ -106,8 +111,10 @@ export function npbGamePk({ date, code }: NpbGameRef) {
 
 /** A schedule's team, with its official English name, as the Stats API would give it */
 export function toMlbScheduleTeam(team: NpbScheduleTeam, lang: NpbLang = 'en'): MLB.Team {
-	const { franchiseName, clubName } = NPB_TEAM_INFO[team.id]
-	const abbreviation = Object.values(NPB_TEAMS).find(({ id }) => id === team.id)?.abbreviation
+	const allStar = npbAllStarTeam(team.id)
+	const info = NPB_TEAM_INFO[team.id]
+	const abbreviation =
+		allStar?.abbreviation ?? Object.values(NPB_TEAMS).find(({ id }) => id === team.id)?.abbreviation
 
 	return toMlbTeam(
 		{
@@ -115,8 +122,8 @@ export function toMlbScheduleTeam(team: NpbScheduleTeam, lang: NpbLang = 'en'): 
 			code: team.code,
 			nameJa: team.shortNameJa,
 			shortNameJa: team.shortNameJa,
-			name: `${franchiseName} ${clubName}`,
-			teamName: clubName,
+			name: allStar?.name ?? `${info.franchiseName} ${info.clubName}`,
+			teamName: allStar?.teamName ?? info.clubName,
 			abbreviation: abbreviation ?? null,
 			runs: team.runs,
 			hits: null,
@@ -125,6 +132,32 @@ export function toMlbScheduleTeam(team: NpbScheduleTeam, lang: NpbLang = 'en'): 
 		lang,
 	)
 }
+
+/** The Stats API's game type nearest each: its Wild Card, LCS, World Series and All-Star Game */
+const GAME_TYPES: Record<NpbCompetition, string> = {
+	regular: 'R',
+	'climax-first': 'F',
+	'climax-final': 'L',
+	climax: 'L',
+	'japan-series': 'W',
+	'all-star': 'A',
+}
+
+/** A postseason or All-Star game's round, as the Stats API's `ALCS Game 3` */
+const ROUNDS: Record<Exclude<NpbCompetition, 'regular'>, string> = {
+	'climax-first': 'CS First Stage Game',
+	'climax-final': 'CS Final Stage Game',
+	climax: 'Climax Series Game',
+	'japan-series': 'Japan Series Game',
+	'all-star': 'All-Star Game',
+}
+
+/**
+ * A postseason or All-Star game's round and number, as the Stats API describes its own. `undefined`
+ * in the regular season, which the card describes by its series instead.
+ */
+const describe = ({ competition, series }: NpbScheduleGame) =>
+	competition === 'regular' ? undefined : `${ROUNDS[competition]} ${series.number}`
 
 /**
  * The schedule's game, brought up to date by its own page where the schedule pages have read it:
@@ -164,7 +197,8 @@ export function toMlbScheduleGame(scheduled: NpbScheduleGame, lang: NpbLang = 'e
 
 	return {
 		gamePk: npbGamePk(game.ref),
-		gameType: 'R',
+		gameType: GAME_TYPES[game.competition],
+		description: describe(game),
 		gameDate: npbGameDate(game),
 		officialDate: game.date,
 		seriesGameNumber: game.series.number,

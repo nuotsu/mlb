@@ -27,6 +27,7 @@ const fixture = (name: string) =>
 
 const july2026 = parseNpbScheduleMonth(fixture('npb-schedule_07_detail-2026'), 2026)
 const october2026 = parseNpbScheduleMonth(fixture('npb-schedule_10_detail-2026'), 2026)
+const november2026 = parseNpbScheduleMonth(fixture('npb-schedule_11_detail-2026'), 2026)
 /** An archived copy from 2025-07-29, 13:42 JST: that day's probable starters, and later games */
 const july2025 = parseNpbScheduleMonth(fixture('npb-schedule_07_detail-2025-0729'), 2025)
 const postseason = parseNpbPostseason(fixture('npb-calendar_10-eng-2026'), 2026, 10)
@@ -45,6 +46,7 @@ describe('parseNpbScheduleMonth', () => {
 	test('reads a finished game, home team first', () => {
 		expect(find(october2026.rows, '2026-10-08', 't')).toEqual({
 			code: 't-s-25',
+			competition: 'regular',
 			date: '2026-10-08',
 			teams: {
 				home: { id: 341, code: 't', shortNameJa: '阪神', runs: 0, record: null },
@@ -93,9 +95,18 @@ describe('parseNpbScheduleMonth', () => {
 		})
 	})
 
-	test('sets All-Star games aside', () => {
+	test('reads All-Star games, between the two leagues', () => {
 		expect(july2026.allStarDates).toEqual(['2026-07-28', '2026-07-29'])
-		expect(july2026.rows.every((row) => row.date !== '2026-07-28')).toBe(true)
+		expect(find(july2026.rows, '2026-07-28', 'cl')).toMatchObject({
+			code: 'cl-pl-01',
+			competition: 'all-star',
+			state: 'Final',
+			teams: {
+				home: { id: -1, code: 'cl', shortNameJa: 'セ・リーグ', runs: 5 },
+				away: { id: -2, code: 'pl', shortNameJa: 'パ・リーグ', runs: 7 },
+			},
+		})
+		expect(find(july2026.rows, '2026-07-29', 'pl').code).toBe('pl-cl-02')
 	})
 
 	test('skips days without games', () => {
@@ -124,20 +135,80 @@ describe('parseNpbPostseason', () => {
 
 	test('none in a month without postseason games', () => {
 		const html = fixture('npb-calendar_10-eng-2026').replace(/tescheaten/g, 'x')
-		expect(parseNpbPostseason(html, 2026, 10)).toEqual({ start: null, games: new Set() })
+		expect(parseNpbPostseason(html, 2026, 10)).toEqual({ start: null, games: new Map() })
 	})
 })
 
 describe('buildNpbSchedule', () => {
-	test('drops the postseason', () => {
+	describe('the postseason', () => {
 		const { games } = buildNpbSchedule({
 			season: 2026,
-			months: [october2026],
+			months: [october2026, november2026],
 			postseason,
+			today: '2026-11-07',
 		})
-		expect(games.at(-1)!.ref).toEqual({ season: 2026, date: '1008', code: 't-s-25' })
-		expect(games.every((game) => game.date <= '2026-10-08')).toBe(true)
-		expect(games.every((game) => game.linked)).toBe(true)
+		const on = (date: string, code: string) =>
+			games.find((game) => game.ref.date === date && game.ref.code === code)!
+
+		test('tells each round apart, and the regular season ends before it', () => {
+			expect(on('1008', 't-s-25').competition).toBe('regular')
+			expect(on('1010', 'g-db-01').competition).toBe('climax-first')
+			expect(on('1014', 't-db-01').competition).toBe('climax-final')
+			expect(on('1024', 'db-h-01').competition).toBe('japan-series')
+			expect(
+				games.filter((game) => game.date >= '2026-10-10').every((g) => g.competition !== 'regular'),
+			).toBe(true)
+		})
+
+		test('leaves out a game that turned out not to be needed', () => {
+			// Japan Series game 6, listed for 11/1 but never played: the Hawks won in four
+			expect(games.at(-1)!.ref).toEqual({ season: 2026, date: '1028', code: 'h-db-04' })
+		})
+
+		test("keeps one that hasn't been played yet, numbered after the round's games", () => {
+			const before = buildNpbSchedule({
+				season: 2026,
+				months: [october2026, november2026],
+				postseason,
+				today: '2026-10-30',
+			}).games
+			expect(before.at(-1)).toMatchObject({
+				date: '2026-11-01',
+				competition: 'japan-series',
+				linked: false,
+				ref: { code: 'db-h-05' },
+			})
+		})
+
+		test('the round as its series, and the record in it', () => {
+			const game4 = on('1028', 'h-db-04')
+			expect(game4.series).toEqual({ number: 4, total: 4, homeWins: 4, awayWins: 0 })
+			expect(game4.teams.home.record).toEqual({ wins: 4, losses: 0, ties: 0 })
+			expect(game4.teams.away.record).toEqual({ wins: 0, losses: 4, ties: 0 })
+		})
+
+		test("doesn't count toward the season record", () => {
+			const lastRegular = on('1008', 't-s-25').teams.home.record!
+			const climaxFinal = on('1017', 't-db-04').teams.home.record!
+			// The Tigers lost all four to the BayStars
+			expect(climaxFinal).toEqual({ wins: 0, losses: 4, ties: 0 })
+			// The season record counts the season's games alone (October's, in this fixture)
+			const tigersRegular = games.filter(
+				(game) =>
+					game.competition === 'regular' &&
+					!game.isCancelled &&
+					(game.teams.home.id === 341 || game.teams.away.id === 341),
+			)
+			expect(lastRegular.wins + lastRegular.losses + lastRegular.ties).toBe(tigersRegular.length)
+		})
+	})
+
+	test('All-Star games, with no record', () => {
+		const { games } = buildNpbSchedule({ season: 2026, months: [july2026] })
+		const allStar = games.filter((game) => game.competition === 'all-star')
+		expect(allStar.map((game) => game.ref.code)).toEqual(['cl-pl-01', 'pl-cl-02'])
+		expect(allStar[1].series).toMatchObject({ number: 2, total: 2 })
+		expect(allStar[0].teams.home.record).toBeNull()
 	})
 
 	test("works out the codes of games npb.jp hasn't linked yet", () => {
@@ -272,6 +343,28 @@ describe('toMlbScheduleGame', () => {
 		expect(game.teams.away.isWinner).toBe(true)
 		expect(game.teams.home.isWinner).toBe(false)
 		expect(game.teams.home.team.name).toBe('Hanshin Tigers')
+	})
+
+	test('postseason and All-Star games: the Stats API game type, described like its own', () => {
+		const october = buildNpbSchedule({
+			season: 2026,
+			months: [october2026],
+			postseason,
+			today: '2026-11-07',
+		}).games
+		const find = (code: string) => toMlbScheduleGame(october.find((g) => g.ref.code === code)!)
+		expect(find('g-db-02')).toMatchObject({ gameType: 'F', description: 'CS First Stage Game 2' })
+		expect(find('t-db-03')).toMatchObject({ gameType: 'L', description: 'CS Final Stage Game 3' })
+		expect(find('h-db-04')).toMatchObject({ gameType: 'W', description: 'Japan Series Game 4' })
+		expect(find('t-s-25')).toMatchObject({ gameType: 'R', description: undefined })
+
+		const allStar = toMlbScheduleGame(
+			buildNpbSchedule({ season: 2026, months: [july2026] }).games.find(
+				(g) => g.ref.code === 'pl-cl-02',
+			)!,
+		)
+		expect(allStar).toMatchObject({ gameType: 'A', description: 'All-Star Game 2' })
+		expect(allStar.teams.home.team).toMatchObject({ id: -2, name: 'Pacific League All-Stars' })
 	})
 
 	test('a tie has no winner, and a called-off game no score', () => {

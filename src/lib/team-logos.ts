@@ -1,4 +1,5 @@
 import { isNpbTeam, npbLogoUrl } from '#lib/npb-roster.js'
+import { npbAllStarTeam } from '#lib/npb.js'
 
 /**
  * Where a team's logo can come from, best first, for an `<img>` to step through on `error`.
@@ -10,6 +11,10 @@ import { isNpbTeam, npbLogoUrl } from '#lib/npb-roster.js'
  * `variant` is the cap for a light background or a dark one (e.g. the team's color).
  */
 export function teamLogoSources(teamId: number, variant: 'light' | 'dark' = 'light') {
+	// NPB's All-Star sides: npb.jp's league flag, as the Stats API has no team for them
+	const allStar = npbAllStarTeam(teamId)
+	if (allStar) return [allStar.logo]
+
 	const year = new Date().getFullYear()
 
 	return [
@@ -33,4 +38,4 @@ const NPB_TEAMS_WITH_STATS_API_LOGOS = new Set([241, 341])
  * from the Stats API's generic light gray spot) is left off and the text keeps its own color
  */
 export const usesNpbLogo = (teamId: number) =>
-	isNpbTeam(teamId) && !NPB_TEAMS_WITH_STATS_API_LOGOS.has(teamId)
+	(isNpbTeam(teamId) && !NPB_TEAMS_WITH_STATS_API_LOGOS.has(teamId)) || !!npbAllStarTeam(teamId)

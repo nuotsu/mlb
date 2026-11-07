@@ -139,7 +139,11 @@
 	async function buildSeriesCalendar(teamId: number, year: number): Promise<SeriesCalendarData> {
 		if (loadSchedule) {
 			const { games, allStarDate } = await loadSchedule(year)
-			return buildRows(games, allStarDate)
+			// The regular season alone, as for MLB teams (`gameType: 'R'` below)
+			return buildRows(
+				games.filter((game) => game.gameType === 'R'),
+				allStarDate,
+			)
 		}
 
 		const sportId = String(team.sport?.id ?? 1)

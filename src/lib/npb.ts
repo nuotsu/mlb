@@ -140,6 +140,38 @@ export const NPB_TEAMS: Record<
 	},
 }
 
+/**
+ * The All-Star Game's two sides, by npb.jp's game page code (`cl-pl-01`). The Stats API has no team
+ * for them, so they get stand-in IDs: negative, so they never match a real team, and with no team
+ * page to link to.
+ */
+export const NPB_ALL_STAR_TEAMS = {
+	cl: {
+		id: -1,
+		name: 'Central League All-Stars',
+		teamName: 'Central',
+		abbreviation: 'CL',
+		nameJa: 'セントラル・リーグ',
+		shortNameJa: 'セ・リーグ',
+		/** npb.jp's league flag, its logo on the game page */
+		logo: 'https://p.npb.jp/img/common/logo/flag_central_s.gif',
+	},
+	pl: {
+		id: -2,
+		name: 'Pacific League All-Stars',
+		teamName: 'Pacific',
+		abbreviation: 'PL',
+		nameJa: 'パシフィック・リーグ',
+		shortNameJa: 'パ・リーグ',
+		logo: 'https://p.npb.jp/img/common/logo/flag_pacific_s.gif',
+	},
+} as const
+
+export type NpbAllStarCode = keyof typeof NPB_ALL_STAR_TEAMS
+
+export const npbAllStarTeam = (teamId: number) =>
+	Object.values(NPB_ALL_STAR_TEAMS).find(({ id }) => id === teamId)
+
 export function npbStandingsUrl(season: number | string, league: NpbLeagueId) {
 	return `https://npb.jp/bis/${season}/stats/std_${NPB_LEAGUES[league].code}.html`
 }
