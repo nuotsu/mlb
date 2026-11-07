@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { isNpbTeam } from '#lib/npb-roster.js'
 	import { npbAllStarTeam } from '#lib/npb.js'
-	import { isNpbLogo, teamLogoSources } from '#lib/team-logos.js'
+	import { teamLogoSources } from '#lib/team-logos.js'
 	import { cn } from '#lib/utils.js'
 	import { colorSchemeStore } from '#ui/store.svelte.js'
 	import type { HTMLImgAttributes } from 'svelte/elements'
@@ -52,12 +52,7 @@
 	{/if}
 
 	<img
-		class={cn(
-			'overflow-hidden text-transparent',
-			className,
-			// npb.jp's logos sit on white: a tile, rounded to read as a badge in dark mode
-			isNpbLogo(src) && 'rounded-[20%]',
-		)}
+		class={cn('overflow-hidden text-transparent', className)}
 		{src}
 		alt={name}
 		width="300"
