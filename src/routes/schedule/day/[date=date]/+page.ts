@@ -20,7 +20,11 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 	/** NPB isn't in the Stats API's schedule; it comes from npb.jp through our own route */
 	if (sportId === String(NPB_SPORT_ID)) {
 		const [npb, { leagues }] = await Promise.all([
-			loadNpbSchedule(year, { startDate: params.date, endDate: params.date }, fetch),
+			loadNpbSchedule(
+				year,
+				{ startDate: params.date, endDate: params.date, linescores: true },
+				fetch,
+			),
 			fetchMLB<MLB.LeaguesResponse>('/api/v1/leagues', {
 				season: year,
 				fields: 'leagues,id,sport,id',

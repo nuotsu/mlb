@@ -13,7 +13,7 @@
  * (called-off games don't count), so it's worked out for the games not linked yet.
  */
 
-import type { NpbGameRef, NpbGameState, NpbSide } from '#lib/npb-game.js'
+import type { NpbGame, NpbGameRef, NpbGameState, NpbGameTeam, NpbSide } from '#lib/npb-game.js'
 import { NPB_TEAM_INFO } from '#lib/npb-roster.js'
 import { cellText, compact, NPB_SPORT_ID, type NpbRecord } from '#lib/npb.js'
 
@@ -77,6 +77,50 @@ export interface NpbScheduleGame {
 	pitchers: NpbSchedulePitchers
 	/** Whether npb.jp links the game yet; if not, `ref.code` is worked out from earlier games */
 	linked: boolean
+	series: NpbScheduleSeries
+	/**
+	 * The game's own state and linescore, from its page on npb.jp, which is fresher than the
+	 * schedule's. Only when asked for (`/api/npb/schedule/{season}?linescores=1`), and `null` if the
+	 * page couldn't be read.
+	 */
+	linescore?: NpbScheduleLinescore | null
+}
+
+/** Consecutive games at one park between the same two teams, like the Stats API's series */
+export interface NpbScheduleSeries {
+	/** Game of the series, from 1 */
+	number: number
+	/** Games in the series, called-off ones included */
+	total: number
+	/** Wins in the series through this game */
+	homeWins: number
+	awayWins: number
+}
+
+export type NpbScheduleLinescore = Pick<
+	NpbGame,
+	'state' | 'statusJa' | 'isCancelled' | 'currentInning' | 'innings'
+> & {
+	teams: Record<NpbSide, Pick<NpbGameTeam, 'runs' | 'hits' | 'errors'>>
+	/** Why it was called off, e.g. 雨天 (see `parseNpbCancelReason`) */
+	cancelReasonJa: string | null
+}
+
+/** The parts of a parsed game page the schedule pages show */
+export function toNpbScheduleLinescore(
+	game: NpbGame,
+	cancelReasonJa: string | null = null,
+): NpbScheduleLinescore {
+	const side = ({ runs, hits, errors }: NpbGameTeam) => ({ runs, hits, errors })
+	return {
+		state: game.state,
+		statusJa: game.statusJa,
+		isCancelled: game.isCancelled,
+		currentInning: game.currentInning,
+		innings: game.innings,
+		teams: { away: side(game.teams.away), home: side(game.teams.home) },
+		cancelReasonJa: game.isCancelled ? cancelReasonJa : null,
+	}
 }
 
 export interface NpbSchedule {
@@ -88,7 +132,10 @@ export interface NpbSchedule {
 }
 
 /** A row of a detail page, before the postseason is told apart and codes are worked out */
-export interface NpbScheduleRow extends Omit<NpbScheduleGame, 'ref' | 'linked'> {
+export interface NpbScheduleRow extends Omit<
+	NpbScheduleGame,
+	'ref' | 'linked' | 'series' | 'linescore'
+> {
 	/** From npb.jp's link, once there is one */
 	code: string | null
 }
@@ -325,12 +372,67 @@ export function buildNpbSchedule({
 				code: code ?? `${row.teams.home.code}-${row.teams.away.code}-${nn}`,
 			},
 			linked: !!code,
+			series: { number: 0, total: 0, homeWins: 0, awayWins: 0 },
 		}
 	})
+
+	numberSeries(games)
 
 	const allStarDates = [...new Set(months.flatMap((month) => month.allStarDates))].sort()
 
 	return { season, games, allStarDates }
+}
+
+const DAY_MS = 86_400_000
+
+/** More days off than this between two games at one park makes them separate series */
+const SERIES_MAX_GAP_DAYS = 2
+
+/**
+ * Fills in each game's `series`: a run of games between the same two teams at the same home team,
+ * with neither playing anyone else in between.
+ */
+function numberSeries(games: NpbScheduleGame[]) {
+	/** Each team's last game */
+	const last = new Map<number, NpbScheduleGame>()
+	const all: NpbScheduleGame[][] = []
+	/** The open series by home team */
+	const open = new Map<number, NpbScheduleGame[]>()
+
+	for (const game of games) {
+		const { home, away } = game.teams
+		const series = open.get(home.id)
+		const previous = series?.at(-1)
+		const continues =
+			previous &&
+			previous.teams.away.id === away.id &&
+			last.get(home.id) === previous &&
+			last.get(away.id) === previous &&
+			(Date.parse(game.date) - Date.parse(previous.date)) / DAY_MS <= SERIES_MAX_GAP_DAYS + 1
+
+		const current = continues ? series! : []
+		if (!continues) {
+			all.push(current)
+			open.set(home.id, current)
+		}
+
+		const before = continues ? previous.series : { homeWins: 0, awayWins: 0 }
+		const decided = game.state === 'Final' && !game.isCancelled && !game.isTie
+		const homeWon = decided && (home.runs ?? 0) > (away.runs ?? 0)
+		const awayWon = decided && (away.runs ?? 0) > (home.runs ?? 0)
+
+		current.push(game)
+		game.series = {
+			number: current.length,
+			total: 0,
+			homeWins: before.homeWins + (homeWon ? 1 : 0),
+			awayWins: before.awayWins + (awayWon ? 1 : 0),
+		}
+		last.set(home.id, game)
+		last.set(away.id, game)
+	}
+
+	for (const series of all) for (const game of series) game.series.total = series.length
 }
 
 /** Games between `startDate` and `endDate` (inclusive), and/or for one team */
@@ -367,13 +469,13 @@ export interface NpbScheduleResponse {
  */
 export async function loadNpbSchedule(
 	season: number | string,
-	query: { startDate?: string; endDate?: string; teamId?: number } = {},
+	query: { startDate?: string; endDate?: string; teamId?: number; linescores?: boolean } = {},
 	fetcher: typeof fetch = fetch,
 ): Promise<NpbScheduleResponse> {
 	const params = new URLSearchParams(
 		Object.entries(query)
-			.filter(([, value]) => value !== undefined)
-			.map(([key, value]) => [key, String(value)]),
+			.filter(([, value]) => value !== undefined && value !== false)
+			.map(([key, value]) => [key, value === true ? '1' : String(value)]),
 	)
 	const response = await fetcher(`/api/npb/schedule/${season}${params.size ? `?${params}` : ''}`)
 

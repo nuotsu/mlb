@@ -2,6 +2,7 @@ import { getScheduleToday } from '#lib/cache-control.js'
 import {
 	npbGameUrl,
 	parseNpbBox,
+	parseNpbCancelReason,
 	parseNpbGame,
 	parseNpbPlays,
 	type NpbGame,
@@ -28,8 +29,11 @@ import {
 	npbScheduleUrl,
 	parseNpbPostseason,
 	parseNpbScheduleMonth,
+	toNpbScheduleLinescore,
 	type NpbPostseason,
 	type NpbSchedule,
+	type NpbScheduleGame,
+	type NpbScheduleLinescore,
 } from '#lib/npb-schedule.js'
 import {
 	NPB_LEAGUES,
@@ -361,4 +365,69 @@ export function getNpbSchedule(
 /** For tests. */
 export function clearNpbScheduleCache() {
 	scheduleCache.clear()
+}
+
+const linescoreCache = createMemoryCache<string, NpbScheduleLinescore>({
+	max: 500,
+	keepError: (e) => e instanceof NpbNotFoundError,
+})
+
+/**
+ * A game's state and linescore from its TOP page alone (no box score, plays or rosters), for the
+ * schedule pages. Cached like {@link getNpbGame}.
+ */
+export function getNpbScheduleLinescore(
+	ref: NpbGameRef,
+	{
+		fetcher = fetch,
+		now = Date.now(),
+		today = getScheduleToday(),
+	}: { fetcher?: typeof fetch; now?: number; today?: Date } = {},
+): Promise<NpbScheduleLinescore> {
+	const ttl = isRecentNpbGame(ref, today) ? LIVE_GAME_TTL_MS : PAST_SEASON_TTL_MS
+	const key = `${ref.season}/${ref.date}/${ref.code}`
+	return linescoreCache.get(
+		key,
+		ttl,
+		async () => {
+			const html = await fetchPage(npbGameUrl(ref), fetcher)
+			return toNpbScheduleLinescore(parseNpbGame(html, ref), parseNpbCancelReason(html))
+		},
+		now,
+	)
+}
+
+/** For tests. */
+export function clearNpbScheduleLinescoreCache() {
+	linescoreCache.clear()
+}
+
+/** At most this many npb.jp game pages are read at once */
+const LINESCORE_CONCURRENCY = 6
+
+/** Today's date in Japan, where NPB's games are dated */
+export const japanToday = () =>
+	new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date())
+
+/**
+ * `games` with their `linescore` from each game's own page: games from today (in Japan) back, as
+ * later ones have none yet; called-off ones for the reason. A page that can't be read leaves `null`.
+ */
+export async function withNpbScheduleLinescores(
+	games: NpbScheduleGame[],
+	{ fetcher = fetch, today = japanToday() }: { fetcher?: typeof fetch; today?: string } = {},
+): Promise<NpbScheduleGame[]> {
+	const result = games.map((game) => ({ ...game }))
+	const queue = result.filter((game) => game.date <= today)
+
+	async function worker() {
+		for (let game = queue.shift(); game; game = queue.shift()) {
+			game.linescore = await getNpbScheduleLinescore(game.ref, { fetcher }).catch(
+				optional<NpbScheduleLinescore>(`linescore ${game.ref.date}/${game.ref.code}`),
+			)
+		}
+	}
+
+	await Promise.all(Array.from({ length: LINESCORE_CONCURRENCY }, worker))
+	return result
 }

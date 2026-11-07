@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchDaySchedule, fetchSeason } from '#lib/fetch/presets.js'
+	import { currentNpbScheduleGame } from '#lib/npb-game-mlb.js'
 	import type { NpbScheduleGame } from '#lib/npb-schedule.js'
 	import { formatDate, getToday, slash } from '#lib/temporal.js'
 	import { readStoredDelay } from '#lib/time-travel.js'
@@ -151,7 +152,7 @@
 </section>
 
 {#snippet npbGroupedGames(games: NpbScheduleGame[], state: NpbScheduleGame['state'])}
-	{@const processedGames = games.filter((game) => game.state === state)}
+	{@const processedGames = games.filter((game) => currentNpbScheduleGame(game).state === state)}
 
 	{#if processedGames.length}
 		<Divider>

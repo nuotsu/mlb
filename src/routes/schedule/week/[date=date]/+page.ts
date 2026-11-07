@@ -24,7 +24,11 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 		const seasons = [...new Set([startDate, endDate].map((date) => date.slice(0, 4)))]
 
 		const [npb, { leagues }] = await Promise.all([
-			Promise.all(seasons.map((season) => loadNpbSchedule(season, { startDate, endDate }, fetch))),
+			Promise.all(
+				seasons.map((season) =>
+					loadNpbSchedule(season, { startDate, endDate, linescores: true }, fetch),
+				),
+			),
 			fetchMLB<MLB.LeaguesResponse>(
 				'/api/v1/leagues',
 				{ season: year, fields: 'leagues,id,sport,id' },

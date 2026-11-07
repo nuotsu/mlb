@@ -761,6 +761,23 @@ export function translateStatus(statusJa: string) {
 	return statusJa
 }
 
+/** Why a game was called off, from its page's 【雨天のため中止】 line, e.g. 雨天 */
+export function parseNpbCancelReason(html: string) {
+	return html.match(/【([^】]+?)のため(?:中止|ノーゲーム)】/)?.[1] ?? null
+}
+
+const CANCEL_REASONS: [RegExp, string][] = [
+	[/雨/, 'Rain'],
+	[/グラウンド不良/, 'Wet Grounds'],
+	[/台風/, 'Typhoon'],
+	[/霧/, 'Fog'],
+	[/地震/, 'Earthquake'],
+]
+
+/** 雨天 → Rain, as the Stats API names a postponement's reason; `undefined` for others */
+export const translateCancelReason = (reasonJa: string) =>
+	CANCEL_REASONS.find(([pattern]) => pattern.test(reasonJa))?.[1]
+
 /** 8勝6敗 → 8-6; 3勝2敗30S → 3-2, 30 SV */
 export function translateRecord(recordJa: string) {
 	// A save's record is just the season total: 25セ (or 25S)

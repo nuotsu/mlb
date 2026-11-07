@@ -2,7 +2,15 @@
 
 import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'bun:test'
-import { gameHref, npbGamePk, toMlbScheduleGame } from './npb-game-mlb'
+import { parseNpbCancelReason, parseNpbGame, translateCancelReason } from './npb-game'
+import {
+	currentNpbScheduleGame,
+	gameHref,
+	npbGamePk,
+	toMlbScheduleFeed,
+	toMlbScheduleGame,
+	toMlbScheduleLinescore,
+} from './npb-game-mlb'
 import {
 	buildNpbSchedule,
 	filterNpbSchedule,
@@ -10,6 +18,7 @@ import {
 	npbScheduleUrl,
 	parseNpbPostseason,
 	parseNpbScheduleMonth,
+	toNpbScheduleLinescore,
 	type NpbScheduleRow,
 } from './npb-schedule'
 
@@ -203,6 +212,24 @@ describe('buildNpbSchedule', () => {
 		expect(wins + losses + ties).toBe(tigers.filter((game) => !game.isCancelled).length)
 	})
 
+	test('numbers each series, with its wins so far', () => {
+		const { games } = buildNpbSchedule({ season: 2026, months: [july2026] })
+		const on = (date: string, code: string) =>
+			games.find((game) => game.ref.date === date && game.ref.code === code)!
+
+		// Carp at Tigers, 7/3 to 7/5: the middle game called off, so it adds no win
+		expect(on('0703', 't-c-11').series).toEqual({ number: 1, total: 3, homeWins: 0, awayWins: 1 })
+		expect(on('0704', 't-c-12').series).toEqual({ number: 2, total: 3, homeWins: 0, awayWins: 1 })
+		expect(on('0705', 't-c-12').series).toEqual({ number: 3, total: 3, homeWins: 1, awayWins: 1 })
+		// A tie counts for neither
+		expect(on('0703', 'b-l-13').series).toEqual({ number: 1, total: 3, homeWins: 0, awayWins: 0 })
+
+		for (const game of games) {
+			expect(game.series.number).toBeGreaterThanOrEqual(1)
+			expect(game.series.number).toBeLessThanOrEqual(game.series.total)
+		}
+	})
+
 	test('collects the All-Star dates', () => {
 		expect(
 			buildNpbSchedule({ season: 2026, months: [july2026, october2026] }).allStarDates,
@@ -255,5 +282,80 @@ describe('toMlbScheduleGame', () => {
 		const calledOff = toMlbScheduleGame(byCode('0701', 't-d-13'))
 		expect(calledOff.status.detailedState).toBe('Postponed')
 		expect(calledOff.teams.home.score).toBeUndefined()
+	})
+})
+
+describe('linescores from game pages', () => {
+	const season = buildNpbSchedule({ season: 2026, months: [october2026] }).games
+	const page = fixture('npb-game-2026-1001-t-g-25-index')
+	const tie = season.find((game) => game.ref.code === 't-g-25')!
+	const withLinescore = {
+		...tie,
+		linescore: toNpbScheduleLinescore(parseNpbGame(page, tie.ref), parseNpbCancelReason(page)),
+	}
+
+	test('gives the card nine scheduled innings, so a twelve-inning game reads Final/12', () => {
+		const linescore = toMlbScheduleLinescore(withLinescore.linescore)
+		expect(linescore.scheduledInnings).toBe(9)
+		expect(linescore.innings).toHaveLength(12)
+		expect(linescore.currentInning).toBe(12)
+		expect(linescore.teams?.home).toMatchObject({ runs: 2, hits: expect.any(Number) })
+	})
+
+	test('an empty linescore until the page is read', () => {
+		expect(toMlbScheduleLinescore(null)).toMatchObject({ innings: [], scheduledInnings: 9 })
+	})
+
+	test('the feed the card reads instead of polling', () => {
+		const linescore = toMlbScheduleLinescore(withLinescore.linescore)
+		const feed = toMlbScheduleFeed(toMlbScheduleGame(withLinescore), linescore)
+		expect(feed.liveData.linescore).toBe(linescore)
+		expect(feed.gameData.teams.home.id).toBe(341)
+	})
+
+	test("the game's page outranks the schedule", () => {
+		const stale = {
+			...withLinescore,
+			state: 'Preview' as const,
+			teams: {
+				away: { ...withLinescore.teams.away, runs: null },
+				home: { ...withLinescore.teams.home, runs: null },
+			},
+		}
+		const game = currentNpbScheduleGame(stale)
+		expect(game.state).toBe('Final')
+		expect(game.teams.home.runs).toBe(2)
+	})
+
+	test('a called-off game shows why, as the Stats API does', () => {
+		expect(parseNpbCancelReason('<p>【雨天のため中止】</p>')).toBe('雨天')
+		expect(parseNpbCancelReason('<p>【雨天のためノーゲーム】</p>')).toBe('雨天')
+		expect(parseNpbCancelReason(page)).toBeNull()
+		expect(translateCancelReason('雨天')).toBe('Rain')
+		expect(translateCancelReason('台風接近')).toBe('Typhoon')
+		expect(translateCancelReason('グラウンド不良')).toBe('Wet Grounds')
+		expect(translateCancelReason('その他')).toBeUndefined()
+
+		const july = buildNpbSchedule({ season: 2026, months: [july2026] }).games
+		const calledOff = july.find((game) => game.isCancelled)!
+		const rainedOut = {
+			...calledOff,
+			linescore: {
+				state: 'Final' as const,
+				statusJa: '雨天のため中止',
+				isCancelled: true,
+				currentInning: null,
+				innings: [],
+				teams: {
+					away: { runs: null, hits: null, errors: null },
+					home: { runs: null, hits: null, errors: null },
+				},
+				cancelReasonJa: '雨天',
+			},
+		}
+		expect(toMlbScheduleGame(rainedOut).status).toMatchObject({
+			detailedState: 'Postponed',
+			reason: 'Rain',
+		})
 	})
 })

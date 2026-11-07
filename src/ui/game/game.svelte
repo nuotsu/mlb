@@ -17,7 +17,7 @@
 	import Loading from '#ui/loading.svelte'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import { page } from '$app/state'
-	import { onMount, untrack } from 'svelte'
+	import { onMount, untrack, type Snippet } from 'svelte'
 	import BaseRunners from './base-runners.svelte'
 	import BSO from './bso.svelte'
 	import Matchup from './matchup.svelte'
@@ -33,6 +33,8 @@
 		seriesRecord: scheduledSeriesRecord,
 		feed: givenFeed,
 		concealed: givenConcealed = false,
+		href,
+		pregame,
 		class: className = '',
 	}: {
 		game: MLB.Game
@@ -45,6 +47,10 @@
 		feed?: MLB.LiveGameFeed
 		/** Show no scores or live details, as with spoiler prevention, until the moment to show loads */
 		concealed?: boolean
+		/** The game's page, for a game the MLB game page doesn't have (NPB's) */
+		href?: string
+		/** Shown before the game in place of the Stats API's probable pitchers */
+		pregame?: Snippet
 		class?: string
 	} = $props()
 
@@ -284,7 +290,11 @@
 			{/await}
 		{/if}
 	{:else if game.status.abstractGameState === 'Preview' || isSpoilerPrevented}
-		<ProbablePitchers {game} />
+		{#if pregame}
+			{@render pregame()}
+		{:else}
+			<ProbablePitchers {game} />
+		{/if}
 	{/if}
 
 	{#if showLiveDetails && isLive && linescore && !isSpoilerPrevented}
@@ -307,7 +317,7 @@
 
 			<a
 				class="inline-flex h-rlh items-center gap-[.5ch] text-current/50 hover-link group-not-hover/game:transition-[translate,opacity] hover:text-current md:group-not-hover/game:-translate-y-full md:group-not-hover/game:opacity-0"
-				href="/game/{game.gamePk}"
+				href={href ?? `/game/${game.gamePk}`}
 			>
 				See details
 				<ChevronRightIcon class="size-lh" />

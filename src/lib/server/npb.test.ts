@@ -12,6 +12,7 @@ import {
 	getNpbSchedule,
 	getNpbStandings,
 	NpbNotFoundError,
+	withNpbScheduleLinescores,
 } from './npb'
 
 const html = readFileSync(new URL('../fixtures/npb-std_c-2024.html', import.meta.url), 'utf8')
@@ -289,5 +290,34 @@ describe('getNpbSchedule', () => {
 		fail = false
 		const schedule = await getNpbSchedule(2026, { fetcher, now: 1 })
 		expect(schedule.games.length).toBeGreaterThan(0)
+	})
+})
+
+describe('withNpbScheduleLinescores', () => {
+	test("reads each game's page up to today, leaving null where it can't", async () => {
+		const pages: Record<string, string> = {
+			'https://npb.jp/scores/2026/1001/t-g-25/': page('npb-game-2026-1001-t-g-25-index'),
+		}
+		const fetcher = fakeScheduleFetch(pages)
+		const { games } = await getNpbSchedule(2026, {
+			fetcher: fakeScheduleFetch(),
+			now: 0,
+			currentSeason: 2027,
+		})
+		const october = games.filter((game) => game.date >= '2026-10-01' && game.date <= '2026-10-02')
+
+		const result = await withNpbScheduleLinescores(october, { fetcher, today: '2026-10-01' })
+
+		const tie = result.find((game) => game.ref.code === 't-g-25')!
+		expect(tie.linescore?.innings).toHaveLength(12)
+		// Read, but npb.jp had no page for it
+		expect(result.find((game) => game.ref.code === 'c-d-25')!.linescore).toBeNull()
+		// After today: not read
+		expect(
+			result.filter((game) => game.date > '2026-10-01').every((game) => !('linescore' in game)),
+		).toBe(true)
+		expect(fetcher.urls.every((url) => url.includes('/1001/'))).toBe(true)
+		// The schedule's own games are left as they were
+		expect(october.every((game) => !('linescore' in game))).toBe(true)
 	})
 })
