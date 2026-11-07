@@ -2,7 +2,7 @@
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import { teamBg } from '#ui/data-table/types.js'
-	import TeamAvatar from '#ui/team/avatar.svelte'
+	import Logo from '#ui/team/logo.svelte'
 	import { browser } from '$app/env'
 	import { onMount } from 'svelte'
 	import Widget from '../widget.svelte'
@@ -98,7 +98,11 @@
 			style:--team-bg={colored ? teamBg(row.team) : undefined}
 		>
 			<a class="flex items-center gap-[.5ch] px-[.5ch] hover-link" href="/teams/{row.team.id}">
-				<TeamAvatar class="size-lh" teamId={row.team.id} />
+				<Logo
+					srcset="https://midfield.mlbstatic.com/v1/team/{row.team.id}/spots/96"
+					class="size-lh object-contain"
+					team={row.team as MLB.Team}
+				/>
 				<span>{row.team.abbreviation}</span>
 				{#if division}
 					<span class="ml-auto text-xs font-normal whitespace-nowrap text-current/50"
