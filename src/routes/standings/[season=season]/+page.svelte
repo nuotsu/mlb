@@ -323,9 +323,6 @@
 		}
 	}
 
-	const formatRecord = (record: NpbRecord | null) =>
-		record ? `${record.wins}-${record.losses}${record.ties ? `-${record.ties}` : ''}` : '-'
-
 	const recordValue = (record: NpbRecord | null) => {
 		const decisions = (record?.wins ?? 0) + (record?.losses ?? 0)
 		return record && decisions ? record.wins / decisions : undefined
@@ -389,7 +386,7 @@
 				value: (team) => recordValue(team[id]),
 				numeric: true,
 				align: 'center',
-				format: (_, team) => formatRecord(team[id]),
+				cell: npbRecordCell,
 				class: 'w-[9ch]',
 			})),
 		]
@@ -633,9 +630,23 @@
 	<TeamCell team={npbTeam(row)} linked={false} />
 {/snippet}
 
-{#snippet npbWinLoss({ row: team }: CellArgs<NpbTeamStanding>)}
-	<span class="positive">{team.wins}</span>-<span class="negative">{team.losses}</span
-	>{#if team.ties}-<span class="text-current/50">{team.ties}</span>{/if}
+{#snippet npbRecord({ wins, losses, ties }: NpbRecord)}
+	<span class="positive">{wins}</span>-<span class="negative">{losses}</span>{#if ties}-<span
+			class="text-current/50">{ties}</span
+		>{/if}
+{/snippet}
+
+{#snippet npbWinLoss({ row }: CellArgs<NpbTeamStanding>)}
+	{@render npbRecord(row)}
+{/snippet}
+
+{#snippet npbRecordCell({ row, columnId }: CellArgs<NpbTeamStanding>)}
+	{@const record = row[columnId as 'home' | 'road' | 'interleague']}
+	{#if record}
+		{@render npbRecord(record)}
+	{:else}
+		<span class="text-current/50">-</span>
+	{/if}
 {/snippet}
 
 {#snippet tableTitle({ title }: HeaderArgs)}
