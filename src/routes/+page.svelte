@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { homeLayoutScript } from '#lib/home.js'
+	import { SITE_DESCRIPTION } from '#lib/seo.js'
 	import Awards from '#ui/banner/awards.svelte'
 	import Grid from '#ui/home/grid.svelte'
 	import Hero from '#ui/home/hero.svelte'
@@ -19,8 +20,8 @@
 </script>
 
 <Metadata
-	title="MLB.TheOhtani.com"
-	description="A custom MLB scorebug for Major League Baseball (MLB) and other leagues. MLB = Mitchell's Live scoreBug."
+	title="Live MLB Scores, Standings & Stats | MLB.TheOhtani.com"
+	description={SITE_DESCRIPTION}
 />
 
 <svelte:head>

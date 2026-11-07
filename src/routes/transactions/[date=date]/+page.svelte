@@ -26,7 +26,10 @@
 	const processedTransactions = $derived(processTransactions(transactions.transactions))
 </script>
 
-<Metadata title="Transactions | MLB.TheOhtani.com" description="MLB transactions" />
+<Metadata
+	title="MLB Transactions | MLB.TheOhtani.com"
+	description="MLB roster moves for the week: trades, signings, injured list placements, call-ups, and releases"
+/>
 
 <Header title="Transactions" crumbs={[{ name: 'Transactions', href: '/transactions' }]}>
 	{#snippet after()}
