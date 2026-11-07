@@ -1,3 +1,4 @@
+import { error } from '@sveltejs/kit'
 import { cacheControlForSeasonPage } from '#lib/cache-control.js'
 import { fetchMLB } from '#lib/fetch/index.js'
 import { NPB_MIN_SEASON, NPB_SPORT_ID, type NpbLeagueStandings } from '#lib/npb.js'
@@ -9,9 +10,11 @@ import type { PageLoad } from './$types'
 const COMPARISON_DAYS = 7
 
 export const load: PageLoad = async ({ params, url, setHeaders, fetch }) => {
-	setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
-
 	const sportId = url.searchParams.get('sportId') ?? '1'
+	const isNpb = sportId === String(NPB_SPORT_ID)
+
+	// NPB sets this only once its standings load, so a failed npb.jp fetch is never CDN-cached.
+	if (!isNpb) setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
 	const requestedGameType = url.searchParams.get('gameType') ?? 'R'
 
 	/**
@@ -73,9 +76,15 @@ export const load: PageLoad = async ({ params, url, setHeaders, fetch }) => {
 		availableSportIds.push(NPB_SPORT_ID)
 	}
 
-	if (sportId === String(NPB_SPORT_ID)) {
+	if (isNpb) {
 		const response = await fetch(`/api/npb/standings/${params.season}`)
-		const npb: NpbLeagueStandings[] = response.ok ? (await response.json()).leagues : []
+		if (!response.ok) {
+			const { message } = await response.json().catch(() => ({ message: undefined }))
+			error(response.status === 404 ? 404 : 502, message ?? 'Could not load NPB standings.')
+		}
+		const npb: NpbLeagueStandings[] = (await response.json()).leagues
+
+		setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
 
 		return {
 			standings: { records: [] } as unknown as MLB.StandingsResponse,
