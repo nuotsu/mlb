@@ -2,6 +2,7 @@
 
 import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'bun:test'
+import { NPB_TEAM_CODES } from '../params'
 import {
 	isNpbGameCode,
 	isNpbGameDate,
@@ -19,6 +20,7 @@ import {
 	type NpbGameRef,
 } from './npb-game'
 import { toMlbLinescore } from './npb-game-mlb'
+import { NPB_TEAM_INFO } from './npb-roster'
 
 const page = (code: string, name: string) =>
 	readFileSync(
@@ -41,6 +43,14 @@ describe('references', () => {
 		expect(isNpbGameCode('t-t-25')).toBe(false)
 		expect(isNpbGameCode('x-g-25')).toBe(false)
 		expect(isNpbGameCode('t-g')).toBe(false)
+	})
+
+	test("the route matcher's team codes match NPB_TEAM_INFO", () => {
+		expect([...NPB_TEAM_CODES].sort()).toEqual(
+			Object.values(NPB_TEAM_INFO)
+				.map((team) => team.code)
+				.sort(),
+		)
 	})
 
 	test('builds URLs', () => {

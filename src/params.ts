@@ -1,5 +1,4 @@
 import { defineParams } from '@sveltejs/kit/params'
-import { isNpbGameCode, isNpbGameDate } from '#lib/npb-game.js'
 
 // MLB data starts in 1876; anything past next season is crawler noise.
 const MIN_SEASON = 1876
@@ -18,6 +17,33 @@ const matchDate = (param: string) => {
 
 const matchGamePk = (param: string) => {
 	return param.match(/^\d+$/) !== null
+}
+
+/** npb.jp's `mmdd` in /scores/{season}/{mmdd}/{code}/ */
+const matchNpbDate = (param: string) => {
+	const parts = param.match(/^(\d{2})(\d{2})$/)
+	if (!parts) return false
+
+	const [month, day] = parts.slice(1).map(Number)
+	return month >= 1 && month <= 12 && day >= 1 && day <= 31
+}
+
+/**
+ * npb.jp's team page codes. Kept here rather than imported from `#lib/npb-roster.js`
+ * (`NPB_TEAM_INFO`): Node loads this file at build time, outside Vite, so it can't import
+ * TypeScript modules. `npb-game.test.ts` checks that the two lists match.
+ */
+export const NPB_TEAM_CODES = ['g', 't', 'd', 'c', 's', 'db', 'h', 'f', 'b', 'e', 'l', 'm']
+
+/** npb.jp's `{home}-{away}-{nn}` game code, e.g. `t-g-25` */
+const matchNpbGame = (param: string) => {
+	const parts = param.match(/^([a-z]{1,2})-([a-z]{1,2})-(\d{1,2})$/)
+	return (
+		!!parts &&
+		parts[1] !== parts[2] &&
+		NPB_TEAM_CODES.includes(parts[1]) &&
+		NPB_TEAM_CODES.includes(parts[2])
+	)
 }
 
 const matchPersonId = (param: string) => {
@@ -43,10 +69,8 @@ const matchVersion = (param: string) => {
 export const params = defineParams({
 	date: (param) => (matchDate(param) ? param : undefined),
 	gamePk: (param) => (matchGamePk(param) ? param : undefined),
-	/** npb.jp's `mmdd` in /scores/{season}/{mmdd}/{code}/ */
-	npbDate: (param) => (isNpbGameDate(param) ? param : undefined),
-	/** npb.jp's `{home}-{away}-{nn}` game code, e.g. `t-g-25` */
-	npbGame: (param) => (isNpbGameCode(param) ? param : undefined),
+	npbDate: (param) => (matchNpbDate(param) ? param : undefined),
+	npbGame: (param) => (matchNpbGame(param) ? param : undefined),
 	personId: (param) => (matchPersonId(param) ? param : undefined),
 	season: (param) => (matchSeason(param) ? param : undefined),
 	teamId: (param) => (matchTeamId(param) ? param : undefined),
