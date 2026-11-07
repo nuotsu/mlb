@@ -1,5 +1,6 @@
 {
 	"buildCommand": "npm run build",
+	"ignoreCommand": "git log -1 --format=%s | grep -q '^chore(release): bump version'",
 	"headers": [
 		{
 			"source": "/game/(.*)",
