@@ -64,7 +64,7 @@
 	>
 		<table class="w-full text-sm tabular-nums">
 			<thead class="text-xs text-current/50">
-				<tr>
+				<tr class="border-b border-stroke">
 					<th class="text-left font-normal">{favorite ? 'Team' : 'Division'}</th>
 					<th class="text-right font-normal">W</th>
 					<th class="text-right font-normal">L</th>
@@ -91,7 +91,13 @@
 {/await}
 
 {#snippet line(row: Row, highlight: boolean, division?: string)}
-	<tr class={['border-t border-stroke', highlight && 'font-bold']}>
+	<!-- the same faint hover as the /standings tables -->
+	<tr
+		class={[
+			'hover:*:bg-[color-mix(in_srgb,var(--color-foreground)_8%,var(--color-background))]',
+			highlight && 'font-bold',
+		]}
+	>
 		<td
 			class={['relative isolate py-[.25ch]', highlight && 'border-l-2 border-l-accent']}
 			style:--team-bg={teamBg(row.team)}
