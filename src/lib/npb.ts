@@ -9,6 +9,9 @@
  * then one column per opponent and (from 2005, except 2020) interleague.
  */
 
+/** NPB's `sportId` in the MLB Stats API, reused so `?sportId=31` selects NPB on /standings. */
+export const NPB_SPORT_ID = 31
+
 /** First season npb.jp publishes standings pages for. */
 export const NPB_MIN_SEASON = 2005
 

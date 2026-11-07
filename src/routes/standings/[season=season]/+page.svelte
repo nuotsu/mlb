@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { NpbRecord, NpbTeamStanding } from '#lib/npb.js'
 	import {
 		byRecord,
 		byWildCardRank,
@@ -291,6 +292,86 @@
 		]
 	}
 
+	const npbLeagueOptions = $derived(
+		(data.npb ?? []).map(({ id, name }) => ({ id, label: name.replace(/ League$/, '') })),
+	)
+
+	/** `?league=central` or `?league=pacific`; Central by default. */
+	const npbLeague = $derived.by(() => {
+		const requested = currentUrl().searchParams.get('league')
+		const leagues = data.npb ?? []
+		return leagues.find(({ id }) => id === requested) ?? leagues[0]
+	})
+
+	const formatRecord = (record: NpbRecord | null) =>
+		record ? `${record.wins}-${record.losses}${record.ties ? `-${record.ties}` : ''}` : '-'
+
+	const recordValue = (record: NpbRecord | null) => {
+		const decisions = (record?.wins ?? 0) + (record?.losses ?? 0)
+		return record && decisions ? record.wins / decisions : undefined
+	}
+
+	const npbColumns: DataTableColumn<NpbTeamStanding>[] = [
+		{
+			id: 'team',
+			header: tableTitle,
+			title: 'Team',
+			value: (team) => team.name ?? team.nameJa,
+			sortable: false,
+			sticky: true,
+			rowHeader: true,
+			cell: npbTeamCell,
+			class: 'w-[14ch] min-w-[14ch] md:w-[1%] md:min-w-[28ch]',
+		},
+		{
+			id: 'wl',
+			header: 'W-L-T',
+			title: 'Wins, losses and ties',
+			value: (team) => team.wins,
+			numeric: true,
+			align: 'center',
+			cell: npbWinLoss,
+			class: 'w-[9ch]',
+		},
+		{
+			id: 'pct',
+			header: '%',
+			title: 'Winning percentage (ties excluded)',
+			value: (team) => Number(team.pct),
+			numeric: true,
+			format: (_, team) => team.pct,
+			cellClass: (team) => (Number(team.pct) >= 0.5 ? 'positive' : 'negative'),
+			class: 'w-[6ch]',
+		},
+		{
+			id: 'gb',
+			header: 'GB',
+			title: 'Games back',
+			value: (team) => team.gamesBack ?? 0,
+			numeric: true,
+			sortDescFirst: false,
+			format: (_, team) => (team.gamesBack ? team.gamesBack.toFixed(1) : '-'),
+			cellClass: (team) => !team.gamesBack && 'text-current/50',
+			class: 'w-[6ch]',
+		},
+		...(
+			[
+				['home', 'Home', 'Home record'],
+				['road', 'Road', 'Road record'],
+				['interleague', 'Inter', 'Interleague record'],
+			] as const
+		).map(([id, header, title]): DataTableColumn<NpbTeamStanding> => ({
+			id,
+			header,
+			title,
+			value: (team) => recordValue(team[id]),
+			numeric: true,
+			align: 'center',
+			format: (_, team) => formatRecord(team[id]),
+			class: 'w-[9ch]',
+		})),
+	]
+
 	/** `al`/`nl` for MLB's leagues, the league ID for any other sport's. */
 	const leagueParam = (key: number) => leagueSide(key)?.toLowerCase() ?? String(key)
 
@@ -403,8 +484,8 @@
 </svelte:head>
 
 <Metadata
-	title="{page.params.season} MLB Standings | MLB.TheOhtani.com"
-	description="MLB standings for the {page.params.season} season"
+	title="{page.params.season} {data.npb ? 'NPB' : 'MLB'} Standings | MLB.TheOhtani.com"
+	description="{data.npb ? 'NPB' : 'MLB'} standings for the {page.params.season} season"
 />
 
 <Header title="Standings" crumbs={[{ name: 'Standings' }]}>
@@ -432,50 +513,107 @@
 	{/snippet}
 </Header>
 
-<section class="grid grid-cols-1 gap-lh p-ch">
-	{#if showSwitcher}
-		<PillSwitcher
-			id="standings-league"
-			aria-label="League"
-			options={leagueOptions}
-			value={league}
-			controls="standings-league-panel"
-			onchange={(next) => setViewParam('league', next, leagueOptions[0].id)}
-		/>
-	{/if}
-
-	{#each shownGroups as { key, heading, tables } (key)}
-		<div
-			class="flex flex-col gap-ch"
-			id={showSwitcher ? 'standings-league-panel' : undefined}
-			role={showSwitcher ? 'tabpanel' : undefined}
-			aria-labelledby={showSwitcher ? `standings-league-tab-${league}` : undefined}
-		>
-			{#if heading && !showSwitcher}
-				<h2 class="px-ch text-sm text-current/50">{heading}</h2>
-			{/if}
-			<div class={cn('grid items-start', data.view === 'playoff' ? 'gap-[.5lh]' : 'gap-[2lh]')}>
-				{#each tables as table, i (i)}
-					<DataTable
-						label={table.title}
-						data={rowsFor(table)}
-						columns={columnsFor(table)}
-						getRowId={(row) => String(row.record.team.id)}
-						sortParam="sort"
-						rowClass={(_, row, rows) =>
-							// the postseason cut line only means something in standings order
-							!isSorted &&
-							row === (table.cutAfter ?? 0) - 1 &&
-							row < rows.length - 1 &&
-							'*:border-b-2 *:border-dashed *:border-b-current/50'}
-					/>
-				{/each}
+{#if data.npb}
+	<section class="grid grid-cols-1 gap-lh p-ch">
+		{#if npbLeague}
+			<PillSwitcher
+				id="standings-league"
+				aria-label="League"
+				options={npbLeagueOptions}
+				value={npbLeague.id}
+				controls="standings-league-panel"
+				onchange={(next) => setViewParam('league', next, npbLeagueOptions[0].id)}
+			/>
+			<div
+				id="standings-league-panel"
+				role="tabpanel"
+				aria-labelledby="standings-league-tab-{npbLeague.id}"
+			>
+				<DataTable
+					label={npbLeague.name}
+					data={npbLeague.teams}
+					columns={npbColumns}
+					getRowId={(team) => team.nameJa}
+					sortParam="sort"
+				/>
 			</div>
-		</div>
-	{:else}
-		<Empty>No standings</Empty>
-	{/each}
-</section>
+		{:else}
+			<Empty>No standings</Empty>
+		{/if}
+	</section>
+
+	<small class="block px-ch pb-lh text-center text-xs text-current/50">
+		NPB standings from
+		<a
+			class="link"
+			href="https://npb.jp/bis/{page.params.season}/stats/"
+			target="_blank"
+			rel="noopener noreferrer">NPB.jp 日本野球機構</a
+		>
+	</small>
+{:else}
+	<section class="grid grid-cols-1 gap-lh p-ch">
+		{#if showSwitcher}
+			<PillSwitcher
+				id="standings-league"
+				aria-label="League"
+				options={leagueOptions}
+				value={league}
+				controls="standings-league-panel"
+				onchange={(next) => setViewParam('league', next, leagueOptions[0].id)}
+			/>
+		{/if}
+
+		{#each shownGroups as { key, heading, tables } (key)}
+			<div
+				class="flex flex-col gap-ch"
+				id={showSwitcher ? 'standings-league-panel' : undefined}
+				role={showSwitcher ? 'tabpanel' : undefined}
+				aria-labelledby={showSwitcher ? `standings-league-tab-${league}` : undefined}
+			>
+				{#if heading && !showSwitcher}
+					<h2 class="px-ch text-sm text-current/50">{heading}</h2>
+				{/if}
+				<div class={cn('grid items-start', data.view === 'playoff' ? 'gap-[.5lh]' : 'gap-[2lh]')}>
+					{#each tables as table, i (i)}
+						<DataTable
+							label={table.title}
+							data={rowsFor(table)}
+							columns={columnsFor(table)}
+							getRowId={(row) => String(row.record.team.id)}
+							sortParam="sort"
+							rowClass={(_, row, rows) =>
+								// the postseason cut line only means something in standings order
+								!isSorted &&
+								row === (table.cutAfter ?? 0) - 1 &&
+								row < rows.length - 1 &&
+								'*:border-b-2 *:border-dashed *:border-b-current/50'}
+						/>
+					{/each}
+				</div>
+			</div>
+		{:else}
+			<Empty>No standings</Empty>
+		{/each}
+	</section>
+{/if}
+
+{#snippet npbTeamCell({ row: team }: CellArgs<NpbTeamStanding>)}
+	<div class="flex items-center gap-ch">
+		<span class="w-[3ch] shrink-0 text-right text-xs text-current/50 tabular-nums">
+			{team.rank}
+		</span>
+		<span class="min-w-0 truncate" title={team.nameJa}>
+			<span class="md:hidden">{team.abbreviation ?? team.nameJa}</span>
+			<span class="max-md:hidden">{team.name ?? team.nameJa}</span>
+		</span>
+	</div>
+{/snippet}
+
+{#snippet npbWinLoss({ row: team }: CellArgs<NpbTeamStanding>)}
+	<span class="positive">{team.wins}</span>-<span class="negative">{team.losses}</span
+	>{#if team.ties}-<span class="text-current/50">{team.ties}</span>{/if}
+{/snippet}
 
 {#snippet tableTitle({ title }: HeaderArgs)}
 	<span class="line-clamp-1 text-left break-all text-foreground">{title}</span>
