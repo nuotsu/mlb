@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'bun:test'
 import {
 	buildNpbRoster,
+	formatNameJa,
 	isNpbTeam,
 	npbFieldingUrl,
 	npbPhotoUrl,
@@ -133,6 +134,38 @@ describe('parseNpbFielding', () => {
 	})
 })
 
+describe('formatNameJa', () => {
+	test('adds the first initial to foreign players', () => {
+		expect(formatNameJa('ルイーズ', 'Ruiz, Jose')).toBe('J. ルイーズ')
+		expect(formatNameJa('ビシエド', 'Viciedo, Dayan')).toBe('D. ビシエド')
+		expect(formatNameJa('ウィットリー', 'Whitley, Forrest')).toBe('F. ウィットリー')
+		expect(formatNameJa('エンカーナシオン', 'Encarnacion, Jerar')).toBe('J. エンカーナシオン')
+		expect(formatNameJa('デュプランティエ', 'Duplantier, Jon')).toBe('J. デュプランティエ')
+	})
+
+	test('leaves Japanese players as they are', () => {
+		expect(formatNameJa('浜地 真澄', 'Hamachi, Masumi')).toBe('浜地 真澄')
+		expect(formatNameJa('大勢', 'Ota, Taisei')).toBe('大勢')
+		// Registered by given name in katakana
+		expect(formatNameJa('リチャード', 'Sunagawa, Richard')).toBe('リチャード')
+		expect(formatNameJa('ザイレン', 'Sobukawa, Zylen')).toBe('ザイレン')
+		expect(formatNameJa('ラマル', 'Ratanayake, Ramal')).toBe('ラマル')
+		expect(formatNameJa('オケム', 'Umebinyuo, Okem')).toBe('オケム')
+	})
+
+	test('tells apart a surname and given name with the same initial', () => {
+		expect(formatNameJa('ロドリゲス', 'Rodriguez, Ronny')).toBe('R. ロドリゲス')
+		expect(formatNameJa('ルーカス', 'Lucas, Easton')).toBe('E. ルーカス')
+		// Both sound alike: the surname wins
+		expect(formatNameJa('アブレウ', 'Abreu, Albert')).toBe('A. アブレウ')
+		expect(formatNameJa('ビド', 'Bido, Osvaldo')).toBe('O. ビド')
+	})
+
+	test('tidies a full-width initial', () => {
+		expect(formatNameJa('Ｅ．ラミレス', 'Ramirez, Erasmo')).toBe('E. ラミレス')
+	})
+})
+
 describe('buildNpbRoster', () => {
 	const roster = buildNpbRoster({ teamId: 241, en, ja, fielding })
 	const byName = (name: string) => roster.players.find((p) => p.name === name)!
@@ -140,6 +173,11 @@ describe('buildNpbRoster', () => {
 	test('adds Japanese names with a half-width space', () => {
 		expect(roster.manager?.nameJa).toBe('阿部 慎之助')
 		expect(byName('Hotta, Kenshin').nameJa).toBe('堀田 賢慎')
+	})
+
+	test('adds first initials to foreign players', () => {
+		expect(byName('Dalbec, Bobby').nameJa).toBe('B. ダルベック')
+		expect(byName('Sunagawa, Richard').nameJa).toBe('リチャード')
 	})
 
 	test('adds photo URLs', () => {

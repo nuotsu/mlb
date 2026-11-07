@@ -304,7 +304,7 @@ export function buildNpbRoster({
 
 			return {
 				...player,
-				nameJa,
+				nameJa: nameJa && formatNameJa(nameJa, player.name),
 				photo: en.season ? npbPhotoUrl(en.season, teamId, player.number, player.id) : null,
 				position:
 					player.group === 'P' || !nameJa
@@ -313,6 +313,104 @@ export function buildNpbRoster({
 			}
 		}),
 	}
+}
+
+/** Each katakana syllable's consonant, by class (see `latinConsonants`); vowels and marks have none */
+const KANA_CONSONANTS: [RegExp, string][] = [
+	[/[カキクケコガギグゲゴ]/, 'K'],
+	[/[サシスセソザジズゼゾ]/, 'S'],
+	[/[タテトダヂヅデド]/, 'T'],
+	[/[チツ]/, 'TS'],
+	[/[ナニヌネノン]/, 'N'],
+	[/[ハヒヘホ]/, 'H'],
+	[/フ/, 'F'],
+	[/[バビブベボヴ]/, 'B'],
+	[/[パピプペポ]/, 'P'],
+	[/[マミムメモ]/, 'M'],
+	[/[ヤユヨ]/, 'Y'],
+	[/[ラリルレロ]/, 'R'],
+	[/ワ/, 'W'],
+]
+
+function kanaConsonants(kana: string) {
+	return [...kana].map((c) => KANA_CONSONANTS.find(([re]) => re.test(c))?.[1][0] ?? '').join('')
+}
+
+/**
+ * A romanized name's consonants in the same classes, as katakana would hear them: L is R, V is
+ * B, D is T, G and C are K (C is S before E, I, Y), Z is S. J is its own class, matching the H of
+ * Spanish names (ホセ) and the S row of English ones (ジョン). Silent H after a consonant is dropped.
+ */
+function latinConsonants(name: string) {
+	return name
+		.toLowerCase()
+		.replace(/ph/g, 'f')
+		.replace(/([bcdfgkpstwz])h/g, '$1')
+		.replace(/c(?=[eiy])/g, 's')
+		.replace(/[^a-z]/g, '')
+		.replace(/[aeiouy]/g, (v, i) => (v === 'y' && i === 0 ? 'Y' : ''))
+		.replace(
+			/[a-z]/g,
+			(c) =>
+				({
+					l: 'R',
+					r: 'R',
+					v: 'B',
+					b: 'B',
+					d: 'T',
+					t: 'T',
+					g: 'K',
+					c: 'K',
+					k: 'K',
+					q: 'K',
+					x: 'K',
+					z: 'S',
+					s: 'S',
+					j: 'J',
+				})[c] ?? c.toUpperCase(),
+		)
+}
+
+const sameConsonant = (kana: string, latin: string) =>
+	kana === latin ||
+	(latin === 'J' && (kana === 'H' || kana === 'S')) ||
+	(kana === 'F' && latin === 'H')
+
+/** Longest common subsequence of two consonant strings */
+function sharedConsonants(kana: string, latin: string) {
+	const row = Array<number>(latin.length + 1).fill(0)
+	for (const k of kana) {
+		let diagonal = 0
+		for (let j = 1; j <= latin.length; j++) {
+			const above = row[j]
+			row[j] = sameConsonant(k, latin[j - 1]) ? diagonal + 1 : Math.max(row[j], row[j - 1])
+			diagonal = above
+		}
+	}
+	return row[latin.length]
+}
+
+/**
+ * Foreign players are listed in katakana by surname alone (ルイーズ); this adds their English
+ * first initial, "J. ルイーズ", and tidies one already written full-width (Ｅ．ラミレス). Players
+ * registered by given name in katakana (リチャード for Sunagawa, Richard) are told apart by which
+ * English name the katakana sounds more like, and left as they are.
+ */
+export function formatNameJa(nameJa: string, name: string) {
+	const written = nameJa.match(/^([Ａ-Ｚ])．(.+)$/)
+	if (written) return `${String.fromCharCode(written[1].charCodeAt(0) - 0xfee0)}. ${written[2]}`
+
+	if (!/^[ァ-ヶー]+$/.test(nameJa)) return nameJa
+
+	const [last, first] = name.split(',').map((part) => part.trim())
+	if (!first || !last) return nameJa
+
+	const kana = kanaConsonants(nameJa)
+	const surname = sharedConsonants(kana, latinConsonants(last))
+	// A tie goes to the surname, the usual listing (Abreu, Albert: アブレウ)
+	const isSurname = surname > 0 && surname >= sharedConsonants(kana, latinConsonants(first))
+
+	return isSurname ? `${first[0].toUpperCase()}. ${nameJa}` : nameJa
 }
 
 function mostPlayed(fielding: NpbFielding[], key: string) {
