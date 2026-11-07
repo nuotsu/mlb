@@ -1,5 +1,15 @@
 import { getScheduleToday } from '#lib/cache-control.js'
 import {
+	npbGameUrl,
+	parseNpbBox,
+	parseNpbGame,
+	parseNpbPlays,
+	type NpbGame,
+	type NpbGameData,
+	type NpbGamePlayerName,
+	type NpbGameRef,
+} from '#lib/npb-game.js'
+import {
 	buildNpbRoster,
 	isNpbTeam,
 	npbFieldingUrl,
@@ -22,6 +32,8 @@ import {
 	CURRENT_SEASON_TTL_MS,
 	PAST_SEASON_TTL_MS,
 } from '#lib/server/memory-cache.js'
+
+export type { NpbGameData, NpbGamePlayerName }
 
 const UPSTREAM_TIMEOUT_MS = 10_000
 
@@ -157,4 +169,110 @@ export function getNpbRoster(
 /** For tests. */
 export function clearNpbRosterCache() {
 	rosterCache.clear()
+}
+
+/** Regular season and interleague games; the postseason and exhibitions aren't covered yet */
+const isCoveredCompetition = (competitionJa: string | null) =>
+	!competitionJa || /公式戦|交流戦/.test(competitionJa)
+
+/** English names for the players on a team's current roster, if it's the game's season */
+function rosterNames(roster: NpbRoster | null, season: number) {
+	const names: Record<string, NpbGamePlayerName> = {}
+	if (!roster || roster.season !== season) return names
+
+	const split = roster.players.map((player) => {
+		const [last = player.name, first = ''] = player.name.split(',').map((part) => part.trim())
+		return { player, last, first }
+	})
+	const surnames = new Map<string, number>()
+	for (const { last } of split) surnames.set(last, (surnames.get(last) ?? 0) + 1)
+
+	for (const { player, last, first } of split) {
+		names[player.id] = {
+			short: surnames.get(last)! > 1 && first ? `${first[0]}. ${last}` : last,
+			full: first ? `${first} ${last}` : last,
+			photo: player.photo,
+		}
+	}
+
+	return names
+}
+
+/**
+ * Fetches and parses an NPB game from npb.jp: the TOP page (required), then its box score and
+ * play-by-play once the game has started, plus English names from both teams' rosters.
+ * Throws {@link NpbNotFoundError} when npb.jp has no such game, or it's not a regular season one.
+ */
+export async function fetchNpbGame(
+	ref: NpbGameRef,
+	fetcher: typeof fetch = fetch,
+): Promise<NpbGameData> {
+	const game = parseNpbGame(await fetchPage(npbGameUrl(ref), fetcher), ref)
+
+	if (!isCoveredCompetition(game.competitionJa)) {
+		throw new NpbNotFoundError(`${game.competitionJa} games aren't covered`)
+	}
+
+	const started = game.state !== 'Preview' && !game.isCancelled
+
+	const [box, plays, ...rosters] = await Promise.all([
+		started
+			? fetchPage(npbGameUrl(ref, 'box'), fetcher)
+					.then(parseNpbBox)
+					.catch(optional<NpbGame['box']>('box score'))
+			: null,
+		started
+			? fetchPage(npbGameUrl(ref, 'playbyplay'), fetcher)
+					.then(parseNpbPlays)
+					.catch(optional<NpbGame['plays']>('play-by-play'))
+			: null,
+		...(['away', 'home'] as const).map((side) => {
+			const id = game.teams[side].id
+			return id && isNpbTeam(id)
+				? getNpbRoster(id, { fetcher }).catch(optional<NpbRoster>(`roster ${id}`))
+				: null
+		}),
+	])
+
+	return {
+		...game,
+		box,
+		plays,
+		names: Object.assign({}, ...rosters.map((roster) => rosterNames(roster, ref.season))),
+	}
+}
+
+const LIVE_GAME_TTL_MS = 30_000
+
+const gameCache = createMemoryCache<string, NpbGameData>({
+	keepError: (e) => e instanceof NpbNotFoundError,
+})
+
+/**
+ * {@link fetchNpbGame}, cached in memory: briefly for games from yesterday on (which may be live
+ * or about to be), and like a past season's standings for older ones.
+ */
+export function getNpbGame(
+	ref: NpbGameRef,
+	{
+		fetcher = fetch,
+		now = Date.now(),
+		today = getScheduleToday(),
+	}: { fetcher?: typeof fetch; now?: number; today?: Date } = {},
+): Promise<NpbGameData> {
+	const ttl = isRecentNpbGame(ref, today) ? LIVE_GAME_TTL_MS : PAST_SEASON_TTL_MS
+	const key = `${ref.season}/${ref.date}/${ref.code}`
+	return gameCache.get(key, ttl, () => fetchNpbGame(ref, fetcher), now)
+}
+
+/** From the day before `today` on: such a game may still change */
+export function isRecentNpbGame({ season, date }: NpbGameRef, today: Date) {
+	const game = Date.UTC(season, Number(date.slice(0, 2)) - 1, Number(date.slice(2)))
+	const yesterday = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate() - 1)
+	return game >= yesterday
+}
+
+/** For tests. */
+export function clearNpbGameCache() {
+	gameCache.clear()
 }

@@ -1,4 +1,5 @@
 import { defineParams } from '@sveltejs/kit/params'
+import { isNpbGameCode, isNpbGameDate } from '#lib/npb-game.js'
 
 // MLB data starts in 1876; anything past next season is crawler noise.
 const MIN_SEASON = 1876
@@ -42,6 +43,10 @@ const matchVersion = (param: string) => {
 export const params = defineParams({
 	date: (param) => (matchDate(param) ? param : undefined),
 	gamePk: (param) => (matchGamePk(param) ? param : undefined),
+	/** npb.jp's `mmdd` in /scores/{season}/{mmdd}/{code}/ */
+	npbDate: (param) => (isNpbGameDate(param) ? param : undefined),
+	/** npb.jp's `{home}-{away}-{nn}` game code, e.g. `t-g-25` */
+	npbGame: (param) => (isNpbGameCode(param) ? param : undefined),
 	personId: (param) => (matchPersonId(param) ? param : undefined),
 	season: (param) => (matchSeason(param) ? param : undefined),
 	teamId: (param) => (matchTeamId(param) ? param : undefined),

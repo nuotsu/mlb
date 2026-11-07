@@ -106,15 +106,20 @@
 			cellClass: 'tabular-nums',
 			class: 'w-[4ch] px-0',
 		},
-		{
-			id: 'lob',
-			header: 'LOB',
-			title: 'Left on base',
-			value: ({ side }) => team(side).leftOnBase,
-			align: 'center',
-			cellClass: 'tabular-nums',
-			class: 'w-[4ch] px-0',
-		},
+		// Not every league reports it (NPB doesn't)
+		...(team('away').leftOnBase !== undefined || team('home').leftOnBase !== undefined
+			? [
+					{
+						id: 'lob',
+						header: 'LOB',
+						title: 'Left on base',
+						value: ({ side }: SideRow) => team(side).leftOnBase,
+						align: 'center',
+						cellClass: 'tabular-nums',
+						class: 'w-[4ch] px-0',
+					} satisfies DataTableColumn<SideRow>,
+				]
+			: []),
 	])
 </script>
 

@@ -3,8 +3,10 @@
 import { readFileSync } from 'node:fs'
 import { beforeEach, describe, expect, test } from 'bun:test'
 import {
+	clearNpbGameCache,
 	clearNpbRosterCache,
 	clearNpbStandingsCache,
+	getNpbGame,
 	getNpbRoster,
 	getNpbStandings,
 	NpbNotFoundError,
@@ -156,5 +158,67 @@ describe('getNpbRoster', () => {
 		const working = fakeNpbFetch()
 		await getNpbRoster(241, { fetcher: working, now: 0 })
 		expect(working.calls).toBe(4)
+	})
+})
+
+describe('getNpbGame', () => {
+	const ref = { season: 2026, date: '1001', code: 't-g-25' }
+	const game = (name: string) => page(`npb-game-2026-1001-t-g-25-${name}`)
+
+	/** The game's pages plus the Giants' roster pages; the Tigers' roster 404s */
+	function gameFetch(index = game('index')) {
+		const pages: Record<string, string> = {
+			...GIANTS_PAGES,
+			'https://npb.jp/scores/2026/1001/t-g-25/': index,
+			'https://npb.jp/scores/2026/1001/t-g-25/box.html': game('box'),
+			'https://npb.jp/scores/2026/1001/t-g-25/playbyplay.html': game('playbyplay'),
+		}
+		const fetcher = Object.assign(
+			async (url: string) => {
+				fetcher.calls++
+				const html = pages[url]
+				return new Response(html ?? '', { status: html ? 200 : 404 })
+			},
+			{ calls: 0 },
+		)
+		return fetcher as unknown as typeof fetch & { calls: number }
+	}
+
+	beforeEach(() => {
+		clearNpbGameCache()
+		clearNpbRosterCache()
+	})
+
+	test('joins box score, plays and English names from the rosters', async () => {
+		const data = await getNpbGame(ref, { fetcher: gameFetch(), today: new Date('2026/11/07') })
+		expect(data.box?.away.batters.length).toBeGreaterThan(9)
+		expect(data.plays).toHaveLength(24)
+
+		// 丸 (Maru, Yoshihiro) is a Giant; the Tigers' roster couldn't load, so they keep Japanese
+		expect(data.names['21425116']).toMatchObject({ short: 'Maru' })
+		expect(data.names['71075138']).toBeUndefined()
+	})
+
+	test('caches a past game', async () => {
+		const fetcher = gameFetch()
+		const options = { fetcher, today: new Date('2026/11/07'), now: 0 }
+		await getNpbGame(ref, options)
+		const calls = fetcher.calls
+		await getNpbGame(ref, { ...options, now: 60 * 60_000 })
+		expect(fetcher.calls).toBe(calls)
+	})
+
+	test('treats games outside the regular season as not found', async () => {
+		const fetcher = gameFetch(
+			game('index').replace('JERA セ・リーグ公式戦', 'セ・リーグ クライマックスシリーズ'),
+		)
+		expect(getNpbGame(ref, { fetcher })).rejects.toBeInstanceOf(NpbNotFoundError)
+	})
+
+	test('is not found when npb.jp has no such game', async () => {
+		const fetcher = gameFetch()
+		expect(getNpbGame({ ...ref, code: 'c-d-1' }, { fetcher })).rejects.toBeInstanceOf(
+			NpbNotFoundError,
+		)
 	})
 })
