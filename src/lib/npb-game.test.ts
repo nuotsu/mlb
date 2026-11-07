@@ -8,10 +8,10 @@ import {
 	isNpbGameDate,
 	npbGamePath,
 	npbGameUrl,
+	npbScorecard,
 	parseNpbBox,
 	parseNpbGame,
 	parseNpbPlays,
-	npbScorecard,
 	parseRunners,
 	scorebookNotation,
 	translatePlay,
@@ -291,6 +291,7 @@ describe('English', () => {
 		expect(translatePositions(['打', '捕'])).toBe('PH-C')
 		expect(translateRecord('8勝6敗')).toBe('8-6')
 		expect(translateRecord('3勝2敗30S')).toBe('3-2, 30 SV')
+		expect(translateRecord('25セ')).toBe('25 SV')
 		expect(translateStatus('試合終了')).toBe('Final')
 		expect(translateStatus('7回裏')).toBe('Bot 7')
 		expect(translateStatus('中止')).toBe('Postponed')
@@ -328,4 +329,3 @@ describe('npbScorecard', () => {
 		expect(home[0][0][0]).toMatchObject({ label: 'BB', out: undefined })
 	})
 })
-

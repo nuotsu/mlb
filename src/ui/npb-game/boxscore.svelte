@@ -30,6 +30,7 @@
 	import PillSwitcher from '#ui/pill-switcher.svelte'
 	import StyledTeam from '#ui/team/styled-team.svelte'
 	import { playerName } from './names.js'
+	import NpbPhoto from './photo.svelte'
 
 	let {
 		game,
@@ -119,19 +120,46 @@
 		}
 	}
 
-	const batterName = $derived<DataTableColumn<BatterRow>>({
-		id: 'player',
-		header: '',
-		title: ja ? '選手' : 'Player',
-		sortable: false,
-		sticky: true,
-		rowHeader: true,
-		cell: batterCell,
-		class: 'min-w-[14ch] pl-ch',
-	})
+	/**
+	 * As in the MLB box score: only the headshot stays put while the stats scroll sideways, and
+	 * a substitute is indented under the player they came in for
+	 */
+	function avatarColumn<T>(
+		cell: DataTableColumn<T>['cell'],
+		substitute?: (row: T) => boolean,
+	): DataTableColumn<T> {
+		return {
+			id: 'avatar',
+			header: '',
+			title: 'Headshot',
+			sortable: false,
+			sticky: true,
+			cell,
+			// sticks 1lh further left, so once stuck its nudged headshot lines up with the others
+			cellClass: (row) => substitute?.(row) && 'left-[-1lh]',
+			class: 'w-lh min-w-lh px-0',
+		}
+	}
+
+	function nameColumn<T>(cell: DataTableColumn<T>['cell'], title: string): DataTableColumn<T> {
+		return {
+			id: 'player',
+			header: '',
+			title,
+			sortable: false,
+			rowHeader: true,
+			cell,
+			class: 'min-w-[14ch] pl-ch',
+		}
+	}
+
+	const batterColumns = $derived([
+		avatarColumn<BatterRow>(batterAvatarCell, (row) => row.substitute),
+		nameColumn<BatterRow>(batterCell, ja ? '選手' : 'Player'),
+	])
 
 	const battingColumns = $derived<DataTableColumn<BatterRow>[]>([
-		batterName,
+		...batterColumns,
 		stat('atBats', ja ? '打数' : 'AB', 'At bats', (row) => row.atBats),
 		stat('hits', ja ? '安打' : 'H', 'Hits', (row) => row.hits),
 		stat('runs', ja ? '得点' : 'R', 'Runs', (row) => row.runs),
@@ -140,7 +168,7 @@
 	])
 
 	const scorecardColumns = $derived<DataTableColumn<BatterRow>[]>([
-		batterName,
+		...batterColumns,
 		...Array.from({ length: innings }, (_, i): DataTableColumn<BatterRow> => ({
 			id: `inning-${i + 1}`,
 			header: String(i + 1),
@@ -148,21 +176,13 @@
 			sortable: false,
 			cell: scorebookCell,
 			align: 'center',
-			class: 'min-w-[4ch] px-[.25ch] text-center border-l border-foreground/10',
+			class: 'inning-start p-0',
 		})),
 	])
 
 	const pitchingColumns = $derived<DataTableColumn<NpbPitcherLine>[]>([
-		{
-			id: 'player',
-			header: '',
-			title: ja ? '投手' : 'Pitcher',
-			sortable: false,
-			sticky: true,
-			rowHeader: true,
-			cell: pitcherCell,
-			class: 'min-w-[14ch] pl-ch',
-		},
+		avatarColumn<NpbPitcherLine>(pitcherAvatarCell),
+		nameColumn<NpbPitcherLine>(pitcherCell, ja ? '投手' : 'Pitcher'),
 		stat('inningsPitched', ja ? '回' : 'IP', 'Innings pitched', (row) => row.inningsPitched),
 		stat('pitches', ja ? '球数' : 'P', 'Pitches', (row) => row.pitches),
 		stat('battersFaced', ja ? '打者' : 'BF', 'Batters faced', (row) => row.battersFaced),
@@ -268,8 +288,30 @@
 	</article>
 {/snippet}
 
+{#snippet avatar(ref: NpbPlayerRef, substitute = false)}
+	<!-- The name's link is the one in the tab order; this one is just a bigger target -->
+	<svelte:element
+		this={ref.id ? 'a' : 'span'}
+		class="relative block"
+		href={ref.id ? npbPlayerUrl(ref.id) : undefined}
+		target={ref.id ? '_blank' : undefined}
+		rel={ref.id ? 'noopener noreferrer' : undefined}
+		tabindex="-1"
+		aria-hidden="true"
+	>
+		{#if substitute}
+			<!-- In the headshot's place, with the headshot nudged aside, so the column doesn't widen -->
+			<ArrowDownRightIcon class="absolute inset-y-0 left-0 my-auto size-ch text-current/40" />
+		{/if}
+
+		<NpbPhoto
+			src={ref.id ? names[ref.id]?.photo : null}
+			class={cn('size-lh', substitute && 'translate-x-lh')}
+		/>
+	</svelte:element>
+{/snippet}
+
 {#snippet player(ref: NpbPlayerRef, label: string, substitute = false)}
-	{@const photo = ref.id ? names[ref.id]?.photo : null}
 	<svelte:element
 		this={ref.id ? 'a' : 'span'}
 		class={cn('group/player flex items-center gap-[.5ch] text-left', substitute && 'pl-lh')}
@@ -278,25 +320,6 @@
 		rel={ref.id ? 'noopener noreferrer' : undefined}
 		title={playerName(ref, names, lang, 'full')}
 	>
-		{#if substitute}
-			<ArrowDownRightIcon class="-ml-lh size-ch shrink-0 text-current/40" />
-		{/if}
-
-		{#if photo}
-			<!-- A circle cropped from the top of the 4:5 photo, as on the NPB roster -->
-			<img
-				class="img-fade block size-lh shrink-0 rounded-full bg-foreground/10 object-cover object-top text-transparent opacity-0 transition-opacity"
-				src={photo}
-				width="144"
-				height="180"
-				alt=""
-				loading="lazy"
-				decoding="async"
-				draggable="false"
-				onload={(e) => e.currentTarget.classList.remove('opacity-0')}
-			/>
-		{/if}
-
 		<span
 			class="line-clamp-1 grow break-all decoration-dashed group-hover/player:underline"
 			lang={ja || !ref.id || !names[ref.id] ? 'ja' : undefined}
@@ -310,6 +333,14 @@
 			</small>
 		{/if}
 	</svelte:element>
+{/snippet}
+
+{#snippet batterAvatarCell({ row }: CellArgs<BatterRow>)}
+	{@render avatar(row.player, row.substitute)}
+{/snippet}
+
+{#snippet pitcherAvatarCell({ row }: CellArgs<NpbPitcherLine>)}
+	{@render avatar(row.player)}
 {/snippet}
 
 {#snippet batterCell({ row }: CellArgs<BatterRow>)}

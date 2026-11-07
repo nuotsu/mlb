@@ -13,6 +13,7 @@
 	import BSO from '#ui/game/bso.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import { playerName } from './names.js'
+	import NpbPhoto from './photo.svelte'
 
 	let {
 		game,
@@ -126,18 +127,7 @@
 										/>
 									</div>
 
-									{#if photo}
-										<img
-											class="img-fade size-rlh shrink-0 rounded-full bg-foreground/10 object-cover object-top opacity-0 transition-opacity"
-											src={photo}
-											width="144"
-											height="180"
-											alt=""
-											loading="lazy"
-											decoding="async"
-											onload={(e) => e.currentTarget.classList.remove('opacity-0')}
-										/>
-									{/if}
+									<NpbPhoto src={photo} class="size-rlh" />
 
 									<p class="grow">
 										<strong class="font-medium" lang={ja ? 'ja' : undefined}>

@@ -3,6 +3,7 @@
 	import type { NpbGameData } from '#lib/npb-game.js'
 	import { NPB_SPORT_ID } from '#lib/npb.js'
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
+	import { cn } from '#lib/utils.js'
 	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
 	import Header from '#ui/header.svelte'
 	import {
@@ -16,10 +17,13 @@
 	} from '#ui/icons/index.js'
 	import Metadata from '#ui/metadata.svelte'
 	import Boxscore from '#ui/npb-game/boxscore.svelte'
+	import Decisions from '#ui/npb-game/decisions.svelte'
 	import GameInfo from '#ui/npb-game/game-info.svelte'
+	import HomeRuns from '#ui/npb-game/home-runs.svelte'
 	import { LANG_PARAM, LANGS } from '#ui/npb-game/names.js'
 	import Plays from '#ui/npb-game/plays.svelte'
 	import Scoreboard from '#ui/npb-game/scoreboard.svelte'
+	import Umpires from '#ui/npb-game/umpires.svelte'
 	import SectionNav from '#ui/section-nav.svelte'
 	import type { PageProps } from './$types'
 
@@ -113,10 +117,18 @@
 
 <section class="group/game-page grid gap-[2lh] py-lh md:grid-cols-2">
 	{#if game.plays}
-		<Plays {game} names={game.names} {lang} />
+		<Plays class="col-span-full max-h-[14lh]" {game} names={game.names} {lang} />
 	{/if}
 
-	<GameInfo class={game.plays ? '' : 'col-span-full'} {game} names={game.names} {lang}>
+	<!-- As on the MLB game page: details, then the favorite button; first once the game is over -->
+	<div
+		id="game-info"
+		class={cn('col-span-full m-auto px-ch', game.state === 'Final' && 'order-first')}
+	>
+		<GameInfo {game} {lang} />
+
+		<hr class="my-ch border-dashed border-stroke" />
+
 		<menu class="flex items-center justify-center gap-ch">
 			<li>
 				<ToggleFavorite
@@ -132,11 +144,23 @@
 				</ToggleFavorite>
 			</li>
 		</menu>
-	</GameInfo>
+	</div>
 
 	{#if game.state !== 'Preview'}
 		<Boxscore class="col-span-full" {game} names={game.names} {lang} />
 	{/if}
+
+	{#if game.decisions.win || game.decisions.loss || game.decisions.save}
+		<div
+			class="col-span-full flex flex-wrap items-start justify-evenly gap-lh px-[2ch] *:grow *:only:mx-auto *:only:max-w-max"
+		>
+			<Decisions {game} names={game.names} {lang} />
+		</div>
+	{/if}
+
+	<HomeRuns class="col-span-full px-[2ch]" {game} names={game.names} {lang} />
+
+	<Umpires class="col-span-full" {game} {lang} />
 
 	<p class="col-span-full px-ch text-center text-xs text-current/50">
 		{ja ? '出典' : 'Game data from'}

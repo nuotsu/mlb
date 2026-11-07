@@ -8,6 +8,7 @@
 	import type { NpbGame, NpbLang } from '#lib/npb-game.js'
 	import { translateStatus } from '#lib/npb-game.js'
 	import { cn } from '#lib/utils.js'
+	import BaseRunners from '#ui/game/base-runners.svelte'
 	import Inning from '#ui/game/inning.svelte'
 	import Linescore from '#ui/game/linescore.svelte'
 	import TeamScores from '#ui/game/team-scores.svelte'
@@ -45,9 +46,22 @@
 	data-state={game.state}
 >
 	<div
-		class="relative z-1 m-auto grid w-full text-center *:leading-none group-has-[[style*=linescore]]/game:h-12"
+		class={cn(
+			'relative z-1 m-auto grid w-full text-center *:leading-none group-has-[[style*=linescore]]/game:h-12',
+			(isLive || isFinal) && 'max-md:mt-rlh',
+		)}
 		style:grid-area="status"
 	>
+		<!-- Behind the status, as on the MLB scoreboard; npb.jp doesn't say who's on base -->
+		<div
+			class={cn(
+				'absolute top-1/2 left-1/2 -z-1 -translate-1/2',
+				game.state !== 'Preview' && 'md:mt-1',
+			)}
+		>
+			<BaseRunners class="w-max" />
+		</div>
+
 		{#if isLive && game.currentInning}
 			<Inning {linescore} />
 		{:else}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import { usesNpbLogo } from '#lib/team-logos.js'
 	import { cn } from '#lib/utils.js'
 	import type { Snippet } from 'svelte'
 	import Logo from './logo.svelte'
@@ -22,16 +23,19 @@
 	} = $props()
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
+
+	/** npb.jp's logo on white: no team color behind it, so the text keeps its own color too */
+	const plain = $derived(usesNpbLogo(team.id))
 </script>
 
 <div
 	class={cn(
 		'group/team @container/team relative isolate flex items-center gap-[.5ch]',
-		isDarkOnLightTeam(team) && 'dark:text-dark',
-		isLightOnDarkTeam(team) && 'dark:text-light',
+		!plain && isDarkOnLightTeam(team) && 'dark:text-dark',
+		!plain && isLightOnDarkTeam(team) && 'dark:text-light',
 		className,
 	)}
-	style:--team-bg="url('{src}/32')"
+	style:--team-bg={plain ? undefined : `url('${src}/32')`}
 >
 	{#if logo}
 		<Logo srcset="{src}/96" class="size-lh shrink-0 object-contain" {team} />

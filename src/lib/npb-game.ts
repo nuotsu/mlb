@@ -761,6 +761,10 @@ export function translateStatus(statusJa: string) {
 
 /** 8勝6敗 → 8-6; 3勝2敗30S → 3-2, 30 SV */
 export function translateRecord(recordJa: string) {
+	// A save's record is just the season total: 25セ (or 25S)
+	const saves = halfWidth(recordJa).match(/^(\d+)(?:セ|S|セーブ)$/)
+	if (saves) return `${saves[1]} SV`
+
 	const match = halfWidth(recordJa).match(/(\d+)勝(\d+)敗(?:(\d+)S)?/)
 	if (!match) return recordJa
 	return `${match[1]}-${match[2]}${match[3] ? `, ${match[3]} SV` : ''}`
