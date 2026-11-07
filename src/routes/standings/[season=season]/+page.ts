@@ -1,6 +1,7 @@
 import { error } from '@sveltejs/kit'
 import { cacheControlForSeasonPage } from '#lib/cache-control.js'
 import { fetchMLB } from '#lib/fetch/index.js'
+import { KBO_SPORT_ID, type KboStandings } from '#lib/kbo.js'
 import { NPB_MIN_SEASON, NPB_SPORT_ID, type NpbLeagueStandings } from '#lib/npb.js'
 import { wildCardSpots } from '#lib/postseason/bracket.js'
 import { addDays, formatDate, getToday } from '#lib/temporal.js'
@@ -12,9 +13,11 @@ const COMPARISON_DAYS = 7
 export const load: PageLoad = async ({ params, url, setHeaders, fetch }) => {
 	const sportId = url.searchParams.get('sportId') ?? '1'
 	const isNpb = sportId === String(NPB_SPORT_ID)
+	const isKbo = sportId === String(KBO_SPORT_ID)
 
-	// NPB sets this only once its standings load, so a failed npb.jp fetch is never CDN-cached.
-	if (!isNpb) setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
+	// NPB and KBO set this only once their standings load, so a failed upstream fetch is never
+	// CDN-cached.
+	if (!isNpb && !isKbo) setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
 	const requestedGameType = url.searchParams.get('gameType') ?? 'R'
 
 	/**
@@ -76,15 +79,41 @@ export const load: PageLoad = async ({ params, url, setHeaders, fetch }) => {
 		availableSportIds.push(NPB_SPORT_ID)
 	}
 
-	if (isNpb) {
-		const response = await fetch(`/api/npb/standings/${params.season}`)
+	// KBO standings come from koreabaseball.com, which only shows its current (or, before a new
+	// season starts, most recent) season.
+	const thisYear = getToday().getFullYear()
+	const season = Number(params.season)
+	if (
+		gameType === 'R' &&
+		(season === thisYear || (season === thisYear - 1 && getToday().getMonth() < 3))
+	) {
+		availableSportIds.push(KBO_SPORT_ID)
+	}
+
+	/** Our own NPB/KBO route; a failure becomes an error page, which isn't CDN-cached. */
+	async function loadLeague<T>(path: string, name: string): Promise<T> {
+		const response = await fetch(path)
 		if (!response.ok) {
 			const { message } = await response.json().catch(() => ({ message: undefined }))
-			error(response.status === 404 ? 404 : 502, message ?? 'Could not load NPB standings.')
+			error(response.status === 404 ? 404 : 502, message ?? `Could not load ${name} standings.`)
 		}
-		const npb: NpbLeagueStandings[] = (await response.json()).leagues
-
+		const body: T = await response.json()
 		setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
+		return body
+	}
+
+	if (isNpb || isKbo) {
+		const npb = isNpb
+			? (
+					await loadLeague<{ leagues: NpbLeagueStandings[] }>(
+						`/api/npb/standings/${params.season}`,
+						'NPB',
+					)
+				).leagues
+			: null
+		const kbo = isKbo
+			? await loadLeague<KboStandings>(`/api/kbo/standings/${params.season}`, 'KBO')
+			: null
 
 		return {
 			standings: { records: [] } as unknown as MLB.StandingsResponse,
@@ -96,6 +125,7 @@ export const load: PageLoad = async ({ params, url, setHeaders, fetch }) => {
 			availableGameTypes: ['R'],
 			availableSportIds,
 			npb,
+			kbo,
 		}
 	}
 
@@ -179,5 +209,6 @@ export const load: PageLoad = async ({ params, url, setHeaders, fetch }) => {
 		availableGameTypes,
 		availableSportIds,
 		npb: null,
+		kbo: null,
 	}
 }
