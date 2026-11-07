@@ -5,7 +5,7 @@ export const SITE_DESCRIPTION =
 	'Live MLB scores with a custom scorebug, plus standings, stat leaders, team and player pages, postseason brackets, ABS challenge rankings, and an MLB Stats API playground.'
 
 /** 1200x630 social preview image */
-export const OG_IMAGE = { url: `${SITE_URL}/og.jpg`, width: 1200, height: 630 }
+export const OG_IMAGE = { url: `${SITE_URL}/og.png`, width: 1200, height: 630 }
 
 export type IndexableRoute = {
 	path: string

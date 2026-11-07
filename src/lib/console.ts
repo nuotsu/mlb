@@ -1,17 +1,6 @@
+import { ASCII_LOGO } from '#lib/ascii-logo.js'
 import { dev } from '$app/env'
 
-// prettier-ignore
-const ascii =
-`$$\\      $$\\ $$\\       $$$$$$$\\  
-$$$\\    $$$ |$$ |      $$  __$$\\ 
-$$$$\\  $$$$ |$$ |      $$ |  $$ |
-$$\\$$\\$$ $$ |$$ |      $$$$$$$\\ |
-$$ \\$$$  $$ |$$ |      $$  __$$\\ 
-$$ |\\$  /$$ |$$ |      $$ |  $$ |
-$$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
-\\__|     \\__|\\________|\\_______/.TheOhtani.com
-`
-
 if (!dev) {
-	console.log(ascii)
+	console.log(`${ASCII_LOGO.trimEnd()}.TheOhtani.com\n`)
 }

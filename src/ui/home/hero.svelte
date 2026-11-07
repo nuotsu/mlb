@@ -1,19 +1,10 @@
 <script lang="ts">
+	import { ASCII_LOGO } from '#lib/ascii-logo.js'
 	import AsciiReveal from '#ui/ascii-reveal.svelte'
 	import Baseball from '#ui/baseball.svelte'
 	import InstallHint from '#ui/onboarding/install-hint.svelte'
 	import QuickSearch from '#ui/quick-search.svelte'
 	import SetupChecklist from './setup-checklist.svelte'
-
-	const ascii = `$$\\      $$\\ $$\\       $$$$$$$\\
-$$$\\    $$$ |$$ |      $$  __$$\\
-$$$$\\  $$$$ |$$ |      $$ |  $$ |
-$$\\$$\\$$ $$ |$$ |      $$$$$$$\\ |
-$$ \\$$$  $$ |$$ |      $$  __$$\\
-$$ |\\$  /$$ |$$ |      $$ |  $$ |
-$$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
-\\__|     \\__|\\________|\\_______/
-`
 </script>
 
 <header class="hero border-b border-stroke">
@@ -22,7 +13,7 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 			<h1 class="flex max-w-max flex-col text-xl" aria-label="Welcome to MLB.TheOhtani.com">
 				<div class="mb-1">Welcome to</div>
 				<AsciiReveal
-					text={ascii}
+					text={ASCII_LOGO}
 					class="-mt-ch overflow-x-auto overflow-y-clip text-left text-[x-small] leading-none"
 				/>
 				<p class="ml-auto">.TheOhtani.com</p>
