@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
+	import { teamBg } from '#ui/data-table/types.js'
 	import TeamAvatar from '#ui/team/avatar.svelte'
 	import { browser } from '$app/env'
 	import { onMount } from 'svelte'
@@ -90,25 +91,20 @@
 {/await}
 
 {#snippet line(row: Row, highlight: boolean, division?: string)}
+	{@const colored = highlight || !!division}
 	<tr class={['border-t border-stroke', highlight && 'font-bold']}>
-		<td class={['py-[.25ch]', highlight && 'shadow-[inset_2px_0_var(--color-accent)]']}>
-			<a
-				class={[
-					'flex items-center gap-[.5ch] pl-[.5ch] hover-link',
-					highlight && 'relative isolate',
-				]}
-				href="/teams/{row.team.id}"
-				style:--team-bg={highlight
-					? `url('https://midfield.mlbstatic.com/v1/team/${row.team.id}/spots/32')`
-					: undefined}
-			>
-				<TeamAvatar class="size-[1.25em]" teamId={row.team.id} />
+		<td
+			class={['py-[.25ch]', colored && 'relative isolate', highlight && 'border-l-2 border-l-accent']}
+			style:--team-bg={colored ? teamBg(row.team) : undefined}
+		>
+			<a class="flex items-center gap-[.5ch] px-[.5ch] hover-link" href="/teams/{row.team.id}">
+				<TeamAvatar class="size-lh" teamId={row.team.id} />
+				<span>{row.team.abbreviation}</span>
 				{#if division}
-					<span class="min-w-[8ch] text-xs font-normal whitespace-nowrap text-current/50"
+					<span class="ml-auto text-xs font-normal whitespace-nowrap text-current/50"
 						>{division}</span
 					>
 				{/if}
-				<span>{row.team.abbreviation}</span>
 			</a>
 		</td>
 		<td class="text-right">{row.wins}</td>

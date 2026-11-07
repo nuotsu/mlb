@@ -46,7 +46,7 @@
 	{:then team}
 		<Widget title="{team.name} schedule" href="/teams/{team.id}" linkLabel="Team" bodyClass="">
 			{#snippet heading()}
-				<TeamAvatar class="size-[1.25em]" teamId={team.id} />
+				<TeamAvatar class="size-lh" teamId={team.id} />
 				<span class="truncate">{team.teamName ?? team.name} Schedule</span>
 			{/snippet}
 			<TeamCalendar {team} />

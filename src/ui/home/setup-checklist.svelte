@@ -83,13 +83,15 @@
 		<ul class="list-none! space-y-ch! pl-0!">
 			{#each steps as step (step.id)}
 				<li class="flex gap-ch">
-					<span
-						class={[
-							'mt-[.3lh] size-[.8lh] shrink-0 rounded-full border',
-							step.done ? 'border-accent bg-accent' : 'border-current/40',
-						]}
-						aria-hidden="true"
-					></span>
+					<!-- centered on the title's line -->
+					<span class="grid h-lh shrink-0 place-items-center" aria-hidden="true">
+						<span
+							class={[
+								'size-[.8lh] rounded-full border',
+								step.done ? 'border-accent bg-accent' : 'border-current/40',
+							]}
+						></span>
+					</span>
 
 					<div class="grid min-w-0 justify-items-start gap-[.5ch]">
 						<p>
