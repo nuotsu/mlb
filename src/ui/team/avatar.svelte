@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { teamColor } from '#lib/team-colors.js'
+	import { isNpbLogo, isTeamSpot, teamLogoSources } from '#lib/team-logos.js'
 	import { cn } from '#lib/utils.js'
 
 	let {
@@ -11,8 +12,10 @@
 		class?: string
 	} = $props()
 
-	// Falls back to the team's spot image when there's no on-dark cap logo
-	let fallback = $state(false)
+	/** The on-dark cap, else npb.jp's logo, else the spot, as each fails to load */
+	const sources = $derived(teamLogoSources(teamId, 'dark'))
+	let attempt = $state(0)
+	const src = $derived(sources[Math.min(attempt, sources.length - 1)])
 </script>
 
 <span
@@ -20,14 +23,19 @@
 	style:background-color={teamColor(teamId)}
 >
 	<img
-		class={cn('size-full rounded-full', fallback ? 'object-cover' : 'object-contain p-[18%]')}
-		src={fallback
-			? `https://midfield.mlbstatic.com/v1/team/${teamId}/spots/72`
-			: `https://www.mlbstatic.com/team-logos/team-cap-on-dark/${teamId}.svg`}
+		class={cn(
+			'size-full rounded-full',
+			isTeamSpot(src) ? 'object-cover' : 'object-contain',
+			// Padding keeps a cap, or the corners of a square npb.jp logo, inside the circle
+			isNpbLogo(src) ? 'bg-white p-[15%]' : !isTeamSpot(src) && 'p-[18%]',
+		)}
+		{src}
 		alt=""
 		width="72"
 		height="72"
 		draggable="false"
-		onerror={() => (fallback = true)}
+		onerror={() => {
+			if (attempt < sources.length - 1) attempt++
+		}}
 	/>
 </span>
