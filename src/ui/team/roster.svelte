@@ -109,6 +109,7 @@
 		<ToggleFavorite
 			class="shrink-0"
 			target={{ href: `/player/${person.id}`, label: (person as MLB.Person).lastName! }}
+			fullName={person.fullName}
 		/>
 	</div>
 {/snippet}

@@ -1,0 +1,61 @@
+# Deletes the Neon preview branch that the Vercel-Neon integration creates
+# (`preview/<git-branch>`) once its PR is closed, merged or not. The integration
+# never deletes these itself until Vercel's deployment retention expires, and
+# the free plan's 10-branch cap breaks Vercel previews when they pile up.
+name: Delete Neon preview branch
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions: {}
+
+concurrency:
+  group: neon-preview-cleanup-${{ github.head_ref }}
+
+jobs:
+  delete-neon-branch:
+    # Fork PRs get no secrets and no Vercel preview, so skip them.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    env:
+      NEON_PROJECT_ID: ${{ vars.NEON_PROJECT_ID || 'still-math-95458062' }}
+    steps:
+      # neondatabase/delete-branch-action exits non-zero when the branch does
+      # not exist (e.g. a PR that never got a preview), so look it up first
+      # and only delete on an exact name match. Passing the resolved branch ID
+      # (br-...) to the action also keeps the git branch name out of its shell.
+      # Only names starting with `preview/` can match, so `main` and
+      # `vercel-dev` are never touched.
+      - name: Find preview branch
+        id: find
+        env:
+          NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+          BRANCH_NAME: preview/${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          if [ -z "$NEON_API_KEY" ]; then
+            echo "::error::NEON_API_KEY secret is not set"
+            exit 1
+          fi
+          response=$(curl -sS --fail-with-body -G \
+            -H "Authorization: Bearer $NEON_API_KEY" \
+            -H "Accept: application/json" \
+            --data-urlencode "search=$BRANCH_NAME" \
+            "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/branches")
+          id=$(jq -r --arg name "$BRANCH_NAME" \
+            '[.branches[] | select(.name == $name)][0].id // empty' <<<"$response")
+          if [ -z "$id" ]; then
+            echo "No Neon branch named $BRANCH_NAME; nothing to delete."
+          else
+            echo "Found $BRANCH_NAME ($id)."
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
+      - name: Delete preview branch
+        if: steps.find.outputs.id != ''
+        uses: neondatabase/delete-branch-action@4468d825d5a88ef4012f1705a82f02ec3072f776 # v3.2.1
+        with:
+          project_id: ${{ env.NEON_PROJECT_ID }}
+          branch: ${{ steps.find.outputs.id }}
+          api_key: ${{ secrets.NEON_API_KEY }}

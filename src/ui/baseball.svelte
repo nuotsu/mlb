@@ -381,7 +381,7 @@
 		bind:this={pre}
 		bind:clientWidth={width}
 		bind:clientHeight={height}
-		class="relative grid aspect-square cursor-grab touch-none place-content-center font-mono leading-none tracking-tighter select-none active:cursor-grabbing"
+		class="relative grid aspect-square cursor-grab touch-none [overflow-anchor:none] place-content-center font-mono leading-none tracking-tighter select-none active:cursor-grabbing"
 		{onpointerdown}
 		{onpointermove}
 		{onpointerup}

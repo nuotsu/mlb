@@ -97,6 +97,7 @@
 								<ToggleFavorite
 									class="shrink-0"
 									target={{ href: `/teams/${team.id}`, label: team.abbreviation! }}
+									fullName={team.name}
 								/>
 							</dd>
 						{/each}

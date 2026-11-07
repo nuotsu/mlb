@@ -121,7 +121,10 @@
 	{#snippet after()}
 		<div class="mx-auto flex items-center justify-center gap-ch">
 			<ToggleCompare class="text-current/50 [&>span]:hidden" personId={person.id} />
-			<ToggleFavorite target={{ href: `/player/${person.id}`, label: person.lastName! }} />
+			<ToggleFavorite
+				target={{ href: `/player/${person.id}`, label: person.lastName! }}
+				fullName={person.fullName}
+			/>
 		</div>
 	{/snippet}
 </Header>
