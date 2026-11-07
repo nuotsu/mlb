@@ -145,7 +145,7 @@ export function npbStandingsUrl(season: number | string, league: NpbLeagueId) {
 }
 
 /** Strips tags, turning `<br>` into newlines, and decodes the few entities NPB uses. */
-function cellText(html: string) {
+export function cellText(html: string) {
 	return html
 		.replace(/<br\s*\/?>/gi, '\n')
 		.replace(/<[^>]*>/g, '')
@@ -155,7 +155,7 @@ function cellText(html: string) {
 }
 
 /** Collapses whitespace (including full-width spaces) used to pad names and headers. */
-const compact = (text: string) => text.replace(/[\s　]+/g, '')
+export const compact = (text: string) => text.replace(/[\s　]+/g, '')
 
 /** "37-33\n(2)" → 37 wins, 33 losses, 2 ties. `***` (self) or blank → null. */
 export function parseNpbRecord(text: string): NpbRecord | null {

@@ -1,4 +1,4 @@
-import { npbLogoUrl } from '#lib/npb-roster.js'
+import { isNpbTeam, npbLogoUrl } from '#lib/npb-roster.js'
 
 /**
  * Where a team's logo can come from, best first, for an `<img>` to step through on `error`.
@@ -24,3 +24,13 @@ export const isNpbLogo = (src: string) => src.startsWith('https://p.npb.jp/')
 
 /** The Stats API's spot: a full-bleed circle, not a logo to pad */
 export const isTeamSpot = (src: string) => src.startsWith('https://midfield.mlbstatic.com/')
+
+/** NPB teams the Stats API has a real logo for; the rest show npb.jp's (see `teamLogoSources`) */
+const NPB_TEAMS_WITH_STATS_API_LOGOS = new Set([241, 341])
+
+/**
+ * The team's logo is npb.jp's, which sits on white, so the team's color behind it (`--team-bg`,
+ * from the Stats API's generic light gray spot) is left off and the text keeps its own color
+ */
+export const usesNpbLogo = (teamId: number) =>
+	isNpbTeam(teamId) && !NPB_TEAMS_WITH_STATS_API_LOGOS.has(teamId)

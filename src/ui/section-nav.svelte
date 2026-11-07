@@ -1,5 +1,5 @@
 <script lang="ts" module>
-	import type { Component } from 'svelte'
+	import type { Component, Snippet } from 'svelte'
 
 	export type Section = { id: string; label: string; icon: Component<Record<string, unknown>> }
 </script>
@@ -13,6 +13,7 @@
 	let {
 		sections,
 		label,
+		after,
 	}: {
 		/**
 		 * Every section the page can render, keyed by the id on its root element, in page order.
@@ -21,6 +22,8 @@
 		sections: Section[]
 		/** Accessible name of the nav, e.g. "Game sections" */
 		label: string
+		/** A control at the end of the bar, past a divider, like a language picker */
+		after?: Snippet
 	} = $props()
 
 	const TOP = $derived(sections[0].id)
@@ -246,7 +249,7 @@
 		<nav
 			aria-label={label}
 			class={cn(
-				'pointer-events-auto max-w-full min-w-0 rounded-full border border-foreground/15 bg-background/70 text-foreground shadow-lg backdrop-blur-md transition-[translate,opacity] duration-300 motion-reduce:transition-none',
+				'pointer-events-auto flex max-w-full min-w-0 items-center rounded-full border border-foreground/15 bg-background/70 text-foreground shadow-lg backdrop-blur-md transition-[translate,opacity] duration-300 motion-reduce:transition-none',
 				hidden && 'pointer-events-none translate-y-[calc(100%+1ch)] opacity-0',
 			)}
 			onfocusin={() => (hidden = false)}
@@ -257,7 +260,7 @@
 				aria-label="Jump to section"
 				aria-orientation="horizontal"
 				tabindex="-1"
-				class="relative isolate no-scrollbar flex gap-0.5 overflow-x-auto overscroll-x-contain rounded-full p-0.5"
+				class="relative isolate no-scrollbar flex min-w-0 gap-0.5 overflow-x-auto overscroll-x-contain rounded-full p-0.5"
 				{onkeydown}
 			>
 				<!-- One highlight, anchored to the active icon, so it slides between them -->
@@ -289,6 +292,14 @@
 					</button>
 				{/each}
 			</div>
+
+			{#if after}
+				<span class="h-6 shrink-0 border-l border-dashed border-foreground/25" aria-hidden="true"
+				></span>
+				<div class="flex shrink-0 items-center p-0.5">
+					{@render after()}
+				</div>
+			{/if}
 		</nav>
 	{/if}
 </div>
