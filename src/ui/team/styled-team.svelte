@@ -34,6 +34,8 @@
 		!plain && isDarkOnLightTeam(team) && 'dark:text-dark',
 		!plain && isLightOnDarkTeam(team) && 'dark:text-light',
 		className,
+		// Over a caller's backdrop (e.g. the scoreboard's), so the row shows what's behind it
+		plain && 'bg-transparent',
 	)}
 	style:--team-bg={plain ? undefined : `url('${src}/32')`}
 >
