@@ -32,8 +32,12 @@ export interface NpbTeamStanding extends NpbRecord {
 	rank: number
 	/** Full Japanese name as NPB prints it, e.g. 阪神タイガース */
 	nameJa: string
-	/** English name, or `null` for a name not in {@link NPB_TEAMS} */
+	/** MLB Stats API team ID, or `null` for a team not in {@link NPB_TEAMS} (same for the rest) */
+	id: number | null
+	/** English name */
 	name: string | null
+	/** Nickname, e.g. Tigers */
+	teamName: string | null
 	abbreviation: string | null
 	games: number
 	/** As printed, e.g. ".560" */
@@ -58,25 +62,82 @@ export interface NpbLeagueStandings {
 	teams: NpbTeamStanding[]
 }
 
-/** English names, keyed by Japanese name with `・` removed (older pages drop it). */
-export const NPB_TEAMS: Record<string, { name: string; abbreviation: string }> = {
+/**
+ * English names and MLB Stats API team IDs (sportId 31), keyed by Japanese name with `・`
+ * removed (older pages drop it). The IDs let the standings table reuse MLB's team cell; the
+ * Stats API only has real logos for the Giants and Tigers, the rest show its generic ball.
+ */
+export const NPB_TEAMS: Record<
+	string,
+	{ id: number; name: string; teamName: string; abbreviation: string }
+> = {
 	// Central League
-	読売ジャイアンツ: { name: 'Yomiuri Giants', abbreviation: 'G' },
-	阪神タイガース: { name: 'Hanshin Tigers', abbreviation: 'T' },
-	中日ドラゴンズ: { name: 'Chunichi Dragons', abbreviation: 'D' },
-	広島東洋カープ: { name: 'Hiroshima Toyo Carp', abbreviation: 'C' },
-	東京ヤクルトスワローズ: { name: 'Tokyo Yakult Swallows', abbreviation: 'S' },
-	ヤクルトスワローズ: { name: 'Yakult Swallows', abbreviation: 'S' },
-	横浜DeNAベイスターズ: { name: 'Yokohama DeNA BayStars', abbreviation: 'DB' },
-	横浜ベイスターズ: { name: 'Yokohama BayStars', abbreviation: 'YB' },
+	読売ジャイアンツ: { id: 241, name: 'Yomiuri Giants', teamName: 'Giants', abbreviation: 'YOM' },
+	阪神タイガース: { id: 341, name: 'Hanshin Tigers', teamName: 'Tigers', abbreviation: 'HAN' },
+	中日ドラゴンズ: { id: 2798, name: 'Chunichi Dragons', teamName: 'Dragons', abbreviation: 'CHU' },
+	広島東洋カープ: { id: 2805, name: 'Hiroshima Toyo Carp', teamName: 'Carp', abbreviation: 'HIR' },
+	東京ヤクルトスワローズ: {
+		id: 2673,
+		name: 'Tokyo Yakult Swallows',
+		teamName: 'Swallows',
+		abbreviation: 'YAK',
+	},
+	ヤクルトスワローズ: {
+		id: 2673,
+		name: 'Yakult Swallows',
+		teamName: 'Swallows',
+		abbreviation: 'YAK',
+	},
+	横浜DeNAベイスターズ: {
+		id: 2800,
+		name: 'Yokohama DeNA BayStars',
+		teamName: 'BayStars',
+		abbreviation: 'YOK',
+	},
+	横浜ベイスターズ: {
+		id: 2800,
+		name: 'Yokohama BayStars',
+		teamName: 'BayStars',
+		abbreviation: 'YOK',
+	},
 	// Pacific League
-	福岡ソフトバンクホークス: { name: 'Fukuoka SoftBank Hawks', abbreviation: 'H' },
-	北海道日本ハムファイターズ: { name: 'Hokkaido Nippon-Ham Fighters', abbreviation: 'F' },
-	オリックスバファローズ: { name: 'Orix Buffaloes', abbreviation: 'B' },
-	東北楽天ゴールデンイーグルス: { name: 'Tohoku Rakuten Golden Eagles', abbreviation: 'E' },
-	埼玉西武ライオンズ: { name: 'Saitama Seibu Lions', abbreviation: 'L' },
-	西武ライオンズ: { name: 'Seibu Lions', abbreviation: 'L' },
-	千葉ロッテマリーンズ: { name: 'Chiba Lotte Marines', abbreviation: 'M' },
+	福岡ソフトバンクホークス: {
+		id: 242,
+		name: 'Fukuoka SoftBank Hawks',
+		teamName: 'Hawks',
+		abbreviation: 'FUK',
+	},
+	北海道日本ハムファイターズ: {
+		id: 2671,
+		name: 'Hokkaido Nippon-Ham Fighters',
+		teamName: 'Fighters',
+		abbreviation: 'NHF',
+	},
+	オリックスバファローズ: {
+		id: 2797,
+		name: 'Orix Buffaloes',
+		teamName: 'Buffaloes',
+		abbreviation: 'ORI',
+	},
+	東北楽天ゴールデンイーグルス: {
+		id: 2674,
+		name: 'Tohoku Rakuten Golden Eagles',
+		teamName: 'Golden Eagles',
+		abbreviation: 'RAK',
+	},
+	埼玉西武ライオンズ: {
+		id: 240,
+		name: 'Saitama Seibu Lions',
+		teamName: 'Lions',
+		abbreviation: 'SEI',
+	},
+	西武ライオンズ: { id: 240, name: 'Seibu Lions', teamName: 'Lions', abbreviation: 'SEI' },
+	千葉ロッテマリーンズ: {
+		id: 2670,
+		name: 'Chiba Lotte Marines',
+		teamName: 'Marines',
+		abbreviation: 'LOT',
+	},
 }
 
 export function npbStandingsUrl(season: number | string, league: NpbLeagueId) {
@@ -195,7 +256,9 @@ export function parseNpbStandings(
 		return {
 			rank: i + 1,
 			nameJa,
+			id: known?.id ?? null,
 			name: known?.name ?? null,
+			teamName: known?.teamName ?? null,
 			abbreviation: known?.abbreviation ?? null,
 			games: Number(cells[1]),
 			wins: Number(cells[2]),

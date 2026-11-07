@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { NpbRecord, NpbTeamStanding } from '#lib/npb.js'
+	import { NPB_SPORT_ID, type NpbRecord, type NpbTeamStanding } from '#lib/npb.js'
 	import {
 		byRecord,
 		byWildCardRank,
@@ -303,6 +303,26 @@
 		return leagues.find(({ id }) => id === requested) ?? leagues[0]
 	})
 
+	/** The shape `TeamCell` takes, from the team's MLB Stats API ID. */
+	function npbTeam({
+		id,
+		name,
+		nameJa,
+		teamName,
+		abbreviation,
+	}: NpbTeamStanding): MLB.TeamDetailed {
+		return {
+			id: id ?? 0,
+			// So the team cell picks NPB's colors: most NPB teams only have the generic ball logo
+			sport: { id: NPB_SPORT_ID } as MLB.Sport,
+			name: name ?? nameJa,
+			link: `/api/v1/teams/${id}`,
+			clubName: teamName ?? undefined,
+			teamName: teamName ?? undefined,
+			abbreviation: abbreviation ?? undefined,
+		}
+	}
+
 	const formatRecord = (record: NpbRecord | null) =>
 		record ? `${record.wins}-${record.losses}${record.ties ? `-${record.ties}` : ''}` : '-'
 
@@ -311,66 +331,77 @@
 		return record && decisions ? record.wins / decisions : undefined
 	}
 
-	const npbColumns: DataTableColumn<NpbTeamStanding>[] = [
-		{
-			id: 'team',
-			header: tableTitle,
-			title: 'Team',
-			value: (team) => team.name ?? team.nameJa,
-			sortable: false,
-			sticky: true,
-			rowHeader: true,
-			cell: npbTeamCell,
-			class: 'w-[14ch] min-w-[14ch] md:w-[1%] md:min-w-[28ch]',
-		},
-		{
-			id: 'wl',
-			header: 'W-L-T',
-			title: 'Wins, losses and ties',
-			value: (team) => team.wins,
-			numeric: true,
-			align: 'center',
-			cell: npbWinLoss,
-			class: 'w-[9ch]',
-		},
-		{
-			id: 'pct',
-			header: '%',
-			title: 'Winning percentage (ties excluded)',
-			value: (team) => Number(team.pct),
-			numeric: true,
-			format: (_, team) => team.pct,
-			cellClass: (team) => (Number(team.pct) >= 0.5 ? 'positive' : 'negative'),
-			class: 'w-[6ch]',
-		},
-		{
-			id: 'gb',
-			header: 'GB',
-			title: 'Games back',
-			value: (team) => team.gamesBack ?? 0,
-			numeric: true,
-			sortDescFirst: false,
-			format: (_, team) => (team.gamesBack ? team.gamesBack.toFixed(1) : '-'),
-			cellClass: (team) => !team.gamesBack && 'text-current/50',
-			class: 'w-[6ch]',
-		},
-		...(
-			[
-				['home', 'Home', 'Home record'],
-				['road', 'Road', 'Road record'],
-				['interleague', 'Inter', 'Interleague record'],
-			] as const
-		).map(([id, header, title]): DataTableColumn<NpbTeamStanding> => ({
-			id,
-			header,
-			title,
-			value: (team) => recordValue(team[id]),
-			numeric: true,
-			align: 'center',
-			format: (_, team) => formatRecord(team[id]),
-			class: 'w-[9ch]',
-		})),
-	]
+	function npbColumnsFor(title: string): DataTableColumn<NpbTeamStanding>[] {
+		return [
+			{
+				id: 'team',
+				header: tableTitle,
+				title,
+				value: (team) => team.name ?? team.nameJa,
+				sortable: false,
+				sticky: true,
+				rowHeader: true,
+				cell: npbTeamCell,
+				// Same sizing as the MLB tables' team column
+				class: ['w-[10ch] min-w-[10ch]', 'md:w-[1%] md:min-w-[24ch]', 'pl-0'],
+			},
+			{
+				id: 'wl',
+				header: 'W-L-T',
+				title: 'Wins, losses and ties',
+				value: (team) => team.wins,
+				numeric: true,
+				align: 'center',
+				cell: npbWinLoss,
+				class: 'w-[9ch]',
+			},
+			{
+				id: 'pct',
+				header: '%',
+				title: 'Winning percentage (ties excluded)',
+				value: (team) => Number(team.pct),
+				numeric: true,
+				format: (_, team) => team.pct,
+				cellClass: (team) => (Number(team.pct) >= 0.5 ? 'positive' : 'negative'),
+				class: 'w-[6ch]',
+			},
+			{
+				id: 'gb',
+				header: 'GB',
+				title: 'Games back',
+				value: (team) => team.gamesBack ?? 0,
+				numeric: true,
+				sortDescFirst: false,
+				format: (_, team) => (team.gamesBack ? team.gamesBack.toFixed(1) : '-'),
+				cellClass: (team) => !team.gamesBack && 'text-current/50',
+				class: 'w-[6ch]',
+			},
+			...(
+				[
+					['home', 'Home', 'Home record'],
+					['road', 'Road', 'Road record'],
+					['interleague', 'Inter', 'Interleague record'],
+				] as const
+			).map(([id, header, title]): DataTableColumn<NpbTeamStanding> => ({
+				id,
+				header,
+				title,
+				value: (team) => recordValue(team[id]),
+				numeric: true,
+				align: 'center',
+				format: (_, team) => formatRecord(team[id]),
+				class: 'w-[9ch]',
+			})),
+		]
+	}
+
+	/**
+	 * Built once per load, keyed by league: columns that changed with the URL (where sorting
+	 * lives) would remount the table on every sort.
+	 */
+	const npbColumns = $derived(
+		new Map((data.npb ?? []).map(({ id, name }) => [id, npbColumnsFor(name)])),
+	)
 
 	/** `al`/`nl` for MLB's leagues, the league ID for any other sport's. */
 	const leagueParam = (key: number) => leagueSide(key)?.toLowerCase() ?? String(key)
@@ -532,7 +563,7 @@
 				<DataTable
 					label={npbLeague.name}
 					data={npbLeague.teams}
-					columns={npbColumns}
+					columns={npbColumns.get(npbLeague.id) ?? []}
 					getRowId={(team) => team.nameJa}
 					sortParam="sort"
 				/>
@@ -598,16 +629,8 @@
 	</section>
 {/if}
 
-{#snippet npbTeamCell({ row: team }: CellArgs<NpbTeamStanding>)}
-	<div class="flex items-center gap-ch">
-		<span class="w-[3ch] shrink-0 text-right text-xs text-current/50 tabular-nums">
-			{team.rank}
-		</span>
-		<span class="min-w-0 truncate" title={team.nameJa}>
-			<span class="md:hidden">{team.abbreviation ?? team.nameJa}</span>
-			<span class="max-md:hidden">{team.name ?? team.nameJa}</span>
-		</span>
-	</div>
+{#snippet npbTeamCell({ row }: CellArgs<NpbTeamStanding>)}
+	<TeamCell team={npbTeam(row)} linked={false} />
 {/snippet}
 
 {#snippet npbWinLoss({ row: team }: CellArgs<NpbTeamStanding>)}

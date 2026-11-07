@@ -36,8 +36,10 @@ describe('parseNpbStandings (2025+ layout)', () => {
 		expect(standings.teams[0]).toMatchObject({
 			rank: 1,
 			nameJa: '阪神タイガース',
+			id: 341,
 			name: 'Hanshin Tigers',
-			abbreviation: 'T',
+			teamName: 'Tigers',
+			abbreviation: 'HAN',
 			games: 143,
 			wins: 79,
 			losses: 62,
@@ -98,6 +100,8 @@ describe('parseNpbStandings (2005 to 2024 layout)', () => {
 		const names = standings.teams.map((t) => t.name)
 		expect(names).toContain('Seibu Lions')
 		expect(names).toContain('Orix Buffaloes')
+		// Every team maps to an MLB Stats API team, so the table can show its logo and link.
+		expect(standings.teams.every((t) => t.id !== null)).toBe(true)
 		// The 2005 Pacific League was ranked by its playoff, so NPB leaves games back blank.
 		expect(standings.teams.every((t) => t.gamesBack === null)).toBe(true)
 		expect(standings.teams[0].nameJa).toBe('千葉ロッテマリーンズ')
