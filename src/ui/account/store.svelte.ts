@@ -20,6 +20,7 @@ import {
 import { appIconStore } from '#ui/app-icon/store.svelte.js'
 import { compareStore } from '#ui/compare/store.svelte.js'
 import { favoritesStore } from '#ui/favorites/store.svelte.js'
+import { homeStore } from '#ui/home/store.svelte.js'
 import { onboardingStore } from '#ui/onboarding/store.svelte.js'
 import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 import { colorSchemeStore } from '#ui/store.svelte.js'
@@ -290,6 +291,7 @@ function localSettings(): Settings {
 		onboardingDismissed: $state.snapshot(onboardingStore.dismissed),
 		appIcon: appIconStore.icon,
 		compare: $state.snapshot(compareStore.ids),
+		home: $state.snapshot(homeStore.saved),
 	}
 }
 
@@ -355,6 +357,7 @@ function applySettings({ settings, settingsUpdatedAt }: AccountState) {
 	if (settings.onboardingDismissed) onboardingStore._replace(settings.onboardingDismissed)
 	if (settings.appIcon) appIconStore._replace(settings.appIcon)
 	if (settings.compare) compareStore._replace(settings.compare)
+	if (settings.home) homeStore._replace(settings.home)
 	setSettingsUpdatedAt(settingsUpdatedAt)
 }
 

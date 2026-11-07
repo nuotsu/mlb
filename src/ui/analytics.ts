@@ -15,6 +15,8 @@ type FavoriteProperties = {
 	type: 'team' | 'player' | 'game'
 	mlb_id: number
 	label: string
+	/** Full team/player name (falls back to `label`) so insights can rank by readable names */
+	name: string
 	/** Kept from the original `favorite_added` event so older insights keep working */
 	href: string
 	/** Where the star was tapped: the page's route id, or `account` for the account page */
@@ -151,6 +153,7 @@ export function trackFavorite(
 	favorite: App.Favorite,
 	source: string,
 	favorites: App.Favorite[],
+	name?: string,
 ) {
 	const key = parseFavoriteHref(favorite.href)
 	if (!key) return
@@ -159,6 +162,7 @@ export function trackFavorite(
 		type: key.type,
 		mlb_id: key.mlbId,
 		label: favorite.label,
+		name: name ?? favorite.label,
 		href: favorite.href,
 		source,
 	})
