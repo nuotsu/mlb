@@ -2,6 +2,7 @@
 	import { npbGamePath, type NpbLang } from '#lib/npb-game.js'
 	import type { NpbGameData } from '#lib/npb-game.js'
 	import { NPB_SPORT_ID } from '#lib/npb.js'
+	import { formatDate, slash } from '#lib/temporal.js'
 	import { currentUrl, setViewParam } from '#lib/url.svelte.js'
 	import { cn } from '#lib/utils.js'
 	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
@@ -108,7 +109,15 @@
 <Header
 	class="max-sm:px-0 max-sm:[&_nav]:pl-ch"
 	crumbs={[
-		{ href: `/teams?sportId=${NPB_SPORT_ID}`, name: 'Nippon Professional Baseball' },
+		// As on MLB game pages, on npb.jp's (Japan) date, which the NPB schedule lists it under
+		{
+			href: `/schedule/week/${game.date}?sportId=${NPB_SPORT_ID}`,
+			name: 'Weekly Schedule',
+		},
+		{
+			href: `/schedule/day/${game.date}?sportId=${NPB_SPORT_ID}`,
+			name: formatDate(slash(game.date), { weekday: 'short', month: 'short', day: 'numeric' }),
+		},
 		{ name: `${away.abbreviation ?? away.shortNameJa} @ ${home.abbreviation ?? home.shortNameJa}` },
 	]}
 >
