@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { KBO_SPORT_ID, KBO_STANDINGS_URL, type KboTeamStanding } from '#lib/kbo.js'
 	import { NPB_SPORT_ID, type NpbRecord, type NpbTeamStanding } from '#lib/npb.js'
 	import {
 		byRecord,
@@ -178,11 +179,11 @@
 		return Number.isFinite(n) ? (gamesBack.startsWith('+') ? -n : n) : undefined
 	}
 
-	/** `W3` is +3, `L2` is −2. */
-	function streakValue(code?: string) {
+	/** `W3` is +3, `L2` is −2, a `T1` tie streak (KBO) is 0. */
+	function streakValue(code?: string | null) {
 		const n = Number(code?.slice(1))
 		if (!code || !Number.isFinite(n)) return undefined
-		return code.startsWith('L') ? -n : n
+		return code.startsWith('L') ? -n : code.startsWith('T') ? 0 : n
 	}
 
 	function columnsFor(table: Table): DataTableColumn<Row>[] {
@@ -303,19 +304,22 @@
 		return leagues.find(({ id }) => id === requested) ?? leagues[0]
 	})
 
-	/** The shape `TeamCell` takes, from the team's MLB Stats API ID. */
-	function npbTeam({
-		id,
-		name,
-		nameJa,
-		teamName,
-		abbreviation,
-	}: NpbTeamStanding): MLB.TeamDetailed {
+	/** The shape `TeamCell` takes, from an NPB or KBO team's MLB Stats API ID. */
+	function leagueTeam(
+		{
+			id,
+			name,
+			teamName,
+			abbreviation,
+		}: Pick<NpbTeamStanding, 'id' | 'name' | 'teamName' | 'abbreviation'>,
+		localName: string,
+		sportId: number,
+	): MLB.TeamDetailed {
 		return {
 			id: id ?? 0,
-			// So the team cell picks NPB's colors: most NPB teams only have the generic ball logo
-			sport: { id: NPB_SPORT_ID } as MLB.Sport,
-			name: name ?? nameJa,
+			// So the team cell picks the league's colors: most teams only have the generic ball logo
+			sport: { id: sportId } as MLB.Sport,
+			name: name ?? localName,
 			link: `/api/v1/teams/${id}`,
 			clubName: teamName ?? undefined,
 			teamName: teamName ?? undefined,
@@ -399,6 +403,84 @@
 	const npbColumns = $derived(
 		new Map((data.npb ?? []).map(({ id, name }) => [id, npbColumnsFor(name)])),
 	)
+
+	/** KBO: one table, no leagues. Built once: see `npbColumns`. */
+	const kboColumns: DataTableColumn<KboTeamStanding>[] = [
+		{
+			id: 'team',
+			header: tableTitle,
+			title: 'KBO League',
+			value: (team) => team.name ?? team.nameKo,
+			sortable: false,
+			sticky: true,
+			rowHeader: true,
+			cell: kboTeamCell,
+			class: ['w-[10ch] min-w-[10ch]', 'md:w-[1%] md:min-w-[24ch]', 'pl-0'],
+		},
+		{
+			id: 'wl',
+			header: 'W-L-T',
+			title: 'Wins, losses and ties',
+			value: (team) => team.wins,
+			numeric: true,
+			align: 'center',
+			cell: kboWinLoss,
+			class: 'w-[9ch]',
+		},
+		{
+			id: 'pct',
+			header: '%',
+			title: 'Winning percentage (ties excluded)',
+			value: (team) => Number(team.pct),
+			numeric: true,
+			format: (_, team) => team.pct,
+			cellClass: (team) => (Number(team.pct) >= 0.5 ? 'positive' : 'negative'),
+			class: 'w-[6ch]',
+		},
+		{
+			id: 'gb',
+			header: 'GB',
+			title: 'Games back',
+			value: (team) => team.gamesBack ?? 0,
+			numeric: true,
+			sortDescFirst: false,
+			format: (_, team) => (team.gamesBack ? team.gamesBack.toFixed(1) : '-'),
+			cellClass: (team) => !team.gamesBack && 'text-current/50',
+			class: 'w-[6ch]',
+		},
+		{
+			id: 'streak',
+			header: 'Strk',
+			title: 'Streak',
+			value: (team) => streakValue(team.streak),
+			numeric: true,
+			format: (_, team) => team.streak ?? '',
+			cellClass: (team) => [
+				team.streak?.startsWith('W') && 'positive',
+				team.streak?.startsWith('L') && 'negative',
+				team.streak?.startsWith('T') && 'text-current/50',
+			],
+			class: 'w-[6ch]',
+		},
+		...(
+			[
+				['lastTen', 'L10', 'Last 10 games'],
+				['home', 'Home', 'Home record'],
+				['road', 'Road', 'Road record'],
+			] as const
+		).map(([id, header, title]): DataTableColumn<KboTeamStanding> => ({
+			id,
+			header,
+			title,
+			value: (team) => recordValue(team[id]),
+			numeric: true,
+			align: 'center',
+			cell: kboRecordCell,
+			class: 'w-[9ch]',
+		})),
+	]
+
+	const sportLabel = $derived(data.npb ? 'NPB' : data.kbo ? 'KBO' : 'MLB')
 
 	/** `al`/`nl` for MLB's leagues, the league ID for any other sport's. */
 	const leagueParam = (key: number) => leagueSide(key)?.toLowerCase() ?? String(key)
@@ -493,7 +575,7 @@
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',
 		'@type': 'ItemList',
-		name: `${page.params.season} MLB Standings`,
+		name: `${page.params.season} ${sportLabel} Standings`,
 		url: `https://mlb.theohtani.com/standings/${page.params.season}`,
 		itemListElement: data.standings.records.flatMap(({ division, teamRecords }) =>
 			teamRecords.map(({ team, wins, losses, winningPercentage, leagueRank, sportRank }) => ({
@@ -512,8 +594,8 @@
 </svelte:head>
 
 <Metadata
-	title="{page.params.season} {data.npb ? 'NPB' : 'MLB'} Standings | MLB.TheOhtani.com"
-	description="{data.npb ? 'NPB' : 'MLB'} standings for the {page.params.season} season"
+	title="{page.params.season} {sportLabel} Standings | MLB.TheOhtani.com"
+	description="{sportLabel} standings for the {page.params.season} season"
 />
 
 <Header title="Standings" crumbs={[{ name: 'Standings' }]}>
@@ -579,6 +661,27 @@
 			rel="noopener noreferrer">NPB.jp 日本野球機構</a
 		>
 	</small>
+{:else if data.kbo}
+	<section class="grid grid-cols-1 gap-lh p-ch">
+		{#if data.kbo.teams.length}
+			<DataTable
+				label="KBO League"
+				data={data.kbo.teams}
+				columns={kboColumns}
+				getRowId={(team) => team.nameKo}
+				sortParam="sort"
+			/>
+		{:else}
+			<Empty>No standings</Empty>
+		{/if}
+	</section>
+
+	<small class="block px-ch pb-lh text-center text-xs text-current/50">
+		KBO standings as of {formatDate(data.kbo.date, { month: 'short', day: 'numeric' })} from
+		<a class="link" href={KBO_STANDINGS_URL} target="_blank" rel="noopener noreferrer"
+			>KoreaBaseball.com 한국야구위원회</a
+		>
+	</small>
 {:else}
 	<section class="grid grid-cols-1 gap-lh p-ch">
 		{#if showSwitcher}
@@ -627,23 +730,41 @@
 {/if}
 
 {#snippet npbTeamCell({ row }: CellArgs<NpbTeamStanding>)}
-	<TeamCell team={npbTeam(row)} linked={false} />
+	<TeamCell team={leagueTeam(row, row.nameJa, NPB_SPORT_ID)} linked={false} />
 {/snippet}
 
-{#snippet npbRecord({ wins, losses, ties }: NpbRecord)}
+{#snippet kboTeamCell({ row }: CellArgs<KboTeamStanding>)}
+	<TeamCell team={leagueTeam(row, row.nameKo, KBO_SPORT_ID)} linked={false} />
+{/snippet}
+
+{#snippet kboWinLoss({ row }: CellArgs<KboTeamStanding>)}
+	{@render wltRecord(row)}
+{/snippet}
+
+{#snippet kboRecordCell({ row, columnId }: CellArgs<KboTeamStanding>)}
+	{@const record = row[columnId as 'lastTen' | 'home' | 'road']}
+	{#if record}
+		{@render wltRecord(record)}
+	{:else}
+		<span class="text-current/50">-</span>
+	{/if}
+{/snippet}
+
+<!-- Wins-losses(-ties), for NPB and KBO records -->
+{#snippet wltRecord({ wins, losses, ties }: NpbRecord)}
 	<span class="positive">{wins}</span>-<span class="negative">{losses}</span>{#if ties}-<span
 			class="text-current/50">{ties}</span
 		>{/if}
 {/snippet}
 
 {#snippet npbWinLoss({ row }: CellArgs<NpbTeamStanding>)}
-	{@render npbRecord(row)}
+	{@render wltRecord(row)}
 {/snippet}
 
 {#snippet npbRecordCell({ row, columnId }: CellArgs<NpbTeamStanding>)}
 	{@const record = row[columnId as 'home' | 'road' | 'interleague']}
 	{#if record}
-		{@render npbRecord(record)}
+		{@render wltRecord(record)}
 	{:else}
 		<span class="text-current/50">-</span>
 	{/if}

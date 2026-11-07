@@ -1,11 +1,12 @@
 export function isDarkOnLightTeam(team?: MLB.Team, sport?: MLB.Sport) {
 	if (!team || isLightOnDarkTeam(team)) return false
 
-	// Leagues whose teams mostly fall back to the Stats API's generic light ball logo (NPB: 31)
+	// Leagues whose teams mostly fall back to the Stats API's generic light ball logo (NPB: 31, KBO: 32)
 	return (
 		['Asheville Tourists', 'Minnesota Golden Gophers', 'Sultanes de Monterrey'].includes(
 			team.name,
-		) || [16, 17, 22, 23, 31, 51].includes(sport?.id ?? (team as MLB.TeamDetailed).sport?.id ?? 1)
+		) ||
+		[16, 17, 22, 23, 31, 32, 51].includes(sport?.id ?? (team as MLB.TeamDetailed).sport?.id ?? 1)
 	)
 }
 

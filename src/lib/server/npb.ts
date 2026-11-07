@@ -7,6 +7,11 @@ import {
 	type NpbLeagueId,
 	type NpbLeagueStandings,
 } from '#lib/npb.js'
+import {
+	createMemoryCache,
+	CURRENT_SEASON_TTL_MS,
+	PAST_SEASON_TTL_MS,
+} from '#lib/server/memory-cache.js'
 
 const UPSTREAM_TIMEOUT_MS = 10_000
 
@@ -40,21 +45,13 @@ export async function fetchNpbStandings(
 	)
 }
 
-const MINUTE_MS = 60_000
-/** Matches `cacheControlForSeasonPage`: 15 min for the current season, a week for past ones. */
-const CURRENT_SEASON_TTL_MS = 15 * MINUTE_MS
-const PAST_SEASON_TTL_MS = 7 * 24 * 60 * MINUTE_MS
-/** npb.jp has ~20 seasons; the cap only guards against a flood of odd season params. */
-const MAX_CACHED_SEASONS = 50
-
-const cache = new Map<number, { expires: number; standings: Promise<NpbLeagueStandings[]> }>()
+const cache = createMemoryCache<number, NpbLeagueStandings[]>({
+	keepError: (e) => e instanceof NpbNotFoundError,
+})
 
 /**
- * {@link fetchNpbStandings}, cached in memory per season and shared by concurrent callers.
- *
- * Page renders call the API route in-process, which skips the CDN, so every uncached page URL
- * (`?league=`, `?sort=`, …) would otherwise hit npb.jp. Failed fetches aren't kept, except
- * {@link NpbNotFoundError}, which won't change within the TTL.
+ * {@link fetchNpbStandings}, cached in memory per season (see `createMemoryCache`).
+ * {@link NpbNotFoundError} is kept for the TTL; other failures are retried on the next call.
  */
 export function getNpbStandings(
 	season: number,
@@ -64,23 +61,8 @@ export function getNpbStandings(
 		currentSeason = getScheduleToday().getFullYear(),
 	}: { fetcher?: typeof fetch; now?: number; currentSeason?: number } = {},
 ): Promise<NpbLeagueStandings[]> {
-	const hit = cache.get(season)
-	if (hit && hit.expires > now) return hit.standings
-
-	const standings = fetchNpbStandings(season, fetcher)
 	const ttl = season < currentSeason ? PAST_SEASON_TTL_MS : CURRENT_SEASON_TTL_MS
-
-	cache.delete(season)
-	if (cache.size >= MAX_CACHED_SEASONS) cache.delete(cache.keys().next().value!)
-	cache.set(season, { expires: now + ttl, standings })
-
-	standings.catch((e) => {
-		if (!(e instanceof NpbNotFoundError) && cache.get(season)?.standings === standings) {
-			cache.delete(season)
-		}
-	})
-
-	return standings
+	return cache.get(season, ttl, () => fetchNpbStandings(season, fetcher), now)
 }
 
 /** For tests. */
