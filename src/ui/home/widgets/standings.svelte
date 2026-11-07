@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
-	import TeamAvatar from '#ui/team/avatar.svelte'
+	import { teamBg } from '#ui/data-table/types.js'
+	import Logo from '#ui/team/logo.svelte'
 	import { browser } from '$app/env'
 	import { onMount } from 'svelte'
 	import Widget from '../widget.svelte'
@@ -63,7 +64,7 @@
 	>
 		<table class="w-full text-sm tabular-nums">
 			<thead class="text-xs text-current/50">
-				<tr>
+				<tr class="border-b border-stroke">
 					<th class="text-left font-normal">{favorite ? 'Team' : 'Division'}</th>
 					<th class="text-right font-normal">W</th>
 					<th class="text-right font-normal">L</th>
@@ -90,16 +91,29 @@
 {/await}
 
 {#snippet line(row: Row, highlight: boolean, division?: string)}
-	<tr class={['border-t border-stroke', highlight && 'font-bold']}>
-		<td class={['py-[.25ch]', highlight && 'shadow-[inset_2px_0_var(--color-accent)]']}>
-			<a class="flex items-center gap-[.5ch] pl-[.5ch] hover-link" href="/teams/{row.team.id}">
-				<TeamAvatar class="size-[1.25em]" teamId={row.team.id} />
+	<!-- the same faint hover as the /standings tables -->
+	<tr
+		class={[
+			'hover:*:bg-[color-mix(in_srgb,var(--color-foreground)_8%,var(--color-background))]',
+			highlight && 'font-bold',
+		]}
+	>
+		<td
+			class={['relative isolate py-[.25ch]', highlight && 'border-l-2 border-l-accent']}
+			style:--team-bg={teamBg(row.team)}
+		>
+			<a class="flex items-center gap-[.5ch] px-[.5ch] hover-link" href="/teams/{row.team.id}">
+				<Logo
+					srcset="https://midfield.mlbstatic.com/v1/team/{row.team.id}/spots/96"
+					class="size-lh object-contain"
+					team={row.team as MLB.Team}
+				/>
+				<span>{row.team.abbreviation}</span>
 				{#if division}
-					<span class="min-w-[8ch] text-xs font-normal whitespace-nowrap text-current/50"
+					<span class="ml-auto text-xs font-normal whitespace-nowrap text-current/50"
 						>{division}</span
 					>
 				{/if}
-				<span class="font-mono">{row.team.abbreviation}</span>
 			</a>
 		</td>
 		<td class="text-right">{row.wins}</td>

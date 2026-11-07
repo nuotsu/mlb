@@ -2,6 +2,7 @@
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import Calendar from '#ui/schedule/calendar.svelte'
+	import TeamAvatar from '#ui/team/avatar.svelte'
 	import TeamCalendar from '#ui/team/team-calendar.svelte'
 	import { onMount } from 'svelte'
 	import Widget from '../widget.svelte'
@@ -29,7 +30,7 @@
 			cache.set(
 				id,
 				fetchMLB<{ teams: MLB.TeamDetailed[] }>(`/api/v1/teams/${id}`, {
-					fields: ['teams,id,name,abbreviation,sport'],
+					fields: ['teams,id,name,teamName,abbreviation,sport'],
 				}).then(({ teams: [team] }) => team),
 			)
 		}
@@ -44,6 +45,10 @@
 		</Widget>
 	{:then team}
 		<Widget title="{team.name} schedule" href="/teams/{team.id}" linkLabel="Team" bodyClass="">
+			{#snippet heading()}
+				<TeamAvatar class="size-lh" teamId={team.id} />
+				<span class="truncate">{team.teamName ?? team.name} Schedule</span>
+			{/snippet}
 			<TeamCalendar {team} />
 		</Widget>
 	{:catch}

@@ -203,8 +203,8 @@
 				class: [
 					table.firstSeed ? 'w-[14ch] min-w-[14ch]' : 'w-[10ch] min-w-[10ch]',
 					'md:w-[1%] md:min-w-[24ch]',
-					// the team's colors start right at the edge, with no strip of background before them
-					'pl-0',
+					// the team's colors fill the cell edge to edge, with no strip of background around them
+					'px-0',
 				],
 			},
 			{
@@ -344,7 +344,7 @@
 				rowHeader: true,
 				cell: npbTeamCell,
 				// Same sizing as the MLB tables' team column
-				class: ['w-[10ch] min-w-[10ch]', 'md:w-[1%] md:min-w-[24ch]', 'pl-0'],
+				class: ['w-[10ch] min-w-[10ch]', 'md:w-[1%] md:min-w-[24ch]', 'px-0'],
 			},
 			{
 				id: 'wl',
@@ -415,7 +415,7 @@
 			sticky: true,
 			rowHeader: true,
 			cell: kboTeamCell,
-			class: ['w-[10ch] min-w-[10ch]', 'md:w-[1%] md:min-w-[24ch]', 'pl-0'],
+			class: ['w-[10ch] min-w-[10ch]', 'md:w-[1%] md:min-w-[24ch]', 'px-0'],
 		},
 		{
 			id: 'wl',
