@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { NPB_SPORT_ID, type NpbRecord, type NpbTeamStanding } from '#lib/npb.js'
 	import {
 		byRecord,
 		byWildCardRank,
@@ -291,6 +292,114 @@
 		]
 	}
 
+	const npbLeagueOptions = $derived(
+		(data.npb ?? []).map(({ id, name }) => ({ id, label: name.replace(/ League$/, '') })),
+	)
+
+	/** `?league=central` or `?league=pacific`; Central by default. */
+	const npbLeague = $derived.by(() => {
+		const requested = currentUrl().searchParams.get('league')
+		const leagues = data.npb ?? []
+		return leagues.find(({ id }) => id === requested) ?? leagues[0]
+	})
+
+	/** The shape `TeamCell` takes, from the team's MLB Stats API ID. */
+	function npbTeam({
+		id,
+		name,
+		nameJa,
+		teamName,
+		abbreviation,
+	}: NpbTeamStanding): MLB.TeamDetailed {
+		return {
+			id: id ?? 0,
+			// So the team cell picks NPB's colors: most NPB teams only have the generic ball logo
+			sport: { id: NPB_SPORT_ID } as MLB.Sport,
+			name: name ?? nameJa,
+			link: `/api/v1/teams/${id}`,
+			clubName: teamName ?? undefined,
+			teamName: teamName ?? undefined,
+			abbreviation: abbreviation ?? undefined,
+		}
+	}
+
+	const recordValue = (record: NpbRecord | null) => {
+		const decisions = (record?.wins ?? 0) + (record?.losses ?? 0)
+		return record && decisions ? record.wins / decisions : undefined
+	}
+
+	function npbColumnsFor(title: string): DataTableColumn<NpbTeamStanding>[] {
+		return [
+			{
+				id: 'team',
+				header: tableTitle,
+				title,
+				value: (team) => team.name ?? team.nameJa,
+				sortable: false,
+				sticky: true,
+				rowHeader: true,
+				cell: npbTeamCell,
+				// Same sizing as the MLB tables' team column
+				class: ['w-[10ch] min-w-[10ch]', 'md:w-[1%] md:min-w-[24ch]', 'pl-0'],
+			},
+			{
+				id: 'wl',
+				header: 'W-L-T',
+				title: 'Wins, losses and ties',
+				value: (team) => team.wins,
+				numeric: true,
+				align: 'center',
+				cell: npbWinLoss,
+				class: 'w-[9ch]',
+			},
+			{
+				id: 'pct',
+				header: '%',
+				title: 'Winning percentage (ties excluded)',
+				value: (team) => Number(team.pct),
+				numeric: true,
+				format: (_, team) => team.pct,
+				cellClass: (team) => (Number(team.pct) >= 0.5 ? 'positive' : 'negative'),
+				class: 'w-[6ch]',
+			},
+			{
+				id: 'gb',
+				header: 'GB',
+				title: 'Games back',
+				value: (team) => team.gamesBack ?? 0,
+				numeric: true,
+				sortDescFirst: false,
+				format: (_, team) => (team.gamesBack ? team.gamesBack.toFixed(1) : '-'),
+				cellClass: (team) => !team.gamesBack && 'text-current/50',
+				class: 'w-[6ch]',
+			},
+			...(
+				[
+					['home', 'Home', 'Home record'],
+					['road', 'Road', 'Road record'],
+					['interleague', 'Inter', 'Interleague record'],
+				] as const
+			).map(([id, header, title]): DataTableColumn<NpbTeamStanding> => ({
+				id,
+				header,
+				title,
+				value: (team) => recordValue(team[id]),
+				numeric: true,
+				align: 'center',
+				cell: npbRecordCell,
+				class: 'w-[9ch]',
+			})),
+		]
+	}
+
+	/**
+	 * Built once per load, keyed by league: columns that changed with the URL (where sorting
+	 * lives) would remount the table on every sort.
+	 */
+	const npbColumns = $derived(
+		new Map((data.npb ?? []).map(({ id, name }) => [id, npbColumnsFor(name)])),
+	)
+
 	/** `al`/`nl` for MLB's leagues, the league ID for any other sport's. */
 	const leagueParam = (key: number) => leagueSide(key)?.toLowerCase() ?? String(key)
 
@@ -403,8 +512,8 @@
 </svelte:head>
 
 <Metadata
-	title="{page.params.season} MLB Standings | MLB.TheOhtani.com"
-	description="MLB standings for the {page.params.season} season"
+	title="{page.params.season} {data.npb ? 'NPB' : 'MLB'} Standings | MLB.TheOhtani.com"
+	description="{data.npb ? 'NPB' : 'MLB'} standings for the {page.params.season} season"
 />
 
 <Header title="Standings" crumbs={[{ name: 'Standings' }]}>
@@ -432,50 +541,113 @@
 	{/snippet}
 </Header>
 
-<section class="grid grid-cols-1 gap-lh p-ch">
-	{#if showSwitcher}
-		<PillSwitcher
-			id="standings-league"
-			aria-label="League"
-			options={leagueOptions}
-			value={league}
-			controls="standings-league-panel"
-			onchange={(next) => setViewParam('league', next, leagueOptions[0].id)}
-		/>
-	{/if}
-
-	{#each shownGroups as { key, heading, tables } (key)}
-		<div
-			class="flex flex-col gap-ch"
-			id={showSwitcher ? 'standings-league-panel' : undefined}
-			role={showSwitcher ? 'tabpanel' : undefined}
-			aria-labelledby={showSwitcher ? `standings-league-tab-${league}` : undefined}
-		>
-			{#if heading && !showSwitcher}
-				<h2 class="px-ch text-sm text-current/50">{heading}</h2>
-			{/if}
-			<div class={cn('grid items-start', data.view === 'playoff' ? 'gap-[.5lh]' : 'gap-[2lh]')}>
-				{#each tables as table, i (i)}
-					<DataTable
-						label={table.title}
-						data={rowsFor(table)}
-						columns={columnsFor(table)}
-						getRowId={(row) => String(row.record.team.id)}
-						sortParam="sort"
-						rowClass={(_, row, rows) =>
-							// the postseason cut line only means something in standings order
-							!isSorted &&
-							row === (table.cutAfter ?? 0) - 1 &&
-							row < rows.length - 1 &&
-							'*:border-b-2 *:border-dashed *:border-b-current/50'}
-					/>
-				{/each}
+{#if data.npb}
+	<section class="grid grid-cols-1 gap-lh p-ch">
+		{#if npbLeague}
+			<PillSwitcher
+				id="standings-league"
+				aria-label="League"
+				options={npbLeagueOptions}
+				value={npbLeague.id}
+				controls="standings-league-panel"
+				onchange={(next) => setViewParam('league', next, npbLeagueOptions[0].id)}
+			/>
+			<div
+				id="standings-league-panel"
+				role="tabpanel"
+				aria-labelledby="standings-league-tab-{npbLeague.id}"
+			>
+				<DataTable
+					label={npbLeague.name}
+					data={npbLeague.teams}
+					columns={npbColumns.get(npbLeague.id) ?? []}
+					getRowId={(team) => team.nameJa}
+					sortParam="sort"
+				/>
 			</div>
-		</div>
+		{:else}
+			<Empty>No standings</Empty>
+		{/if}
+	</section>
+
+	<small class="block px-ch pb-lh text-center text-xs text-current/50">
+		NPB standings from
+		<a
+			class="link"
+			href="https://npb.jp/bis/{page.params.season}/stats/"
+			target="_blank"
+			rel="noopener noreferrer">NPB.jp 日本野球機構</a
+		>
+	</small>
+{:else}
+	<section class="grid grid-cols-1 gap-lh p-ch">
+		{#if showSwitcher}
+			<PillSwitcher
+				id="standings-league"
+				aria-label="League"
+				options={leagueOptions}
+				value={league}
+				controls="standings-league-panel"
+				onchange={(next) => setViewParam('league', next, leagueOptions[0].id)}
+			/>
+		{/if}
+
+		{#each shownGroups as { key, heading, tables } (key)}
+			<div
+				class="flex flex-col gap-ch"
+				id={showSwitcher ? 'standings-league-panel' : undefined}
+				role={showSwitcher ? 'tabpanel' : undefined}
+				aria-labelledby={showSwitcher ? `standings-league-tab-${league}` : undefined}
+			>
+				{#if heading && !showSwitcher}
+					<h2 class="px-ch text-sm text-current/50">{heading}</h2>
+				{/if}
+				<div class={cn('grid items-start', data.view === 'playoff' ? 'gap-[.5lh]' : 'gap-[2lh]')}>
+					{#each tables as table, i (i)}
+						<DataTable
+							label={table.title}
+							data={rowsFor(table)}
+							columns={columnsFor(table)}
+							getRowId={(row) => String(row.record.team.id)}
+							sortParam="sort"
+							rowClass={(_, row, rows) =>
+								// the postseason cut line only means something in standings order
+								!isSorted &&
+								row === (table.cutAfter ?? 0) - 1 &&
+								row < rows.length - 1 &&
+								'*:border-b-2 *:border-dashed *:border-b-current/50'}
+						/>
+					{/each}
+				</div>
+			</div>
+		{:else}
+			<Empty>No standings</Empty>
+		{/each}
+	</section>
+{/if}
+
+{#snippet npbTeamCell({ row }: CellArgs<NpbTeamStanding>)}
+	<TeamCell team={npbTeam(row)} linked={false} />
+{/snippet}
+
+{#snippet npbRecord({ wins, losses, ties }: NpbRecord)}
+	<span class="positive">{wins}</span>-<span class="negative">{losses}</span>{#if ties}-<span
+			class="text-current/50">{ties}</span
+		>{/if}
+{/snippet}
+
+{#snippet npbWinLoss({ row }: CellArgs<NpbTeamStanding>)}
+	{@render npbRecord(row)}
+{/snippet}
+
+{#snippet npbRecordCell({ row, columnId }: CellArgs<NpbTeamStanding>)}
+	{@const record = row[columnId as 'home' | 'road' | 'interleague']}
+	{#if record}
+		{@render npbRecord(record)}
 	{:else}
-		<Empty>No standings</Empty>
-	{/each}
-</section>
+		<span class="text-current/50">-</span>
+	{/if}
+{/snippet}
 
 {#snippet tableTitle({ title }: HeaderArgs)}
 	<span class="line-clamp-1 text-left break-all text-foreground">{title}</span>

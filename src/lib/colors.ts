@@ -1,17 +1,21 @@
 export function isDarkOnLightTeam(team?: MLB.Team, sport?: MLB.Sport) {
-	if (!team) return false
+	if (!team || isLightOnDarkTeam(team)) return false
 
+	// Leagues whose teams mostly fall back to the Stats API's generic light ball logo (NPB: 31)
 	return (
 		['Asheville Tourists', 'Minnesota Golden Gophers', 'Sultanes de Monterrey'].includes(
 			team.name,
-		) || [16, 17, 22, 23, 51].includes(sport?.id ?? (team as MLB.TeamDetailed).sport?.id ?? 1)
+		) || [16, 17, 22, 23, 31, 51].includes(sport?.id ?? (team as MLB.TeamDetailed).sport?.id ?? 1)
 	)
 }
 
 export function isLightOnDarkTeam(team?: MLB.Team) {
 	if (!team) return false
 
-	return ['Hanshin Tigers', 'Tokyo Yomiuri Giants'].includes(team.name)
+	// By ID too: NPB standings use NPB's English names, e.g. Yomiuri Giants
+	return (
+		[241, 341].includes(team.id) || ['Hanshin Tigers', 'Tokyo Yomiuri Giants'].includes(team.name)
+	)
 }
 
 /** White → red text color for pitch velocity (mph). Full red at 100+. */

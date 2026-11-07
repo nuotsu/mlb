@@ -1,5 +1,6 @@
 import { cacheControlForSeasonPage } from '#lib/cache-control.js'
 import { fetchMLB } from '#lib/fetch/index.js'
+import { NPB_MIN_SEASON, NPB_SPORT_ID, type NpbLeagueStandings } from '#lib/npb.js'
 import { wildCardSpots } from '#lib/postseason/bracket.js'
 import { addDays, formatDate, getToday } from '#lib/temporal.js'
 import type { PageLoad } from './$types'
@@ -7,7 +8,7 @@ import type { PageLoad } from './$types'
 /** How far back the "Change" column looks. */
 const COMPARISON_DAYS = 7
 
-export const load: PageLoad = async ({ params, url, setHeaders }) => {
+export const load: PageLoad = async ({ params, url, setHeaders, fetch }) => {
 	setHeaders({ 'cache-control': cacheControlForSeasonPage(params.season) })
 
 	const sportId = url.searchParams.get('sportId') ?? '1'
@@ -66,6 +67,28 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 				.filter(Boolean),
 		),
 	] as number[]
+
+	// NPB isn't in the MLB Stats API's standings; it comes from npb.jp through our own route.
+	if (Number(params.season) >= NPB_MIN_SEASON && gameType === 'R') {
+		availableSportIds.push(NPB_SPORT_ID)
+	}
+
+	if (sportId === String(NPB_SPORT_ID)) {
+		const response = await fetch(`/api/npb/standings/${params.season}`)
+		const npb: NpbLeagueStandings[] = response.ok ? (await response.json()).leagues : []
+
+		return {
+			standings: { records: [] } as unknown as MLB.StandingsResponse,
+			standingsType: 'regularSeason',
+			view: 'division' as const,
+			wildCardSpots: 0,
+			rankChanges: {} as Record<number, number>,
+			comparisonDate: formatDate(getToday(), { locale: 'en-CA' }),
+			availableGameTypes: ['R'],
+			availableSportIds,
+			npb,
+		}
+	}
 
 	const standingsType =
 		gameType === 'S' ? 'springTraining' : gameType === 'P' ? 'postseason' : 'regularSeason'
@@ -146,5 +169,6 @@ export const load: PageLoad = async ({ params, url, setHeaders }) => {
 		comparisonDate,
 		availableGameTypes,
 		availableSportIds,
+		npb: null,
 	}
 }
