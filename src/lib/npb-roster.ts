@@ -62,6 +62,15 @@ export function npbPhotoUrl(season: number, teamId: number | string, number: str
 	return `https://p.npb.jp/players_photo/${season}/180/${teamCode(teamId)}/${number.padStart(3, '0')}_${id}.jpg`
 }
 
+/**
+ * npb.jp's 120×120 team logo for a season (a GIF on white), or `null` for a non-NPB team. Newer
+ * seasons' logos go up when npb.jp is ready, so callers should fall back to the year before.
+ */
+export function npbLogoUrl(teamId: number | string, season: number) {
+	const code = NPB_TEAM_INFO[Number(teamId)]?.code
+	return code ? `https://p.npb.jp/img/common/logo/${season}/logo_${code}_l.gif` : null
+}
+
 /** The roster page's position groups */
 export type NpbPositionGroup = 'P' | 'C' | 'IF' | 'OF'
 
