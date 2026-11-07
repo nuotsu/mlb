@@ -572,6 +572,10 @@
 </script>
 
 <svelte:head>
+	{#if data.npb}
+		<!-- Team logos, see `Logo` -->
+		<link rel="preconnect" href="https://p.npb.jp" />
+	{/if}
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',
 		'@type': 'ItemList',
