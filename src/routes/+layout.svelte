@@ -58,6 +58,8 @@
 	<link rel="preconnect" href="https://www.mlbstatic.com" />
 	<link rel="preconnect" href="https://midfield.mlbstatic.com" />
 	<link rel="preconnect" href="https://img.mlbstatic.com" />
+	<!-- Font files from fonts.css; fonts are fetched in CORS mode, so this needs crossorigin -->
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',

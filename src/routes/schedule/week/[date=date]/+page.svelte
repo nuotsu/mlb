@@ -84,6 +84,13 @@
 	}
 </script>
 
+<svelte:head>
+	{#if data.npb}
+		<!-- Team logos, see `Logo` -->
+		<link rel="preconnect" href="https://p.npb.jp" />
+	{/if}
+</svelte:head>
+
 <Metadata title="Weekly Schedule | MLB.TheOhtani.com" description="Weekly calendar of MLB games." />
 
 <Header title="Weekly Schedule" crumbs={[{ name: 'Weekly Schedule', href: '/schedule/week' }]}>
