@@ -68,7 +68,10 @@
 	})}<\/script>`}
 </svelte:head>
 
-<Metadata title="{team.name} | MLB.TheOhtani.com" description="{team.name} team page" />
+<Metadata
+	title="{team.name} | MLB.TheOhtani.com"
+	description="{team.name} roster, injured list, and recent transactions"
+/>
 
 <Header
 	crumbs={[

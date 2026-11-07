@@ -71,14 +71,11 @@
 <Metadata
 	title="Account | MLB.TheOhtani.com"
 	description="Your account, favorites, and app settings"
+	noindex
 />
 
 <!-- Back from Google restores this page from the bfcache: stop the spinner -->
 <svelte:window onpageshow={(event) => event.persisted && (signingIn = false)} />
-
-<svelte:head>
-	<meta name="robots" content="noindex" />
-</svelte:head>
 
 <Header title="Account" crumbs={[{ href: '/account', name: 'Account' }]} />
 

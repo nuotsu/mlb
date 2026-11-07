@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { formatDate } from '#lib/temporal.js'
+	import { getPostPath } from '#ui/blog/get-blog.js'
 	import type { HTMLAttributes } from 'svelte/elements'
 
 	let {
@@ -14,8 +15,7 @@
 
 <ul class="flex flex-col gap-ch leading-tight {className}">
 	{#each posts.slice(0, limit) as post (post.slug)}
-		{@const date = formatDate(post.date, { locale: 'en-CA' })}
-		{@const href = `/blog/${date}-${post.slug}`}
+		{@const href = getPostPath(post)}
 
 		<li
 			class="group/post relative grid grid-cols-[auto_1fr] items-start gap-ch border-dashed border-stroke [&+&]:border-t [&+&]:pt-ch"

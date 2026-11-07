@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
+	import { SITE_DESCRIPTION } from '#lib/seo.js'
 	import AsciiReveal from '#ui/ascii-reveal.svelte'
 	import Awards from '#ui/banner/awards.svelte'
 	import Baseball from '#ui/baseball.svelte'
@@ -51,8 +52,8 @@ $$ | \\_/ $$ |$$$$$$$$\\ $$$$$$$  |
 </script>
 
 <Metadata
-	title="MLB.TheOhtani.com"
-	description="A custom MLB scorebug for Major League Baseball (MLB) and other leagues. MLB = Mitchell's Live scoreBug."
+	title="Live MLB Scores, Standings & Stats | MLB.TheOhtani.com"
+	description={SITE_DESCRIPTION}
 />
 
 <div

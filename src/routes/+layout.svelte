@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { analyticsEnabled } from '#lib/analytics.js'
 	import { appIconScript } from '#lib/app-icon.js'
+	import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/seo.js'
 	import { hideDelayedGamesScript } from '#lib/time-travel.js'
 	import { accountStore, initAccount } from '#ui/account/store.svelte.js'
 	import { setAnalyticsContext } from '#ui/analytics.js'
@@ -60,14 +61,28 @@
 
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',
-		'@type': 'WebApplication',
-		name: 'MLB.TheOhtani.com',
-		url: 'https://mlb.theohtani.com',
-		description: 'A custom MLB scorebug, standings, stats, and player profiles.',
-		applicationCategory: 'SportsApplication',
-		operatingSystem: 'Web',
-		inLanguage: 'en',
-		author: { '@type': 'Person', name: 'nuotsu', url: 'https://mlb.theohtani.com' },
+		'@graph': [
+			{
+				// Gives Google the site name shown above search results
+				'@type': 'WebSite',
+				'@id': `${SITE_URL}/#website`,
+				name: SITE_NAME,
+				alternateName: ["Mitchell's Live scoreBug", 'TheOhtani MLB'],
+				url: `${SITE_URL}/`,
+				inLanguage: 'en',
+			},
+			{
+				'@type': 'WebApplication',
+				name: SITE_NAME,
+				url: `${SITE_URL}/`,
+				description: SITE_DESCRIPTION,
+				applicationCategory: 'SportsApplication',
+				operatingSystem: 'Web',
+				inLanguage: 'en',
+				offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+				author: { '@type': 'Person', name: 'nuotsu', url: 'https://github.com/nuotsu' },
+			},
+		],
 	})}<\/script>`}
 </svelte:head>
 

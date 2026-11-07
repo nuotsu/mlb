@@ -92,7 +92,10 @@
 	})}<\/script>`}
 </svelte:head>
 
-<Metadata title="{person.fullName} | MLB.TheOhtani.com" description="{person.fullName} profile" />
+<Metadata
+	title="{person.fullName} Stats & Profile | MLB.TheOhtani.com"
+	description="{person.fullName} stats, bio, awards, and career history"
+/>
 
 <Header
 	crumbs={[

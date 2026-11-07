@@ -1,8 +1,10 @@
-# Game and schedule pages are client-oriented and expensive to SSR; keep crawlers on index/blog.
+# Game and schedule pages are client-oriented and expensive to SSR; keep crawlers on the main routes.
 User-agent: *
 Disallow: /game/
 Disallow: /schedule/
 Disallow: /mcp
 Disallow: /api/proxy/
+Disallow: /api/account/
+Disallow: /ph/
 
 Sitemap: https://mlb.theohtani.com/sitemap.xml

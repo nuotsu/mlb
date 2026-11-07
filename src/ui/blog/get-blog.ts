@@ -24,6 +24,11 @@ export function getAllBlogs() {
 	return posts
 }
 
+/** A post's URL path: `/blog/<YYYY-MM-DD>-<slug>`, matching its filename */
+export function getPostPath(post: { date: string; slug?: string }) {
+	return `/blog/${formatDate(post.date, { locale: 'en-CA' })}-${post.slug}`
+}
+
 export function getPostEntry(slug: string) {
 	const modules = import.meta.glob<any>('./posts/*.md', { eager: true })
 

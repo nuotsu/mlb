@@ -1,42 +1,36 @@
-import { getAllBlogs } from '#ui/blog/get-blog.js'
+import { fetchMLB } from '#lib/fetch/index.js'
+import { getIndexableRoutes, SITE_URL } from '#lib/seo.js'
+import { getToday } from '#lib/temporal.js'
+import { getAllBlogs, getPostPath } from '#ui/blog/get-blog.js'
+import type { RequestHandler } from './$types'
 
-const BASE = 'https://mlb.theohtani.com'
+type SitemapUrl = { loc: string; lastmod?: string }
 
-const staticRoutes: {
-	route: string
-	priority: string
-}[] = [
-	{ route: '/', priority: '1.0' },
-	{ route: '/blog', priority: '0.8' },
-	{ route: '/schedule/day', priority: '0.8' },
-	{ route: '/schedule/week', priority: '0.8' },
-	{ route: '/standings', priority: '0.8' },
-	{ route: '/postseason', priority: '0.8' },
-	{ route: '/stats', priority: '0.8' },
-	{ route: '/team-stats', priority: '0.8' },
-	{ route: '/abs', priority: '0.8' },
-	{ route: '/teams', priority: '0.8' },
-	{ route: '/player', priority: '0.8' },
-	{ route: '/transactions', priority: '0.8' },
-	{ route: '/api', priority: '0.7' },
-]
-
-export function GET() {
+export const GET: RequestHandler = async ({ fetch }) => {
+	const season = getToday().getFullYear()
 	const posts = getAllBlogs()
-	const urls = [
-		...staticRoutes.map(({ route, priority }) => ({
-			loc: BASE + route,
-			priority,
+
+	const teams = await fetchMLB<MLB.TeamsResponse>(
+		'/api/v1/teams',
+		{ sportId: '1', fields: ['teams,id'] },
+		{ fetch },
+	)
+		.then((res) => res.teams ?? [])
+		.catch(() => [])
+
+	const urls: SitemapUrl[] = [
+		...getIndexableRoutes(season).map(({ path }) => ({
+			loc: SITE_URL + path,
+			// The home page and blog index change whenever a post goes up
+			lastmod: path === '/' || path === '/blog' ? posts[0]?.date : undefined,
 		})),
-		...posts.map((p) => ({
-			loc: `${BASE}/blog/${p.slug}`,
-			priority: '0.6',
-		})),
+		...teams.map((team) => ({ loc: `${SITE_URL}/teams/${team.id}` })),
+		...posts.map((post) => ({ loc: SITE_URL + getPostPath(post), lastmod: post.date })),
 	]
 
 	const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${urls.map((url) => `<url><loc>${url.loc}</loc><priority>${url.priority}</priority><changefreq>daily</changefreq></url>`).join('\n')}
+${urls.map(({ loc, lastmod }) => `<url><loc>${loc}</loc>${lastmod ? `<lastmod>${lastmod}</lastmod>` : ''}</url>`).join('\n')}
 </urlset>`
 
 	return new Response(xml, {
