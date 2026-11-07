@@ -1,6 +1,6 @@
 {
 	"buildCommand": "npm run build",
-	"ignoreCommand": "git log -1 --format=%s | grep -q '^chore(release): bump version'",
+	"ignoreCommand": "git log -1 --format=%s | grep -q '^chore(release): bump version' && [ \"$(git rev-parse HEAD^)\" = \"$VERCEL_GIT_PREVIOUS_SHA\" ]",
 	"headers": [
 		{
 			"source": "/game/(.*)",
