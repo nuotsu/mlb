@@ -11,9 +11,13 @@
 		linkLabel = 'View all',
 		class: className,
 		bodyClass = 'p-ch',
+		heading,
 		children,
 	}: {
+		/** Also the section's accessible name */
 		title: string
+		/** Replaces the visible title, e.g. to add a logo */
+		heading?: Snippet
 		href?: string
 		linkLabel?: string
 		class?: string
@@ -68,7 +72,9 @@
 			</button>
 		{/if}
 
-		<h2 class="grow truncate h4">{title}</h2>
+		<h2 class="flex grow items-center gap-[.5ch] truncate h4">
+			{#if heading}{@render heading()}{:else}{title}{/if}
+		</h2>
 
 		{#if editing}
 			<button

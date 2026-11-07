@@ -92,14 +92,23 @@
 {#snippet line(row: Row, highlight: boolean, division?: string)}
 	<tr class={['border-t border-stroke', highlight && 'font-bold']}>
 		<td class={['py-[.25ch]', highlight && 'shadow-[inset_2px_0_var(--color-accent)]']}>
-			<a class="flex items-center gap-[.5ch] pl-[.5ch] hover-link" href="/teams/{row.team.id}">
+			<a
+				class={[
+					'flex items-center gap-[.5ch] pl-[.5ch] hover-link',
+					highlight && 'relative isolate',
+				]}
+				href="/teams/{row.team.id}"
+				style:--team-bg={highlight
+					? `url('https://midfield.mlbstatic.com/v1/team/${row.team.id}/spots/32')`
+					: undefined}
+			>
 				<TeamAvatar class="size-[1.25em]" teamId={row.team.id} />
 				{#if division}
 					<span class="min-w-[8ch] text-xs font-normal whitespace-nowrap text-current/50"
 						>{division}</span
 					>
 				{/if}
-				<span class="font-mono">{row.team.abbreviation}</span>
+				<span>{row.team.abbreviation}</span>
 			</a>
 		</td>
 		<td class="text-right">{row.wins}</td>
