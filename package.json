@@ -8,7 +8,7 @@
 		"dev": "vite dev --host",
 		"build": "node scripts/migrate-preview.js && vite build",
 		"preview": "vite preview",
-		"prepare": "git config core.hooksPath .githooks; svelte-kit sync || echo ''",
+		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
 		"format": "prettier --write .",
