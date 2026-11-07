@@ -1,5 +1,14 @@
 import { getScheduleToday } from '#lib/cache-control.js'
-import { isNpbTeam, npbRosterUrl, parseNpbRoster, type NpbRoster } from '#lib/npb-roster.js'
+import {
+	buildNpbRoster,
+	isNpbTeam,
+	npbFieldingUrl,
+	npbRosterUrl,
+	parseNpbFielding,
+	parseNpbRoster,
+	type NpbFielding,
+	type NpbRoster,
+} from '#lib/npb-roster.js'
 import {
 	NPB_LEAGUES,
 	NPB_MIN_SEASON,
@@ -71,9 +80,32 @@ export function clearNpbStandingsCache() {
 	cache.clear()
 }
 
+/** GETs an npb.jp page's HTML, or throws {@link NpbNotFoundError} on a 404. */
+async function fetchPage(url: string, fetcher: typeof fetch) {
+	const response = await fetcher(url, {
+		headers: { accept: 'text/html' },
+		signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+	})
+
+	if (response.status === 404) throw new NpbNotFoundError(`${url} not found`)
+	if (!response.ok) throw new Error(`${url} responded ${response.status}`)
+
+	return response.text()
+}
+
+/** For the extras: the roster still shows without Japanese names or exact positions. */
+function optional<T>(label: string) {
+	return (e: unknown): T | null => {
+		console.warn(`[npbRoster] ${label}:`, e instanceof Error ? e.message : e)
+		return null
+	}
+}
+
 /**
- * Fetches and parses a team's current roster from npb.jp (it publishes no past rosters).
- * Throws {@link NpbNotFoundError} for a team npb.jp has no roster page for.
+ * Fetches a team's current roster from npb.jp (it publishes no past rosters): the English page,
+ * plus the Japanese page and the season's first-team and farm fielding stats, merged by
+ * `buildNpbRoster`. Only the English page is required.
+ * Throws {@link NpbNotFoundError} for a team npb.jp has no roster for.
  */
 export async function fetchNpbRoster(
 	teamId: number,
@@ -81,16 +113,30 @@ export async function fetchNpbRoster(
 ): Promise<NpbRoster> {
 	if (!isNpbTeam(teamId)) throw new NpbNotFoundError(`npb.jp has no roster for team ${teamId}`)
 
-	const url = npbRosterUrl(teamId)
-	const response = await fetcher(url, {
-		headers: { accept: 'text/html' },
-		signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
+	const [en, ja] = await Promise.all([
+		fetchPage(npbRosterUrl(teamId), fetcher).then(parseNpbRoster),
+		fetchPage(npbRosterUrl(teamId, 'ja'), fetcher)
+			.then(parseNpbRoster)
+			.catch(optional<NpbRoster>('Japanese roster')),
+	])
+
+	// A new season's roster can be up before its first game, and so before any fielding stats
+	const fielding = en.season
+		? await Promise.all(
+				([1, 2] as const).map((level) =>
+					fetchPage(npbFieldingUrl(en.season!, teamId, level), fetcher)
+						.then(parseNpbFielding)
+						.catch(optional<NpbFielding>(`fielding ${level}`)),
+				),
+			)
+		: []
+
+	return buildNpbRoster({
+		teamId,
+		en,
+		ja,
+		fielding: fielding.filter((page) => page !== null),
 	})
-
-	if (response.status === 404) throw new NpbNotFoundError(`npb.jp has no roster for team ${teamId}`)
-	if (!response.ok) throw new Error(`${url} responded ${response.status}`)
-
-	return parseNpbRoster(await response.text())
 }
 
 const rosterCache = createMemoryCache<number, NpbRoster>({

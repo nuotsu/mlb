@@ -2,7 +2,8 @@
 	@component
 	An NPB team's current roster from npb.jp, laid out like the MLB `Roster`: batters, pitchers,
 	then the manager (npb.jp lists no coaching staff). Players have no page here, so their names
-	link to npb.jp. Developmental (育成) players are tagged; players who have left are dropped.
+	link to npb.jp: the Japanese name to the Japanese page, the English name to the English one.
+	Developmental (育成) players are tagged; players who have left are dropped.
 -->
 <script lang="ts">
 	import type { NpbRoster, NpbRosterPlayer } from '#lib/npb-roster.js'
@@ -12,11 +13,11 @@
 	let { roster }: { roster: NpbRoster } = $props()
 
 	const current = $derived(roster.players.filter(({ departed }) => !departed))
-	const batters = $derived(current.filter(({ position }) => position !== 'P'))
-	const pitchers = $derived(current.filter(({ position }) => position === 'P'))
+	const batters = $derived(current.filter(({ group }) => group !== 'P'))
+	const pitchers = $derived(current.filter(({ group }) => group === 'P'))
 
-	/** Catchers, then infielders, then outfielders, as npb.jp orders them */
-	const POSITION_ORDER = ['C', 'IF', 'OF']
+	/** Around the diamond, then the groups of players with no fielding stats to narrow them */
+	const POSITION_ORDER = ['C', '1B', '2B', '3B', 'SS', 'IF', 'OF']
 
 	const numberColumn: DataTableColumn<NpbRosterPlayer> = {
 		id: 'number',
@@ -28,6 +29,14 @@
 		align: 'center',
 		cellClass: 'text-sm tabular-nums',
 		class: 'w-[5ch]',
+	}
+
+	const nameJaColumn: DataTableColumn<NpbRosterPlayer> = {
+		id: 'nameJa',
+		header: '選手',
+		title: 'Japanese name',
+		value: (row) => row.nameJa,
+		cell: nameJaCell,
 	}
 
 	const playerColumn: DataTableColumn<NpbRosterPlayer> = {
@@ -42,7 +51,7 @@
 		{
 			id: 'position',
 			header: 'Pos',
-			title: 'Position',
+			title: 'Position played most this season',
 			value: (row) => row.position,
 			sortFn: (a, b) => POSITION_ORDER.indexOf(a.position) - POSITION_ORDER.indexOf(b.position),
 			align: 'center',
@@ -50,6 +59,7 @@
 			class: 'w-[5ch]',
 		},
 		numberColumn,
+		nameJaColumn,
 		playerColumn,
 		{
 			id: 'batsThrows',
@@ -64,6 +74,7 @@
 
 	const pitcherColumns: DataTableColumn<NpbRosterPlayer>[] = [
 		numberColumn,
+		nameJaColumn,
 		playerColumn,
 		{
 			id: 'throws',
@@ -90,6 +101,9 @@
 	{#if roster.manager}
 		<p class="flex items-center gap-ch px-ch sm:px-rch">
 			<span class="w-[5ch] shrink-0 text-center text-sm tabular-nums">{roster.manager.number}</span>
+			{#if roster.manager.nameJa}
+				<span class="line-clamp-1 break-all" lang="ja">{roster.manager.nameJa}</span>
+			{/if}
 			<span class="line-clamp-1 break-all">{roster.manager.name}</span>
 		</p>
 	{/if}
@@ -124,6 +138,33 @@
 			stickyHeader={false}
 		/>
 	</section>
+{/snippet}
+
+{#snippet nameJaCell({ row }: CellArgs<NpbRosterPlayer>)}
+	<a
+		class="group/player flex min-w-0 items-center gap-ch text-left decoration-dashed"
+		href="https://npb.jp/bis/players/{row.id}.html"
+		target="_blank"
+		rel="noopener noreferrer"
+		lang="ja"
+	>
+		<!-- A circle cropped from the top of the 4:5 photo; it stays an empty circle if missing -->
+		<img
+			class="img-fade block size-lh shrink-0 rounded-full bg-foreground/10 object-cover object-top text-transparent opacity-0 transition-opacity"
+			src={row.photo}
+			width="144"
+			height="180"
+			alt=""
+			loading="lazy"
+			decoding="async"
+			draggable="false"
+			onload={(e) => e.currentTarget.classList.remove('opacity-0')}
+		/>
+
+		<span class="line-clamp-1 grow break-all group-hover/player:underline">
+			{row.nameJa ?? ''}
+		</span>
+	</a>
 {/snippet}
 
 {#snippet playerCell({ row }: CellArgs<NpbRosterPlayer>)}

@@ -69,6 +69,9 @@
 </script>
 
 <svelte:head>
+	{#if isNpb}
+		<link rel="preconnect" href="https://p.npb.jp" />
+	{/if}
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',
 		'@type': 'SportsTeam',

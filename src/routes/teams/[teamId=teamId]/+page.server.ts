@@ -1,6 +1,6 @@
 import { fetchMLB } from '#lib/fetch/index.js'
 import { fetchRosterByType, fetchTeamTransactions } from '#lib/fetch/presets.js'
-import { isNpbTeam } from '#lib/npb-roster.js'
+import { isNpbTeam, NPB_TEAM_INFO } from '#lib/npb-roster.js'
 import { getNpbRoster } from '#lib/server/npb.js'
 import { addDays, getToday } from '#lib/temporal.js'
 import { buildInjuredList } from '#ui/team/injured-list.js'
@@ -41,8 +41,17 @@ export const load: PageServerLoad = async ({ params, url, fetch, setHeaders }) =
 	 * the current one: the date doesn't apply, and there is no IL or coaching staff to show.
 	 */
 	if (isNpbTeam(params.teamId)) {
+		// Official names, owner included (Yokohama DeNA BayStars), over the Stats API's
+		const { franchiseName, clubName } = NPB_TEAM_INFO[Number(params.teamId)]
+
 		return {
-			team: teams.teams[0],
+			team: {
+				...teams.teams[0],
+				name: `${franchiseName} ${clubName}`,
+				franchiseName,
+				clubName,
+				teamName: clubName,
+			},
 			npb: await getNpbRoster(Number(params.teamId)).catch((e) => {
 				console.error('[npbRoster]', e)
 				return null
