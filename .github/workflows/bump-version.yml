@@ -5,6 +5,11 @@
 # The bump commit is skipped by Vercel (see `ignoreCommand` in vercel.json), so
 # each merge deploys once. Production therefore shows the version bumped after
 # the previous merge: still unique and increasing per deploy.
+#
+# The bump lands seconds after the merge, often before Vercel starts building,
+# and Vercel then builds only the newest commit: the bump. So `ignoreCommand`
+# skips a bump only when its parent is what production already runs
+# (`VERCEL_GIT_PREVIOUS_SHA`); otherwise it builds the bump, merge included.
 name: Bump version
 
 on:
