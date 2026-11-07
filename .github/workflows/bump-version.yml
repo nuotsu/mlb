@@ -1,0 +1,53 @@
+# Bumps the patch version in package.json after every push to main (i.e. every
+# merged PR), so the sidebar's version number keeps increasing. Feature branches
+# never touch "version", so PRs can't conflict on it.
+#
+# The bump commit is skipped by Vercel (see `ignoreCommand` in vercel.json), so
+# each merge deploys once. Production therefore shows the version bumped after
+# the previous merge: still unique and increasing per deploy.
+name: Bump version
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+# Serialize runs so back-to-back merges bump one at a time
+concurrency:
+  group: bump-version
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    # Never react to our own bump commit
+    if: "!startsWith(github.event.head_commit.message, 'chore(release): bump version')"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Bump patch version
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            git pull --ff-only origin main
+            next=$(node -e '
+              const fs = require("fs")
+              const pkg = fs.readFileSync("package.json", "utf8")
+              const current = JSON.parse(pkg).version
+              const parts = current.split(".")
+              parts[2] = String(Number(parts[2]) + 1)
+              const next = parts.join(".")
+              fs.writeFileSync("package.json", pkg.replace(`"version": "${current}"`, `"version": "${next}"`))
+              console.log(next)
+            ')
+            git commit -am "chore(release): bump version to $next [skip ci]"
+            git push origin HEAD:main && exit 0
+            echo "Push raced another commit; retrying"
+            git reset --hard origin/main
+          done
+          exit 1
