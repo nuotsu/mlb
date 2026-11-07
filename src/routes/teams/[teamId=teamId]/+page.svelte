@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { npbRosterUrl } from '#lib/npb-roster.js'
+	import { NPB_SPORT_ID } from '#lib/npb.js'
 	import { cn } from '#lib/utils.js'
 	import Divider from '#ui/divider.svelte'
 	import Empty from '#ui/empty.svelte'
@@ -9,6 +11,7 @@
 	import ToggleSpoilerPrevention from '#ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
 	import InjuredList from '#ui/team/injured-list.svelte'
 	import Logo from '#ui/team/logo.svelte'
+	import NpbRoster from '#ui/team/npb-roster.svelte'
 	import Roster from '#ui/team/roster.svelte'
 	import SectionNav from '#ui/team/section-nav.svelte'
 	import { DATE_PARAM, getDateForMonth, getSelectedDate } from '#ui/team/selected-date.js'
@@ -21,6 +24,18 @@
 	let { data }: PageProps = $props()
 
 	const team = $derived(data.team as MLB.TeamDetailed)
+
+	/** NPB teams load their roster from npb.jp instead, and have no schedule or IL in the Stats API */
+	const isNpb = $derived(data.npb !== undefined)
+
+	/** The Stats API files some NPB teams under International Baseball, so name the league here */
+	const sportCrumb = $derived(
+		isNpb
+			? { href: `/teams?sportId=${NPB_SPORT_ID}`, name: 'Nippon Professional Baseball' }
+			: team.sport?.name
+				? { href: `/teams?sportId=${team.sport?.id}`, name: team.sport.name }
+				: {},
+	)
 
 	/** Single source of truth: the roster, calendars, and IL all follow it */
 	const date = $derived(getSelectedDate(page.url))
@@ -60,26 +75,28 @@
 		name: team.name,
 		sport: 'https://en.wikipedia.org/wiki/Baseball',
 		url: `https://mlb.theohtani.com/teams/${team.id}`,
-		memberOf: {
-			'@type': 'SportsOrganization',
-			name: 'Major League Baseball',
-			url: 'https://www.mlb.com',
-		},
+		memberOf: isNpb
+			? {
+					'@type': 'SportsOrganization',
+					name: 'Nippon Professional Baseball',
+					url: 'https://npb.jp/eng/',
+				}
+			: {
+					'@type': 'SportsOrganization',
+					name: 'Major League Baseball',
+					url: 'https://www.mlb.com',
+				},
 	})}<\/script>`}
 </svelte:head>
 
 <Metadata
 	title="{team.name} | MLB.TheOhtani.com"
-	description="{team.name} roster, injured list, and recent transactions"
+	description={isNpb
+		? `${team.name} roster`
+		: `${team.name} roster, injured list, and recent transactions`}
 />
 
-<Header
-	crumbs={[
-		{ href: '/teams', name: 'Teams' },
-		team.sport?.name ? { href: `/teams?sportId=${team.sport?.id}`, name: team.sport.name } : {},
-		{ name: team.name },
-	]}
->
+<Header crumbs={[{ href: '/teams', name: 'Teams' }, sportCrumb, { name: team.name }]}>
 	<div
 		class={cn(
 			'flex flex-wrap gap-ch',
@@ -101,7 +118,9 @@
 
 	{#snippet after()}
 		<div class="mx-auto flex items-center justify-center gap-ch">
-			<ToggleSpoilerPrevention team={{ id: team.id, abbreviation: team.abbreviation! }} />
+			{#if !isNpb}
+				<ToggleSpoilerPrevention team={{ id: team.id, abbreviation: team.abbreviation! }} />
+			{/if}
 			<ToggleFavorite
 				target={{ href: `/teams/${team.id}`, label: team.abbreviation! }}
 				fullName={team.name}
@@ -111,39 +130,60 @@
 </Header>
 
 <section class="team-page grid gap-lh pt-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
-	<div class="px-ch">
-		<TeamCalendar {team} bind:value={() => pendingMonth ?? date.slice(0, 7), selectMonth} />
-	</div>
+	{#if isNpb}
+		<div class="space-y-ch">
+			<Divider>Roster</Divider>
 
-	<div id="series-calendar" class="space-y-ch">
-		<SeriesCalendar {team} {date} />
-	</div>
+			{#if data.npb}
+				<div class="grid gap-y-ch md:grid-cols-[repeat(auto-fill,minmax(var(--container-xs),1fr))]">
+					<NpbRoster roster={data.npb} />
+				</div>
 
-	<div class="space-y-ch">
-		<Divider>Roster</Divider>
-
-		{#if data.roster.roster}
-			<div class="grid gap-y-ch md:grid-cols-[repeat(auto-fill,minmax(var(--container-xs),1fr))]">
-				<Roster roster={data.roster.roster} coaches={data.coaches.roster} />
-			</div>
-		{:else}
-			<Empty>No roster</Empty>
-		{/if}
-	</div>
-
-	<div id="injured-list" class="space-y-ch">
-		<Divider>Injured List</Divider>
-
-		{#await data.injuredList}
-			<Loading class="justify-center p-lh text-current/40">Loading injured list...</Loading>
-		{:then injuredList}
-			{#if injuredList?.length}
-				<InjuredList players={injuredList} today={date} />
+				<small class="block px-ch text-center text-xs text-current/50">
+					{data.npb.status ? `${data.npb.status} roster` : 'Roster'} from
+					<a class="link" href={npbRosterUrl(team.id)} target="_blank" rel="noopener noreferrer"
+						>NPB.jp 日本野球機構</a
+					>
+				</small>
 			{:else}
-				<Empty>{injuredList ? 'No players on the IL' : 'Failed to load injured list'}</Empty>
+				<Empty>Failed to load roster</Empty>
 			{/if}
-		{/await}
-	</div>
+		</div>
+	{:else}
+		<div class="px-ch">
+			<TeamCalendar {team} bind:value={() => pendingMonth ?? date.slice(0, 7), selectMonth} />
+		</div>
+
+		<div id="series-calendar" class="space-y-ch">
+			<SeriesCalendar {team} {date} />
+		</div>
+
+		<div class="space-y-ch">
+			<Divider>Roster</Divider>
+
+			{#if data.roster?.roster}
+				<div class="grid gap-y-ch md:grid-cols-[repeat(auto-fill,minmax(var(--container-xs),1fr))]">
+					<Roster roster={data.roster.roster} coaches={data.coaches?.roster ?? []} />
+				</div>
+			{:else}
+				<Empty>No roster</Empty>
+			{/if}
+		</div>
+
+		<div id="injured-list" class="space-y-ch">
+			<Divider>Injured List</Divider>
+
+			{#await data.injuredList}
+				<Loading class="justify-center p-lh text-current/40">Loading injured list...</Loading>
+			{:then injuredList}
+				{#if injuredList?.length}
+					<InjuredList players={injuredList} today={date} />
+				{:else}
+					<Empty>{injuredList ? 'No players on the IL' : 'Failed to load injured list'}</Empty>
+				{/if}
+			{/await}
+		</div>
+	{/if}
 </section>
 
 <SectionNav />

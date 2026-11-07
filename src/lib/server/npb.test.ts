@@ -2,16 +2,23 @@
 
 import { readFileSync } from 'node:fs'
 import { beforeEach, describe, expect, test } from 'bun:test'
-import { clearNpbStandingsCache, getNpbStandings, NpbNotFoundError } from './npb'
+import {
+	clearNpbRosterCache,
+	clearNpbStandingsCache,
+	getNpbRoster,
+	getNpbStandings,
+	NpbNotFoundError,
+} from './npb'
 
 const html = readFileSync(new URL('../fixtures/npb-std_c-2024.html', import.meta.url), 'utf8')
+const rosterHtml = readFileSync(new URL('../fixtures/npb-rst_g-2026.html', import.meta.url), 'utf8')
 
 /** A fake `fetch` that counts calls and answers with `status` (the fixture page on 200). */
-function fakeFetch(status = 200) {
+function fakeFetch(status = 200, page = html) {
 	const fetcher = Object.assign(
 		async () => {
 			fetcher.calls++
-			return new Response(status === 200 ? html : '', { status })
+			return new Response(status === 200 ? page : '', { status })
 		},
 		{ calls: 0 },
 	)
@@ -79,5 +86,39 @@ describe('getNpbStandings', () => {
 			NpbNotFoundError,
 		)
 		expect(working.calls).toBe(0)
+	})
+})
+
+describe('getNpbRoster', () => {
+	beforeEach(clearNpbRosterCache)
+
+	test('fetches once per team and refetches after 15 minutes', async () => {
+		const fetcher = fakeFetch(200, rosterHtml)
+
+		const [first, second] = await Promise.all([
+			getNpbRoster(241, { fetcher, now: 0 }),
+			getNpbRoster(241, { fetcher, now: 0 }),
+		])
+		expect(second).toBe(first)
+		expect(first.manager?.name).toBe('Abe, Shinnosuke')
+
+		await getNpbRoster(241, { fetcher, now: 14 * MINUTE })
+		expect(fetcher.calls).toBe(1)
+		await getNpbRoster(241, { fetcher, now: 15 * MINUTE })
+		expect(fetcher.calls).toBe(2)
+	})
+
+	test('rejects non-NPB teams without fetching', async () => {
+		const fetcher = fakeFetch(200, rosterHtml)
+		await expect(getNpbRoster(119, { fetcher, now: 0 })).rejects.toBeInstanceOf(NpbNotFoundError)
+		expect(fetcher.calls).toBe(0)
+	})
+
+	test('does not keep upstream failures', async () => {
+		await expect(getNpbRoster(241, { fetcher: fakeFetch(503), now: 0 })).rejects.toThrow('503')
+
+		const working = fakeFetch(200, rosterHtml)
+		await getNpbRoster(241, { fetcher: working, now: 0 })
+		expect(working.calls).toBe(1)
 	})
 })
