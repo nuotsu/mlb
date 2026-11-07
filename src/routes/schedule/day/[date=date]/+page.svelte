@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchDaySchedule, fetchSeason } from '#lib/fetch/presets.js'
+	import type { NpbScheduleGame } from '#lib/npb-schedule.js'
 	import { formatDate, getToday, slash } from '#lib/temporal.js'
 	import { readStoredDelay } from '#lib/time-travel.js'
 	import { maintainSearchParams } from '#lib/url.svelte.js'
@@ -9,6 +10,7 @@
 	import Game from '#ui/game/game.svelte'
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
+	import NpbScheduleGameCard from '#ui/npb-game/schedule-game.svelte'
 	import SelectDate from '#ui/schedule/select-date.svelte'
 	import SeasonInfo from '#ui/season/season-info.svelte'
 	import SeasonProgress from '#ui/season/season-progress.svelte'
@@ -76,6 +78,9 @@
 	})
 
 	async function onDateChange(date: string) {
+		// NPB's day loads from npb.jp, through the page's own load
+		if (data.npb) return goto(maintainSearchParams(`/schedule/day/${date}`))
+
 		currentDate = date
 		schedule = await fetchDaySchedule(date)
 		seasonProgress = await fetchSeasonProgress(
@@ -117,23 +122,51 @@
 </Header>
 
 <section class="py-lh sm:px-ch">
-	{#if schedule.dates[0]?.games.some((game) => game.gameType === 'R')}
+	{#if seasonProgress && schedule.dates[0]?.games.some((game) => game.gameType === 'R')}
 		<SeasonProgress class="mb-lh pt-lh max-sm:px-ch" {currentDate} {seasonProgress} />
 	{/if}
 
-	{#each schedule.dates as { games }}
-		{@render groupedGames(games, 'Live')}
-		{@render groupedGames(games, 'Preview')}
-		{@render groupedGames(games, 'Final')}
+	{#if data.npb}
+		{#each ['Live', 'Preview', 'Final'] as const as state (state)}
+			{@render npbGroupedGames(data.npb, state)}
+		{/each}
+
+		{#if !data.npb.length}
+			<Empty>No games</Empty>
+		{/if}
 	{:else}
-		<Empty>No games</Empty>
-	{/each}
+		{#each schedule.dates as { games }}
+			{@render groupedGames(games, 'Live')}
+			{@render groupedGames(games, 'Preview')}
+			{@render groupedGames(games, 'Final')}
+		{:else}
+			<Empty>No games</Empty>
+		{/each}
+	{/if}
 
 	{#if data.season}
 		<hr class="my-lh border-dashed border-stroke" />
 		<SeasonInfo {season} />
 	{/if}
 </section>
+
+{#snippet npbGroupedGames(games: NpbScheduleGame[], state: NpbScheduleGame['state'])}
+	{@const processedGames = games.filter((game) => game.state === state)}
+
+	{#if processedGames.length}
+		<Divider>
+			{state} ({processedGames.length})
+		</Divider>
+
+		<div
+			class="grid items-start gap-lh md:grid-cols-[repeat(auto-fill,minmax(var(--column-width,var(--container-xs)),1fr))] lg:[--column-width:var(--container-md)]"
+		>
+			{#each processedGames as game (game.ref.code)}
+				<NpbScheduleGameCard {game} />
+			{/each}
+		</div>
+	{/if}
+{/snippet}
 
 {#snippet groupedGames(games: MLB.Game[], state: string)}
 	{@const processedGames = games.filter((game) => stateOf(game) === state).sort(sortFavorite)}

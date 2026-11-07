@@ -727,6 +727,8 @@ const VENUES: Record<string, string> = {
 	マツダスタジアム: 'Mazda Stadium',
 	みずほPayPay: 'Mizuho PayPay Dome',
 	エスコンフィールド: 'ES CON Field Hokkaido',
+	// The schedule's short form
+	エスコンＦ: 'ES CON Field Hokkaido',
 	京セラD大阪: 'Kyocera Dome Osaka',
 	ほっと神戸: 'Hotto Motto Field Kobe',
 	楽天モバイル: 'Rakuten Mobile Park Miyagi',

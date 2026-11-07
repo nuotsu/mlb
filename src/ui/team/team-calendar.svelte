@@ -1,25 +1,34 @@
 <script lang="ts">
 	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
 	import { fetchMLB } from '#lib/fetch/index.js'
+	import { gameHref } from '#lib/npb-game-mlb.js'
 	import { formatDate, getToday } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
 	import Headshot from '#ui/player/headshot.svelte'
 	import Calendar from '#ui/schedule/calendar.svelte'
+	import type { TeamSchedule } from './npb-team-schedule.js'
 	import StyledTeam from './styled-team.svelte'
 
 	let {
 		team,
 		value = $bindable(formatDate(getToday(), { locale: 'en-CA' }).slice(0, 7)),
+		loadSchedule,
 		class: className,
 	}: {
 		team: MLB.TeamDetailed
 		/** Month shown, as `YYYY-MM` */
 		value?: string
+		/**
+		 * The season's games from elsewhere than the Stats API, like an NPB team's from npb.jp.
+		 * These show no starting pitchers: there are none to look up by `gamePk`.
+		 */
+		loadSchedule?: (season: number) => Promise<TeamSchedule>
 		class?: string
 	} = $props()
 
-	// Memoize per-year so the schedule + rotation is only built once
-	const scheduleCache = new Map<number, Promise<ScheduleData>>()
+	// Memoize per team + year so the schedule + rotation is only built once; the page keeps this
+	// component when it moves to another team
+	const scheduleCache = new Map<string, Promise<ScheduleData>>()
 
 	type ScheduleData = {
 		gamesByDate: Record<string, MLB.Game[]>
@@ -65,6 +74,13 @@
 	}
 
 	async function buildScheduleData(year: number): Promise<ScheduleData> {
+		if (loadSchedule) {
+			const { games } = await loadSchedule(year)
+			const gamesByDate: Record<string, MLB.Game[]> = {}
+			for (const game of games) (gamesByDate[game.officialDate] ??= []).push(game)
+			return { gamesByDate, predictions: new Map(), confirmedPast: new Map() }
+		}
+
 		const schedule = await fetchMLB<MLB.ScheduleResponse>(`/api/v1/schedule`, {
 			sportId: String(team.sport?.id ?? 1),
 			teamId: String(team.id),
@@ -143,8 +159,9 @@
 	}
 
 	function fetchSchedule(year: number): Promise<ScheduleData> {
-		if (!scheduleCache.has(year)) scheduleCache.set(year, buildScheduleData(year))
-		return scheduleCache.get(year)!
+		const key = `${team.id}-${year}`
+		if (!scheduleCache.has(key)) scheduleCache.set(key, buildScheduleData(year))
+		return scheduleCache.get(key)!
 	}
 </script>
 
@@ -165,12 +182,14 @@
 						{@const didWin = isHome ? teams.home.isWinner : teams.away.isWinner}
 
 						<li>
-							<a href="/game/{gamePk}">
+							<a href={gameHref(game)}>
 								<StyledTeam
 									class="justify-center gap-0 overflow-clip text-foreground *:data-name:hidden @max-[10ch]/team:[&:has([src*=silo])_picture>img]:size-[.75lh]"
 									team={opponent}
 								>
-									{#if confirmedPast.has(gamePk)}
+									{#if loadSchedule}
+										<!-- No pitchers to look up -->
+									{:else if confirmedPast.has(gamePk)}
 										<!-- Past game with a confirmed probable pitcher -->
 										<Headshot
 											person={confirmedPast.get(gamePk)!}

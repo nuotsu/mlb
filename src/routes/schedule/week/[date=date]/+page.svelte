@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchSeason, fetchWeekSchedule } from '#lib/fetch/presets.js'
+	import type { NpbScheduleGame } from '#lib/npb-schedule.js'
 	import { formatDate, getToday, slash } from '#lib/temporal.js'
 	import { maintainSearchParams } from '#lib/url.svelte.js'
 	import { count } from '#lib/utils.js'
@@ -8,6 +9,7 @@
 	import Game from '#ui/game/game.svelte'
 	import Header from '#ui/header.svelte'
 	import Metadata from '#ui/metadata.svelte'
+	import NpbScheduleGameCard from '#ui/npb-game/schedule-game.svelte'
 	import SelectWeek from '#ui/schedule/select-week.svelte'
 	import SeasonInfo from '#ui/season/season-info.svelte'
 	import SelectSport from '#ui/select-sport.svelte'
@@ -48,8 +50,19 @@
 		season = data.season
 	})
 
+	/** NPB's games by day, like the Stats API's `dates` */
+	const npbDates = $derived.by(() => {
+		if (!data.npb) return null
+		const dates: { date: string; games: NpbScheduleGame[] }[] = []
+		for (const game of data.npb) {
+			if (dates.at(-1)?.date === game.date) dates.at(-1)!.games.push(game)
+			else dates.push({ date: game.date, games: [game] })
+		}
+		return dates
+	})
+
 	const includestoday = $derived(
-		schedule.dates.some((d) => d.date === getToday().toISOString().split('T')[0]),
+		(npbDates ?? schedule.dates).some((d) => d.date === getToday().toISOString().split('T')[0]),
 	)
 
 	$effect(() => {
@@ -61,6 +74,9 @@
 	})
 
 	async function onDateChange(date: string) {
+		// NPB's week loads from npb.jp, through the page's own load
+		if (data.npb) return goto(maintainSearchParams(`/schedule/week/${date}`))
+
 		currentDate = date
 		schedule = await fetchWeekSchedule(date)
 		season = await fetchSeason(new Date(slash(date)).getFullYear().toString())
@@ -81,28 +97,45 @@
 </Header>
 
 <section class="space-y-px py-lh sm:px-ch">
-	{#each schedule.dates as date (date.date)}
-		<details class="group accordion" open={formatDate(slash(date.date)) === formatDate(getToday())}>
-			<summary class="sticky-below-header z-1 backdrop-blur-xs after:ml-0!">
-				{formatDate(slash(date.date), {
-					weekday: 'short',
-					month: 'numeric',
-					day: 'numeric',
-				})}
+	{#each npbDates ?? schedule.dates as date (date.date)}
+		{@render day(date)}
+	{:else}
+		<Empty>No games</Empty>
+	{/each}
 
-				{#if formatDate(slash(date.date)) === formatDate(getToday())}
-					<small class="dark:text-accent not-dark:positive">Today</small>
-				{/if}
+	{#if data.season}
+		<hr class="my-lh border-dashed border-stroke" />
+		<SeasonInfo {season} />
+	{/if}
+</section>
 
-				<a class="ml-auto link" href={maintainSearchParams(`/schedule/day/${date.date}`)}>
-					{count(date.games.length, 'game')}
-				</a>
-			</summary>
+{#snippet day({ date, games }: { date: string; games: MLB.Game[] | NpbScheduleGame[] })}
+	<details class="group accordion" open={formatDate(slash(date)) === formatDate(getToday())}>
+		<summary class="sticky-below-header z-1 backdrop-blur-xs after:ml-0!">
+			{formatDate(slash(date), {
+				weekday: 'short',
+				month: 'numeric',
+				day: 'numeric',
+			})}
 
-			<div
-				class="grid anim-fade items-start gap-lh md:grid-cols-[repeat(auto-fill,minmax(var(--column-width,var(--container-xs)),1fr))] lg:[--column-width:var(--container-md)]"
-			>
-				{#each date.games.sort(sortFavorite) as game (game.gamePk)}
+			{#if formatDate(slash(date)) === formatDate(getToday())}
+				<small class="dark:text-accent not-dark:positive">Today</small>
+			{/if}
+
+			<a class="ml-auto link" href={maintainSearchParams(`/schedule/day/${date}`)}>
+				{count(games.length, 'game')}
+			</a>
+		</summary>
+
+		<div
+			class="grid anim-fade items-start gap-lh md:grid-cols-[repeat(auto-fill,minmax(var(--column-width,var(--container-xs)),1fr))] lg:[--column-width:var(--container-md)]"
+		>
+			{#if npbDates}
+				{#each games as NpbScheduleGame[] as game (game.ref.code)}
+					<NpbScheduleGameCard {game} />
+				{/each}
+			{:else}
+				{#each (games as MLB.Game[]).sort(sortFavorite) as game (game.gamePk)}
 					{@const { linescore } = game as MLB.Game & { linescore: MLB.Linescore }}
 
 					<Game
@@ -114,14 +147,7 @@
 						)}
 					/>
 				{/each}
-			</div>
-		</details>
-	{:else}
-		<Empty>No games</Empty>
-	{/each}
-
-	{#if data.season}
-		<hr class="my-lh border-dashed border-stroke" />
-		<SeasonInfo {season} />
-	{/if}
-</section>
+			{/if}
+		</div>
+	</details>
+{/snippet}

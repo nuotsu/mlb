@@ -20,6 +20,18 @@ import {
 	type NpbRoster,
 } from '#lib/npb-roster.js'
 import {
+	buildNpbSchedule,
+	NPB_POSTSEASON_MONTHS,
+	NPB_SCHEDULE_MIN_SEASON,
+	NPB_SCHEDULE_MONTHS,
+	npbCalendarUrl,
+	npbScheduleUrl,
+	parseNpbPostseason,
+	parseNpbScheduleMonth,
+	type NpbPostseason,
+	type NpbSchedule,
+} from '#lib/npb-schedule.js'
+import {
 	NPB_LEAGUES,
 	NPB_MIN_SEASON,
 	npbStandingsUrl,
@@ -275,4 +287,78 @@ export function isRecentNpbGame({ season, date }: NpbGameRef, today: Date) {
 /** For tests. */
 export function clearNpbGameCache() {
 	gameCache.clear()
+}
+
+/** A month npb.jp has no page for (before opening day, after the season) has no games */
+const orNothing = <T>(e: unknown): T | null => {
+	if (e instanceof NpbNotFoundError) return null
+	throw e
+}
+
+/**
+ * Fetches a season's regular season schedule from npb.jp: every month's detail page, plus the
+ * English calendar for the months the postseason can fall in, to leave it out.
+ * Throws {@link NpbNotFoundError} when npb.jp has no schedule for that season.
+ */
+export async function fetchNpbSchedule(
+	season: number,
+	fetcher: typeof fetch = fetch,
+): Promise<NpbSchedule> {
+	if (season < NPB_SCHEDULE_MIN_SEASON) {
+		throw new NpbNotFoundError(`npb.jp has no schedule for ${season}`)
+	}
+
+	const [months, calendars] = await Promise.all([
+		Promise.all(
+			NPB_SCHEDULE_MONTHS.map((month) =>
+				fetchPage(npbScheduleUrl(season, month), fetcher)
+					.then((html) => parseNpbScheduleMonth(html, season))
+					.catch(orNothing<ReturnType<typeof parseNpbScheduleMonth>>),
+			),
+		),
+		Promise.all(
+			NPB_POSTSEASON_MONTHS.map((month) =>
+				fetchPage(npbCalendarUrl(season, month), fetcher)
+					.then((html) => parseNpbPostseason(html, season, month))
+					.catch(orNothing<NpbPostseason>),
+			),
+		),
+	])
+
+	const found = months.filter((month) => month !== null)
+	if (!found.length) throw new NpbNotFoundError(`npb.jp has no schedule for ${season}`)
+
+	return buildNpbSchedule({
+		season,
+		months: found,
+		postseason: {
+			start: calendars.find((calendar) => calendar?.start)?.start ?? null,
+			games: new Set(calendars.flatMap((calendar) => [...(calendar?.games ?? [])])),
+		},
+	})
+}
+
+const scheduleCache = createMemoryCache<number, NpbSchedule>({
+	keepError: (e) => e instanceof NpbNotFoundError,
+})
+
+/**
+ * {@link fetchNpbSchedule}, cached in memory per season like the standings: briefly for the
+ * current season, for a week for past ones.
+ */
+export function getNpbSchedule(
+	season: number,
+	{
+		fetcher = fetch,
+		now = Date.now(),
+		currentSeason = getScheduleToday().getFullYear(),
+	}: { fetcher?: typeof fetch; now?: number; currentSeason?: number } = {},
+): Promise<NpbSchedule> {
+	const ttl = season < currentSeason ? PAST_SEASON_TTL_MS : CURRENT_SEASON_TTL_MS
+	return scheduleCache.get(season, ttl, () => fetchNpbSchedule(season, fetcher), now)
+}
+
+/** For tests. */
+export function clearNpbScheduleCache() {
+	scheduleCache.clear()
 }

@@ -3,7 +3,11 @@
  * pages already use: the linescore, the team scores and the status.
  */
 
-import type { NpbGame, NpbGameTeam, NpbLang } from '#lib/npb-game.js'
+import type { NpbGame, NpbGameRef, NpbGameTeam, NpbLang } from '#lib/npb-game.js'
+import { npbGamePath, translateStatus } from '#lib/npb-game.js'
+import { NPB_TEAM_INFO } from '#lib/npb-roster.js'
+import type { NpbScheduleGame, NpbScheduleTeam } from '#lib/npb-schedule.js'
+import { NPB_TEAMS } from '#lib/npb.js'
 
 /** NPB plays nine innings, and up to twelve before a tie */
 const SCHEDULED_INNINGS = 9
@@ -74,4 +78,89 @@ export function toMlbLinescore(game: NpbGame): MLB.Linescore {
 			]),
 		),
 	} as unknown as MLB.Linescore
+}
+
+/** An MLB-shaped game that links somewhere other than `/game/{gamePk}`, like an NPB game's page */
+export type LinkedMlbGame = MLB.Game & { href?: string }
+
+/** The game's page: its own `href`, else the MLB game page */
+export const gameHref = (game: LinkedMlbGame) => game.href ?? `/game/${game.gamePk}`
+
+const NPB_TEAM_ORDER = Object.keys(NPB_TEAM_INFO).map(Number)
+
+/**
+ * A stand-in `gamePk` for an NPB game, unique within a season and negative so it can't collide
+ * with the Stats API's: components key and number their games by it.
+ */
+export function npbGamePk({ date, code }: NpbGameRef) {
+	const [home, away, number] = code.split('-')
+	const index = (teamCode: string) =>
+		NPB_TEAM_ORDER.findIndex((id) => NPB_TEAM_INFO[id].code === teamCode)
+	const pair = index(home) * NPB_TEAM_ORDER.length + index(away)
+	return -((Number(date) * NPB_TEAM_ORDER.length ** 2 + pair) * 100 + Number(number))
+}
+
+/** A schedule's team, with its official English name, as the Stats API would give it */
+export function toMlbScheduleTeam(team: NpbScheduleTeam, lang: NpbLang = 'en'): MLB.Team {
+	const { franchiseName, clubName } = NPB_TEAM_INFO[team.id]
+	const abbreviation = Object.values(NPB_TEAMS).find(({ id }) => id === team.id)?.abbreviation
+
+	return toMlbTeam(
+		{
+			id: team.id,
+			code: team.code,
+			nameJa: team.shortNameJa,
+			shortNameJa: team.shortNameJa,
+			name: `${franchiseName} ${clubName}`,
+			teamName: clubName,
+			abbreviation: abbreviation ?? null,
+			runs: team.runs,
+			hits: null,
+			errors: null,
+		},
+		lang,
+	)
+}
+
+/**
+ * An NPB schedule game in the Stats API's schedule shape, for the schedule and team calendar
+ * components, linking to our NPB game page. A tie has no winner.
+ */
+export function toMlbScheduleGame(game: NpbScheduleGame, lang: NpbLang = 'en'): LinkedMlbGame {
+	const { home, away } = game.teams
+	const decided = game.state === 'Final' && !game.isCancelled && !game.isTie
+	const side = (team: NpbScheduleTeam, other: NpbScheduleTeam) => ({
+		team: toMlbScheduleTeam(team, lang),
+		leagueRecord: team.record ?? undefined,
+		score: game.isCancelled ? undefined : (team.runs ?? undefined),
+		isWinner:
+			decided && team.runs !== null && other.runs !== null ? team.runs > other.runs : undefined,
+	})
+
+	return {
+		gamePk: npbGamePk(game.ref),
+		gameType: 'R',
+		gameDate: npbGameDate(game),
+		officialDate: game.date,
+		status: {
+			abstractGameState: game.state,
+			// Called-off games count for neither team, as the MLB calendar leaves out postponements
+			detailedState: game.isCancelled
+				? game.statusJa === '中止'
+					? 'Postponed'
+					: 'Cancelled'
+				: game.statusJa
+					? translateStatus(game.statusJa)
+					: game.state === 'Preview'
+						? 'Scheduled'
+						: game.state,
+			// e.g. No game, shown in place of the state
+			reason:
+				game.isCancelled && game.statusJa !== '中止'
+					? translateStatus(game.statusJa ?? '')
+					: undefined,
+		},
+		teams: { away: side(away, home), home: side(home, away) },
+		href: npbGamePath(game.ref),
+	} as unknown as LinkedMlbGame
 }

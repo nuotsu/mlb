@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
 	import { fetchSeason } from '#lib/fetch/presets.js'
+	import { gameHref } from '#lib/npb-game-mlb.js'
 	import { formatDate, getToday } from '#lib/temporal.js'
 	import { cn } from '#lib/utils.js'
 	import Divider from '#ui/divider.svelte'
@@ -8,16 +9,20 @@
 	import Loading from '#ui/loading.svelte'
 	import { spoilerPreventionStore } from '#ui/spoiler-prevention/store.svelte.js'
 	import { browser } from '$app/env'
+	import type { TeamSchedule } from './npb-team-schedule.js'
 	import StyledTeam from './styled-team.svelte'
 
 	let {
 		team,
 		date = formatDate(getToday(), { locale: 'en-CA' }),
+		loadSchedule,
 		class: className,
 	}: {
 		team: MLB.TeamDetailed
 		/** Selected date (`YYYY-MM-DD`); its season is the one shown */
 		date?: string
+		/** The season's games from elsewhere than the Stats API, like an NPB team's from npb.jp */
+		loadSchedule?: (season: number) => Promise<TeamSchedule>
 		class?: string
 	} = $props()
 
@@ -25,6 +30,7 @@
 
 	type SeriesGame = {
 		gamePk: number
+		href: string
 		gameNumber: number | null
 		awayScore: number | null
 		homeScore: number | null
@@ -45,6 +51,8 @@
 		rows: SeriesRow[]
 		wins: number
 		losses: number
+		/** NPB games can end level */
+		ties: number
 	}
 
 	function isNonCountable(status: MLB.GameStatus) {
@@ -70,6 +78,7 @@
 		let current: Extract<SeriesRow, { type: 'series' }> | null = null
 		let wins = 0
 		let losses = 0
+		let ties = 0
 
 		for (const game of games) {
 			const isHome = game.teams.home.team.id === team.id
@@ -99,9 +108,11 @@
 
 			if (didWin === true) wins++
 			else if (didWin === false) losses++
+			else if (isFinal) ties++
 
 			current.games.push({
 				gamePk: game.gamePk,
+				href: gameHref(game),
 				gameNumber: nonCountable ? null : (gameNumbers.get(game.gamePk) ?? null),
 				awayScore: hasScore ? (game.teams.away.score ?? null) : null,
 				homeScore: hasScore ? (game.teams.home.score ?? null) : null,
@@ -109,7 +120,7 @@
 			})
 		}
 
-		if (!allStarDate) return { rows, wins, losses }
+		if (!allStarDate) return { rows, wins, losses, ties }
 
 		const withBreak: SeriesRow[] = []
 		let inserted = false
@@ -120,12 +131,17 @@
 			}
 			withBreak.push(row)
 		}
-		return { rows: withBreak, wins, losses }
+		return { rows: withBreak, wins, losses, ties }
 	}
 
 	const cache = new Map<string, Promise<SeriesCalendarData>>()
 
 	async function buildSeriesCalendar(teamId: number, year: number): Promise<SeriesCalendarData> {
+		if (loadSchedule) {
+			const { games, allStarDate } = await loadSchedule(year)
+			return buildRows(games, allStarDate)
+		}
+
 		const sportId = String(team.sport?.id ?? 1)
 
 		const [schedule, season] = await Promise.all([
@@ -174,10 +190,10 @@
 {#if browser}
 	{#await fetchSeriesCalendar(season)}
 		{@render fallback()}
-	{:then { rows, wins, losses }}
+	{:then { rows, wins, losses, ties }}
 		<Divider>
 			Series Calendar{#if !hideSpoilers}
-				{' '}({wins}-{losses}){/if}
+				{' '}({wins}-{losses}{#if ties}-{ties}{/if}){/if}
 		</Divider>
 		{#if rows.length === 0}
 			<div class={cn('px-ch', className)}>
@@ -216,7 +232,7 @@
 										{@const isColored =
 											!hideSpoilers && (game.didWin === true || game.didWin === false)}
 										<a
-											href="/game/{game.gamePk}"
+											href={game.href}
 											class={cn(
 												'group/cell grid min-h-lh place-content-center text-center tabular-nums',
 												isColored
