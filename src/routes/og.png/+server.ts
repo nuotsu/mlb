@@ -48,21 +48,14 @@ export const GET: RequestHandler = async () => {
 			color: '#fff',
 			fontFamily: 'Geist',
 		},
-		[
-			h('div', { display: 'flex', flexDirection: 'column' }, [
-				h(
-					'div',
-					{ fontFamily: 'Geist Mono', fontSize: 34, lineHeight: 1, whiteSpace: 'pre' },
-					ASCII_LOGO.trimEnd(),
-				),
-				h('div', { alignSelf: 'flex-end', marginTop: 12, fontSize: 52 }, '.TheOhtani.com'),
-			]),
+		h('div', { display: 'flex', flexDirection: 'column' }, [
 			h(
 				'div',
-				{ marginTop: 56, fontSize: 30, color: 'rgba(255, 255, 255, 0.6)' },
-				'Track MLB games, explore stats, and query the Stats API, all in one app.',
+				{ fontFamily: 'Geist Mono', fontSize: 40, lineHeight: 1, whiteSpace: 'pre' },
+				ASCII_LOGO.trimEnd(),
 			),
-		],
+			h('div', { alignSelf: 'flex-end', marginTop: 16, fontSize: 60 }, '.TheOhtani.com'),
+		]),
 	)
 
 	const svg = await satori(element as never, {

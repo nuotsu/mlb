@@ -10,11 +10,10 @@
 <header class="hero border-b border-stroke">
 	<div class="layout mx-auto grid max-w-5xl gap-x-[2lh] gap-y-lh px-ch py-[2lh]">
 		<div class="title [grid-area:title]">
-			<h1 class="flex max-w-max flex-col text-xl" aria-label="Welcome to MLB.TheOhtani.com">
-				<div class="mb-1">Welcome to</div>
+			<h1 class="flex max-w-max flex-col text-xl" aria-label="MLB.TheOhtani.com">
 				<AsciiReveal
 					text={ASCII_LOGO}
-					class="-mt-ch overflow-x-auto overflow-y-clip text-left text-[x-small] leading-none"
+					class="overflow-x-auto overflow-y-clip text-left text-[x-small] leading-none"
 				/>
 				<p class="ml-auto">.TheOhtani.com</p>
 			</h1>
