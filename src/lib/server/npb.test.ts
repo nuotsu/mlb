@@ -5,11 +5,14 @@ import { beforeEach, describe, expect, test } from 'bun:test'
 import {
 	clearNpbGameCache,
 	clearNpbRosterCache,
+	clearNpbScheduleCache,
 	clearNpbStandingsCache,
 	getNpbGame,
 	getNpbRoster,
+	getNpbSchedule,
 	getNpbStandings,
 	NpbNotFoundError,
+	withNpbScheduleLinescores,
 } from './npb'
 
 const html = readFileSync(new URL('../fixtures/npb-std_c-2024.html', import.meta.url), 'utf8')
@@ -208,11 +211,17 @@ describe('getNpbGame', () => {
 		expect(fetcher.calls).toBe(calls)
 	})
 
-	test('treats games outside the regular season as not found', async () => {
-		const fetcher = gameFetch(
-			game('index').replace('JERA セ・リーグ公式戦', 'セ・リーグ クライマックスシリーズ'),
-		)
+	test('treats exhibition games as not found', async () => {
+		const fetcher = gameFetch(game('index').replace('JERA セ・リーグ公式戦', 'オープン戦'))
 		expect(getNpbGame(ref, { fetcher })).rejects.toBeInstanceOf(NpbNotFoundError)
+	})
+
+	test('covers the postseason and the All-Star Game', async () => {
+		for (const competition of ['CS ファイナルステージ', 'SMBC日本シリーズ', 'オールスターゲーム']) {
+			clearNpbGameCache()
+			const fetcher = gameFetch(game('index').replace('JERA セ・リーグ公式戦', competition))
+			expect((await getNpbGame(ref, { fetcher })).competitionJa).toBe(competition)
+		}
 	})
 
 	test('is not found when npb.jp has no such game', async () => {
@@ -220,5 +229,102 @@ describe('getNpbGame', () => {
 		expect(getNpbGame({ ...ref, code: 'c-d-1' }, { fetcher })).rejects.toBeInstanceOf(
 			NpbNotFoundError,
 		)
+	})
+})
+
+/** npb.jp's 2026 schedule pages we have fixtures for; the other months 404 */
+const SCHEDULE_PAGES: Record<string, string> = {
+	'https://npb.jp/games/2026/schedule_07_detail.html': page('npb-schedule_07_detail-2026'),
+	'https://npb.jp/games/2026/schedule_10_detail.html': page('npb-schedule_10_detail-2026'),
+	// Lists Nippon Series game 6, which wasn't needed, with no label on the English calendar
+	'https://npb.jp/games/2026/schedule_11_detail.html': page('npb-schedule_11_detail-2026'),
+	'https://npb.jp/bis/eng/2026/calendar/index_10.html': page('npb-calendar_10-eng-2026'),
+}
+
+function fakeScheduleFetch(pages = SCHEDULE_PAGES) {
+	const fetcher = Object.assign(
+		async (url: string) => {
+			fetcher.urls.push(url)
+			const html = pages[url]
+			return new Response(html ?? '', { status: html ? 200 : 404 })
+		},
+		{ urls: [] as string[] },
+	)
+	return fetcher as unknown as typeof fetch & { urls: string[] }
+}
+
+describe('getNpbSchedule', () => {
+	beforeEach(clearNpbScheduleCache)
+
+	test('reads every month and the postseason calendars, once per season', async () => {
+		const fetcher = fakeScheduleFetch()
+		const options = { fetcher, now: 0, currentSeason: 2027 }
+
+		const schedule = await getNpbSchedule(2026, options)
+		await getNpbSchedule(2026, { ...options, now: 60 * MINUTE })
+
+		expect(fetcher.urls).toHaveLength(11)
+		expect(fetcher.urls).toContain('https://npb.jp/games/2026/schedule_03_detail.html')
+		expect(fetcher.urls).toContain('https://npb.jp/games/2026/schedule_11_detail.html')
+		expect(fetcher.urls).toContain('https://npb.jp/bis/eng/2026/calendar/index_11.html')
+
+		expect(schedule.allStarDates).toEqual(['2026-07-28', '2026-07-29'])
+		expect(schedule.games.at(0)!.date).toBe('2026-07-01')
+		// Through the Japan Series, without the game 6 it didn't need
+		expect(schedule.games.at(-1)!.ref.code).toBe('h-db-04')
+		expect(schedule.games.filter((game) => game.competition === 'all-star')).toHaveLength(2)
+	})
+
+	test('throws NpbNotFoundError when no month has a page, or before 2019', async () => {
+		const fetcher = fakeScheduleFetch({})
+
+		await expect(getNpbSchedule(2026, { fetcher, now: 0 })).rejects.toBeInstanceOf(NpbNotFoundError)
+		await expect(getNpbSchedule(2018, { fetcher, now: 0 })).rejects.toBeInstanceOf(NpbNotFoundError)
+		expect(fetcher.urls).toHaveLength(11)
+	})
+
+	test('a failing month fails the season, and is retried', async () => {
+		let fail = true
+		const fetcher = Object.assign(async (url: string) => {
+			if (fail && url.endsWith('schedule_07_detail.html')) {
+				return new Response('', { status: 503 })
+			}
+			const html = SCHEDULE_PAGES[url]
+			return new Response(html ?? '', { status: html ? 200 : 404 })
+		}) as unknown as typeof fetch
+
+		await expect(getNpbSchedule(2026, { fetcher, now: 0 })).rejects.toThrow('503')
+		fail = false
+		const schedule = await getNpbSchedule(2026, { fetcher, now: 1 })
+		expect(schedule.games.length).toBeGreaterThan(0)
+	})
+})
+
+describe('withNpbScheduleLinescores', () => {
+	test("reads each game's page up to today, leaving null where it can't", async () => {
+		const pages: Record<string, string> = {
+			'https://npb.jp/scores/2026/1001/t-g-25/': page('npb-game-2026-1001-t-g-25-index'),
+		}
+		const fetcher = fakeScheduleFetch(pages)
+		const { games } = await getNpbSchedule(2026, {
+			fetcher: fakeScheduleFetch(),
+			now: 0,
+			currentSeason: 2027,
+		})
+		const october = games.filter((game) => game.date >= '2026-10-01' && game.date <= '2026-10-02')
+
+		const result = await withNpbScheduleLinescores(october, { fetcher, today: '2026-10-01' })
+
+		const tie = result.find((game) => game.ref.code === 't-g-25')!
+		expect(tie.linescore?.innings).toHaveLength(12)
+		// Read, but npb.jp had no page for it
+		expect(result.find((game) => game.ref.code === 'c-d-25')!.linescore).toBeNull()
+		// After today: not read
+		expect(
+			result.filter((game) => game.date > '2026-10-01').every((game) => !('linescore' in game)),
+		).toBe(true)
+		expect(fetcher.urls.every((url) => url.includes('/1001/'))).toBe(true)
+		// The schedule's own games are left as they were
+		expect(october.every((game) => !('linescore' in game))).toBe(true)
 	})
 })

@@ -12,6 +12,7 @@
 	import InjuredList from '#ui/team/injured-list.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import NpbRoster from '#ui/team/npb-roster.svelte'
+	import { fetchNpbTeamSchedule } from '#ui/team/npb-team-schedule.js'
 	import Roster from '#ui/team/roster.svelte'
 	import SectionNav from '#ui/team/section-nav.svelte'
 	import { DATE_PARAM, getDateForMonth, getSelectedDate } from '#ui/team/selected-date.js'
@@ -25,8 +26,13 @@
 
 	const team = $derived(data.team as MLB.TeamDetailed)
 
-	/** NPB teams load their roster from npb.jp instead, and have no schedule or IL in the Stats API */
+	/** NPB teams load their roster and schedule from npb.jp instead, and have no IL */
 	const isNpb = $derived(data.npb !== undefined)
+
+	/** npb.jp's schedule for the calendars, as the Stats API has none for NPB */
+	const loadSchedule = $derived(
+		isNpb ? (season: number) => fetchNpbTeamSchedule(team.id, season) : undefined,
+	)
 
 	/** The Stats API files some NPB teams under International Baseball, so name the league here */
 	const sportCrumb = $derived(
@@ -95,7 +101,7 @@
 <Metadata
 	title="{team.name} | MLB.TheOhtani.com"
 	description={isNpb
-		? `${team.name} roster`
+		? `${team.name} schedule and roster`
 		: `${team.name} roster, injured list, and recent transactions`}
 />
 
@@ -133,6 +139,18 @@
 </Header>
 
 <section class="team-page grid gap-lh pt-lh pb-[max(1lh,env(safe-area-inset-bottom))]">
+	<div class="px-ch">
+		<TeamCalendar
+			{team}
+			{loadSchedule}
+			bind:value={() => pendingMonth ?? date.slice(0, 7), selectMonth}
+		/>
+	</div>
+
+	<div id="series-calendar" class="space-y-ch">
+		<SeriesCalendar {team} {date} {loadSchedule} />
+	</div>
+
 	{#if isNpb}
 		<div class="space-y-ch">
 			<Divider>Roster</Divider>
@@ -153,14 +171,6 @@
 			{/if}
 		</div>
 	{:else}
-		<div class="px-ch">
-			<TeamCalendar {team} bind:value={() => pendingMonth ?? date.slice(0, 7), selectMonth} />
-		</div>
-
-		<div id="series-calendar" class="space-y-ch">
-			<SeriesCalendar {team} {date} />
-		</div>
-
 		<div class="space-y-ch">
 			<Divider>Roster</Divider>
 

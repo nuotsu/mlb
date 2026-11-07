@@ -2,6 +2,7 @@ import { getScheduleToday } from '#lib/cache-control.js'
 import {
 	npbGameUrl,
 	parseNpbBox,
+	parseNpbCancelReason,
 	parseNpbGame,
 	parseNpbPlays,
 	type NpbGame,
@@ -12,6 +13,7 @@ import {
 import {
 	buildNpbRoster,
 	isNpbTeam,
+	NPB_TEAM_INFO,
 	npbFieldingUrl,
 	npbRosterUrl,
 	parseNpbFielding,
@@ -19,6 +21,21 @@ import {
 	type NpbFielding,
 	type NpbRoster,
 } from '#lib/npb-roster.js'
+import {
+	buildNpbSchedule,
+	NPB_POSTSEASON_MONTHS,
+	NPB_SCHEDULE_MIN_SEASON,
+	NPB_SCHEDULE_MONTHS,
+	npbCalendarUrl,
+	npbScheduleUrl,
+	parseNpbPostseason,
+	parseNpbScheduleMonth,
+	toNpbScheduleLinescore,
+	type NpbPostseason,
+	type NpbSchedule,
+	type NpbScheduleGame,
+	type NpbScheduleLinescore,
+} from '#lib/npb-schedule.js'
 import {
 	NPB_LEAGUES,
 	NPB_MIN_SEASON,
@@ -171,9 +188,9 @@ export function clearNpbRosterCache() {
 	rosterCache.clear()
 }
 
-/** Regular season and interleague games; the postseason and exhibitions aren't covered yet */
+/** Regular season, interleague, postseason and All-Star games; exhibitions aren't covered */
 const isCoveredCompetition = (competitionJa: string | null) =>
-	!competitionJa || /公式戦|交流戦/.test(competitionJa)
+	!competitionJa || /公式戦|交流戦|CS|クライマックス|日本シリーズ|オールスター/.test(competitionJa)
 
 /** English names for the players on a team's current roster, if it's the game's season */
 function rosterNames(roster: NpbRoster | null, season: number) {
@@ -226,12 +243,15 @@ export async function fetchNpbGame(
 					.then(parseNpbPlays)
 					.catch(optional<NpbGame['plays']>('play-by-play'))
 			: null,
-		...(['away', 'home'] as const).map((side) => {
-			const id = game.teams[side].id
-			return id && isNpbTeam(id)
-				? getNpbRoster(id, { fetcher }).catch(optional<NpbRoster>(`roster ${id}`))
-				: null
-		}),
+		// An All-Star side's players come from every team in its league, so read every roster
+		...[
+			...new Set(
+				(['away', 'home'] as const).flatMap((side) => {
+					const id = game.teams[side].id
+					return id && isNpbTeam(id) ? [id] : Object.keys(NPB_TEAM_INFO).map(Number)
+				}),
+			),
+		].map((id) => getNpbRoster(id, { fetcher }).catch(optional<NpbRoster>(`roster ${id}`))),
 	])
 
 	return {
@@ -275,4 +295,144 @@ export function isRecentNpbGame({ season, date }: NpbGameRef, today: Date) {
 /** For tests. */
 export function clearNpbGameCache() {
 	gameCache.clear()
+}
+
+/** A month npb.jp has no page for (before opening day, after the season) has no games */
+const orNothing = <T>(e: unknown): T | null => {
+	if (e instanceof NpbNotFoundError) return null
+	throw e
+}
+
+/**
+ * Fetches a season's regular season schedule from npb.jp: every month's detail page, plus the
+ * English calendar for the months the postseason can fall in, to leave it out.
+ * Throws {@link NpbNotFoundError} when npb.jp has no schedule for that season.
+ */
+export async function fetchNpbSchedule(
+	season: number,
+	fetcher: typeof fetch = fetch,
+): Promise<NpbSchedule> {
+	if (season < NPB_SCHEDULE_MIN_SEASON) {
+		throw new NpbNotFoundError(`npb.jp has no schedule for ${season}`)
+	}
+
+	const [months, calendars] = await Promise.all([
+		Promise.all(
+			NPB_SCHEDULE_MONTHS.map((month) =>
+				fetchPage(npbScheduleUrl(season, month), fetcher)
+					.then((html) => parseNpbScheduleMonth(html, season))
+					.catch(orNothing<ReturnType<typeof parseNpbScheduleMonth>>),
+			),
+		),
+		Promise.all(
+			NPB_POSTSEASON_MONTHS.map((month) =>
+				fetchPage(npbCalendarUrl(season, month), fetcher)
+					.then((html) => parseNpbPostseason(html, season, month))
+					.catch(orNothing<NpbPostseason>),
+			),
+		),
+	])
+
+	const found = months.filter((month) => month !== null)
+	if (!found.length) throw new NpbNotFoundError(`npb.jp has no schedule for ${season}`)
+
+	return buildNpbSchedule({
+		season,
+		months: found,
+		postseason: {
+			start: calendars.find((calendar) => calendar?.start)?.start ?? null,
+			games: new Map(calendars.flatMap((calendar) => [...(calendar?.games ?? [])])),
+		},
+		today: japanToday(),
+	})
+}
+
+const scheduleCache = createMemoryCache<number, NpbSchedule>({
+	keepError: (e) => e instanceof NpbNotFoundError,
+})
+
+/**
+ * {@link fetchNpbSchedule}, cached in memory per season like the standings: briefly for the
+ * current season, for a week for past ones.
+ */
+export function getNpbSchedule(
+	season: number,
+	{
+		fetcher = fetch,
+		now = Date.now(),
+		currentSeason = getScheduleToday().getFullYear(),
+	}: { fetcher?: typeof fetch; now?: number; currentSeason?: number } = {},
+): Promise<NpbSchedule> {
+	const ttl = season < currentSeason ? PAST_SEASON_TTL_MS : CURRENT_SEASON_TTL_MS
+	return scheduleCache.get(season, ttl, () => fetchNpbSchedule(season, fetcher), now)
+}
+
+/** For tests. */
+export function clearNpbScheduleCache() {
+	scheduleCache.clear()
+}
+
+const linescoreCache = createMemoryCache<string, NpbScheduleLinescore>({
+	max: 500,
+	keepError: (e) => e instanceof NpbNotFoundError,
+})
+
+/**
+ * A game's state and linescore from its TOP page alone (no box score, plays or rosters), for the
+ * schedule pages. Cached like {@link getNpbGame}.
+ */
+export function getNpbScheduleLinescore(
+	ref: NpbGameRef,
+	{
+		fetcher = fetch,
+		now = Date.now(),
+		today = getScheduleToday(),
+	}: { fetcher?: typeof fetch; now?: number; today?: Date } = {},
+): Promise<NpbScheduleLinescore> {
+	const ttl = isRecentNpbGame(ref, today) ? LIVE_GAME_TTL_MS : PAST_SEASON_TTL_MS
+	const key = `${ref.season}/${ref.date}/${ref.code}`
+	return linescoreCache.get(
+		key,
+		ttl,
+		async () => {
+			const html = await fetchPage(npbGameUrl(ref), fetcher)
+			return toNpbScheduleLinescore(parseNpbGame(html, ref), parseNpbCancelReason(html))
+		},
+		now,
+	)
+}
+
+/** For tests. */
+export function clearNpbScheduleLinescoreCache() {
+	linescoreCache.clear()
+}
+
+/** At most this many npb.jp game pages are read at once */
+const LINESCORE_CONCURRENCY = 6
+
+/** Today's date in Japan, where NPB's games are dated */
+export const japanToday = () =>
+	new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tokyo' }).format(new Date())
+
+/**
+ * `games` with their `linescore` from each game's own page: games from today (in Japan) back, as
+ * later ones have none yet; called-off ones for the reason. A page that can't be read leaves `null`.
+ */
+export async function withNpbScheduleLinescores(
+	games: NpbScheduleGame[],
+	{ fetcher = fetch, today = japanToday() }: { fetcher?: typeof fetch; today?: string } = {},
+): Promise<NpbScheduleGame[]> {
+	const result = games.map((game) => ({ ...game }))
+	const queue = result.filter((game) => game.date <= today)
+
+	async function worker() {
+		for (let game = queue.shift(); game; game = queue.shift()) {
+			game.linescore = await getNpbScheduleLinescore(game.ref, { fetcher }).catch(
+				optional<NpbScheduleLinescore>(`linescore ${game.ref.date}/${game.ref.code}`),
+			)
+		}
+	}
+
+	await Promise.all(Array.from({ length: LINESCORE_CONCURRENCY }, worker))
+	return result
 }

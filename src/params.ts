@@ -35,14 +35,18 @@ const matchNpbDate = (param: string) => {
  */
 export const NPB_TEAM_CODES = ['g', 't', 'd', 'c', 's', 'db', 'h', 'f', 'b', 'e', 'l', 'm']
 
-/** npb.jp's `{home}-{away}-{nn}` game code, e.g. `t-g-25` */
-const matchNpbGame = (param: string) => {
+/** The All-Star Game's sides, `cl-pl-01`; kept in step with `NPB_ALL_STAR_TEAMS` the same way */
+export const NPB_ALL_STAR_CODES = ['cl', 'pl']
+
+/** npb.jp's `{home}-{away}-{nn}` game code, e.g. `t-g-25`: two teams, or the two All-Star sides */
+export const matchNpbGame = (param: string) => {
 	const parts = param.match(/^([a-z]{1,2})-([a-z]{1,2})-(\d{1,2})$/)
 	return (
 		!!parts &&
 		parts[1] !== parts[2] &&
-		NPB_TEAM_CODES.includes(parts[1]) &&
-		NPB_TEAM_CODES.includes(parts[2])
+		[NPB_TEAM_CODES, NPB_ALL_STAR_CODES].some(
+			(codes) => codes.includes(parts[1]) && codes.includes(parts[2]),
+		)
 	)
 }
 

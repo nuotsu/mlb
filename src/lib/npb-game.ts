@@ -12,7 +12,7 @@
  */
 
 import { NPB_TEAM_INFO } from '#lib/npb-roster.js'
-import { cellText, compact, NPB_TEAMS } from '#lib/npb.js'
+import { cellText, compact, NPB_ALL_STAR_TEAMS, NPB_TEAMS, type NpbAllStarCode } from '#lib/npb.js'
 import type { Notation } from '#lib/scorecard.js'
 
 export interface NpbGameRef {
@@ -213,11 +213,16 @@ export const isNpbGameDate = (mmdd: string) => {
 	return month >= 1 && month <= 12 && day >= 1 && day <= 31
 }
 
-/** `t-g-25`: two known team codes, then the game number */
+const isAllStarCode = (code: string): code is NpbAllStarCode => code in NPB_ALL_STAR_TEAMS
+
+/** `t-g-25`: two known team codes (or the All-Star sides, `cl-pl-01`), then the game number */
 export const isNpbGameCode = (code: string) => {
 	const match = code.match(CODE_PATTERN)
 	return (
-		!!match && TEAM_BY_CODE.has(match[1]) && TEAM_BY_CODE.has(match[2]) && match[1] !== match[2]
+		!!match &&
+		match[1] !== match[2] &&
+		((TEAM_BY_CODE.has(match[1]) && TEAM_BY_CODE.has(match[2])) ||
+			(isAllStarCode(match[1]) && isAllStarCode(match[2])))
 	)
 }
 
@@ -282,6 +287,11 @@ function teamFromCode(
 	code: string,
 	nameJa?: string,
 ): Omit<NpbGameTeam, 'runs' | 'hits' | 'errors'> {
+	if (isAllStarCode(code)) {
+		const { id, name, teamName, abbreviation } = NPB_ALL_STAR_TEAMS[code]
+		return { id, code, nameJa: nameJa ?? '', shortNameJa: '', name, teamName, abbreviation }
+	}
+
 	const id = TEAM_BY_CODE.get(code) ?? null
 	const known =
 		(nameJa && NPB_TEAMS[nameJa.replace(/・/g, '')]) ||
@@ -377,7 +387,13 @@ function parseHeader(html: string, ref: NpbGameRef): Header {
 		venueJa:
 			compact(cellText(title.match(/<span class="place">([\s\S]*?)<\/span>/)?.[1] ?? '')) || null,
 		competitionJa: heading.match(/【([^】]+)】/)?.[1].trim() ?? null,
-		seriesGameNumber: toNumber(heading.match(/(\d+)回戦/)?.[1] ?? ''),
+		// 25回戦 in the season; 第1戦 in a postseason round or the All-Star Game
+		seriesGameNumber: toNumber(
+			heading
+				.match(/(\d+)回戦|第(\d+)戦/)
+				?.slice(1)
+				.find(Boolean) ?? '',
+		),
 		statusJa: info.match(/【([^】]+)】/)?.[1].trim() ?? null,
 		startTime: time('開始'),
 		endTime: time('終了'),
@@ -727,6 +743,8 @@ const VENUES: Record<string, string> = {
 	マツダスタジアム: 'Mazda Stadium',
 	みずほPayPay: 'Mizuho PayPay Dome',
 	エスコンフィールド: 'ES CON Field Hokkaido',
+	// The schedule's short form
+	エスコンＦ: 'ES CON Field Hokkaido',
 	京セラD大阪: 'Kyocera Dome Osaka',
 	ほっと神戸: 'Hotto Motto Field Kobe',
 	楽天モバイル: 'Rakuten Mobile Park Miyagi',
@@ -736,13 +754,25 @@ const VENUES: Record<string, string> = {
 
 export const translateVenue = (venueJa: string) => VENUES[venueJa] ?? venueJa
 
+/** Whether a game is in the regular season (interleague included), from its competition */
+export const isNpbRegularSeason = (competitionJa: string | null) =>
+	!competitionJa || /公式戦|交流戦/.test(competitionJa)
+
 /** `JERA セ・リーグ公式戦` → Central League; npb.jp names the sponsor first */
 export function translateCompetition(competitionJa: string) {
 	if (/交流戦/.test(competitionJa)) return 'Interleague'
 	if (/セ・リーグ/.test(competitionJa)) return 'Central League'
 	if (/パ・リーグ/.test(competitionJa)) return 'Pacific League'
-	if (/クライマックス/.test(competitionJa)) return 'Climax Series'
+	if (/CS|クライマックス/.test(competitionJa)) {
+		const stage = /ファースト/.test(competitionJa)
+			? ' First Stage'
+			: /ファイナル/.test(competitionJa)
+				? ' Final Stage'
+				: ''
+		return `Climax Series${stage}`
+	}
 	if (/日本シリーズ/.test(competitionJa)) return 'Japan Series'
+	if (/オールスター/.test(competitionJa)) return 'All-Star Game'
 	if (/オープン戦/.test(competitionJa)) return 'Preseason'
 	return competitionJa
 }
@@ -758,6 +788,23 @@ export function translateStatus(statusJa: string) {
 	if (live) return `${live[2] === '表' ? 'Top' : 'Bot'} ${live[1]}`
 	return statusJa
 }
+
+/** Why a game was called off, from its page's 【雨天のため中止】 line, e.g. 雨天 */
+export function parseNpbCancelReason(html: string) {
+	return html.match(/【([^】]+?)のため(?:中止|ノーゲーム)】/)?.[1] ?? null
+}
+
+const CANCEL_REASONS: [RegExp, string][] = [
+	[/雨/, 'Rain'],
+	[/グラウンド不良/, 'Wet Grounds'],
+	[/台風/, 'Typhoon'],
+	[/霧/, 'Fog'],
+	[/地震/, 'Earthquake'],
+]
+
+/** 雨天 → Rain, as the Stats API names a postponement's reason; `undefined` for others */
+export const translateCancelReason = (reasonJa: string) =>
+	CANCEL_REASONS.find(([pattern]) => pattern.test(reasonJa))?.[1]
 
 /** 8勝6敗 → 8-6; 3勝2敗30S → 3-2, 30 SV */
 export function translateRecord(recordJa: string) {

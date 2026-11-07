@@ -1,6 +1,8 @@
 import { fetchMLB } from '#lib/fetch/index.js'
 import { fetchSeason } from '#lib/fetch/presets.js'
+import { isNpbTeam } from '#lib/npb-roster.js'
 import { formatDate, getToday, slash } from '#lib/temporal.js'
+import { fetchNpbTeamSchedule } from './npb-team-schedule.js'
 
 /** Search param holding the team page's selected date (`YYYY-MM-DD`) */
 export const DATE_PARAM = 'date'
@@ -50,20 +52,32 @@ export function fetchSeasonDefaultDate(
 	const sportId = String(team.sport?.id ?? 1)
 	const isPast = season < currentSeason
 
-	const promise = fetchMLB<MLB.ScheduleResponse>('/api/v1/schedule', {
-		sportId,
-		teamId: String(team.id),
-		startDate: `${season}-01-01`,
-		endDate: `${season}-12-31`,
-		gameType: 'R,F,D,L,W',
-		fields: 'dates,date',
-	})
-		.then(async ({ dates }) => {
-			const gameDate = (isPast ? dates?.at(-1) : dates?.[0])?.date
+	async function lastOrFirstGameDate() {
+		// NPB's schedule comes from npb.jp
+		if (isNpbTeam(team.id)) {
+			const { games } = await fetchNpbTeamSchedule(team.id, season)
+			return (isPast ? games.at(-1) : games[0])?.officialDate
+		}
+
+		const { dates } = await fetchMLB<MLB.ScheduleResponse>('/api/v1/schedule', {
+			sportId,
+			teamId: String(team.id),
+			startDate: `${season}-01-01`,
+			endDate: `${season}-12-31`,
+			gameType: 'R,F,D,L,W',
+			fields: 'dates,date',
+		})
+		return (isPast ? dates?.at(-1) : dates?.[0])?.date
+	}
+
+	const promise = lastOrFirstGameDate()
+		.then(async (gameDate) => {
 			if (gameDate) return gameDate
 
 			// No games for this team that season: use the league calendar
-			const info = await fetchSeason(String(season), sportId).catch(() => undefined)
+			const info = isNpbTeam(team.id)
+				? undefined
+				: await fetchSeason(String(season), sportId).catch(() => undefined)
 			return (
 				(isPast
 					? (info?.postSeasonEndDate ?? info?.regularSeasonEndDate)

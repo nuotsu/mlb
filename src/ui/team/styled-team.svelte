@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import { npbAllStarTeam } from '#lib/npb.js'
 	import { usesNpbLogo } from '#lib/team-logos.js'
 	import { cn } from '#lib/utils.js'
 	import type { Snippet } from 'svelte'
@@ -63,7 +64,8 @@
 
 	{@render children?.()}
 
-	{#if linked}
+	<!-- NPB's All-Star sides have no team page -->
+	{#if linked && !npbAllStarTeam(team.id)}
 		<!-- clipped: the label is only an accessible name, and it would otherwise wrap past the box -->
 		<a href="/teams/{team.id}" class="absolute inset-0 overflow-clip text-transparent">
 			{team.name}

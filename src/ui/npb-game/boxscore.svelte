@@ -1,7 +1,7 @@
 <!--
 	@component
 	An NPB game's box score: each side's batting and pitching lines, or a scorecard of npb.jp's
-	scorebook entries by inning, on the same tables as the MLB box score.
+	scorebook entries by inning, on the same tables as the MLB box score, sortable by any stat as it is.
 -->
 <script lang="ts">
 	import { toMlbTeam } from '#lib/npb-game-mlb.js'
@@ -57,6 +57,13 @@
 	const view = $derived<View>(
 		currentUrl().searchParams.get('view') === 'scorecard' ? 'scorecard' : 'boxscore',
 	)
+
+	/**
+	 * Sorted by a stat (kept in `?batting=` or `?pitching=`, shared by both teams' tables, as on the
+	 * MLB box score), so a substitute no longer sits under the player they came in for
+	 */
+	const isSorted = (group: 'batting' | 'pitching') =>
+		view === 'boxscore' && !!currentUrl().searchParams.get(group)
 
 	type BatterRow = NpbBatterLine & {
 		substitute: boolean
@@ -154,7 +161,7 @@
 	}
 
 	const batterColumns = $derived([
-		avatarColumn<BatterRow>(batterAvatarCell, (row) => row.substitute),
+		avatarColumn<BatterRow>(batterAvatarCell, (row) => row.substitute && !isSorted('batting')),
 		nameColumn<BatterRow>(batterCell, ja ? '選手' : 'Player'),
 	])
 
@@ -268,7 +275,8 @@
 				data={rows[side]}
 				columns={view === 'scorecard' ? scorecardColumns : battingColumns}
 				getRowId={(row) => `${row.player.id ?? row.player.nameJa}-${row.positionsJa.join('')}`}
-				sortable={false}
+				sortable={view === 'boxscore'}
+				sortParam={view === 'boxscore' ? 'batting' : undefined}
 				tableClass="w-full"
 				stickyHeader={false}
 			/>
@@ -281,7 +289,8 @@
 			data={game.box?.[side].pitchers ?? []}
 			columns={pitchingColumns}
 			getRowId={(row) => row.player.id ?? row.player.nameJa}
-			sortable={false}
+			sortable
+			sortParam="pitching"
 			tableClass="w-full"
 			stickyHeader={false}
 		/>
@@ -336,7 +345,7 @@
 {/snippet}
 
 {#snippet batterAvatarCell({ row }: CellArgs<BatterRow>)}
-	{@render avatar(row.player, row.substitute)}
+	{@render avatar(row.player, row.substitute && !isSorted('batting'))}
 {/snippet}
 
 {#snippet pitcherAvatarCell({ row }: CellArgs<NpbPitcherLine>)}
@@ -344,7 +353,7 @@
 {/snippet}
 
 {#snippet batterCell({ row }: CellArgs<BatterRow>)}
-	{@render player(row.player, positions(row.positionsJa), row.substitute)}
+	{@render player(row.player, positions(row.positionsJa), row.substitute && !isSorted('batting'))}
 {/snippet}
 
 {#snippet pitcherCell({ row }: CellArgs<NpbPitcherLine>)}

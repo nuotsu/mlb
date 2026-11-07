@@ -2,7 +2,8 @@
 
 import { readFileSync } from 'node:fs'
 import { describe, expect, test } from 'bun:test'
-import { NPB_TEAM_CODES } from '../params'
+import { matchNpbGame, NPB_ALL_STAR_CODES, NPB_TEAM_CODES } from '../params'
+import { NPB_ALL_STAR_TEAMS } from './npb'
 import {
 	isNpbGameCode,
 	isNpbGameDate,
@@ -14,6 +15,7 @@ import {
 	parseNpbPlays,
 	parseRunners,
 	scorebookNotation,
+	translateCompetition,
 	translatePlay,
 	translatePositions,
 	translateRecord,
@@ -44,6 +46,16 @@ describe('references', () => {
 		expect(isNpbGameCode('t-t-25')).toBe(false)
 		expect(isNpbGameCode('x-g-25')).toBe(false)
 		expect(isNpbGameCode('t-g')).toBe(false)
+		// The All-Star Game, between the two leagues, but not a team against a league
+		expect(isNpbGameCode('cl-pl-01')).toBe(true)
+		expect(isNpbGameCode('pl-cl-02')).toBe(true)
+		expect(isNpbGameCode('cl-g-01')).toBe(false)
+	})
+
+	test('the route matcher takes the same codes', () => {
+		for (const code of ['t-g-25', 'cl-pl-01', 'pl-cl-02']) expect(matchNpbGame(code)).toBe(true)
+		for (const code of ['cl-g-01', 'cl-cl-01', 't-t-25']) expect(matchNpbGame(code)).toBe(false)
+		expect([...NPB_ALL_STAR_CODES].sort()).toEqual(Object.keys(NPB_ALL_STAR_TEAMS).sort())
 	})
 
 	test("the route matcher's team codes match NPB_TEAM_INFO", () => {
@@ -58,6 +70,34 @@ describe('references', () => {
 		expect(npbGameUrl(TIE)).toBe('https://npb.jp/scores/2026/1001/t-g-25/')
 		expect(npbGameUrl(TIE, 'box')).toBe('https://npb.jp/scores/2026/1001/t-g-25/box.html')
 		expect(npbGamePath(TIE)).toBe('/game/npb/2026/1001/t-g-25')
+	})
+})
+
+describe('parseNpbGame, All-Star Game', () => {
+	const ref = { season: 2026, date: '0728', code: 'cl-pl-01' }
+	const game = parseNpbGame(
+		readFileSync(
+			new URL('./fixtures/npb-game-2026-0728-cl-pl-01-index.html', import.meta.url),
+			'utf8',
+		),
+		ref,
+	)
+
+	test('the two leagues, as stand-in teams', () => {
+		expect(game.competitionJa).toBe('オールスターゲーム')
+		expect(translateCompetition(game.competitionJa!)).toBe('All-Star Game')
+		// 第1戦: the first of the two All-Star games
+		expect(game.seriesGameNumber).toBe(1)
+		expect(game.teams.home).toMatchObject({ id: -1, code: 'cl', name: 'Central League All-Stars' })
+		expect(game.teams.away).toMatchObject({ id: -2, code: 'pl', runs: 7 })
+	})
+})
+
+describe('translateCompetition', () => {
+	test('the postseason rounds', () => {
+		expect(translateCompetition('CS ファーストステージ')).toBe('Climax Series First Stage')
+		expect(translateCompetition('CS ファイナルステージ')).toBe('Climax Series Final Stage')
+		expect(translateCompetition('SMBC日本シリーズ')).toBe('Japan Series')
 	})
 })
 

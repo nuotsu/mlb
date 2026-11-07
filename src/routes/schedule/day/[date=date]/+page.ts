@@ -1,6 +1,9 @@
+import { error } from '@sveltejs/kit'
 import { cacheControlForScheduleDay } from '#lib/cache-control.js'
 import { fetchMLB, notFoundOnMlb404 } from '#lib/fetch/index.js'
 import { fetchDaySchedule, fetchSeason } from '#lib/fetch/presets.js'
+import { loadNpbSchedule, scheduleSportIds } from '#lib/npb-schedule.js'
+import { NPB_SPORT_ID } from '#lib/npb.js'
 import { getToday, slash } from '#lib/temporal.js'
 import { fetchSeasonProgress } from './fetch-season-progress'
 
@@ -10,10 +13,38 @@ const notFoundOnMissingData = (e: unknown): never =>
 
 export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 	depends('schedule:day')
-	setHeaders({ 'cache-control': cacheControlForScheduleDay(params.date) })
 
 	const sportId = url.searchParams.get('sportId') || '1'
 	const year = (new Date(slash(params.date)).getFullYear() ?? getToday().getFullYear()).toString()
+
+	/** NPB isn't in the Stats API's schedule; it comes from npb.jp through our own route */
+	if (sportId === String(NPB_SPORT_ID)) {
+		const [npb, { leagues }] = await Promise.all([
+			loadNpbSchedule(
+				year,
+				{ startDate: params.date, endDate: params.date, linescores: true },
+				fetch,
+			),
+			fetchMLB<MLB.LeaguesResponse>('/api/v1/leagues', {
+				season: year,
+				fields: 'leagues,id,sport,id',
+			}),
+		]).catch(() => error(502, 'Could not load the NPB schedule.'))
+
+		// Only once it loads, so a failed upstream fetch is never CDN-cached
+		setHeaders({ 'cache-control': cacheControlForScheduleDay(params.date) })
+
+		return {
+			schedule: { dates: [] } as unknown as MLB.ScheduleResponse,
+			seasonProgress: null,
+			season: null as unknown as MLB.SeasonDateInfo,
+			availableSportIds: scheduleSportIds(leagues, year),
+			seriesContext: null,
+			npb: npb.games,
+		}
+	}
+
+	setHeaders({ 'cache-control': cacheControlForScheduleDay(params.date) })
 
 	const seriesStartDate = new Date(slash(params.date))
 	seriesStartDate.setDate(seriesStartDate.getDate() - 7)
@@ -42,16 +73,14 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 		),
 	]).catch(notFoundOnMissingData)
 
-	const availableSportIds = [
-		...new Set(leagues.map((l) => l.sport?.id).filter(Boolean)),
-	] as number[]
 	const seasonProgress = await fetchSeasonProgress(sportId, year, schedule)
 
 	return {
 		schedule,
 		seasonProgress,
 		season,
-		availableSportIds,
+		availableSportIds: scheduleSportIds(leagues, year),
 		seriesContext,
+		npb: null,
 	}
 }

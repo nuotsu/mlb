@@ -5,6 +5,7 @@
 <script lang="ts">
 	import { npbGameDate } from '#lib/npb-game-mlb.js'
 	import {
+		isNpbRegularSeason,
 		translateCompetition,
 		translateVenue,
 		type NpbGame,
@@ -52,7 +53,13 @@
 
 	{#if game.seriesGameNumber}
 		<dt>{ja ? '対戦' : 'Series'}</dt>
-		<dd>{ja ? `${game.seriesGameNumber}回戦` : `Game ${game.seriesGameNumber} of the season`}</dd>
+		<dd>
+			{#if isNpbRegularSeason(game.competitionJa)}
+				{ja ? `${game.seriesGameNumber}回戦` : `Game ${game.seriesGameNumber} of the season`}
+			{:else}
+				{ja ? `第${game.seriesGameNumber}戦` : `Game ${game.seriesGameNumber}`}
+			{/if}
+		</dd>
 	{/if}
 
 	{#if game.venueJa}
