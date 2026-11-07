@@ -91,11 +91,10 @@
 {/await}
 
 {#snippet line(row: Row, highlight: boolean, division?: string)}
-	{@const colored = highlight || !!division}
 	<tr class={['border-t border-stroke', highlight && 'font-bold']}>
 		<td
-			class={['py-[.25ch]', colored && 'relative isolate', highlight && 'border-l-2 border-l-accent']}
-			style:--team-bg={colored ? teamBg(row.team) : undefined}
+			class={['relative isolate py-[.25ch]', highlight && 'border-l-2 border-l-accent']}
+			style:--team-bg={teamBg(row.team)}
 		>
 			<a class="flex items-center gap-[.5ch] px-[.5ch] hover-link" href="/teams/{row.team.id}">
 				<Logo
