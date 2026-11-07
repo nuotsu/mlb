@@ -969,3 +969,57 @@ export function scorebookNotation(entryJa: string): Notation & { rbi: number } {
 
 	return { label: entryJa, kind: 'other', rbi }
 }
+
+export type NpbScorecardCell = ReturnType<typeof scorebookNotation> & {
+	/** As npb.jp writes it, e.g. 右前安① */
+	entryJa: string
+	/** The out the batter made, 1 to 3 */
+	out?: number
+	/** The batter came around to score; only known for a home run */
+	scored: boolean
+	/** The play-by-play's result, e.g. センター前ヒット */
+	resultJa?: string
+}
+
+/**
+ * A side's scorecard: each batting line's box score entries by inning, matched in order to the
+ * batter's plate appearances in the play-by-play for the outs before each one.
+ */
+export function npbScorecard(
+	batters: NpbBatterLine[],
+	plays: NpbHalfInning[] | null,
+	side: NpbSide,
+): NpbScorecardCell[][][] {
+	const half = side === 'away' ? 'top' : 'bottom'
+	const atBats = new Map<string, Extract<NpbPlayEvent, { type: 'atBat' }>[]>()
+
+	for (const { inning, half: h, events } of plays ?? []) {
+		if (h !== half) continue
+		for (const event of events) {
+			if (event.type !== 'atBat' || !event.batter.id) continue
+			const key = `${inning}-${event.batter.id}`
+			atBats.set(key, [...(atBats.get(key) ?? []), event])
+		}
+	}
+
+	return batters.map((line) =>
+		line.innings.map((entries, i) =>
+			entries.map((entryJa, j) => {
+				const notation = scorebookNotation(entryJa)
+				const event = line.player.id ? atBats.get(`${i + 1}-${line.player.id}`)?.[j] : undefined
+				const madeOut = notation.kind === 'out' || notation.kind === 'strikeout'
+
+				return {
+					...notation,
+					entryJa,
+					out:
+						madeOut && event
+							? Math.min(3, event.outs + (notation.badge === 'DP' ? 2 : 1))
+							: undefined,
+					scored: notation.kind === 'homeRun',
+					resultJa: event?.resultJa,
+				}
+			}),
+		),
+	)
+}

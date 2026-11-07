@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fetchMLB } from '#lib/fetch/index.js'
-	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import { teamBg } from '#ui/data-table/types.js'
+	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import Logo from '#ui/team/logo.svelte'
 	import { browser } from '$app/env'
 	import { onMount } from 'svelte'

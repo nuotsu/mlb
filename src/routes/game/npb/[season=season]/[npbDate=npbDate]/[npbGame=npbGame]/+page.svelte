@@ -8,6 +8,7 @@
 	import {
 		HomePlateIcon,
 		InfoIcon,
+		LanguageIcon,
 		ListUnorderedIcon,
 		PencilLineIcon,
 		StrikezoneIcon,
@@ -19,7 +20,6 @@
 	import { LANG_PARAM, LANGS } from '#ui/npb-game/names.js'
 	import Plays from '#ui/npb-game/plays.svelte'
 	import Scoreboard from '#ui/npb-game/scoreboard.svelte'
-	import PillSwitcher from '#ui/pill-switcher.svelte'
 	import SectionNav from '#ui/section-nav.svelte'
 	import type { PageProps } from './$types'
 
@@ -112,36 +112,27 @@
 </Header>
 
 <section class="group/game-page grid gap-[2lh] py-lh md:grid-cols-2">
-	<menu class="col-span-full flex flex-wrap items-center justify-center gap-ch px-ch">
-		<li>
-			<PillSwitcher
-				id="lang"
-				aria-label="Language"
-				options={LANGS}
-				value={lang}
-				onchange={(next) => setViewParam(LANG_PARAM, next, 'en')}
-			/>
-		</li>
-		<li>
-			<ToggleFavorite
-				target={{
-					href: npbGamePath(game.ref),
-					label: [
-						away.abbreviation ?? away.shortNameJa,
-						home.abbreviation ?? home.shortNameJa,
-					].join(' @ '),
-				}}
-			>
-				Favorite
-			</ToggleFavorite>
-		</li>
-	</menu>
-
 	{#if game.plays}
 		<Plays {game} names={game.names} {lang} />
 	{/if}
 
-	<GameInfo class={game.plays ? '' : 'col-span-full'} {game} names={game.names} {lang} />
+	<GameInfo class={game.plays ? '' : 'col-span-full'} {game} names={game.names} {lang}>
+		<menu class="flex items-center justify-center gap-ch">
+			<li>
+				<ToggleFavorite
+					target={{
+						href: npbGamePath(game.ref),
+						label: [
+							away.abbreviation ?? away.shortNameJa,
+							home.abbreviation ?? home.shortNameJa,
+						].join(' @ '),
+					}}
+				>
+					Favorite
+				</ToggleFavorite>
+			</li>
+		</menu>
+	</GameInfo>
 
 	{#if game.state !== 'Preview'}
 		<Boxscore class="col-span-full" {game} names={game.names} {lang} />
@@ -158,7 +149,26 @@
 	</p>
 </section>
 
-<SectionNav sections={SECTIONS} label="Game sections" />
+<SectionNav sections={SECTIONS} label="Game sections">
+	{#snippet after()}
+		<label
+			class="relative flex h-9 shrink-0 items-center gap-[.5ch] rounded-full px-2 text-foreground/60 transition-colors focus-within:ring-2 focus-within:ring-accent focus-within:ring-inset pointer-fine:hover:bg-accent/25 pointer-fine:hover:text-foreground"
+			title={ja ? '言語' : 'Language'}
+		>
+			<LanguageIcon class="size-[1.125rem] shrink-0" aria-hidden="true" />
+			<select
+				class="cursor-pointer appearance-none bg-transparent text-xs outline-none"
+				aria-label={ja ? '言語' : 'Language'}
+				value={lang}
+				onchange={(e) => setViewParam(LANG_PARAM, e.currentTarget.value, 'en')}
+			>
+				{#each LANGS as option (option.id)}
+					<option value={option.id}>{option.label}</option>
+				{/each}
+			</select>
+		</label>
+	{/snippet}
+</SectionNav>
 
 <style>
 	section {

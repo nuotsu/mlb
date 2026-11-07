@@ -33,6 +33,10 @@
 		const innings = linescore.innings?.length ?? 0
 		return innings > 9 && text === 'Final' ? `Final/${innings}` : text
 	})
+
+	const statusLines = $derived(
+		lang === 'ja' ? (status.match(/^(試合)(.+)$/)?.slice(1) ?? [status]) : [status],
+	)
 </script>
 
 <article
@@ -50,11 +54,14 @@
 			<b
 				class={cn(
 					'absolute inset-x-0 top-1/2 -translate-y-1/2 px-[.5ch]',
-					status.length > 6 ? 'text-[x-small]' : 'text-xs',
+					statusLines.some((line) => line.length > 6) ? 'text-[x-small]' : 'text-xs',
 				)}
 				lang={lang === 'ja' && game.statusJa ? 'ja' : undefined}
 			>
-				{status}
+				<!-- Japanese breaks between words, not wherever it runs out of room: 試合 / 終了 -->
+				{#each statusLines as line, i (i)}
+					<span class="block">{line}</span>
+				{/each}
 			</b>
 		{/if}
 	</div>

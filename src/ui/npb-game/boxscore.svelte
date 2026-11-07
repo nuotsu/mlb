@@ -7,13 +7,15 @@
 	import { toMlbTeam } from '#lib/npb-game-mlb.js'
 	import {
 		npbPlayerUrl,
-		scorebookNotation,
+		npbScorecard,
+		translatePlay,
 		translatePositions,
 		type NpbBatterLine,
 		type NpbGame,
 		type NpbLang,
 		type NpbPitcherLine,
 		type NpbPlayerRef,
+		type NpbScorecardCell,
 		type NpbSide,
 	} from '#lib/npb-game.js'
 	import type { NpbGamePlayerName } from '#lib/npb-game.js'
@@ -23,6 +25,7 @@
 	import DataTable from '#ui/data-table/data-table.svelte'
 	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import Empty from '#ui/empty.svelte'
+	import ScorecardDiamond from '#ui/game/scorecard-diamond.svelte'
 	import { ArrowDownRightIcon } from '#ui/icons/index.js'
 	import PillSwitcher from '#ui/pill-switcher.svelte'
 	import StyledTeam from '#ui/team/styled-team.svelte'
@@ -54,16 +57,39 @@
 		currentUrl().searchParams.get('view') === 'scorecard' ? 'scorecard' : 'boxscore',
 	)
 
-	type BatterRow = NpbBatterLine & { substitute: boolean }
+	type BatterRow = NpbBatterLine & {
+		substitute: boolean
+		/** Scorecard boxes by inning */
+		cells: NpbScorecardCell[][]
+	}
 
-	const batters = (side: NpbSide): BatterRow[] =>
-		game.box?.[side].batters.map((line) => ({ ...line, substitute: line.order === null })) ?? []
+	const rows = $derived(
+		Object.fromEntries(
+			(['away', 'home'] as const).map((side) => {
+				const lines = game.box?.[side].batters ?? []
+				const cells = npbScorecard(lines, game.plays, side)
+				return [
+					side,
+					lines.map((line, i): BatterRow => ({
+						...line,
+						substitute: line.order === null,
+						cells: cells[i],
+					})),
+				]
+			}),
+		) as Record<NpbSide, BatterRow[]>,
+	)
 
 	const innings = $derived(
-		Math.max(
-			9,
-			...(['away', 'home'] as const).flatMap(
-				(side) => game.box?.[side].batters.map((b) => b.innings.length) ?? [],
+		Math.max(9, ...Object.values(rows).flatMap((lines) => lines.map((b) => b.innings.length))),
+	)
+
+	/** Boxes per inning: more than one when the order bats around */
+	const boxesPerInning = $derived(
+		Array.from({ length: innings }, (_, i) =>
+			Math.max(
+				1,
+				...Object.values(rows).flatMap((lines) => lines.map((b) => b.cells[i]?.length ?? 0)),
 			),
 		),
 	)
@@ -149,7 +175,10 @@
 		stat('strikeOuts', ja ? '三振' : 'K', 'Strikeouts', (row) => row.strikeOuts),
 	])
 
-	/** The scorecard's colors: blue for a run batted in, red for an out, as on the MLB scorecard */
+	/*
+	 * The MLB scorecard's colors: blue for a run batted in, red for an out, and strikeouts and walks
+	 * in their own colors (yellow strike, green ball)
+	 */
 	const COLORS: Record<ScorecardKind, string> = {
 		hit: 'text-foreground',
 		homeRun: 'font-bold text-blue-700 dark:text-blue-300',
@@ -157,9 +186,28 @@
 		strikeout: 'text-yellow-700 dark:text-yellow-300',
 		error: 'text-current/60',
 		fieldersChoice: 'text-current/60',
-		out: 'text-red-600 dark:text-red-400',
+		out: 'text-current/60',
 		runner: 'text-current/60',
 		other: 'text-current/60',
+	}
+
+	function cellColor(cell: NpbScorecardCell) {
+		if (cell.kind === 'walk' || cell.kind === 'strikeout' || cell.kind === 'homeRun') {
+			return COLORS[cell.kind]
+		}
+		if (cell.rbi) return 'text-blue-600 dark:text-blue-400'
+		if (cell.kind === 'out') return 'text-red-600 dark:text-red-400'
+		return COLORS[cell.kind]
+	}
+
+	/** A box's tooltip: the play-by-play's result, else npb.jp's scorebook entry */
+	function cellTitle(cell: NpbScorecardCell, inning: number) {
+		const result = cell.resultJa
+			? ja
+				? cell.resultJa
+				: translatePlay(cell.resultJa, (p) => playerName(p, names, lang))
+			: cell.entryJa
+		return `${ja ? `${inning}回` : `${ordinal(inning)} inning`}: ${result}`
 	}
 
 	const DECISIONS = { W: '勝', L: '敗', S: 'S', H: 'H' } as const
@@ -195,8 +243,9 @@
 
 		<div id="boxscore-lineup-{side}" role="tabpanel" aria-labelledby="boxscore-tab-{view}">
 			<DataTable
-				label="{mlbTeam.name} batting"
-				data={batters(side)}
+				class={view === 'scorecard' ? 'npb-scorecard' : undefined}
+				label="{mlbTeam.name} {view === 'scorecard' ? 'scorecard' : 'batting'}"
+				data={rows[side]}
 				columns={view === 'scorecard' ? scorecardColumns : battingColumns}
 				getRowId={(row) => `${row.player.id ?? row.player.nameJa}-${row.positionsJa.join('')}`}
 				sortable={false}
@@ -272,23 +321,75 @@
 {/snippet}
 
 {#snippet scorebookCell({ row, columnId }: CellArgs<BatterRow>)}
-	{@const entries = row.innings[Number(columnId.replace('inning-', '')) - 1] ?? []}
-	<span class="flex flex-col items-center leading-tight">
-		{#each entries as entry, i (i)}
-			{@const notation = scorebookNotation(entry)}
-			<span
-				class={cn(
-					'whitespace-nowrap tabular-nums',
-					notation.rbi ? 'font-bold text-blue-600 dark:text-blue-400' : COLORS[notation.kind],
-					notation.kind === 'homeRun' && COLORS.homeRun,
-				)}
-				title={entry}
-				lang={ja ? 'ja' : undefined}
-			>
-				{ja ? entry : notation.label}{#if notation.badge}<sup class="text-[.6em]"
-						>{notation.badge}</sup
-					>{/if}{#if notation.rbi && !ja}<sub class="text-[.6em]">{notation.rbi}</sub>{/if}
-			</span>
+	{@const inning = Number(columnId.replace('inning-', ''))}
+	{@const cells = row.cells[inning - 1] ?? []}
+	<div class="flex">
+		{#each { length: boxesPerInning[inning - 1] ?? 1 }, i (i)}
+			{@const cell = cells[i]}
+			<div class="box">
+				{#if cell}
+					<span
+						class={cn('relative grid size-full place-items-center', cellColor(cell))}
+						title={cellTitle(cell, inning)}
+						role="img"
+						aria-label={cellTitle(cell, inning)}
+					>
+						<ScorecardDiamond {cell} />
+
+						<span class="relative text-[0.6875rem] leading-none" aria-hidden="true">
+							{cell.label}
+						</span>
+
+						{#if cell.out}
+							<span
+								class="absolute top-0.5 left-1 text-[0.625rem] leading-none font-semibold text-red-600 dark:text-red-400"
+								aria-hidden="true"
+							>
+								{cell.out}
+							</span>
+						{/if}
+
+						{#if cell.rbi > 0}
+							<span
+								class="absolute right-0.5 bottom-0 text-[0.5625rem] leading-tight font-bold"
+								aria-hidden="true"
+							>
+								{cell.rbi}
+							</span>
+						{/if}
+
+						{#if cell.badge}
+							<span
+								class="absolute bottom-0 left-0.5 text-[0.5rem] leading-tight font-bold tracking-tight"
+								aria-hidden="true"
+							>
+								{cell.badge}
+							</span>
+						{/if}
+					</span>
+				{:else}
+					<div
+						class="relative grid size-full place-items-center text-current/15"
+						aria-hidden="true"
+					>
+						<ScorecardDiamond />
+					</div>
+				{/if}
+			</div>
 		{/each}
-	</span>
+	</div>
 {/snippet}
+
+<style>
+	/* A box per plate appearance, as on the MLB scorecard */
+	.box {
+		width: 2.5rem;
+		height: 2rem;
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* A hairline between innings, but not between an inning's own boxes */
+	:global(.npb-scorecard .inning-start) {
+		border-left: 1px solid color-mix(in srgb, currentColor 10%, transparent);
+	}
+</style>

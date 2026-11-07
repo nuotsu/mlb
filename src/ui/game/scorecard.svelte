@@ -8,13 +8,13 @@
 		type AbsChallenge,
 		type ScorecardCell,
 		type ScorecardKind,
-		type Steal,
 	} from '#lib/scorecard.js'
 	import { cn, ordinal } from '#lib/utils.js'
 	import DataTable from '#ui/data-table/data-table.svelte'
 	import type { CellArgs, DataTableColumn } from '#ui/data-table/types.js'
 	import { favoritesStore } from '#ui/favorites/store.svelte.js'
 	import BoxscorePlayer from '#ui/game/boxscore-player.svelte'
+	import ScorecardDiamond from '#ui/game/scorecard-diamond.svelte'
 
 	let {
 		team,
@@ -37,19 +37,6 @@
 		/** Show this plate appearance in the pitch sequence */
 		onAtBatSelect?: (atBatIndex: number) => void
 	} = $props()
-
-	/** Home, first, second, third and home again, on the diamond's 40 × 40 box. */
-	const BASE_PATH = ['20,37', '37,20', '20,3', '3,20', '20,37']
-	const BASE_POINTS = BASE_PATH.map((p) => p.split(',').map(Number))
-
-	/** A steal's side of the diamond, cut off halfway when they were caught in a rundown. */
-	function stealPoints({ from, to, caught }: Steal) {
-		const [x1, y1] = BASE_POINTS[from]
-		const [x2, y2] = BASE_POINTS[to]
-		return caught === 'between'
-			? `${x1},${y1} ${(x1 + x2) / 2},${(y1 + y2) / 2}`
-			: `${x1},${y1} ${x2},${y2}`
-	}
 
 	const scorecard = $derived(
 		buildScorecard({
@@ -158,12 +145,6 @@
 		if (cell.isScoringPlay) return BLUE
 		if (cell.madeOut) return RED
 		return COLORS[cell.kind]
-	}
-
-	/** The bold base paths: green for a walk, white for an error, the label's color for a hit. */
-	const BASE_PATH_COLORS: Partial<Record<ScorecardKind, string>> = {
-		walk: 'stroke-green-700 dark:stroke-accent',
-		error: 'stroke-foreground',
 	}
 
 	// Tooltip: hover with a mouse, tap on a touchscreen, or focus with a keyboard
@@ -341,7 +322,7 @@
 							if (cell.kind !== 'runner') onAtBatSelect?.(cell.atBatIndex)
 						}}
 					>
-						{@render diamond(cell)}
+						<ScorecardDiamond {cell} />
 
 						<span class="relative text-[0.6875rem] leading-none" aria-hidden="true">
 							{#if cell.mirrored}
@@ -399,7 +380,7 @@
 						)}
 						aria-hidden="true"
 					>
-						{@render diamond()}
+						<ScorecardDiamond />
 					</div>
 				{/if}
 			</div>
@@ -445,62 +426,6 @@
 			</svg>
 		{/each}
 	</span>
-{/snippet}
-
-<!--
-	An empty diamond takes its cell's color. A plate appearance's outline is always gray; an out
-	shows in its red label, not its outline.
--->
-{#snippet diamond(cell?: ScorecardCell)}
-	<svg
-		viewBox="0 0 40 40"
-		class="absolute inset-x-0.5 inset-y-0 h-full w-[calc(100%-0.25rem)]"
-		aria-hidden="true"
-	>
-		<path
-			class={cn(cell && 'stroke-foreground/45', cell?.scored && 'fill-blue-500 dark:fill-blue-400')}
-			d="M20 3 37 20 20 37 3 20Z"
-			fill="none"
-			fill-opacity={cell?.kind === 'homeRun' ? 0.5 : 0.35}
-			stroke="currentColor"
-			stroke-width="1"
-			stroke-linejoin="round"
-			vector-effect="non-scaling-stroke"
-		/>
-
-		<!-- Base paths, counterclockwise from home: one side for a single, walk or error, all four for a homer -->
-		{#if cell?.bases}
-			<polyline
-				class={BASE_PATH_COLORS[cell.kind]}
-				points={BASE_PATH.slice(0, cell.bases + 1).join(' ')}
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2.5"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-				vector-effect="non-scaling-stroke"
-			/>
-		{/if}
-
-		<!-- Stolen bases, dashed; red when caught stealing, and half a side when caught in a rundown -->
-		{#each cell?.steals ?? [] as steal, i (i)}
-			<polyline
-				class={steal.caught ? 'stroke-red-600 dark:stroke-red-400' : 'stroke-foreground'}
-				points={stealPoints(steal)}
-				fill="none"
-				stroke="currentColor"
-				stroke-width="2.5"
-				stroke-dasharray="3.5 2.5"
-				stroke-linecap="butt"
-				vector-effect="non-scaling-stroke"
-			/>
-		{/each}
-
-		{#if cell?.pickedOff}
-			{@const [cx, cy] = BASE_POINTS[cell.pickedOff]}
-			<circle class="fill-red-600 dark:fill-red-400" {cx} {cy} r="3" />
-		{/if}
-	</svg>
 {/snippet}
 
 <style>

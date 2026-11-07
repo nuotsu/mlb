@@ -11,6 +11,7 @@ import {
 	parseNpbBox,
 	parseNpbGame,
 	parseNpbPlays,
+	npbScorecard,
 	parseRunners,
 	scorebookNotation,
 	translatePlay,
@@ -307,3 +308,24 @@ describe('toMlbLinescore', () => {
 		expect(linescore.teams?.home).toMatchObject({ runs: 5 })
 	})
 })
+
+describe('npbScorecard', () => {
+	test('pairs scorebook entries with plate appearances for outs', () => {
+		const box = parseNpbBox(page('t-g-25', 'box'))
+		const plays = parseNpbPlays(page('t-g-25', 'playbyplay'))
+		const [maru] = npbScorecard(box.away.batters, plays, 'away')
+
+		// 丸 struck out to open the game, then grounded out to second in the 3rd
+		expect(maru[0][0]).toMatchObject({ label: 'K', out: 1, resultJa: '空振り三振' })
+		expect(maru[2][0]).toMatchObject({ label: 'G4', kind: 'out' })
+
+		const home = npbScorecard(box.home.batters, plays, 'home')
+		const oyama = box.home.batters.findIndex((b) => b.player.nameJa === '大山')
+		// The bases-loaded double play with one out made the 2nd and 3rd outs
+		expect(home[oyama][0][0]).toMatchObject({ label: 'G5', badge: 'DP', out: 3 })
+		expect(home[oyama][5][0]).toMatchObject({ label: 'HR', scored: true, rbi: 1 })
+		// 近本 walked: no out
+		expect(home[0][0][0]).toMatchObject({ label: 'BB', out: undefined })
+	})
+})
+
