@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { KBO_REGISTER_URL } from '#lib/kbo-roster.js'
+	import { KBO_SPORT_ID } from '#lib/kbo.js'
 	import { npbRosterUrl } from '#lib/npb-roster.js'
 	import { NPB_SPORT_ID } from '#lib/npb.js'
 	import { cn } from '#lib/utils.js'
@@ -10,6 +12,8 @@
 	import Metadata from '#ui/metadata.svelte'
 	import ToggleSpoilerPrevention from '#ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
 	import InjuredList from '#ui/team/injured-list.svelte'
+	import KboRoster from '#ui/team/kbo-roster.svelte'
+	import { fetchKboTeamSchedule } from '#ui/team/kbo-team-schedule.js'
 	import Logo from '#ui/team/logo.svelte'
 	import NpbRoster from '#ui/team/npb-roster.svelte'
 	import { fetchNpbTeamSchedule } from '#ui/team/npb-team-schedule.js'
@@ -29,18 +33,27 @@
 	/** NPB teams load their roster and schedule from npb.jp instead, and have no IL */
 	const isNpb = $derived(data.npb !== undefined)
 
-	/** npb.jp's schedule for the calendars, as the Stats API has none for NPB */
+	/** KBO teams likewise, from koreabaseball.com */
+	const isKbo = $derived(data.kbo !== undefined)
+
+	/** The league site's schedule for the calendars, as the Stats API has none for NPB or KBO */
 	const loadSchedule = $derived(
-		isNpb ? (season: number) => fetchNpbTeamSchedule(team.id, season) : undefined,
+		isNpb
+			? (season: number) => fetchNpbTeamSchedule(team.id, season)
+			: isKbo
+				? (season: number) => fetchKboTeamSchedule(team.id, season)
+				: undefined,
 	)
 
 	/** The Stats API files some NPB teams under International Baseball, so name the league here */
 	const sportCrumb = $derived(
 		isNpb
 			? { href: `/teams?sportId=${NPB_SPORT_ID}`, name: 'Nippon Professional Baseball' }
-			: team.sport?.name
-				? { href: `/teams?sportId=${team.sport?.id}`, name: team.sport.name }
-				: {},
+			: isKbo
+				? { href: `/teams?sportId=${KBO_SPORT_ID}`, name: 'Korea Baseball Organization' }
+				: team.sport?.name
+					? { href: `/teams?sportId=${team.sport?.id}`, name: team.sport.name }
+					: {},
 	)
 
 	/** Single source of truth: the roster, calendars, and IL all follow it */
@@ -77,6 +90,8 @@
 <svelte:head>
 	{#if isNpb}
 		<link rel="preconnect" href="https://p.npb.jp" />
+	{:else if isKbo}
+		<link rel="preconnect" href="https://6ptotvmi5753.edge.naverncp.com" />
 	{/if}
 	{@html `<script type="application/ld+json">${JSON.stringify({
 		'@context': 'https://schema.org',
@@ -90,17 +105,23 @@
 					name: 'Nippon Professional Baseball',
 					url: 'https://npb.jp/eng/',
 				}
-			: {
-					'@type': 'SportsOrganization',
-					name: 'Major League Baseball',
-					url: 'https://www.mlb.com',
-				},
+			: isKbo
+				? {
+						'@type': 'SportsOrganization',
+						name: 'Korea Baseball Organization',
+						url: 'https://www.koreabaseball.com/',
+					}
+				: {
+						'@type': 'SportsOrganization',
+						name: 'Major League Baseball',
+						url: 'https://www.mlb.com',
+					},
 	})}<\/script>`}
 </svelte:head>
 
 <Metadata
 	title="{team.name} | MLB.TheOhtani.com"
-	description={isNpb
+	description={isNpb || isKbo
 		? `${team.name} schedule and roster`
 		: `${team.name} roster, injured list, and recent transactions`}
 />
@@ -127,7 +148,7 @@
 
 	{#snippet after()}
 		<div class="mx-auto flex items-center justify-center gap-ch">
-			{#if !isNpb}
+			{#if !isNpb && !isKbo}
 				<ToggleSpoilerPrevention team={{ id: team.id, abbreviation: team.abbreviation! }} />
 			{/if}
 			<ToggleFavorite
@@ -164,6 +185,25 @@
 					{data.npb.status ? `${data.npb.status} roster` : 'Roster'} from
 					<a class="link" href={npbRosterUrl(team.id)} target="_blank" rel="noopener noreferrer"
 						>NPB.jp 日本野球機構</a
+					>
+				</small>
+			{:else}
+				<Empty>Failed to load roster</Empty>
+			{/if}
+		</div>
+	{:else if isKbo}
+		<div class="space-y-ch">
+			<Divider>Roster</Divider>
+
+			{#if data.kbo}
+				<div class="grid gap-y-ch md:grid-cols-[repeat(auto-fill,minmax(var(--container-xs),1fr))]">
+					<KboRoster roster={data.kbo} />
+				</div>
+
+				<small class="block px-ch text-center text-xs text-current/50">
+					First-team roster as of {data.kbo.date} from
+					<a class="link" href={KBO_REGISTER_URL} target="_blank" rel="noopener noreferrer"
+						>KBO 한국야구위원회 (koreabaseball.com)</a
 					>
 				</small>
 			{:else}

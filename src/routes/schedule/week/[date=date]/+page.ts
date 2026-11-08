@@ -2,6 +2,8 @@ import { error } from '@sveltejs/kit'
 import { cacheControlForScheduleWeek } from '#lib/cache-control.js'
 import { fetchMLB, notFoundOnMlb404 } from '#lib/fetch/index.js'
 import { fetchSeason, fetchWeekSchedule } from '#lib/fetch/presets.js'
+import { loadKboSchedule, withKboSportId } from '#lib/kbo-schedule.js'
+import { KBO_SPORT_ID } from '#lib/kbo.js'
 import { loadNpbSchedule, scheduleSportIds } from '#lib/npb-schedule.js'
 import { NPB_SPORT_ID } from '#lib/npb.js'
 import { slash } from '#lib/temporal.js'
@@ -42,8 +44,40 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 		return {
 			schedule: { dates: [] } as unknown as MLB.ScheduleResponse,
 			season: null as unknown as MLB.SeasonDateInfo,
-			availableSportIds: scheduleSportIds(leagues, year),
+			availableSportIds: withKboSportId(scheduleSportIds(leagues, year), year),
 			npb: npb.flatMap(({ games }) => games),
+			kbo: null,
+		}
+	}
+
+	/** Nor is KBO's; it comes from koreabaseball.com through our own route */
+	if (sportId === String(KBO_SPORT_ID)) {
+		const { startDate, endDate } = getWeekDates(params.date)
+		// A week can span New Year's, though KBO plays no games then
+		const seasons = [...new Set([startDate, endDate].map((date) => date.slice(0, 4)))]
+
+		const [kbo, { leagues }] = await Promise.all([
+			Promise.all(
+				seasons.map((season) =>
+					loadKboSchedule(season, { startDate, endDate, linescores: true }, fetch),
+				),
+			),
+			fetchMLB<MLB.LeaguesResponse>(
+				'/api/v1/leagues',
+				{ season: year, fields: 'leagues,id,sport,id' },
+				{ fetch },
+			),
+		]).catch(() => error(502, 'Could not load the KBO schedule.'))
+
+		// Only once it loads, so a failed upstream fetch is never CDN-cached
+		setHeaders({ 'cache-control': cacheControlForScheduleWeek(params.date) })
+
+		return {
+			schedule: { dates: [] } as unknown as MLB.ScheduleResponse,
+			season: null as unknown as MLB.SeasonDateInfo,
+			availableSportIds: withKboSportId(scheduleSportIds(leagues, year), year),
+			npb: null,
+			kbo: kbo.flatMap(({ games }) => games),
 		}
 	}
 
@@ -62,7 +96,8 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 	return {
 		schedule,
 		season,
-		availableSportIds: scheduleSportIds(leagues, year),
+		availableSportIds: withKboSportId(scheduleSportIds(leagues, year), year),
 		npb: null,
+		kbo: null,
 	}
 }
