@@ -1,6 +1,8 @@
 import { fetchMLB } from '#lib/fetch/index.js'
 import { fetchRosterByType, fetchTeamTransactions } from '#lib/fetch/presets.js'
+import { isKboTeam, kboTeamById } from '#lib/kbo.js'
 import { isNpbTeam, NPB_TEAM_INFO } from '#lib/npb-roster.js'
+import { getKboRoster } from '#lib/server/kbo.js'
 import { getNpbRoster } from '#lib/server/npb.js'
 import { addDays, getToday } from '#lib/temporal.js'
 import { buildInjuredList } from '#ui/team/injured-list.js'
@@ -56,6 +58,34 @@ export const load: PageServerLoad = async ({ params, url, fetch, setHeaders }) =
 				console.error('[npbRoster]', e)
 				return null
 			}),
+			kbo: undefined,
+			roster: null,
+			coaches: null,
+			injuredList: null,
+		}
+	}
+
+	/**
+	 * Likewise for KBO: the Stats API has no KBO rosters, so it comes from koreabaseball.com's
+	 * register, which has the latest day's first-team roster alone.
+	 */
+	if (isKboTeam(params.teamId)) {
+		const { name, teamName } = kboTeamById(Number(params.teamId))!
+		const franchiseName = name.slice(0, -teamName.length).trim()
+
+		return {
+			team: {
+				...teams.teams[0],
+				name,
+				franchiseName,
+				clubName: teamName,
+				teamName,
+			},
+			npb: undefined,
+			kbo: await getKboRoster(Number(params.teamId)).catch((e) => {
+				console.error('[kboRoster]', e)
+				return null
+			}),
 			roster: null,
 			coaches: null,
 			injuredList: null,
@@ -88,6 +118,7 @@ export const load: PageServerLoad = async ({ params, url, fetch, setHeaders }) =
 	return {
 		team: teams.teams[0],
 		npb: undefined,
+		kbo: undefined,
 		roster,
 		coaches,
 

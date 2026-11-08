@@ -1,7 +1,9 @@
 import { fetchMLB } from '#lib/fetch/index.js'
 import { fetchSeason } from '#lib/fetch/presets.js'
+import { isKboTeam } from '#lib/kbo.js'
 import { isNpbTeam } from '#lib/npb-roster.js'
 import { formatDate, getToday, slash } from '#lib/temporal.js'
+import { fetchKboTeamSchedule } from './kbo-team-schedule.js'
 import { fetchNpbTeamSchedule } from './npb-team-schedule.js'
 
 /** Search param holding the team page's selected date (`YYYY-MM-DD`) */
@@ -53,9 +55,12 @@ export function fetchSeasonDefaultDate(
 	const isPast = season < currentSeason
 
 	async function lastOrFirstGameDate() {
-		// NPB's schedule comes from npb.jp
-		if (isNpbTeam(team.id)) {
-			const { games } = await fetchNpbTeamSchedule(team.id, season)
+		// NPB's schedule comes from npb.jp, and KBO's from koreabaseball.com
+		if (isNpbTeam(team.id) || isKboTeam(team.id)) {
+			const { games } = await (isNpbTeam(team.id) ? fetchNpbTeamSchedule : fetchKboTeamSchedule)(
+				team.id,
+				season,
+			)
 			return (isPast ? games.at(-1) : games[0])?.officialDate
 		}
 
@@ -75,9 +80,10 @@ export function fetchSeasonDefaultDate(
 			if (gameDate) return gameDate
 
 			// No games for this team that season: use the league calendar
-			const info = isNpbTeam(team.id)
-				? undefined
-				: await fetchSeason(String(season), sportId).catch(() => undefined)
+			const info =
+				isNpbTeam(team.id) || isKboTeam(team.id)
+					? undefined
+					: await fetchSeason(String(season), sportId).catch(() => undefined)
 			return (
 				(isPast
 					? (info?.postSeasonEndDate ?? info?.regularSeasonEndDate)

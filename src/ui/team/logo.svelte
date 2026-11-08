@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isKboTeam, kboAllStarTeam } from '#lib/kbo.js'
 	import { isNpbTeam } from '#lib/npb-roster.js'
 	import { npbAllStarTeam } from '#lib/npb.js'
 	import { teamLogoSources } from '#lib/team-logos.js'
@@ -24,12 +25,15 @@
 	/** Tried in order, moving on when one fails to load (see `teamLogoSources`) */
 	const sources = $derived(teamLogoSources(id))
 
-	/** NPB's All-Star sides have no Stats API team, so no dark cap or custom source either */
-	const allStar = $derived(!!npbAllStarTeam(id))
+	/**
+	 * NPB's and KBO's All-Star sides have no Stats API team, and KBO teams no cap: no dark cap or
+	 * custom source for them
+	 */
+	const noStatsApiLogo = $derived(!!npbAllStarTeam(id) || !!kboAllStarTeam(id) || isKboTeam(id))
 
 	/** NPB teams skip a custom (Stats API) dark source: it's the generic ball for most of them */
 	const srcset = $derived(
-		allStar ? undefined : customSrcset && !isNpbTeam(id) ? customSrcset : darkCap,
+		noStatsApiLogo ? undefined : customSrcset && !isNpbTeam(id) ? customSrcset : darkCap,
 	)
 
 	let attempt = $state(0)
