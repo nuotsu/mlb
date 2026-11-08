@@ -1,3 +1,4 @@
+import { isKboTeam, kboAllStarTeam, kboLogoUrl } from '#lib/kbo.js'
 import { isNpbTeam, npbLogoUrl } from '#lib/npb-roster.js'
 import { npbAllStarTeam } from '#lib/npb.js'
 
@@ -6,7 +7,8 @@ import { npbAllStarTeam } from '#lib/npb.js'
  *
  * The Stats API has cap logos for MLB clubs (and the Giants and Tigers), and a generic ball as
  * every other team's "spot". NPB teams try npb.jp's logo (this year's, else last year's: a new
- * season's go up when npb.jp is ready) before that ball.
+ * season's go up when npb.jp is ready) before that ball. KBO teams and All-Star sides use
+ * koreabaseball.com's emblem (this year's, else its current one), as the Stats API has none.
  *
  * `variant` is the cap for a light background or a dark one (e.g. the team's color).
  */
@@ -16,6 +18,15 @@ export function teamLogoSources(teamId: number, variant: 'light' | 'dark' = 'lig
 	if (allStar) return [allStar.logo]
 
 	const year = new Date().getFullYear()
+
+	// KBO: the Stats API has no cap for these, so koreabaseball.com's emblem comes first
+	const kbo = kboLogoUrl(teamId, year)
+	if (kbo) {
+		const sources = [kbo, kboLogoUrl(teamId, 'fixed')!]
+		return kboAllStarTeam(teamId)
+			? sources
+			: [...sources, `https://midfield.mlbstatic.com/v1/team/${teamId}/spots/72`]
+	}
 
 	return [
 		`https://www.mlbstatic.com/team-logos/team-cap-on-${variant}/${teamId}.svg`,
@@ -39,3 +50,11 @@ const NPB_TEAMS_WITH_STATS_API_LOGOS = new Set([241, 341])
  */
 export const usesNpbLogo = (teamId: number) =>
 	(isNpbTeam(teamId) && !NPB_TEAMS_WITH_STATS_API_LOGOS.has(teamId)) || !!npbAllStarTeam(teamId)
+
+/**
+ * The team's logo is a league site's rather than the Stats API's: npb.jp's (see
+ * {@link usesNpbLogo}) or koreabaseball.com's. Either way the team's color from the Stats API's
+ * generic spot is left off.
+ */
+export const usesLeagueLogo = (teamId: number) =>
+	usesNpbLogo(teamId) || isKboTeam(teamId) || !!kboAllStarTeam(teamId)

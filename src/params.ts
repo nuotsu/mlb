@@ -50,6 +50,34 @@ export const matchNpbGame = (param: string) => {
 	)
 }
 
+/**
+ * koreabaseball.com's team codes, as in its game IDs. Kept here rather than imported from
+ * `#lib/kbo.js` (`KBO_TEAMS`), for the same reason as `NPB_TEAM_CODES`; `kbo-game.test.ts` checks
+ * that the two lists match.
+ */
+export const KBO_TEAM_CODES = ['HT', 'SS', 'LG', 'OB', 'KT', 'SK', 'LT', 'HH', 'NC', 'WO']
+
+/** The All-Star Game's sides, 나눔 and 드림; kept in step with `KBO_ALL_STAR_TEAMS` the same way */
+export const KBO_ALL_STAR_CODES = ['WE', 'EA']
+
+/** koreabaseball.com's game ID, `{yyyymmdd}{away}{home}{n}`, e.g. `20261001NCOB0` */
+export const matchKboGame = (param: string) => {
+	const parts = param.match(/^\d{4}(\d{2})(\d{2})([A-Z]{2})([A-Z]{2})\d$/)
+	if (!parts) return false
+
+	const [month, day] = [Number(parts[1]), Number(parts[2])]
+	return (
+		month >= 1 &&
+		month <= 12 &&
+		day >= 1 &&
+		day <= 31 &&
+		parts[3] !== parts[4] &&
+		[KBO_TEAM_CODES, KBO_ALL_STAR_CODES].some(
+			(codes) => codes.includes(parts[3]) && codes.includes(parts[4]),
+		)
+	)
+}
+
 const matchPersonId = (param: string) => {
 	return param.match(/^\d+$/) !== null
 }
@@ -73,6 +101,7 @@ const matchVersion = (param: string) => {
 export const params = defineParams({
 	date: (param) => (matchDate(param) ? param : undefined),
 	gamePk: (param) => (matchGamePk(param) ? param : undefined),
+	kboGame: (param) => (matchKboGame(param) ? param : undefined),
 	npbDate: (param) => (matchNpbDate(param) ? param : undefined),
 	npbGame: (param) => (matchNpbGame(param) ? param : undefined),
 	personId: (param) => (matchPersonId(param) ? param : undefined),

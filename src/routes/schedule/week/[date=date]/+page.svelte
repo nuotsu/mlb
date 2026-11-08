@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchSeason, fetchWeekSchedule } from '#lib/fetch/presets.js'
+	import { KBO_SCHEDULE_URL, type KboScheduleGame } from '#lib/kbo-schedule.js'
 	import type { NpbScheduleGame } from '#lib/npb-schedule.js'
 	import { formatDate, getToday, slash } from '#lib/temporal.js'
 	import { maintainSearchParams } from '#lib/url.svelte.js'
@@ -8,6 +9,7 @@
 	import { sortFavorite } from '#ui/favorites/store.svelte.js'
 	import Game from '#ui/game/game.svelte'
 	import Header from '#ui/header.svelte'
+	import KboScheduleGameCard from '#ui/kbo-game/schedule-game.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import NpbScheduleGameCard from '#ui/npb-game/schedule-game.svelte'
 	import SelectWeek from '#ui/schedule/select-week.svelte'
@@ -61,8 +63,21 @@
 		return dates
 	})
 
+	/** KBO's games by day, the same way */
+	const kboDates = $derived.by(() => {
+		if (!data.kbo) return null
+		const dates: { date: string; games: KboScheduleGame[] }[] = []
+		for (const game of data.kbo) {
+			if (dates.at(-1)?.date === game.date) dates.at(-1)!.games.push(game)
+			else dates.push({ date: game.date, games: [game] })
+		}
+		return dates
+	})
+
 	const includestoday = $derived(
-		(npbDates ?? schedule.dates).some((d) => d.date === getToday().toISOString().split('T')[0]),
+		(npbDates ?? kboDates ?? schedule.dates).some(
+			(d) => d.date === getToday().toISOString().split('T')[0],
+		),
 	)
 
 	$effect(() => {
@@ -74,8 +89,8 @@
 	})
 
 	async function onDateChange(date: string) {
-		// NPB's week loads from npb.jp, through the page's own load
-		if (data.npb) return goto(maintainSearchParams(`/schedule/week/${date}`))
+		// NPB's and KBO's weeks load from their sites, through the page's own load
+		if (data.npb || data.kbo) return goto(maintainSearchParams(`/schedule/week/${date}`))
 
 		currentDate = date
 		schedule = await fetchWeekSchedule(date)
@@ -97,11 +112,20 @@
 </Header>
 
 <section class="space-y-px py-lh sm:px-ch">
-	{#each npbDates ?? schedule.dates as date (date.date)}
+	{#each npbDates ?? kboDates ?? schedule.dates as date (date.date)}
 		{@render day(date)}
 	{:else}
 		<Empty>No games</Empty>
 	{/each}
+
+	{#if kboDates}
+		<small class="mt-lh block px-ch text-center text-xs text-current/50">
+			Schedule and scores from
+			<a class="link" href={KBO_SCHEDULE_URL} target="_blank" rel="noopener noreferrer"
+				>KBO 한국야구위원회 (koreabaseball.com)</a
+			>
+		</small>
+	{/if}
 
 	{#if data.season}
 		<hr class="my-lh border-dashed border-stroke" />
@@ -109,7 +133,13 @@
 	{/if}
 </section>
 
-{#snippet day({ date, games }: { date: string; games: MLB.Game[] | NpbScheduleGame[] })}
+{#snippet day({
+	date,
+	games,
+}: {
+	date: string
+	games: MLB.Game[] | NpbScheduleGame[] | KboScheduleGame[]
+})}
 	<details class="group accordion" open={formatDate(slash(date)) === formatDate(getToday())}>
 		<summary class="sticky-below-header z-1 backdrop-blur-xs after:ml-0!">
 			{formatDate(slash(date), {
@@ -133,6 +163,10 @@
 			{#if npbDates}
 				{#each games as NpbScheduleGame[] as game (game.ref.code)}
 					<NpbScheduleGameCard {game} />
+				{/each}
+			{:else if kboDates}
+				{#each games as KboScheduleGame[] as game (game.id)}
+					<KboScheduleGameCard {game} />
 				{/each}
 			{:else}
 				{#each (games as MLB.Game[]).sort(sortFavorite) as game (game.gamePk)}
