@@ -1,7 +1,5 @@
 <script lang="ts">
-	import { isNpbTeam } from '#lib/npb-roster.js'
-	import { npbAllStarTeam } from '#lib/npb.js'
-	import { teamLogoSources } from '#lib/team-logos.js'
+	import { teamLogoSources, usesNpbLogo } from '#lib/team-logos.js'
 	import { cn } from '#lib/utils.js'
 	import { colorSchemeStore } from '#ui/store.svelte.js'
 	import type { HTMLImgAttributes } from 'svelte/elements'
@@ -24,13 +22,11 @@
 	/** Tried in order, moving on when one fails to load (see `teamLogoSources`) */
 	const sources = $derived(teamLogoSources(id))
 
-	/** NPB's All-Star sides have no Stats API team, so no dark cap or custom source either */
-	const allStar = $derived(!!npbAllStarTeam(id))
-
-	/** NPB teams skip a custom (Stats API) dark source: it's the generic ball for most of them */
-	const srcset = $derived(
-		allStar ? undefined : customSrcset && !isNpbTeam(id) ? customSrcset : darkCap,
-	)
+	/**
+	 * NPB teams (and their All-Star sides) show npb.jp's logo in both color schemes, so no dark
+	 * cap or custom (Stats API) source replaces it
+	 */
+	const srcset = $derived(usesNpbLogo(id) ? undefined : customSrcset || darkCap)
 
 	let attempt = $state(0)
 	let srcsetValid = $state(false)
