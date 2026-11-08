@@ -102,6 +102,13 @@
 	)
 </script>
 
+<svelte:head>
+	{#if data.npb}
+		<!-- Team logos, see `Logo` -->
+		<link rel="preconnect" href="https://p.npb.jp" />
+	{/if}
+</svelte:head>
+
 <Metadata
 	title="{formattedDate} | MLB.TheOhtani.com"
 	description="Game schedule for {formattedDate}"

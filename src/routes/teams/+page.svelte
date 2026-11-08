@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { NPB_SPORT_ID } from '#lib/npb.js'
 	import { cn } from '#lib/utils.js'
 	import Empty from '#ui/empty.svelte'
 	import ToggleFavorite from '#ui/favorites/toggle-favorite.svelte'
@@ -10,6 +11,7 @@
 	import ToggleSpoilerPrevention from '#ui/spoiler-prevention/toggle-spoiler-prevention.svelte'
 	import Logo from '#ui/team/logo.svelte'
 	import ToggleAllDetails from '#ui/toggle-all-details.svelte'
+	import { page } from '$app/state'
 	import type { PageProps } from './$types'
 
 	let { data }: PageProps = $props()
@@ -22,6 +24,13 @@
 		).sort(([a], [b]) => (!a ? 1 : !b ? -1 : a.localeCompare(b))),
 	)
 </script>
+
+<svelte:head>
+	{#if page.url.searchParams.get('sportId') === String(NPB_SPORT_ID)}
+		<!-- Team logos, see `Logo` -->
+		<link rel="preconnect" href="https://p.npb.jp" />
+	{/if}
+</svelte:head>
 
 <Metadata
 	title="{sport?.abbreviation || 'MLB'} Teams | MLB.TheOhtani.com"
