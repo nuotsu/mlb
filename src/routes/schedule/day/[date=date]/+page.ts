@@ -2,6 +2,8 @@ import { error } from '@sveltejs/kit'
 import { cacheControlForScheduleDay } from '#lib/cache-control.js'
 import { fetchMLB, notFoundOnMlb404 } from '#lib/fetch/index.js'
 import { fetchDaySchedule, fetchSeason } from '#lib/fetch/presets.js'
+import { loadKboSchedule, withKboSportId } from '#lib/kbo-schedule.js'
+import { KBO_SPORT_ID } from '#lib/kbo.js'
 import { loadNpbSchedule, scheduleSportIds } from '#lib/npb-schedule.js'
 import { NPB_SPORT_ID } from '#lib/npb.js'
 import { getToday, slash } from '#lib/temporal.js'
@@ -38,9 +40,38 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 			schedule: { dates: [] } as unknown as MLB.ScheduleResponse,
 			seasonProgress: null,
 			season: null as unknown as MLB.SeasonDateInfo,
-			availableSportIds: scheduleSportIds(leagues, year),
+			availableSportIds: withKboSportId(scheduleSportIds(leagues, year), year),
 			seriesContext: null,
 			npb: npb.games,
+			kbo: null,
+		}
+	}
+
+	/** Nor is KBO's; it comes from koreabaseball.com through our own route */
+	if (sportId === String(KBO_SPORT_ID)) {
+		const [kbo, { leagues }] = await Promise.all([
+			loadKboSchedule(
+				year,
+				{ startDate: params.date, endDate: params.date, linescores: true },
+				fetch,
+			),
+			fetchMLB<MLB.LeaguesResponse>('/api/v1/leagues', {
+				season: year,
+				fields: 'leagues,id,sport,id',
+			}),
+		]).catch(() => error(502, 'Could not load the KBO schedule.'))
+
+		// Only once it loads, so a failed upstream fetch is never CDN-cached
+		setHeaders({ 'cache-control': cacheControlForScheduleDay(params.date) })
+
+		return {
+			schedule: { dates: [] } as unknown as MLB.ScheduleResponse,
+			seasonProgress: null,
+			season: null as unknown as MLB.SeasonDateInfo,
+			availableSportIds: withKboSportId(scheduleSportIds(leagues, year), year),
+			seriesContext: null,
+			npb: null,
+			kbo: kbo.games,
 		}
 	}
 
@@ -79,8 +110,9 @@ export const load = async ({ params, url, depends, fetch, setHeaders }) => {
 		schedule,
 		seasonProgress,
 		season,
-		availableSportIds: scheduleSportIds(leagues, year),
+		availableSportIds: withKboSportId(scheduleSportIds(leagues, year), year),
 		seriesContext,
 		npb: null,
+		kbo: null,
 	}
 }

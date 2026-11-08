@@ -1,5 +1,10 @@
 <script lang="ts">
 	import { fetchDaySchedule, fetchSeason } from '#lib/fetch/presets.js'
+	import {
+		currentKboScheduleGame,
+		KBO_SCHEDULE_URL,
+		type KboScheduleGame,
+	} from '#lib/kbo-schedule.js'
 	import { currentNpbScheduleGame } from '#lib/npb-game-mlb.js'
 	import type { NpbScheduleGame } from '#lib/npb-schedule.js'
 	import { formatDate, getToday, slash } from '#lib/temporal.js'
@@ -10,6 +15,7 @@
 	import { sortFavorite } from '#ui/favorites/store.svelte.js'
 	import Game from '#ui/game/game.svelte'
 	import Header from '#ui/header.svelte'
+	import KboScheduleGameCard from '#ui/kbo-game/schedule-game.svelte'
 	import Metadata from '#ui/metadata.svelte'
 	import NpbScheduleGameCard from '#ui/npb-game/schedule-game.svelte'
 	import SelectDate from '#ui/schedule/select-date.svelte'
@@ -79,8 +85,8 @@
 	})
 
 	async function onDateChange(date: string) {
-		// NPB's day loads from npb.jp, through the page's own load
-		if (data.npb) return goto(maintainSearchParams(`/schedule/day/${date}`))
+		// NPB's and KBO's days load from their sites, through the page's own load
+		if (data.npb || data.kbo) return goto(maintainSearchParams(`/schedule/day/${date}`))
 
 		currentDate = date
 		schedule = await fetchDaySchedule(date)
@@ -142,6 +148,21 @@
 		{#if !data.npb.length}
 			<Empty>No games</Empty>
 		{/if}
+	{:else if data.kbo}
+		{#each ['Live', 'Preview', 'Final'] as const as state (state)}
+			{@render kboGroupedGames(data.kbo, state)}
+		{/each}
+
+		{#if !data.kbo.length}
+			<Empty>No games</Empty>
+		{/if}
+
+		<small class="mt-lh block px-ch text-center text-xs text-current/50">
+			Schedule and scores from
+			<a class="link" href={KBO_SCHEDULE_URL} target="_blank" rel="noopener noreferrer"
+				>KBO 한국야구위원회 (koreabaseball.com)</a
+			>
+		</small>
 	{:else}
 		{#each schedule.dates as { games }}
 			{@render groupedGames(games, 'Live')}
@@ -171,6 +192,24 @@
 		>
 			{#each processedGames as game (game.ref.code)}
 				<NpbScheduleGameCard {game} />
+			{/each}
+		</div>
+	{/if}
+{/snippet}
+
+{#snippet kboGroupedGames(games: KboScheduleGame[], state: KboScheduleGame['state'])}
+	{@const processedGames = games.filter((game) => currentKboScheduleGame(game).state === state)}
+
+	{#if processedGames.length}
+		<Divider>
+			{state} ({processedGames.length})
+		</Divider>
+
+		<div
+			class="grid items-start gap-lh md:grid-cols-[repeat(auto-fill,minmax(var(--column-width,var(--container-xs)),1fr))] lg:[--column-width:var(--container-md)]"
+		>
+			{#each processedGames as game (game.id)}
+				<KboScheduleGameCard {game} />
 			{/each}
 		</div>
 	{/if}

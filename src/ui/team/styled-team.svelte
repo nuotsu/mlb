@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { isDarkOnLightTeam, isLightOnDarkTeam } from '#lib/colors.js'
+	import { kboAllStarTeam } from '#lib/kbo.js'
 	import { npbAllStarTeam } from '#lib/npb.js'
-	import { usesNpbLogo } from '#lib/team-logos.js'
+	import { usesLeagueLogo } from '#lib/team-logos.js'
 	import { cn } from '#lib/utils.js'
 	import type { Snippet } from 'svelte'
 	import Logo from './logo.svelte'
@@ -25,8 +26,11 @@
 
 	const src = $derived(`https://midfield.mlbstatic.com/v1/team/${team.id}/spots`)
 
-	/** npb.jp's logo on white: no team color behind it, so the text keeps its own color too */
-	const plain = $derived(usesNpbLogo(team.id))
+	/**
+	 * A league site's logo (npb.jp's on white, koreabaseball.com's): no team color behind it, so the
+	 * text keeps its own color too
+	 */
+	const plain = $derived(usesLeagueLogo(team.id))
 </script>
 
 <div
@@ -64,8 +68,8 @@
 
 	{@render children?.()}
 
-	<!-- NPB's All-Star sides have no team page -->
-	{#if linked && !npbAllStarTeam(team.id)}
+	<!-- NPB's and KBO's All-Star sides have no team page -->
+	{#if linked && !npbAllStarTeam(team.id) && !kboAllStarTeam(team.id)}
 		<!-- clipped: the label is only an accessible name, and it would otherwise wrap past the box -->
 		<a href="/teams/{team.id}" class="absolute inset-0 overflow-clip text-transparent">
 			{team.name}

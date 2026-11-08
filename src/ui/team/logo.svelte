@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { teamLogoSources, usesNpbLogo } from '#lib/team-logos.js'
+	import { teamLogoSources, usesLeagueLogo } from '#lib/team-logos.js'
 	import { cn } from '#lib/utils.js'
 	import { colorSchemeStore } from '#ui/store.svelte.js'
 	import type { HTMLImgAttributes } from 'svelte/elements'
@@ -23,10 +23,10 @@
 	const sources = $derived(teamLogoSources(id))
 
 	/**
-	 * NPB teams (and their All-Star sides) show npb.jp's logo in both color schemes, so no dark
-	 * cap or custom (Stats API) source replaces it
+	 * NPB and KBO teams (and their All-Star sides) show their league site's logo in both color
+	 * schemes, so no dark cap or custom (Stats API) source replaces it
 	 */
-	const srcset = $derived(usesNpbLogo(id) ? undefined : customSrcset || darkCap)
+	const srcset = $derived(usesLeagueLogo(id) ? undefined : customSrcset || darkCap)
 
 	let attempt = $state(0)
 	let srcsetValid = $state(false)
