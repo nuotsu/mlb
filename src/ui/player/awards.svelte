@@ -124,6 +124,8 @@
 			getRowId={(row) => row.key}
 			sortable={false}
 			hideHeader
+			stickyHeader={false}
+			virtualize={false}
 			rowClass={(row, i, all) => [
 				i > 0 &&
 					all[i - 1].season !== row.season &&
