@@ -7,25 +7,29 @@ export const load: PageLoad = async ({ url, fetch, setHeaders }) => {
 
 	const searchParams = Object.fromEntries(url.searchParams.entries())
 
-	const teams = await fetchMLB<MLB.TeamsResponse>(
-		'/api/v1/teams',
-		{
-			sportId: '1',
-			fields: [
-				'teams,id,name,abbreviation',
-				'sport,abbreviation',
-				'league,name,division,sortOrder,nameShort',
-			],
-			hydrate: 'sport,division',
-			...searchParams,
-		},
-		{ fetch },
-	).catch((e) => notFoundOnMlb404(e, 'No teams found for this sport'))
+	const [teams, availableSportIds] = await Promise.all([
+		fetchMLB<MLB.TeamsResponse>(
+			'/api/v1/teams',
+			{
+				sportId: '1',
+				fields: [
+					'teams,id,name,abbreviation',
+					'sport,abbreviation',
+					'league,name,division,sortOrder,nameShort',
+				],
+				hydrate: 'sport,division',
+				...searchParams,
+			},
+			{ fetch },
+		).catch((e) => notFoundOnMlb404(e, 'No teams found for this sport')),
+		fetchSportIdsWithTeams(searchParams.season, fetch),
+	])
 
 	if (searchParams.sportId === String(NPB_SPORT_ID)) addMissingNpbTeams(teams)
 
 	return {
 		teams,
+		availableSportIds,
 	}
 }
 
@@ -43,4 +47,26 @@ function addMissingNpbTeams(teams: MLB.TeamsResponse) {
 		seen.add(id)
 		list.push({ id, name, abbreviation, sport } as MLB.TeamDetailed)
 	}
+}
+
+/**
+ * Sports with at least one team, for the sport select (e.g. Negro League and Olympic Baseball
+ * have none). `undefined` on failure leaves every option enabled.
+ */
+async function fetchSportIdsWithTeams(season: string | undefined, fetch: typeof globalThis.fetch) {
+	const all = await fetchMLB<MLB.TeamsResponse>(
+		'/api/v1/teams',
+		{ fields: ['teams,sport,id'], season },
+		{ fetch },
+	).catch(() => undefined)
+	if (!all?.teams) return undefined
+
+	const ids = new Set(
+		(all.teams as MLB.TeamDetailed[])
+			.map((team) => team.sport?.id)
+			.filter((id) => id !== undefined),
+	)
+	// The Stats API files some NPB clubs elsewhere, but NPB always has teams (see above)
+	ids.add(NPB_SPORT_ID)
+	return [...ids]
 }
