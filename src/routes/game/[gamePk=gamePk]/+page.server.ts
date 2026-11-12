@@ -18,13 +18,14 @@ export const load: PageServerLoad = async ({ params, url, fetch, setHeaders }) =
 			gamePk: params.gamePk,
 			fields: [
 				'dates,date,venue,description,seriesGameNumber,gamesInSeries',
-				'games,gamePk,gameType,gameDate,link',
+				'games,gamePk,gameType,gameDate,officialDate,gameNumber,link',
 				'flags,noHitter,perfectGame',
 				'status,abstractGameState,detailedState,reason',
-				'teams,away,home,team,id,name,leagueRecord,wins,losses,score',
+				'teams,away,home,team,id,name,abbreviation,leagueRecord,wins,losses,score',
 				'broadcasts,callSign,isNational',
 			],
-			hydrate: 'flags,broadcasts(all)',
+			// `team` for the abbreviations in `page_label` (+layout.svelte)
+			hydrate: 'flags,broadcasts(all),team',
 		},
 		{ fetch },
 	)

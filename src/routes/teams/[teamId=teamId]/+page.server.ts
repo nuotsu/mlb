@@ -33,7 +33,9 @@ export const load: PageServerLoad = async ({ params, url, fetch, setHeaders }) =
 	const teams = await fetchMLB<MLB.TeamsResponse>(
 		`/api/v1/teams/${params.teamId}`,
 		{
-			fields: ['teams,id,name,franchiseName,clubName,teamName,abbreviation', 'sport'],
+			fields: ['teams,id,name,franchiseName,clubName,teamName,abbreviation,active', 'sport,league'],
+			// Sport and league abbreviations tell apart teams sharing a name in `page_label`
+			hydrate: 'sport,league',
 		},
 		{ fetch },
 	)

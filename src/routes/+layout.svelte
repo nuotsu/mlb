@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { analyticsEnabled } from '#lib/analytics.js'
 	import { appIconScript } from '#lib/app-icon.js'
+	import { pageLabel } from '#lib/page-label.js'
 	import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from '#lib/seo.js'
 	import { hideDelayedGamesScript } from '#lib/time-travel.js'
 	import { accountStore, initAccount } from '#ui/account/store.svelte.js'
@@ -34,10 +35,14 @@
 			return posthog.capture('$pageleave')
 		})
 
+		// Runs once the new page's data is in `page` (every navigation, game → game included), so
+		// the label is the page being viewed. Left off routes without one, not sent empty.
 		afterNavigate(({ shallow }) => {
 			if (shallow || !analyticsEnabled) return
 
-			return posthog.capture('$pageview')
+			const page_label = pageLabel(page.route.id, page.data)
+
+			return posthog.capture('$pageview', page_label ? { page_label } : undefined)
 		})
 
 		const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
