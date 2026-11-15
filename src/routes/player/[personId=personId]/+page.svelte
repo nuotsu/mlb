@@ -162,7 +162,7 @@
 		</section>
 	{/if}
 
-	<HeadshotHistory {person} />
+	<HeadshotHistory {person} staffSeasons={data.staffSeasons} />
 
 	<!-- Wraps the group switcher too, so jumping to the stats lands above it -->
 	<div id="stats" class="space-y-lh has-data-empty:hidden">

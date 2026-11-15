@@ -410,6 +410,19 @@ declare global {
 			strikeZoneTop?: number
 			strikeZoneBottom?: number
 			currentTeam?: Team
+			/** Present when hydrated with `education` */
+			education?: Education
+		}
+
+		interface School {
+			name: string
+			city?: string
+			state?: string
+		}
+
+		interface Education {
+			highschools?: School[]
+			colleges?: School[]
 		}
 
 		/**
