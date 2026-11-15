@@ -64,6 +64,15 @@
 		</dd>
 	{/if}
 
+	{#if person.education?.colleges?.length}
+		<dt>College</dt>
+		<dd class="flex flex-col items-start">
+			{#each person.education.colleges as { name }, i (`${name}-${i}`)}
+				<span>{name}</span>
+			{/each}
+		</dd>
+	{/if}
+
 	{#if person.mlbDebutDate}
 		<dt>MLB Debut</dt>
 		<dd>
