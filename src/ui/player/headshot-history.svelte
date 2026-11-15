@@ -4,6 +4,7 @@
 
 	let {
 		person,
+		managerSeasons,
 	}: {
 		person: MLB.Person & {
 			currentTeam?: MLB.Team
@@ -11,7 +12,21 @@
 			rosterEntries?: MLB.Roster[]
 			drafts?: MLB.DraftPick[]
 		}
+		/** Streamed seasons spent managing an MLB club, since managers have no stats to show. */
+		managerSeasons?: Promise<{ season: number; team: MLB.Team }[]>
 	} = $props()
+
+	let managed = $state.raw<{ season: number; team: MLB.Team }[]>([])
+
+	$effect(() => {
+		let stale = false
+		managerSeasons?.then((seasons) => {
+			if (!stale) managed = seasons
+		})
+		return () => {
+			stale = true
+		}
+	})
 
 	/** How far past a playing career to look for coach and manager headshots. */
 	const LOOKBACK = 30
@@ -47,6 +62,8 @@
 			const end = endDate ? Number(endDate.slice(0, 4)) : isActive ? thisYear : start
 			for (let y = start; y <= end; y++) add(y, team)
 		}
+
+		for (const { season, team } of managed) add(season, team)
 
 		const known = [...teamsBySeason.keys()]
 		const lastKnown = known.length ? Math.max(...known) : undefined

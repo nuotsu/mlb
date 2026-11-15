@@ -31,6 +31,60 @@ export const load: PageLoad = async ({ params, fetch, setHeaders }) => {
 		debutGamePk: player.mlbDebutDate
 			? fetchDebutGamePk(personId, player.mlbDebutDate, fetch)
 			: Promise.resolve(undefined),
+		/** Streamed: seasons spent as an MLB manager, which stats and roster entries don't cover. */
+		managerSeasons: fetchManagerSeasons(player.id, fetch),
+	}
+}
+
+/** How many past seasons to scan for a manager's tenure. */
+const MANAGER_LOOKBACK = 30
+
+type CoachesResponse = { roster?: { person: { id: number }; jobId: string }[] }
+
+/**
+ * Seasons the person managed an MLB club. Managers have no stats and their roster
+ * entries are from playing days, so the history is rebuilt from each team's coaching
+ * staff: find the current club among the 30, then walk that club back year by year.
+ * Only that club is scanned, so tenures with earlier clubs are not included.
+ */
+async function fetchManagerSeasons(personId: number, fetch: typeof globalThis.fetch) {
+	const none: { season: number; team: MLB.Team }[] = []
+
+	try {
+		const thisYear = new Date().getFullYear()
+
+		const { roster: managers } = await fetchMLB<{ roster?: { person: { id: number } }[] }>(
+			'/api/v1/jobs',
+			{ jobType: 'MNGR', sportId: '1' },
+			{ fetch },
+		)
+		if (!managers?.some(({ person }) => person.id === personId)) return none
+
+		const { teams } = await fetchMLB<{ teams: MLB.Team[] }>(
+			'/api/v1/teams',
+			{ sportId: '1', fields: 'teams,id,name' },
+			{ fetch },
+		)
+
+		const isManager = async (teamId: number, season: number) => {
+			const { roster } = await fetchMLB<CoachesResponse>(
+				`/api/v1/teams/${teamId}/coaches`,
+				{ season: String(season) },
+				{ fetch },
+			)
+			return !!roster?.some(({ person, jobId }) => jobId === 'MNGR' && person.id === personId)
+		}
+
+		const flags = await Promise.all(teams.map((t) => isManager(t.id, thisYear).catch(() => false)))
+		const team = teams.find((_, i) => flags[i])
+		if (!team) return none
+
+		const years = Array.from({ length: MANAGER_LOOKBACK + 1 }, (_, i) => thisYear - i)
+		const hits = await Promise.all(years.map((s) => isManager(team.id, s).catch(() => false)))
+
+		return years.flatMap((season, i) => (hits[i] ? [{ season, team }] : []))
+	} catch {
+		return none
 	}
 }
 
