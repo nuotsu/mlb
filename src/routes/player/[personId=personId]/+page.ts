@@ -31,35 +31,29 @@ export const load: PageLoad = async ({ params, fetch, setHeaders }) => {
 		debutGamePk: player.mlbDebutDate
 			? fetchDebutGamePk(personId, player.mlbDebutDate, fetch)
 			: Promise.resolve(undefined),
-		/** Streamed: seasons spent as an MLB manager, which stats and roster entries don't cover. */
-		managerSeasons: fetchManagerSeasons(player.id, fetch),
+		/** Streamed: seasons on an MLB coaching staff, which stats and roster entries don't cover. */
+		staffSeasons: player.active ? Promise.resolve([]) : fetchStaffSeasons(player.id, fetch),
 	}
 }
 
-/** How many past seasons to scan for a manager's tenure. */
-const MANAGER_LOOKBACK = 30
+/** How many past seasons to scan for a coaching tenure. */
+const STAFF_LOOKBACK = 30
 
-type CoachesResponse = { roster?: { person: { id: number }; jobId: string }[] }
+type CoachesResponse = { roster?: { person: { id: number } }[] }
 
 /**
- * Seasons the person managed an MLB club. Managers have no stats and their roster
- * entries are from playing days, so the history is rebuilt from each team's coaching
+ * Seasons the person was on an MLB club's coaching staff in any role (manager,
+ * coach, coordinator...). Staff have no stats and their roster entries are from
+ * playing days, so the history is rebuilt from each team's coaching
  * staff: find the current club among the 30, walk it back while the run continues,
  * then look for the previous club in the season before the run, and repeat.
  * A season off between clubs ends the search.
  */
-async function fetchManagerSeasons(personId: number, fetch: typeof globalThis.fetch) {
+async function fetchStaffSeasons(personId: number, fetch: typeof globalThis.fetch) {
 	const none: { season: number; team: MLB.Team }[] = []
 
 	try {
 		const thisYear = new Date().getFullYear()
-
-		const { roster: managers } = await fetchMLB<{ roster?: { person: { id: number } }[] }>(
-			'/api/v1/jobs',
-			{ jobType: 'MNGR', sportId: '1' },
-			{ fetch },
-		)
-		if (!managers?.some(({ person }) => person.id === personId)) return none
 
 		const { teams } = await fetchMLB<{ teams: MLB.Team[] }>(
 			'/api/v1/teams',
@@ -67,33 +61,39 @@ async function fetchManagerSeasons(personId: number, fetch: typeof globalThis.fe
 			{ fetch },
 		)
 
-		const isManager = async (teamId: number, season: number) => {
+		const onStaff = async (teamId: number, season: number) => {
 			const { roster } = await fetchMLB<CoachesResponse>(
 				`/api/v1/teams/${teamId}/coaches`,
 				{ season: String(season) },
 				{ fetch },
 			)
-			return !!roster?.some(({ person, jobId }) => jobId === 'MNGR' && person.id === personId)
+			return !!roster?.some(({ person }) => person.id === personId)
 		}
 
 		const findClub = async (season: number) => {
 			const flags = await Promise.all(
-				teams.map((t) => isManager(t.id, season).catch(() => false)),
+				teams.map((t) => onStaff(t.id, season).catch(() => false)),
 			)
 			return teams.find((_, i) => flags[i])
 		}
 
-		const floor = thisYear - MANAGER_LOOKBACK
+		const floor = thisYear - STAFF_LOOKBACK
 		const seasons: { season: number; team: MLB.Team }[] = []
 
 		// Walk back through consecutive seasons with one club, then search all clubs
 		// for the season just before the run to pick up the previous one
+		// Staff not yet announced for this season may still have been on last year's
+		let start = thisYear
 		for (let year = thisYear; year >= floor; ) {
-			const team = await findClub(year)
+			let team = await findClub(year)
+			if (!team && year === start && start === thisYear) {
+				start = year -= 1
+				team = await findClub(year)
+			}
 			if (!team) break
 
 			const years = Array.from({ length: year - floor + 1 }, (_, i) => year - i)
-			const hits = await Promise.all(years.map((s) => isManager(team.id, s).catch(() => false)))
+			const hits = await Promise.all(years.map((s) => onStaff(team.id, s).catch(() => false)))
 			const run = hits.indexOf(false) === -1 ? hits.length : hits.indexOf(false)
 
 			for (const season of years.slice(0, run)) seasons.push({ season, team })
