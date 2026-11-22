@@ -3,11 +3,11 @@ import { APP_ICONS, type AppIcon } from './account.js'
 export const APP_ICON_KEY = 'app-icon'
 
 export const APP_ICON_LABELS: Record<AppIcon, string> = {
-	default: 'Original',
-	blue: 'Blue glove',
+	default: 'Blue glove',
 	green: 'Green glove',
 	red: 'Red glove',
 	black: 'Black glove',
+	v4: 'v4',
 }
 
 type IconFile =
@@ -20,7 +20,7 @@ type IconFile =
 /** Public path of one size of an app icon */
 export function appIconSrc(icon: AppIcon, file: IconFile) {
 	if (icon === 'default') {
-		return `/favicons/${file === 'icon-192.png' ? 'android-chrome-192x192.png' : file}?v=2`
+		return `/favicons/${file === 'icon-192.png' ? 'android-chrome-192x192.png' : file}`
 	}
 	return `/app-icons/${icon}/${file}`
 }
