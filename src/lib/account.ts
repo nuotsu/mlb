@@ -71,10 +71,10 @@ export const COLOR_SCHEMES = ['light', 'dark', 'auto'] as const
 export type ColorScheme = (typeof COLOR_SCHEMES)[number]
 
 /**
- * App icon / favicon choices, in picker order. `default` is the blue glove (listed first), `original` the first 4; the rest
+ * App icon / favicon choices, in picker order. `default` is the blue glove (listed first), `v4` the first 4; the rest
  * live in /static/app-icons
  */
-export const APP_ICONS = ['default', 'green', 'red', 'black', 'original'] as const
+export const APP_ICONS = ['default', 'green', 'red', 'black', 'v4'] as const
 export type AppIcon = (typeof APP_ICONS)[number]
 
 export type Settings = {

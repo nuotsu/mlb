@@ -7,7 +7,7 @@ export const APP_ICON_LABELS: Record<AppIcon, string> = {
 	green: 'Green glove',
 	red: 'Red glove',
 	black: 'Black glove',
-	original: 'Original',
+	v4: 'v4',
 }
 
 type IconFile =
